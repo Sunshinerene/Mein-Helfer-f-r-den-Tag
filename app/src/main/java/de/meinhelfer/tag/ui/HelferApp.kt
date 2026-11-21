@@ -82,6 +82,8 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
     var showSummary by rememberSaveable { mutableStateOf(false) }
     var showGuide by rememberSaveable { mutableStateOf(false) }
     var showReorder by rememberSaveable { mutableStateOf(false) }
+    var showWegweiser by rememberSaveable { mutableStateOf(false) }
+    var showProfile by rememberSaveable { mutableStateOf(false) }
     var showTour by rememberSaveable { mutableStateOf(false) }
     val appContext = LocalContext.current
     // Beim ersten Start einmal den Rundgang anbieten
@@ -109,12 +111,13 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
         }
     }
 
-    BackHandler(enabled = showSettings || showSummary || showGuide || showTour || showReorder) {
+    BackHandler(enabled = showSettings || showSummary || showGuide || showTour || showReorder || showWegweiser) {
         when {
             showTour -> showTour = false
             showGuide -> showGuide = false
             showSettings -> showSettings = false
             showReorder -> showReorder = false
+            showWegweiser -> showWegweiser = false
             else -> showSummary = false
         }
     }
@@ -129,6 +132,14 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
             onBack = { showSettings = false },
             onOpenGuide = { showGuide = true },
             onStartTour = { showTour = true },
+        )
+    } else if (showWegweiser) {
+        val currentPerson = persons.firstOrNull { it.id == personId }
+        WegweiserScreen(
+            personName = currentPerson?.name,
+            careLevel = currentPerson?.careLevel ?: 0,
+            onAddTodo = { vm.addTodo(it) },
+            onBack = { showWegweiser = false },
         )
     } else if (showReorder) {
         ReorderScreen(
@@ -185,6 +196,9 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
                         onOpenSettings = { showSettings = true },
                         onOpenSummary = { showSummary = true },
                         onOpenReorder = { showReorder = true },
+                        person = persons.firstOrNull { it.id == personId },
+                        onEditProfile = { showProfile = true },
+                        onOpenWegweiser = { showWegweiser = true },
                     )
                     Tab.Medikamente -> MedicationScreen(meds, doctors, vm, onReorder = { showReorder = true })
                     Tab.Termine -> AppointmentScreen(appointments, doctors, vm)
@@ -192,6 +206,19 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
                 }
               }
             }
+        }
+    }
+
+    if (showProfile) {
+        persons.firstOrNull { it.id == personId }?.let { p ->
+            PersonDialog(
+                initial = p,
+                onDismiss = { showProfile = false },
+                onSave = {
+                    vm.updatePerson(it)
+                    showProfile = false
+                },
+            )
         }
     }
 

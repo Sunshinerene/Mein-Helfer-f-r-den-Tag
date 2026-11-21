@@ -210,6 +210,16 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         selectPerson(id)
     }
 
+    /** Neue Person mit Profil anlegen und auswaehlen. */
+    fun addPerson(person: Person) = viewModelScope.launch {
+        val id = db.personDao().insert(person.copy(id = 0, name = person.name.trim(), important = person.important.trim()))
+        selectPerson(id)
+    }
+
+    fun updatePerson(person: Person) = viewModelScope.launch {
+        db.personDao().update(person.copy(name = person.name.trim(), important = person.important.trim()))
+    }
+
     fun renamePerson(person: Person, name: String) = viewModelScope.launch {
         db.personDao().update(person.copy(name = name.trim()))
     }

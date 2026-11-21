@@ -41,6 +41,10 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
                 "Oben auf jeder Seite steht „Für: Name“. Medikamente, Termine, Abhaken, Bemerkungen, To-dos und Auswertung gelten immer für diese Person.",
             ),
             GuideItem(
+                "Profil: Geburtsdatum, Pflegegrad, Wichtiges",
+                "Beim Anlegen oder über den Namen → „Profil bearbeiten“ kannst du Geburtsdatum, Pflegegrad (1 bis 5) und „Wichtig zu wissen“ eintragen, z. B. Allergien oder Besonderheiten. Alles ist freiwillig, bleibt nur in der App und wird nie automatisch gesendet. Auf der Heute-Seite steht oben das Profil mit Alter und Pflegegrad.",
+            ),
+            GuideItem(
                 "Person wechseln oder anlegen",
                 "Auf den Namen tippen. Dort wählst du eine andere Person oder legst eine neue an. Praktisch, wenn du z. B. für beide Eltern sorgst.",
             ),
@@ -148,6 +152,29 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             GuideItem(
                 "Liste als PDF",
                 "„PDF der Auswahl erstellen“ legt die Liste im privaten App-Ordner ab. Von dort kannst du sie öffnen, unter „Speichern unter“ auf dein Handy herunterladen, drucken oder teilen. Gespeicherte Listen kannst du dort auch löschen.",
+            ),
+        ),
+    ),
+    GuideSection(
+        id = "wegweiser",
+        title = "Wegweiser Leistungen",
+        summary = "Welche Hilfen und Anträge je Pflegegrad",
+        items = listOf(
+            GuideItem(
+                "Öffnen",
+                "Auf der Heute-Seite in der Profilkarte „Wegweiser Leistungen“ antippen.",
+            ),
+            GuideItem(
+                "Was steht drin?",
+                "Erste Schritte (Pflegegrad beantragen, Begutachtung, Widerspruch), Leistungen für zu Hause, Pflegeheim, Hilfen für pflegende Angehörige und weitere Hilfen. Die Beträge für den eingetragenen Pflegegrad sind hervorgehoben. Mit den Pflegegrad-Schaltflächen siehst du andere Stufen oder alle auf einmal.",
+            ),
+            GuideItem(
+                "Auf die To-do-Liste",
+                "Bei vielen Punkten gibt es „+ Auf meine To-do-Liste“, z. B. „Pflegegrad beantragen“ oder „Verhinderungspflege planen“. So behältst du den Überblick, was noch zu tun ist.",
+            ),
+            GuideItem(
+                "Ohne Gewähr",
+                "Die Beträge gelten für die gesetzliche Pflegeversicherung in Deutschland (Stand der Angaben steht unten im Wegweiser). Gesetze ändern sich. Verbindlich sind nur Auskünfte der Pflegekasse oder eines Pflegestützpunkts. Es ist keine Rechtsberatung.",
             ),
         ),
     ),

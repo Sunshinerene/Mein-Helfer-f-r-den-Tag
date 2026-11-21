@@ -9,6 +9,12 @@ import java.time.LocalDate
 data class Person(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val name: String,
+    /** Geburtsdatum als Epoch-Tag, optional. */
+    val birthDate: Long? = null,
+    /** Pflegegrad 1 bis 5, 0 = keiner bzw. noch unbekannt. */
+    val careLevel: Int = 0,
+    /** Freitext "Wichtig zu wissen" (z. B. Allergien, Besonderheiten). */
+    val important: String = "",
 )
 
 /** Medikament mit Einnahmezeiten und Vorrat (fuer die Nachbestell-Warnung). */

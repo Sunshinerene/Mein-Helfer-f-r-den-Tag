@@ -4,6 +4,12 @@
 
 - [ ] Erkennung von Packungsfoto weiter verbessern (Wirkstoff, Packungsbeilage), Kamera-Scan für Barcodes live
 
+## Version 0.13.0 (fertig)
+
+- [x] Profil je Person: Geburtsdatum (Alter), Pflegegrad 1 bis 5, "Wichtig zu wissen", nur lokal; Profilkarte auf der Heute-Seite
+- [x] Wegweiser Leistungen: Erste Schritte, Leistungen für zu Hause, Pflegeheim, Hilfen für Angehörige, weitere Hilfen; Beträge je Pflegegrad (Stand 11/2026), Schritte auf die To-do-Liste
+- [x] Anleitung aktualisiert
+
 ## Version 0.12.0 (fertig)
 
 - [x] Medikament antippen zeigt alle Infos auf einen Blick (Beschreibung, PZN, Arzt, Apotheke, Notizen), Beschreibung auch gekürzt auf der Karte
@@ -85,5 +91,4 @@
 - [ ] Dokumente scannen und verschlüsselt ablegen
 - [ ] Datenbank verschlüsseln, App-Sperre
 - [ ] KI-Vorschläge aus Dokumenten (immer mit Bestätigung), Datenschutz-Filter vor jeder Übertragung
-- [ ] Wegweiser: Leistungen und Anträge je Pflegegrad
 - [ ] Umkreissuche für Ärzte und Pflegedienste

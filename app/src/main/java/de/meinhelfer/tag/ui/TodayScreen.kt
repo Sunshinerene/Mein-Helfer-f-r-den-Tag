@@ -36,6 +36,7 @@ import de.meinhelfer.tag.data.Checkin
 import de.meinhelfer.tag.data.DayNote
 import de.meinhelfer.tag.data.Doctor
 import de.meinhelfer.tag.data.Medication
+import de.meinhelfer.tag.data.Person
 import de.meinhelfer.tag.data.Todo
 import de.meinhelfer.tag.summary.SummaryBuilder
 import de.meinhelfer.tag.update.UpdateState
@@ -80,6 +81,9 @@ fun TodayScreen(
     onOpenSettings: () -> Unit,
     onOpenSummary: () -> Unit,
     onOpenReorder: () -> Unit = {},
+    person: Person? = null,
+    onEditProfile: () -> Unit = {},
+    onOpenWegweiser: () -> Unit = {},
 ) {
     val zone = ZoneId.systemDefault()
     val today = LocalDate.ofEpochDay(todayDay)
@@ -131,6 +135,10 @@ fun TodayScreen(
                     }
                 }
             }
+        }
+
+        item {
+            ProfileCard(person, todayDay, onEditProfile, onOpenWegweiser)
         }
 
         if (lowStock.isNotEmpty()) {
@@ -354,6 +362,36 @@ private fun parseSlot(slot: String): LocalTime? =
     de.meinhelfer.tag.reminder.ReminderScheduler.parseTime(slot)?.let { (h, m) -> LocalTime.of(h, m) }
 
 /** Zeile mit Haken, Text und Bemerkungs-Knopf. */
+@Composable
+private fun ProfileCard(person: Person?, todayDay: Long, onEdit: () -> Unit, onWegweiser: () -> Unit) {
+    if (person == null) return
+    val age = person.birthDate?.let { java.time.Period.between(LocalDate.ofEpochDay(it), LocalDate.ofEpochDay(todayDay)).years }
+        ?.takeIf { it >= 0 }
+    val head = listOfNotNull(
+        age?.let { "$it Jahre" },
+        person.careLevel.takeIf { it in 1..5 }?.let { "Pflegegrad $it" },
+    ).joinToString(" · ")
+    HCard(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(person.name, style = MaterialTheme.typography.titleMedium)
+            if (head.isNotEmpty()) Text(head, style = MaterialTheme.typography.bodyMedium)
+            if (person.important.isNotBlank()) {
+                Text("Wichtig: ${person.important}", style = MaterialTheme.typography.bodyMedium, maxLines = 4)
+            }
+            if (head.isEmpty() && person.important.isBlank()) {
+                Text(
+                    "Du kannst im Profil Geburtsdatum, Pflegegrad und Wichtiges eintragen. Das bleibt nur in der App.",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                TextButton(onClick = onEdit, contentPadding = PaddingValues(horizontal = 8.dp)) { Text("Profil bearbeiten") }
+                TextButton(onClick = onWegweiser, contentPadding = PaddingValues(horizontal = 8.dp)) { Text("Wegweiser Leistungen") }
+            }
+        }
+    }
+}
+
 @Composable
 private fun CheckRow(
     done: Boolean,
