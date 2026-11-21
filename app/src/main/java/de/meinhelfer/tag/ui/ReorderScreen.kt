@@ -117,6 +117,8 @@ fun ReorderScreen(
         return file
     }
 
+    val files = remember(refresh) { ReorderExport.savedFiles(context) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -285,7 +287,6 @@ fun ReorderScreen(
             }
 
             // ---- Gespeicherte Listen
-            val files = remember(refresh) { ReorderExport.savedFiles(context) }
             if (files.isNotEmpty()) {
                 item { Text("Gespeicherte Listen", style = MaterialTheme.typography.titleMedium) }
                 files.forEach { file ->
