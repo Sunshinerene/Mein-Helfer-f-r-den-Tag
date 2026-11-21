@@ -213,6 +213,25 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         db.todoDao().insert(Todo(personId = _personId.value, text = text.trim(), createdMillis = System.currentTimeMillis()))
     }
 
+    fun addTasks(drafts: List<TaskDraft>) = viewModelScope.launch {
+        val now = System.currentTimeMillis()
+        drafts.filter { it.text.isNotBlank() }.forEach {
+            db.todoDao().insert(
+                Todo(
+                    personId = _personId.value,
+                    text = it.text.trim(),
+                    createdMillis = now,
+                    doctorId = it.doctorId,
+                    priority = it.priority,
+                    dueDay = it.dueDay,
+                    outside = it.outside,
+                ),
+            )
+        }
+    }
+
+    fun updateTodo(item: Todo) = viewModelScope.launch { db.todoDao().update(item) }
+
     fun setTodoDone(item: Todo, done: Boolean) = viewModelScope.launch { db.todoDao().update(item.copy(done = done)) }
 
     fun deleteTodo(item: Todo) = viewModelScope.launch { db.todoDao().delete(item) }

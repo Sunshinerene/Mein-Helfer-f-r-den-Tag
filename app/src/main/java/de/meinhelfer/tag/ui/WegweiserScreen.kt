@@ -84,7 +84,7 @@ fun WegweiserScreen(person: Person?, onAddTodo: (String) -> Unit, onBack: () -> 
                             }
                         }
                         Text(
-                            "Mit „+ Auf meine To-do-Liste“ übernimmst du einen Schritt in deine Liste auf der Heute-Seite.",
+                            "Mit „+ Als Aufgabe merken“ übernimmst du einen Schritt als Aufgabe auf die Heute-Seite.",
                             style = MaterialTheme.typography.bodySmall,
                         )
                         val kasse = person?.insurer.orEmpty()
@@ -138,7 +138,7 @@ fun WegweiserScreen(person: Person?, onAddTodo: (String) -> Unit, onBack: () -> 
                                         onAddTodo(todo)
                                         added.add(todo)
                                     }, enabled = !isAdded) {
-                                        Text(if (isAdded) "✓ Auf der To-do-Liste" else "+ Auf meine To-do-Liste")
+                                        Text(if (isAdded) "✓ Als Aufgabe gemerkt" else "+ Als Aufgabe merken")
                                     }
                                 }
                             }

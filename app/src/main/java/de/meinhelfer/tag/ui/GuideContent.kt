@@ -38,7 +38,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
         items = listOf(
             GuideItem(
                 "Für wen gilt es?",
-                "Oben auf jeder Seite steht „Für: Name“. Medikamente, Termine, Abhaken, Bemerkungen, To-dos und Auswertung gelten immer für diese Person.",
+                "Oben auf jeder Seite steht „Für: Name“. Medikamente, Termine, Abhaken, Bemerkungen, Aufgaben und Auswertung gelten immer für diese Person.",
             ),
             GuideItem(
                 "Profil: Geburtsdatum, Pflegegrad, Wichtiges",
@@ -50,14 +50,14 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Umbenennen und löschen",
-                "Im selben Menü kannst du die Person umbenennen. Beim Löschen gehen ihre Medikamente, Termine, Bemerkungen und To-dos verloren. Das lässt sich nicht rückgängig machen. Kontakte bleiben erhalten, weil sie für alle gelten.",
+                "Im selben Menü kannst du die Person umbenennen. Beim Löschen gehen ihre Medikamente, Termine, Bemerkungen und Aufgaben verloren. Das lässt sich nicht rückgängig machen. Kontakte bleiben erhalten, weil sie für alle gelten.",
             ),
         ),
     ),
     GuideSection(
         id = "heute",
         title = "Heute",
-        summary = "Abhaken, Notizen, To-dos und Nachbestell-Warnung",
+        summary = "Abhaken, Notizen, Aufgaben und Nachbestell-Warnung",
         items = listOf(
             GuideItem(
                 "Einnahmen abhaken",
@@ -72,8 +72,8 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
                 "Eine freie Notiz für den ganzen Tag: wie der Tag lief, was auffiel. Sie fließt in die Auswertung ein.",
             ),
             GuideItem(
-                "To-dos",
-                "Eine kleine Liste für Dinge, die erledigt werden sollen, z. B. „Rezept anfordern“. Haken setzen, wenn erledigt. „Löschen“ entfernt den Eintrag.",
+                "Aufgaben",
+                "Hier stehen Dinge, die erledigt werden sollen, z. B. „Blutuntersuchung beim Hausarzt“. Mit „+ Aufgabe hinzufügen“ legst du eine an: Text, Wichtigkeit (niedrig, normal, hoch), „Erledigt bis“ und optional den zuständigen Arzt bzw. die Stelle aus deinen Kontakten. Die Liste ist nach Wichtigkeit und Frist sortiert. Dringendes und Überfälliges steht in Rot. Mit dem Haken erledigst du eine Aufgabe, erledigte rutschen nach unten. Hast du einen Kontakt gewählt, kannst du direkt „Anrufen“ oder „E-Mail“ tippen. Ist „Außer Haus“ angehakt, gibt es zusätzlich „Fahrdienst“ (siehe Termine). „Bearbeiten“ ändert alles, „Löschen“ entfernt die Aufgabe.",
             ),
             GuideItem(
                 "Bald nachbestellen",
@@ -196,8 +196,8 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
                 "Bei vielen Einträgen gibt es Links: Mit Lupe öffnet sich eine Suche in deinem Browser (z. B. „Antrag Pflegegrad“ deiner Krankenkasse) oder deine Karten-App (z. B. Pflegestützpunkt, Pflegedienst, Tagespflege, Versorgungsamt in deiner Nähe). Mit Pfeil öffnet sich eine feste Seite, z. B. der Pflegelotse oder das Bundesamt für Familie. Eingesetzt werden nur Krankenkasse und PLZ/Ort aus dem Profil, nie Name, Straße oder Versichertennummer. Je genauer das Profil, desto besser die Treffer.",
             ),
             GuideItem(
-                "Auf die To-do-Liste",
-                "Bei vielen Punkten gibt es „+ Auf meine To-do-Liste“, z. B. „Pflegegrad beantragen“ oder „Verhinderungspflege planen“. So behältst du den Überblick, was noch zu tun ist.",
+                "Als Aufgabe merken",
+                "Bei vielen Punkten gibt es „+ Als Aufgabe merken“, z. B. „Pflegegrad beantragen“ oder „Verhinderungspflege planen“. So behältst du den Überblick, was noch zu tun ist.",
             ),
             GuideItem(
                 "Ohne Gewähr",
@@ -224,7 +224,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Unterlagen anhängen",
-                "Auf der Terminkarte „Unterlagen“ antippen. Die App schlägt passende Dokumente vor (gleicher Arzt, passende Kategorie, z. B. Medikamentenplan oder Befund). Du hakst an, was zum Termin gehört, und kannst jedes Dokument mit „Ansehen“ öffnen. Angehängte Unterlagen stehen auf der Karte. Darunter findest du Anregungen, was man mitnehmen könnte (z. B. Versichertenkarte, Medikamentenplan). Jeden Punkt kannst du mit „+ To-do“ auf deine Liste setzen. Das sind allgemeine Anregungen, was gebraucht wird, sagt die Praxis.",
+                "Auf der Terminkarte „Unterlagen“ antippen. Die App schlägt passende Dokumente vor (gleicher Arzt, passende Kategorie, z. B. Medikamentenplan oder Befund). Du hakst an, was zum Termin gehört, und kannst jedes Dokument mit „Ansehen“ öffnen. Angehängte Unterlagen stehen auf der Karte. Darunter findest du Anregungen, was man mitnehmen könnte (z. B. Versichertenkarte, Medikamentenplan). Jeden Punkt kannst du mit „+ Aufgabe“ als Aufgabe merken. Das sind allgemeine Anregungen, was gebraucht wird, sagt die Praxis.",
             ),
             GuideItem(
                 "Die Terminkarte",
@@ -260,6 +260,10 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             GuideItem(
                 "Zusammenfassung",
                 "Im Formular gibt es „Zusammenfassung“. Du kannst sie selbst schreiben oder per KI erstellen lassen („Per KI zusammenfassen“). Vor dem Senden siehst du den genauen Text. Name, Geburtsdatum, Versichertennummer und Straße der Person werden durch Platzhalter ersetzt, andere Namen im Dokument können aber enthalten sein. Brich ab, wenn etwas nicht raus soll. Die Zusammenfassung ist ein Anhaltspunkt in einfacher Sprache und kann Fehler enthalten. Sie steht danach auf der Karte, im Detail und wird von der Suche gefunden.",
+            ),
+            GuideItem(
+                "Aufgaben vorschlagen",
+                "Unter der Zusammenfassung gibt es „Aufgaben vorschlagen“. Die KI liest die Zusammenfassung (oder den Text) und schlägt vor, was zu tun ist, z. B. „Blutuntersuchung der Nierenwerte beim Hausarzt“, mit Wichtigkeit, Frist („Anfang nächster Woche“ wird in ein Datum umgerechnet) und ob man dafür aus dem Haus muss. Vor dem Senden siehst du wieder den genauen Text. Dann hakst du an, was übernommen werden soll. Der passende Kontakt (z. B. dein Hausarzt) wird nur auf deinem Handy zugeordnet, die Namen deiner Kontakte werden nie gesendet. Du kannst den Kontakt pro Vorschlag ändern. Übernommene Aufgaben stehen auf der Heute-Seite, abhakbar, mit Direktkontakt und Fahrdienst. Auch das ist nur ein Anhaltspunkt: bitte prüfen, ob es zum Dokument passt.",
             ),
             GuideItem(
                 "Dokument hinzufügen",
@@ -402,8 +406,8 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
                 "Die Empfehlungen sind Anregungen, kein ärztlicher Rat. Sie ersetzen weder Arzt noch Apotheke. „Nicht abgehakt“ heißt nur, dass nichts abgehakt wurde. Vielleicht wurde es trotzdem genommen.",
             ),
             GuideItem(
-                "Auf die To-do-Liste",
-                "Bei jeder Empfehlung kannst du „Auf meine To-do-Liste“ tippen, z. B. um etwas beim Hausarzt anzusprechen.",
+                "Als Aufgabe merken",
+                "Bei jeder Empfehlung kannst du „+ Als Aufgabe merken“ tippen, z. B. um etwas beim Hausarzt anzusprechen.",
             ),
             GuideItem(
                 "Teilen",

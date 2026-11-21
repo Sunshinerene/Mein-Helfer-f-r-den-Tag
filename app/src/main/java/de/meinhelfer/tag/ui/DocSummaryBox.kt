@@ -29,6 +29,7 @@ import de.meinhelfer.tag.ai.AiClient
 import de.meinhelfer.tag.ai.AiConfig
 import de.meinhelfer.tag.ai.AiLimitException
 import de.meinhelfer.tag.ai.AiProvider
+import de.meinhelfer.tag.data.Doctor
 import de.meinhelfer.tag.data.Person
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -40,6 +41,17 @@ private const val SUMMARY_SYSTEM =
         "Nenne, worum es geht, wichtige Daten, Fristen und Beträge und was als Nächstes zu klären sein könnte (nur als Frage an Arzt, Pflegekasse oder die genannte Stelle). " +
         "Keine Diagnosen, keine Dosierungsempfehlungen. Erfinde nichts: Was nicht im Text steht, lässt du weg. " +
         "Ist der Text kaum lesbar, sage das in einem Stichpunkt. Keine Einleitung, kein Schlusssatz."
+
+private const val TASKS_SYSTEM =
+    "Du hilfst pflegenden Angehörigen, aus einem Schreiben oder Bericht konkrete Aufgaben abzuleiten. Du bist kein Arzt und ersetzt keinen. " +
+        "Nenne nur Aufgaben, die im Text stehen oder sich direkt daraus ergeben (z. B. Untersuchung machen lassen, Termin vereinbaren, Antrag oder Unterlagen einreichen, Rezept holen, Frist beachten). " +
+        "Keine Diagnosen, keine Dosierungen, nichts erfinden. Höchstens 5 Aufgaben. " +
+        "Antworte NUR mit einem JSON-Array ohne weiteren Text, jedes Element so: " +
+        "{\"aufgabe\": \"kurzer Satz im Imperativ\", \"stelle\": \"zuständige Stelle, z. B. Hausarzt, Nephrologe, Pflegekasse, Apotheke, oder leer\", " +
+        "\"frist_tage\": Zahl der Tage ab heute bis spätestens erledigt oder null, \"prioritaet\": \"hoch\" oder \"normal\" oder \"niedrig\", " +
+        "\"ausser_haus\": true wenn man dafür das Haus verlassen muss, sonst false}. " +
+        "Rechne Zeitangaben aus dem Text mit dem genannten heutigen Datum in Tage um (z. B. „Anfang nächster Woche“ = Tage bis zum nächsten Montag). " +
+        "Gibt es keine Aufgaben, antworte []."
 
 private const val MAX_CHARS = 12_000
 
@@ -73,6 +85,9 @@ fun DocSummaryBox(
     person: Person?,
     summary: String,
     onSummary: (String) -> Unit,
+    doctors: List<Doctor> = emptyList(),
+    docDay: Long? = null,
+    onAddTasks: ((List<TaskDraft>) -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -81,12 +96,22 @@ fun DocSummaryBox(
     var error by remember { mutableStateOf<String?>(null) }
     var limitHit by remember { mutableStateOf(false) }
     var provider by remember { mutableStateOf(AiConfig.provider(context)) }
+    var confirmTasks by remember { mutableStateOf(false) }
+    var taskDrafts by remember { mutableStateOf<List<TaskDraft>?>(null) }
+    var taskInfo by remember { mutableStateOf<String?>(null) }
 
     val configured = AiConfig.isConfigured(context)
     val otherReady = AiProvider.entries.any { it != provider && AiConfig.apiKey(context, it).isNotBlank() }
     val masked = remember(text, person) { maskPersonal(text.take(MAX_CHARS), person) }
     val promptText = "Text eines Dokuments (Namen und Nummern der betreuten Person sind durch Platzhalter ersetzt):\n\n$masked"
     val enoughText = text.trim().length >= 40
+    val todayDate = LocalDate.now()
+    val weekdays = listOf("Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag")
+    val taskSource = if (summary.trim().length >= 20) maskPersonal(summary, person) else masked
+    val taskPrompt = "Heute ist " + weekdays[todayDate.dayOfWeek.value - 1] + ", " + todayDate.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + "." +
+        (docDay?.let { " Das Dokument ist vom " + LocalDate.ofEpochDay(it).format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + "." } ?: "") +
+        "\n\n" + (if (summary.trim().length >= 20) "Zusammenfassung des Dokuments" else "Text des Dokuments") +
+        " (Namen und Nummern der betreuten Person sind durch Platzhalter ersetzt):\n\n" + taskSource
 
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text("Zusammenfassung (Anhaltspunkt)", style = MaterialTheme.typography.labelLarge)
@@ -123,6 +148,12 @@ fun DocSummaryBox(
             }
             if (!enoughText) {
                 Text("Dafür ist zu wenig Text erkannt. Lies den Text neu aus oder trage ihn unten ein.", style = MaterialTheme.typography.bodySmall)
+            }
+            if (onAddTasks != null) {
+                OutlinedButton(enabled = enoughText || summary.trim().length >= 20, onClick = { confirmTasks = true }) {
+                    Text("Aufgaben vorschlagen")
+                }
+                taskInfo?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
             }
         }
         error?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
@@ -177,6 +208,61 @@ fun DocSummaryBox(
                 }) { Text("Senden") }
             },
             dismissButton = { TextButton(onClick = { confirm = false }) { Text("Abbrechen") } },
+        )
+    }
+
+    if (confirmTasks) {
+        AlertDialog(
+            onDismissRequest = { confirmTasks = false },
+            title = { Text("An ${provider.label} senden?") },
+            text = {
+                Column(
+                    Modifier.heightIn(max = 380.dp).verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Text(
+                        "Die KI soll daraus Aufgaben vorschlagen. Genau dieser Text wird über das Internet gesendet. Name, Geburtsdatum, Versichertennummer und Straße der Person sind ersetzt, " +
+                            "Namen deiner Kontakte werden nicht gesendet. Die Zuordnung zum Kontakt passiert nur auf deinem Handy.",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    Text(taskPrompt, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.fillMaxWidth())
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmTasks = false
+                    loading = true
+                    error = null
+                    limitHit = false
+                    taskInfo = null
+                    scope.launch {
+                        AiClient.ask(context, TASKS_SYSTEM, taskPrompt)
+                            .onSuccess { answer ->
+                                val drafts = parseTaskSuggestions(answer, doctors, LocalDate.now().toEpochDay())
+                                if (drafts.isEmpty()) taskInfo = "Die KI hat keine Aufgaben im Text gefunden." else taskDrafts = drafts
+                            }
+                            .onFailure {
+                                error = it.message ?: "Das hat nicht geklappt."
+                                limitHit = it is AiLimitException
+                            }
+                        loading = false
+                    }
+                }) { Text("Senden") }
+            },
+            dismissButton = { TextButton(onClick = { confirmTasks = false }) { Text("Abbrechen") } },
+        )
+    }
+
+    taskDrafts?.let { drafts ->
+        TaskSuggestDialog(
+            drafts = drafts,
+            doctors = doctors,
+            onAdd = { chosen ->
+                onAddTasks?.invoke(chosen)
+                taskInfo = "${chosen.size} Aufgabe(n) auf die Heute-Seite übernommen."
+                taskDrafts = null
+            },
+            onDismiss = { taskDrafts = null },
         )
     }
 }

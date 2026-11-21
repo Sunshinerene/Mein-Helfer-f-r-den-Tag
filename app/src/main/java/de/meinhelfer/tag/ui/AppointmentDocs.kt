@@ -196,7 +196,7 @@ internal fun AppointmentDocsDialog(
                         TextButton(enabled = !added, onClick = {
                             onAddTodo("Termin ${appointment.title} ($whenText): $item")
                             todoAdded.add(item)
-                        }) { Text(if (added) "✓" else "+ To-do") }
+                        }) { Text(if (added) "✓" else "+ Aufgabe") }
                     }
                 }
                 Text(

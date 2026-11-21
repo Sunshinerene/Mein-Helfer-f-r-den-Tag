@@ -59,7 +59,8 @@ internal fun isOutsideHome(a: Appointment, doctor: Doctor?): Boolean {
 private val EXTRAS = listOf("Rollator", "Rollstuhl", "Begleitperson", "Hilfe beim Einsteigen")
 
 private fun buildRequest(
-    a: Appointment,
+    whenText: String,
+    place: String,
     doctor: Doctor?,
     person: Person?,
     extras: Set<String>,
@@ -69,14 +70,14 @@ private fun buildRequest(
         listOf(it.street, listOf(it.zip, it.city).filter { s -> s.isNotBlank() }.joinToString(" "))
             .filter { s -> s.isNotBlank() }.joinToString(", ")
     }.orEmpty().ifBlank { "(Adresse bitte ergänzen)" }
-    val target = listOf(a.place, doctor?.address.orEmpty()).firstOrNull { it.isNotBlank() }
+    val target = listOf(place, doctor?.address.orEmpty()).firstOrNull { it.isNotBlank() }
         ?: "(Ziel bitte ergänzen)"
-    val sb = StringBuilder("Guten Tag, ich möchte eine Fahrt zu einem Arzttermin anfragen.\n")
+    val sb = StringBuilder("Guten Tag, ich möchte eine Fahrt anfragen.\n")
     sb.append("Abholung: ").append(pickup).append('\n')
     sb.append("Ziel: ").append(target)
     doctor?.let { sb.append(" (").append(it.name).append(')') }
     sb.append('\n')
-    sb.append("Termin: ").append(formatAppointmentTime(a.whenMillis, a.endMillis)).append('\n')
+    sb.append("Termin: ").append(whenText).append('\n')
     sb.append("Rückfahrt: ").append(if (returnTrip) "ja, bitte nach dem Termin" else "nein").append('\n')
     if (extras.isNotEmpty()) sb.append("Hinweise: ").append(extras.joinToString(", ")).append('\n')
     sb.append("Bitte um Rückmeldung zu Verfügbarkeit und Preis. Danke!")
@@ -118,7 +119,9 @@ private fun openUrl(context: Context, url: String) {
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun FahrdienstDialog(
-    appointment: Appointment,
+    title: String,
+    whenText: String,
+    place: String,
     doctor: Doctor?,
     doctors: List<Doctor>,
     person: Person?,
@@ -135,12 +138,12 @@ internal fun FahrdienstDialog(
     var hits by remember { mutableStateOf<List<FahrdienstHit>?>(null) }
 
     val fixed = doctors.filter { it.isFahrdienst() }
-    val request = buildRequest(appointment, doctor, person, extras, returnTrip)
-    val subject = "Fahrt am " + formatDateTime(appointment.whenMillis)
+    val request = buildRequest(whenText, place, doctor, person, extras, returnTrip)
+    val subject = "Fahrtanfrage"
     val zip = person?.zip.orEmpty()
     val city = person?.city.orEmpty()
     val canSearch = (zip + city).isNotBlank()
-    val destination = listOf(appointment.place, doctor?.address.orEmpty()).firstOrNull { it.isNotBlank() }
+    val destination = listOf(place, doctor?.address.orEmpty()).firstOrNull { it.isNotBlank() }
 
     AlertDialog(
         onDismissRequest = onClose,
@@ -150,10 +153,7 @@ internal fun FahrdienstDialog(
                 Modifier.heightIn(max = 520.dp).verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                Text(
-                    appointment.title + "\n" + formatAppointmentTime(appointment.whenMillis, appointment.endMillis),
-                    style = MaterialTheme.typography.titleSmall,
-                )
+                Text(title + "\n" + whenText, style = MaterialTheme.typography.titleSmall)
 
                 Text("Was soll in der Anfrage stehen?", style = MaterialTheme.typography.titleSmall)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

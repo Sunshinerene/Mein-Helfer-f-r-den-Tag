@@ -83,13 +83,13 @@ private val TOUR_PAGES: List<TourPage> = listOf(
     TourPage(
         title = "Heute: abhaken",
         text = "Auf der Heute-Seite siehst du, was jetzt ansteht. Haken setzen, wenn eine Einnahme oder ein Termin erledigt ist. Vergessenes wird rot markiert.",
-        tips = listOf("Mit „Notiz“ hältst du fest, was aufgefallen ist.", "Dort stehen auch deine To-dos und die Bemerkung zum Tag."),
+        tips = listOf("Mit „Notiz“ hältst du fest, was aufgefallen ist.", "Dort stehen auch deine Aufgaben und die Bemerkung zum Tag."),
         mock = { MockToday() },
     ),
     TourPage(
-        title = "Notizen und To-dos",
+        title = "Notizen und Aufgaben",
         text = "Schreib kurz auf, was auffällt: „später genommen“, „Termin verschoben“, „wenig gegessen“. Die Schnellauswahl spart Tipparbeit.",
-        tips = listOf("Notizen fließen in die Auswertung ein.", "Was du später klären willst, kommt auf die To-do-Liste."),
+        tips = listOf("Notizen fließen in die Auswertung ein.", "Was du später klären willst, wird als Aufgabe gemerkt, mit Arzt, Frist und Wichtigkeit."),
         mock = { MockNotes() },
     ),
     TourPage(
@@ -101,7 +101,7 @@ private val TOUR_PAGES: List<TourPage> = listOf(
     TourPage(
         title = "Auswertung",
         text = "Für Tag, Woche oder Monat zeigt die Auswertung, was gut lief, was auffällt und welche nächsten Schritte sinnvoll sein könnten.",
-        tips = listOf("Das sind Anhaltspunkte, kein ärztlicher Rat.", "Empfehlungen lassen sich mit einem Tipp auf die To-do-Liste setzen."),
+        tips = listOf("Das sind Anhaltspunkte, kein ärztlicher Rat.", "Empfehlungen lassen sich mit einem Tipp als Aufgabe merken."),
         mock = { MockSummary() },
     ),
     TourPage(
@@ -376,7 +376,7 @@ private fun MockNotes() {
         MockChip("Nebenwirkung aufgefallen")
     }
     MockCard {
-        Text("To-dos (1 offen)", style = MaterialTheme.typography.titleSmall)
+        Text("Aufgaben (1 offen)", style = MaterialTheme.typography.titleSmall)
         MockCheckRow(false, "Medikamentenplan beim Hausarzt besprechen")
     }
 }
@@ -403,7 +403,7 @@ private fun MockSummary() {
     MockCard {
         Text("Empfehlungen (nur Anhaltspunkte)", style = MaterialTheme.typography.titleSmall)
         Text("• Rezept rechtzeitig anfragen.", style = MaterialTheme.typography.bodyMedium)
-        Text("+ Auf meine To-do-Liste", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+        Text("+ Als Aufgabe merken", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
     }
 }
 

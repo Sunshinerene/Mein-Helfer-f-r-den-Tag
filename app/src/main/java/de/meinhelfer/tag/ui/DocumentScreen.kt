@@ -329,6 +329,7 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?
                 doctors = doctors,
                 categoryOptions = categoryOptions,
                 person = person,
+                onAddTasks = { vm.addTasks(it) },
                 onAddPage = { showAddPage = true },
                 onRemoveLast = {
                     scope.launch {
@@ -373,6 +374,7 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?
             doctors = doctors,
             categoryOptions = categoryOptions,
             person = person,
+            onAddTasks = { vm.addTasks(it) },
             onAddPage = {},
             onRemoveLast = {},
             onDismiss = { editItem = null },
@@ -392,6 +394,7 @@ private fun DocumentDialog(
     doctors: List<Doctor>,
     categoryOptions: List<String>,
     person: Person?,
+    onAddTasks: (List<TaskDraft>) -> Unit,
     onAddPage: () -> Unit,
     onRemoveLast: () -> Unit,
     onDismiss: () -> Unit,
@@ -497,7 +500,15 @@ private fun DocumentDialog(
                     label = { Text("Notizen") },
                     modifier = Modifier.fillMaxWidth(),
                 )
-                DocSummaryBox(text = text, person = person, summary = summary, onSummary = { summary = it })
+                DocSummaryBox(
+                    text = text,
+                    person = person,
+                    summary = summary,
+                    onSummary = { summary = it },
+                    doctors = doctors,
+                    docDay = date?.toEpochDay(),
+                    onAddTasks = onAddTasks,
+                )
                 if (initial != null && DocumentReader.canExtract(initial.mimeType)) {
                     OutlinedButton(
                         enabled = !rereading,

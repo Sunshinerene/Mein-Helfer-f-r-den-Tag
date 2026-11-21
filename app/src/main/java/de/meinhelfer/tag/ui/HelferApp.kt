@@ -380,7 +380,9 @@ private fun AppointmentScreen(
 
     rideFor?.let { a ->
         FahrdienstDialog(
-            appointment = a,
+            title = a.title,
+            whenText = formatAppointmentTime(a.whenMillis, a.endMillis),
+            place = a.place,
             doctor = doctors.firstOrNull { it.id == a.doctorId },
             doctors = doctors,
             person = person,

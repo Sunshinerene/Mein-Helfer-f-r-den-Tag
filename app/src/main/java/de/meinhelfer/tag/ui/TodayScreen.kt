@@ -91,7 +91,6 @@ fun TodayScreen(
 
     var noteTarget by remember { mutableStateOf<NoteTarget?>(null) }
     var editDayNote by remember { mutableStateOf(false) }
-    var addTodo by remember { mutableStateOf(false) }
 
     val medChecks = checkins.filter { it.kind == Checkin.MED && it.day == todayDay }
         .associateBy { SummaryBuilder.normSlot(it.slot) to it.refId }
@@ -242,40 +241,8 @@ fun TodayScreen(
             }
         }
 
-        // ---- To-dos
-        item {
-            HCard(Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(start = 8.dp, end = 8.dp, top = 16.dp, bottom = 8.dp)) {
-                    Text(
-                        "To-dos" + if (todos.any { !it.done }) " (${todos.count { !it.done }} offen)" else "",
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(start = 8.dp, bottom = 4.dp),
-                    )
-                    if (todos.isEmpty()) {
-                        Text(
-                            "Noch nichts vorgemerkt, z. B. „Medikamentenplan beim Hausarzt besprechen“.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.padding(start = 8.dp, bottom = 4.dp),
-                        )
-                    }
-                    todos.forEach { t ->
-                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                            Checkbox(checked = t.done, onCheckedChange = { vm.setTodoDone(t, it) })
-                            Text(
-                                t.text,
-                                style = MaterialTheme.typography.bodyMedium,
-                                textDecoration = if (t.done) TextDecoration.LineThrough else TextDecoration.None,
-                                modifier = Modifier.weight(1f).clickable { vm.setTodoDone(t, !t.done) }.padding(vertical = 4.dp),
-                            )
-                            TextButton(onClick = { vm.deleteTodo(t) }, contentPadding = PaddingValues(horizontal = 8.dp)) {
-                                Text("Löschen", maxLines = 1)
-                            }
-                        }
-                    }
-                    TextButton(onClick = { addTodo = true }) { Text("+ To-do hinzufügen") }
-                }
-            }
-        }
+        // ---- Aufgaben
+        item { TasksCard(todos = todos, doctors = doctors, person = person, vm = vm) }
 
         // ---- Bemerkung zum Tag
         item {
@@ -329,18 +296,6 @@ fun TodayScreen(
             onSave = { text ->
                 vm.saveCheckin(t.kind, t.refId, t.day, t.slot, note = text)
                 noteTarget = null
-            },
-        )
-    }
-    if (addTodo) {
-        NameDialog(
-            title = "Neues To-do",
-            label = "Was ist zu tun?",
-            initial = "",
-            onDismiss = { addTodo = false },
-            onSave = {
-                vm.addTodo(it)
-                addTodo = false
             },
         )
     }

@@ -117,7 +117,7 @@ fun AiHintBox(
                     onTodo(line)
                     added.add(line)
                 }, enabled = !isAdded) {
-                    Text(if (isAdded) "✓ Auf der To-do-Liste" else "+ Auf meine To-do-Liste")
+                    Text(if (isAdded) "✓ Als Aufgabe gemerkt" else "+ Als Aufgabe merken")
                 }
             }
             Text(AiClient.DISCLAIMER, style = MaterialTheme.typography.bodySmall)

@@ -190,7 +190,7 @@ private fun block(
                     if (onTodo != null) {
                         val isAdded = line in added
                         TextButton(onClick = { onTodo(line) }, enabled = !isAdded) {
-                            Text(if (isAdded) "✓ Auf der To-do-Liste" else "+ Auf meine To-do-Liste")
+                            Text(if (isAdded) "✓ Als Aufgabe gemerkt" else "+ Als Aufgabe merken")
                         }
                     }
                 }

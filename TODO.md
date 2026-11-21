@@ -4,6 +4,12 @@
 
 - [ ] Erkennung von Packungsfoto weiter verbessern (Wirkstoff, Packungsbeilage), Kamera-Scan für Barcodes live
 
+## Version 0.23.0 (fertig)
+
+- [x] To-do-Liste auf der Heute-Seite wird zu „Aufgaben“: zuständiger Arzt bzw. Stelle (Anrufen, E-Mail), Wichtigkeit, „Erledigt bis“ mit Überfällig-Hinweis, Außer Haus mit Fahrdienst, sortiert und abhakbar, bearbeitbar
+- [x] KI-Zusammenfassung eines Dokuments: „Aufgaben vorschlagen“ (mit Bestätigung des genauen Textes), Auswahl der Vorschläge, Kontakt wird lokal zugeordnet und ist änderbar
+- [x] Beschriftungen „Als Aufgabe merken“ statt To-do-Liste
+
 ## Version 0.22.0 (fertig)
 
 - [x] Termine: neue Karten mit großem Datum und Wochentag, Countdown („heute“, „in 3 Tagen“), Uhrzeit, Kontakt mit Anruf, Route, Unterlagen und Erinnerung; vergangene Termine grau
@@ -136,7 +142,7 @@
 
 ## Weitere Ideen
 
-- [ ] Aufgaben (v0.23.0): To-do-Liste auf Heute zu „Aufgaben“ ausbauen mit zuständigem Arzt (Direktkontakt), Priorität, Fällig-bis, Fahrdienst bei Aufgaben außer Haus; KI-Zusammenfassung schlägt Aufgaben vor (z. B. „Blutuntersuchung Nierenwerte beim Hausarzt“), du wählst aus, was übernommen wird
+- [ ] Aufgabe mit Dokument verknüpfen (Link zurück zum Bericht), Aufgabe in den Kalender oder als Erinnerung
 - [ ] Umkreissuche auch für Apotheken, Sanitätshäuser und Pflegedienste
 
 - [ ] Anleitung und Rundgang bei neuen Funktionen mitpflegen (Datei GuideContent.kt und TourScreen.kt)

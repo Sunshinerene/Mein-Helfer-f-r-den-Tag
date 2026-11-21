@@ -133,7 +133,7 @@ data class DayNote(
     val text: String = "",
 )
 
-/** Eigene To-do-Liste je Person (z. B. "Medikamentenplan beim Hausarzt besprechen"). */
+/** Aufgabe je Person (z. B. "Blutuntersuchung beim Hausarzt"), optional mit Kontakt, Prioritaet, Frist und Fahrdienst. */
 @Entity
 data class Todo(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
@@ -141,6 +141,14 @@ data class Todo(
     val text: String,
     val done: Boolean = false,
     val createdMillis: Long = 0,
+    /** Zustaendiger Arzt bzw. Kontakt, null = keiner. */
+    val doctorId: Long? = null,
+    /** 0 = niedrig, 1 = normal, 2 = hoch. */
+    val priority: Int = 1,
+    /** Erledigen bis (Epoch-Tag), null = ohne Frist. */
+    val dueDay: Long? = null,
+    /** Findet ausserhalb der Wohnung statt (Fahrdienst anbieten). */
+    val outside: Boolean = false,
 )
 
 /** Dokument (Arztbericht, Befund, Bescheid ...). Die Datei liegt verschluesselt im App-Ordner, der erkannte Text in der Datenbank. */
