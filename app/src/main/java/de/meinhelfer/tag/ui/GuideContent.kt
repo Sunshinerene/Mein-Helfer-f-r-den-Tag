@@ -120,7 +120,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Unterlagen zur Aufgabe",
-                "Bei jeder Aufgabe gibt es „Unterlagen“, sobald Dokumente gespeichert sind. Dort hakst du an, welche Dokumente (Befund, Rezept, Bericht, Bescheid) zur Aufgabe gehören. Die Zahl in Klammern zeigt, wie viele verknüpft sind, mit „Ansehen“ öffnest du sie direkt. So findest du den Bericht, aus dem die Aufgabe stammt, immer wieder.",
+                "Bei jeder Aufgabe gibt es „Unterlagen“, sobald Dokumente gespeichert sind. Dort hakst du an, welche Dokumente (Befund, Rezept, Bericht, Bescheid) zur Aufgabe gehören. Die Zahl in Klammern zeigt, wie viele verknüpft sind, mit „Ansehen“ öffnest du sie direkt. So findest du den Bericht, aus dem die Aufgabe stammt, immer wieder. Unter „Passt vermutlich zur Aufgabe“ schlägt die App Dokumente vor, mit Grund (z. B. „gleicher Arzt“, „Stichwort im Titel: niere“, „aktuell“). Die Vorschläge werden nur auf deinem Handy aus Titel, Kategorie, Arzt, Stichwörtern im Text und Datum berechnet. Zu alte oder erst später entstandene Dokumente werden aussortiert, bei Medikamentenplan und Pflegebescheid zählt nur der neueste.",
             ),
             GuideItem(
                 "Bald nachbestellen",
@@ -347,6 +347,10 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             GuideItem(
                 "Sicher abgelegt",
                 "Die Dateien werden verschlüsselt im privaten App-Ordner gespeichert und nirgends hin gesendet. Beim Öffnen entsteht kurz eine Kopie, die beim nächsten App-Start gelöscht wird. Nicht lesbar sind passwortgeschützte PDFs und Dateitypen wie Word. Sie werden trotzdem gespeichert, nur ohne Text.",
+            ),
+            GuideItem(
+                "Schreiben und Vollmachten erstellen",
+                "Im Tab „Dokumente“ und bei den Kontakten gibt es „Schreiben / Vollmacht erstellen“. Du wählst eine Vorlage: Vollmacht für Anträge und Auskünfte, Entbindung von der Schweigepflicht, Antrag auf Pflegegrad, Höherstufung, Widerspruch gegen einen Bescheid, Verhinderungspflege, Pflegehilfsmittel, Kopie der Behandlungsunterlagen, Folgerezept oder ein freies Schreiben. Name, Anschrift, Versichertennummer und Medikamente setzt die App aus deinen Angaben ein, den Empfänger wählst du aus den Kontakten. Du kannst festlegen, ob die Person selbst schreibt oder du mit Vollmacht. Den Text prüfst und änderst du, Stellen mit „(bitte ergänzen)“ füllst du aus. Dann „PDF erstellen“: mit Vorschau, „Drucken“, „Speichern unter …“, „Teilen“, „In Dokumente ablegen“ und „Als Aufgabe merken“ (ausdrucken, unterschreiben, abschicken, einscannen). Die unterschriebene Fassung scannst du später wie jedes Dokument ein. Die Texte sind Entwürfe und keine Rechtsberatung. Vorsorgevollmacht und Patientenverfügung gibt es nicht als Vorlage, weil dafür besondere Formvorschriften gelten.",
             ),
         ),
     ),

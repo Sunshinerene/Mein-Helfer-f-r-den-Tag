@@ -49,34 +49,21 @@ internal object VisitPlanner {
 
     fun build(a: Appointment, doctor: Doctor?, person: Person?, medCount: Int, docs: List<Document>): VisitPlan {
         val text = (a.title + " " + doctor?.specialty.orEmpty() + " " + doctor?.name.orEmpty()).lowercase()
-        val categories: List<String>
+        val categories = DocMatcher.categoriesFor(text, general = true)
         val extra = mutableListOf<String>()
         when {
             has(text, "krankenhaus", "klinik", "aufnahme", "entlass", "op ") -> {
-                categories = listOf("Medikamentenplan", "Arztbericht", "Vollmacht / Verfügung", "Pflegegrad / Bescheid", "Überweisung")
                 extra += "Einweisung bzw. Überweisung, falls vorhanden"
                 extra += "Vollmacht und Patientenverfügung, falls vorhanden"
             }
             has(text, "pflegebegutachtung", "begutachtung", "pflegekasse", "medicproof", "md ", "pflegegrad") -> {
-                categories = listOf("Pflegegrad / Bescheid", "Arztbericht", "Medikamentenplan", "Vollmacht / Verfügung")
                 extra += "Notizen zum Alltag und zu Hilfebedarf (z. B. ein Pflegetagebuch)"
                 extra += "Frühere Bescheide der Pflegekasse"
             }
-            has(text, "physio", "ergo", "logo", "therapie") -> {
-                categories = listOf("Rezept / Verordnung", "Arztbericht")
-                extra += "Die Verordnung (Rezept) für die Behandlung"
-            }
-            has(text, "blut", "labor") -> {
-                categories = listOf("Befund / Labor", "Überweisung")
-                extra += "Vorher nachfragen, ob man nüchtern kommen soll"
-            }
-            has(text, "rezept", "apotheke") -> {
-                categories = listOf("Rezept / Verordnung", "Medikamentenplan")
-            }
-            else -> {
-                categories = listOf("Arztbericht", "Befund / Labor", "Medikamentenplan", "Rezept / Verordnung")
-                extra += "Überweisung, falls für einen Facharzt nötig"
-            }
+            has(text, "physio", "ergo", "logo", "therapie") -> extra += "Die Verordnung (Rezept) für die Behandlung"
+            has(text, "blut", "labor") -> extra += "Vorher nachfragen, ob man nüchtern kommen soll"
+            has(text, "rezept", "apotheke") -> {}
+            else -> extra += "Überweisung, falls für einen Facharzt nötig"
         }
 
         val checklist = buildList {
@@ -89,15 +76,11 @@ internal object VisitPlanner {
             add("Fragen und Beobachtungen vorher aufschreiben")
         }.distinct()
 
-        val reasons = mutableMapOf<Long, String>()
-        val sameDoctor = if (doctor == null) emptyList() else
-            docs.filter { it.doctorId == doctor.id }.sortedByDescending { docEpochDay(it) }.take(5)
-        sameDoctor.forEach { reasons[it.id] = "gleicher Arzt / gleiche Stelle" }
-        val byCategory = categories.flatMap { c ->
-            docs.filter { it.category == c }.sortedByDescending { docEpochDay(it) }.take(2)
-        }
-        byCategory.forEach { reasons.putIfAbsent(it.id, "Kategorie ${it.category}") }
-        val suggested = (sameDoctor + byCategory).distinctBy { it.id }
+        val refDay = Instant.ofEpochMilli(a.whenMillis).atZone(ZoneId.systemDefault()).toLocalDate().toEpochDay()
+        val keywords = DocMatcher.keywords(listOf(a.title, a.notes), doctor)
+        val matches = DocMatcher.match(docs, categories, doctor, keywords, refDay)
+        val reasons = matches.associate { it.doc.id to it.reasonText }
+        val suggested = matches.map { it.doc }
         val missing = categories.filter { c -> docs.none { it.category == c } }
         return VisitPlan(suggested, reasons, missing, checklist)
     }

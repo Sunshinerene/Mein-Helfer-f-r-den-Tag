@@ -79,7 +79,7 @@ private fun Document.dateText(): String? = docDate?.let { LocalDate.ofEpochDay(i
 
 /** Dokumente: Berichte, Befunde, Bescheide. Fotografieren, aus der Galerie oder als Datei laden. */
 @Composable
-fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?, vm: MainViewModel) {
+fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?, vm: MainViewModel, onOpenLetters: () -> Unit = {}) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var query by remember { mutableStateOf("") }
@@ -224,6 +224,9 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?
                     doctorFilter = null
                 },
             )
+        }
+        TextButton(onClick = onOpenLetters, modifier = Modifier.padding(horizontal = 8.dp)) {
+            Text("Schreiben / Vollmacht erstellen und ausdrucken")
         }
         ListScreen(
             items = ordered,

@@ -2,16 +2,17 @@
 
 ## Als Nächstes
 
+- [ ] Vorlagen erweitern (Kündigung Pflegedienst, Antrag Schwerbehindertenausweis, Widerruf), Unterschrift-Scan automatisch dem Entwurf zuordnen
 - [ ] Erkennung von Packungsfoto weiter verbessern (Wirkstoff, Packungsbeilage), Kamera-Scan für Barcodes live
+
+## Version 0.30.0 (fertig)
+
+- [x] Dokument-Vorschläge bei Terminen und Aufgaben genauer: Punktesystem (Arzt, Kategorie, Stichwörter in Titel und Text, Aktualität), Grund wird angezeigt, nur neuester Plan/Bescheid, zu alte oder spätere Dokumente aussortiert
+- [x] Schreiben und Vollmachten als PDF: Vollmacht, Schweigepflichtentbindung, Pflegegrad-Antrag, Höherstufung, Widerspruch, Verhinderungspflege, Pflegehilfsmittel, Unterlagen anfordern, Folgerezept, freies Schreiben; Vorschau, Drucken, Speichern, Teilen, in Dokumente ablegen, Aufgabe „unterschreiben und abschicken“
 
 ## Version 0.29.0 (fertig)
 
 - [x] Sicherung und Wiederherstellung: eine Datei mit Passwort verschlüsselt (Datenbank, Dokumente, Fotos, Einstellungen), speichern wohin man will, Wiederherstellung auch auf neuem Handy, mit Prüfung und Rückfall
-
-## Als Nächstes (Wunsch vom 21.11.)
-
-- [ ] Dokument-Vorschläge bei Terminen und Aufgaben genauer zuordnen
-- [ ] Schreiben und Vorlagen für den Postweg (Vollmacht, Schweigepflichtentbindung, Anträge, Widerspruch) als PDF zum Ausdrucken, später eingescannt wieder in die App
 
 ## Version 0.28.0 (fertig)
 

@@ -212,6 +212,7 @@ internal fun TasksCard(
     docsFor?.let { t ->
         TaskDocsDialog(
             task = t,
+            doctor = doctors.firstOrNull { it.id == t.doctorId },
             docs = documents,
             doctors = doctors,
             onSave = { ids ->
@@ -464,10 +465,11 @@ internal fun TaskSuggestDialog(
     )
 }
 
-/** Dokumente mit einer Aufgabe verknuepfen (z. B. Befund oder Rezept zur Aufgabe), jederzeit ansehbar. */
+/** Dokumente mit einer Aufgabe verknuepfen: verknuepfte oben, dann passende Vorschlaege mit Grund, dann alle anderen. */
 @Composable
 internal fun TaskDocsDialog(
     task: Todo,
+    doctor: Doctor?,
     docs: List<Document>,
     doctors: List<Doctor>,
     onSave: (List<Long>) -> Unit,
@@ -477,7 +479,26 @@ internal fun TaskDocsDialog(
         mutableStateListOf<Long>().apply { addAll(task.attachedIds().filter { id -> docs.any { it.id == id } }) }
     }
     var viewDoc by remember { mutableStateOf<Document?>(null) }
-    val sorted = docs.sortedWith(compareByDescending<Document> { it.id in selected }.thenByDescending { docEpochDay(it) })
+    var showAll by remember { mutableStateOf(false) }
+    val matches = remember(task.id, docs.size) {
+        val text = (task.text + " " + doctor?.specialty.orEmpty() + " " + doctor?.name.orEmpty()).lowercase()
+        val refDay = task.dueDay ?: LocalDate.now().toEpochDay()
+        DocMatcher.match(
+            docs = docs,
+            categories = DocMatcher.categoriesFor(text, general = false),
+            doctor = doctor,
+            keywords = DocMatcher.keywords(listOf(task.text), doctor),
+            refDay = refDay,
+        )
+    }
+    val linked = docs.filter { it.id in task.attachedIds() }.sortedByDescending { docEpochDay(it) }
+    val suggested = matches.filter { m -> linked.none { it.id == m.doc.id } }
+    val others = docs.filter { d -> linked.none { it.id == d.id } && suggested.none { it.doc.id == d.id } }
+        .sortedByDescending { docEpochDay(it) }
+
+    fun toggle(id: Long) {
+        if (id in selected) selected.remove(id) else selected.add(id)
+    }
 
     AlertDialog(
         onDismissRequest = onClose,
@@ -493,19 +514,31 @@ internal fun TaskDocsDialog(
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 } else {
-                    Text(
-                        "Hake an, was zu dieser Aufgabe gehört. Verknüpfte Dokumente stehen oben.",
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                    sorted.forEach { d ->
-                        DocRow(
-                            d,
-                            null,
-                            d.id in selected,
-                            { if (d.id in selected) selected.remove(d.id) else selected.add(d.id) },
-                            { viewDoc = d },
+                    if (linked.isNotEmpty()) {
+                        Text("Verknüpft", style = MaterialTheme.typography.labelLarge)
+                        linked.forEach { d -> DocRow(d, null, d.id in selected, { toggle(d.id) }, { viewDoc = d }) }
+                    }
+                    if (suggested.isNotEmpty()) {
+                        Text("Passt vermutlich zur Aufgabe", style = MaterialTheme.typography.labelLarge)
+                        suggested.forEach { m ->
+                            DocRow(m.doc, m.reasonText, m.doc.id in selected, { toggle(m.doc.id) }, { viewDoc = m.doc })
+                        }
+                    } else if (linked.isEmpty()) {
+                        Text(
+                            "Zu dieser Aufgabe passt auf den ersten Blick kein Dokument. Unten kannst du selbst auswählen.",
+                            style = MaterialTheme.typography.bodySmall,
                         )
                     }
+                    if (others.isNotEmpty()) {
+                        TextButton(onClick = { showAll = !showAll }) {
+                            Text(if (showAll) "Weitere Dokumente ausblenden" else "Weitere Dokumente anzeigen (${others.size})")
+                        }
+                        if (showAll) others.forEach { d -> DocRow(d, null, d.id in selected, { toggle(d.id) }, { viewDoc = d }) }
+                    }
+                    Text(
+                        "Die Vorschläge kommen aus Titel, Kategorie, Arzt, Stichwörtern im Text und Datum, nur auf deinem Handy berechnet. Bitte selbst prüfen, ob es passt.",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
                 }
             }
         },

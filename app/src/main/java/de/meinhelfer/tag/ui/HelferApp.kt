@@ -96,6 +96,7 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
     var showTour by rememberSaveable { mutableStateOf(false) }
     var showCaregiver by rememberSaveable { mutableStateOf(false) }
     var showNotruf by rememberSaveable { mutableStateOf(false) }
+    var showLetters by rememberSaveable { mutableStateOf(false) }
     val appContext = LocalContext.current
     var caregiver by remember { mutableStateOf(AppPrefs.caregiver(appContext)) }
     // Beim ersten Start einmal den Rundgang anbieten
@@ -137,12 +138,13 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
         }
     }
 
-    BackHandler(enabled = showSettings || showSummary || showGuide || showTour || showReorder || showWegweiser) {
+    BackHandler(enabled = showSettings || showSummary || showGuide || showTour || showReorder || showWegweiser || showLetters) {
         when {
             showTour -> showTour = false
             showGuide -> showGuide = false
             showSettings -> showSettings = false
             showReorder -> showReorder = false
+            showLetters -> showLetters = false
             showWegweiser -> showWegweiser = false
             else -> showSummary = false
         }
@@ -166,6 +168,15 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
             person = persons.firstOrNull { it.id == personId },
             onAddTodo = { vm.addTodo(it) },
             onBack = { showWegweiser = false },
+        )
+    } else if (showLetters) {
+        LetterScreen(
+            person = persons.firstOrNull { it.id == personId },
+            doctors = doctors,
+            meds = meds,
+            caregiver = caregiver,
+            vm = vm,
+            onBack = { showLetters = false },
         )
     } else if (showReorder) {
         ReorderScreen(
@@ -239,10 +250,11 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
                     )
                     Tab.Medikamente -> MedicationScreen(meds, doctors, vm, onReorder = { showReorder = true })
                     Tab.Termine -> AppointmentScreen(appointments, doctors, documents, meds, persons.firstOrNull { it.id == personId }, vm, caregiver) { showCaregiver = true }
-                    Tab.Dokumente -> DocumentScreen(documents, doctors, persons.firstOrNull { it.id == personId }, vm)
+                    Tab.Dokumente -> DocumentScreen(documents, doctors, persons.firstOrNull { it.id == personId }, vm, onOpenLetters = { showLetters = true })
                     Tab.Aerzte -> DoctorScreen(
                         doctors, vm, persons.firstOrNull { it.id == personId }, meds,
                         caregiver, onEditCaregiver = { showCaregiver = true },
+                        onOpenLetters = { showLetters = true },
                     )
                     Tab.Infos -> InfoScreen(
                         person = persons.firstOrNull { it.id == personId },
@@ -506,6 +518,7 @@ private fun DoctorScreen(
     meds: List<Medication>,
     caregiver: de.meinhelfer.tag.data.CaregiverProfile,
     onEditCaregiver: () -> Unit,
+    onOpenLetters: () -> Unit = {},
 ) {
     var mailTo by remember { mutableStateOf<Doctor?>(null) }
     var showAdd by remember { mutableStateOf(false) }
@@ -524,6 +537,10 @@ private fun DoctorScreen(
         onClick = { showNearby = true },
         modifier = Modifier.padding(horizontal = 8.dp),
     ) { Text("In der Nähe suchen: Apotheke, Pflegedienst, Sanitätshaus …") }
+    TextButton(
+        onClick = onOpenLetters,
+        modifier = Modifier.padding(horizontal = 8.dp),
+    ) { Text("Schreiben / Vollmacht erstellen") }
     if (categories.size > 1) {
         FlowRow(
             Modifier.fillMaxWidth().padding(horizontal = 16.dp),
