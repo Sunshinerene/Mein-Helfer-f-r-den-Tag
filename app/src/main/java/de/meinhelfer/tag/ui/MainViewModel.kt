@@ -11,6 +11,7 @@ import de.meinhelfer.tag.data.Doctor
 import de.meinhelfer.tag.data.Document
 import de.meinhelfer.tag.data.Medication
 import de.meinhelfer.tag.data.Person
+import de.meinhelfer.tag.data.Recurrence
 import de.meinhelfer.tag.data.Todo
 import de.meinhelfer.tag.media.DocumentStore
 import de.meinhelfer.tag.media.PhotoStore
@@ -86,9 +87,15 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         .map { it.firstOrNull() }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
+    /** Alle Aufgaben der Person, auch ausgeblendete erledigte (Verlauf, Suche, Auswertung). */
     @OptIn(ExperimentalCoroutinesApi::class)
-    val todos: StateFlow<List<Todo>> = _personId
+    val taskHistory: StateFlow<List<Todo>> = _personId
         .flatMapLatest { p -> db.todoDao().all(p) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    /** Aufgaben fuer die Listen: ohne ausgeblendete erledigte. */
+    val todos: StateFlow<List<Todo>> = taskHistory
+        .map { list -> list.filter { !it.archived } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // ---- Theme (System / Hell / Dunkel)
@@ -140,8 +147,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             }
             if (list.none { it.id == _personId.value }) selectPerson(list.first().id)
         }
-        // Sicherheitsnetz: Erinnerungen bei jedem App-Start neu planen.
-        viewModelScope.launch { ReminderScheduler.rescheduleAll(app) }
+        // Terminserien ohne Ende fortschreiben, dann Erinnerungen neu planen (Sicherheitsnetz bei jedem App-Start).
+        viewModelScope.launch {
+            extendSeries()
+            ReminderScheduler.rescheduleAll(app)
+        }
         if (AppPrefs.autoUpdateCheck(app)) checkForUpdate()
     }
 
@@ -185,19 +195,94 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     // ---------------------------------------------------------------- Termine
 
+    /** Neuer Termin; mit Wiederholung werden die Folgetermine gleich mit angelegt. */
     fun add(item: Appointment) = viewModelScope.launch {
-        db.appointmentDao().insert(item.copy(personId = _personId.value))
+        val base = item.copy(
+            id = 0,
+            personId = _personId.value,
+            seriesId = if (item.repeatDays != 0) System.currentTimeMillis() else 0L,
+        )
+        db.appointmentDao().insert(base)
+        Recurrence.following(base).forEach { db.appointmentDao().insert(it) }
         ReminderScheduler.rescheduleAll(getApplication())
     }
 
+    /** Einfaches Aendern (z. B. Unterlagen), ohne Serienlogik. */
     fun update(item: Appointment) = viewModelScope.launch {
         db.appointmentDao().update(item)
         ReminderScheduler.rescheduleAll(getApplication())
     }
 
-    fun delete(item: Appointment) = viewModelScope.launch {
-        db.appointmentDao().delete(item)
-        db.checkinDao().deleteFor(Checkin.APPT, item.id)
+    private fun epochDayOf(millis: Long): Long =
+        java.time.Instant.ofEpochMilli(millis).atZone(java.time.ZoneId.systemDefault()).toLocalDate().toEpochDay()
+
+    /** Fruehere Termine einer Serie enden vor [millis] (damit nichts neu angelegt wird). */
+    private suspend fun endSeriesBefore(series: List<Appointment>, millis: Long) {
+        val until = epochDayOf(millis) - 1
+        series.filter { it.whenMillis < millis }.forEach {
+            db.appointmentDao().update(it.copy(repeatUntil = minOf(it.repeatUntil ?: Long.MAX_VALUE, until)))
+        }
+    }
+
+    /**
+     * Termin speichern. Bei einer Serie: nur diesen Termin ([following] = false, Regel bleibt)
+     * oder diesen und alle folgenden (folgende werden nach der neuen Regel neu angelegt).
+     */
+    fun saveAppointment(original: Appointment, saved: Appointment, following: Boolean) = viewModelScope.launch {
+        val dao = db.appointmentDao()
+        when {
+            original.seriesId == 0L -> {
+                if (saved.repeatDays != 0) {
+                    val withSeries = saved.copy(seriesId = System.currentTimeMillis())
+                    dao.update(withSeries)
+                    Recurrence.following(withSeries).forEach { dao.insert(it) }
+                } else {
+                    dao.update(saved.copy(seriesId = 0L))
+                }
+            }
+            !following -> dao.update(
+                saved.copy(seriesId = original.seriesId, repeatDays = original.repeatDays, repeatUntil = original.repeatUntil),
+            )
+            else -> {
+                val series = dao.list().filter { it.seriesId == original.seriesId }
+                series.filter { it.whenMillis > original.whenMillis && it.id != original.id }.forEach {
+                    dao.delete(it)
+                    db.checkinDao().deleteFor(Checkin.APPT, it.id)
+                }
+                endSeriesBefore(series.filter { it.id != original.id }, original.whenMillis)
+                val updated = saved.copy(seriesId = original.seriesId)
+                dao.update(updated)
+                Recurrence.following(updated).forEach { dao.insert(it) }
+            }
+        }
+        ReminderScheduler.rescheduleAll(getApplication())
+    }
+
+    fun delete(item: Appointment) = deleteAppointment(item, following = false)
+
+    /** Loescht einen Termin bzw. bei Serien auf Wunsch auch alle folgenden. */
+    fun deleteAppointment(item: Appointment, following: Boolean) = viewModelScope.launch {
+        val dao = db.appointmentDao()
+        if (item.seriesId == 0L || !following) {
+            dao.delete(item)
+            db.checkinDao().deleteFor(Checkin.APPT, item.id)
+        } else {
+            val series = dao.list().filter { it.seriesId == item.seriesId }
+            series.filter { it.whenMillis >= item.whenMillis }.forEach {
+                dao.delete(it)
+                db.checkinDao().deleteFor(Checkin.APPT, it.id)
+            }
+            endSeriesBefore(series, item.whenMillis)
+        }
+    }
+
+    /** Serien ohne Ende fortschreiben, damit immer etwa ein halbes Jahr im Voraus angelegt ist. */
+    private suspend fun extendSeries() {
+        val dao = db.appointmentDao()
+        dao.list().filter { it.seriesId != 0L }.groupBy { it.seriesId }.values.forEach { list ->
+            val last = list.maxByOrNull { it.whenMillis } ?: return@forEach
+            Recurrence.following(last).forEach { dao.insert(it) }
+        }
     }
 
     // ---------------------------------------------------------------- Abhaken, Bemerkungen, Auswertung
@@ -284,12 +369,27 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun updateTodo(item: Todo) = viewModelScope.launch { db.todoDao().update(item) }
 
-    fun setTodoDone(item: Todo, done: Boolean) = viewModelScope.launch { db.todoDao().update(item.copy(done = done)) }
+    fun setTodoDone(item: Todo, done: Boolean) = viewModelScope.launch {
+        db.todoDao().update(item.copy(done = done, doneMillis = if (done) System.currentTimeMillis() else null, archived = false))
+    }
+
+    /** Ergebnis und Bewertung einer Aufgabe festhalten. */
+    fun saveTodoResult(item: Todo, result: String, rating: Int) = viewModelScope.launch {
+        db.todoDao().setResult(item.id, result.trim(), rating.coerceIn(0, 5))
+    }
+
+    /** Erledigte Aufgabe aus der Liste ausblenden (bleibt im Verlauf). */
+    fun archiveTodo(item: Todo) = viewModelScope.launch { db.todoDao().archive(item.id) }
+
+    /** Aufgabe aus dem Verlauf wieder als offen in die Liste holen. */
+    fun reopenTodo(item: Todo) = viewModelScope.launch {
+        db.todoDao().update(item.copy(done = false, doneMillis = null, archived = false))
+    }
 
     fun deleteTodo(item: Todo) = viewModelScope.launch { db.todoDao().delete(item) }
 
-    /** Entfernt alle erledigten Aufgaben der aktuellen Person. */
-    fun deleteDoneTodos() = viewModelScope.launch { db.todoDao().deleteDone(_personId.value) }
+    /** Blendet alle erledigten Aufgaben der aktuellen Person aus der Liste aus (sie bleiben im Verlauf). */
+    fun archiveDoneTodos() = viewModelScope.launch { db.todoDao().archiveDone(_personId.value) }
 
     // ---------------------------------------------------------------- Personen
 
@@ -361,6 +461,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             appointments = db.appointmentDao().listFor(person),
             checkins = db.checkinDao().rangeList(start.toEpochDay(), end.toEpochDay()),
             dayNotes = db.dayNoteDao().rangeList(person, start.toEpochDay(), end.toEpochDay()),
+            todos = db.todoDao().list().filter { it.personId == person },
         )
     }
 

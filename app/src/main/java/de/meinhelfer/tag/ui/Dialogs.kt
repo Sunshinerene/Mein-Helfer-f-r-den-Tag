@@ -459,6 +459,8 @@ fun AppointmentDialog(
     var reminder by remember { mutableStateOf(initial?.reminderMinutes ?: 60) }
     var place by remember { mutableStateOf(initial?.place ?: "") }
     var notes by remember { mutableStateOf(initial?.notes ?: "") }
+    var repeat by remember { mutableStateOf(initial?.repeatDays ?: 0) }
+    var repeatUntil by remember { mutableStateOf(initial?.repeatUntil?.let { LocalDate.ofEpochDay(it) }) }
 
     val selectedDoctor = doctors.firstOrNull { it.id == doctorId }
 
@@ -483,6 +485,9 @@ fun AppointmentDialog(
                         personId = initial?.personId ?: 1,
                         reminderMinutes = reminder,
                         docIds = initial?.docIds ?: "",
+                        seriesId = initial?.seriesId ?: 0L,
+                        repeatDays = repeat,
+                        repeatUntil = if (repeat == 0) null else repeatUntil?.toEpochDay(),
                     ),
                 )
             }
@@ -545,6 +550,30 @@ fun AppointmentDialog(
                     color = MaterialTheme.colorScheme.error,
                 )
             }
+        }
+
+        DropdownField(
+            label = "Wiederholen",
+            value = de.meinhelfer.tag.data.Recurrence.label(repeat),
+            options = de.meinhelfer.tag.data.Recurrence.OPTIONS.map { it.second },
+            editable = false,
+            onValueChange = { chosen ->
+                de.meinhelfer.tag.data.Recurrence.OPTIONS.firstOrNull { it.second == chosen }?.let { repeat = it.first }
+            },
+        )
+        if (repeat != 0) {
+            DatePickerField(
+                label = "Wiederholen bis (freiwillig)",
+                date = repeatUntil,
+                onChange = { repeatUntil = it },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            if (repeatUntil != null) TextButton(onClick = { repeatUntil = null }) { Text("Ohne Ende") }
+            Text(
+                if (repeatUntil == null) "Ohne Ende legt die App die Termine immer etwa ein halbes Jahr im Voraus an."
+                else "Die Termine werden bis zu diesem Tag angelegt.",
+                style = MaterialTheme.typography.bodySmall,
+            )
         }
 
         DropdownField(

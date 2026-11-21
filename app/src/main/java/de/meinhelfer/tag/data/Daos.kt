@@ -165,8 +165,15 @@ interface TodoDao {
     @Query("UPDATE Todo SET doctorId = NULL WHERE doctorId = :contactId")
     suspend fun clearDoctor(contactId: Long)
 
-    @Query("DELETE FROM Todo WHERE personId = :personId AND done = 1")
-    suspend fun deleteDone(personId: Long)
+    @Query("UPDATE Todo SET result = :result, rating = :rating WHERE id = :id")
+    suspend fun setResult(id: Long, result: String, rating: Int)
+
+    @Query("UPDATE Todo SET archived = 1 WHERE id = :id")
+    suspend fun archive(id: Long)
+
+    /** Erledigte aus der Liste ausblenden (bleiben im Verlauf). */
+    @Query("UPDATE Todo SET archived = 1 WHERE personId = :personId AND done = 1")
+    suspend fun archiveDone(personId: Long)
 }
 
 @Dao

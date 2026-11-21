@@ -50,9 +50,9 @@ internal object DocMatcher {
         fun has(vararg words: String) = words.any { text.contains(it) }
         return when {
             has("krankenhaus", "klinik", "aufnahme", "entlass", "einweisung") ->
-                listOf("Arztbericht", "Medikamentenplan", "Vollmacht / Verfügung", "Pflegegrad / Bescheid", "Überweisung")
+                listOf("Krankenhaus / Entlassbericht", "Arztbericht", "Medikamentenplan", "Vollmacht / Verfügung", "Pflegegrad / Bescheid", "Überweisung")
             has("pflegebegutachtung", "begutachtung", "pflegekasse", "medicproof", "md ", "pflegegrad", "höherstufung") ->
-                listOf("Pflegegrad / Bescheid", "Arztbericht", "Medikamentenplan", "Vollmacht / Verfügung")
+                listOf("Pflegegrad / Bescheid", "Arztbericht", "Krankenhaus / Entlassbericht", "Medikamentenplan", "Vollmacht / Verfügung")
             has("physio", "ergo", "logo", "krankengymnastik") -> listOf("Rezept / Verordnung", "Arztbericht")
             has("blut", "labor") -> listOf("Befund / Labor", "Überweisung")
             has("rezept", "apotheke") -> listOf("Rezept / Verordnung", "Medikamentenplan")
@@ -60,7 +60,7 @@ internal object DocMatcher {
             has("vollmacht", "verfügung", "betreuung") -> listOf("Vollmacht / Verfügung")
             has("rechnung", "quittung", "erstattung", "kosten") -> listOf("Rechnung / Quittung")
             has("antrag", "widerspruch", "bescheid") -> listOf("Pflegegrad / Bescheid", "Arztbericht")
-            general -> listOf("Arztbericht", "Befund / Labor", "Medikamentenplan", "Rezept / Verordnung")
+            general -> listOf("Arztbericht", "Krankenhaus / Entlassbericht", "Befund / Labor", "Medikamentenplan", "Rezept / Verordnung")
             else -> emptyList()
         }
     }

@@ -6,7 +6,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 val DOC_CATEGORIES = listOf(
-    "Arztbericht", "Befund / Labor", "Rezept / Verordnung", "Medikamentenplan", "Pflegegrad / Bescheid",
+    "Arztbericht", "Krankenhaus / Entlassbericht", "Befund / Labor", "Rezept / Verordnung", "Medikamentenplan", "Pflegegrad / Bescheid",
     "Vollmacht / Verfügung", "Rechnung / Quittung", "Überweisung", "Sonstiges",
 )
 
@@ -43,27 +43,87 @@ object DocumentAnalyzer {
     }
 
     /** Passende Standard-Kategorie aus dem Text, oder null. */
-    fun suggestKnownCategory(title: String, text: String): String? {
-        val joined = title + "\n" + text
-        return RULES.firstOrNull { (_, regex) -> regex.containsMatchIn(joined) }?.first
-    }
+    fun suggestKnownCategory(title: String, text: String): String? =
+        // Bei genug Text zaehlt nur der Text, damit ein falscher alter Titel nicht in die Irre fuehrt.
+        if (text.length >= 80) bestCategory(text) else bestCategory(title + "\n" + text)
 
     private val DATE = Regex("""\b(\d{1,2})\.\s?(\d{1,2})\.\s?(\d{4})\b""")
     private val SHOWN = DateTimeFormatter.ofPattern("dd.MM.yyyy", Locale.GERMANY)
 
-    private val RULES: List<Pair<String, Regex>> = listOf(
-        "Medikamentenplan" to Regex("Medikationsplan|Medikamentenplan|Bundeseinheitlicher Medikationsplan", RegexOption.IGNORE_CASE),
-        "Rezept / Verordnung" to Regex("Rezept|Verordnung|Arzneimittelverordnung|Muster 16", RegexOption.IGNORE_CASE),
-        "Pflegegrad / Bescheid" to Regex("Pflegegrad|Pflegekasse|Medizinischer Dienst|Begutachtung|Bescheid", RegexOption.IGNORE_CASE),
-        "Vollmacht / Verfügung" to Regex("Vollmacht|Patientenverfügung|Betreuungsverfügung", RegexOption.IGNORE_CASE),
-        "Rechnung / Quittung" to Regex("Rechnung|Quittung|Rechnungsbetrag|Zuzahlung", RegexOption.IGNORE_CASE),
-        "Überweisung" to Regex("Überweisung", RegexOption.IGNORE_CASE),
-        "Arztbericht" to Regex("Arztbrief|Arztbericht|Entlassbrief|Entlassungsbrief|Epikrise|Anamnese|Diagnose", RegexOption.IGNORE_CASE),
-        "Befund / Labor" to Regex("Befund|Labor|Blutbild|Röntgen|MRT|Sonographie|Ultraschall|EKG|Messwert", RegexOption.IGNORE_CASE),
+    /** Kategorie mit eindeutigen (stark) und typischen (schwach) Woertern. */
+    private class Rule(val category: String, strong: String, weak: String) {
+        val strong = Regex(strong, RegexOption.IGNORE_CASE)
+        val weak = Regex(weak, RegexOption.IGNORE_CASE)
+    }
+
+    private val RULES: List<Rule> = listOf(
+        Rule(
+            "Krankenhaus / Entlassbericht",
+            "Entlass(?:ungs)?(?:brief|bericht)|Entlassung|entlassen|stationär|Krankenhausaufenthalt|Klinikaufenthalt|Aufnahmedatum|Notaufnahme|Rettungsstelle|vorläufiger Arztbrief",
+            "Krankenhaus|Klinikum|Klinik\\b|Station\\b|Chefarzt|Oberarzt|Aufenthalt|aufgenommen",
+        ),
+        Rule(
+            "Medikamentenplan",
+            "Medikationsplan|Medikamentenplan|Bundeseinheitlicher Medikationsplan",
+            "Wirkstoff|morgens|mittags|abends|zur Nacht",
+        ),
+        Rule(
+            "Rezept / Verordnung",
+            "\\bRezept\\b|E-?Rezept|Kassenrezept|Muster 16|Arzneimittelverordnung|Heilmittelverordnung|Verordnung häuslicher Krankenpflege|Rezeptgebühr",
+            "Verordnung|verordnet|Gültig bis|\\bPZN\\b",
+        ),
+        Rule(
+            "Pflegegrad / Bescheid",
+            "Pflegegrad|Pflegekasse|Medizinischer Dienst|Begutachtung|Pflegegutachten|Medicproof",
+            "Bescheid|Widerspruchsfrist|Rechtsbehelf|Leistungsbescheid",
+        ),
+        Rule(
+            "Vollmacht / Verfügung",
+            "Vollmacht|Patientenverfügung|Betreuungsverfügung|Vorsorgevollmacht",
+            "Bevollmächtigte|bevollmächtige|Betreuer",
+        ),
+        Rule(
+            "Rechnung / Quittung",
+            "Rechnung|Quittung|Rechnungsbetrag|Rechnungsnummer",
+            "Zuzahlung|Betrag|\\bIBAN\\b|zahlbar",
+        ),
+        Rule(
+            "Überweisung",
+            "Überweisungsschein|Überweisung an|Überweisung zur|Muster 6\\b",
+            "Überweisung|Mitbehandlung|Auftragsleistung",
+        ),
+        Rule(
+            "Arztbericht",
+            "Arztbrief|Arztbericht|Epikrise",
+            "Anamnese|Diagnose|Therapie|Procedere|Kollegin|Kollege|Empfehlung",
+        ),
+        Rule(
+            "Befund / Labor",
+            "Laborbefund|Befundbericht|Blutbild|Laborwerte|Röntgen|\\bMRT\\b|\\bCT\\b|Sonographie|Ultraschall|\\bEKG\\b",
+            "Befund|Labor|Referenzbereich|Normwert|mg/dl|mmol",
+        ),
     )
 
+    /**
+     * Gewichtete Erkennung statt "erster Treffer gewinnt": Eindeutige Woerter zaehlen mehr, im Kopf (Anfang) noch mehr.
+     * So wird z. B. ein Entlassbericht, in dem auch "Verordnung" steht, trotzdem richtig eingeordnet.
+     */
+    private fun bestCategory(text: String): String? {
+        val head = text.take(500)
+        val scored = RULES.mapIndexed { index, r ->
+            val strongHead = r.strong.findAll(head).count().coerceAtMost(3)
+            val strongAll = r.strong.findAll(text).count().coerceAtMost(5)
+            val weakAll = r.weak.findAll(text).count().coerceAtMost(4)
+            Triple(r.category, strongHead * 4 + strongAll * 3 + weakAll, index)
+        }
+        val best = scored.filter { it.second >= 3 }
+            .sortedWith(compareByDescending<Triple<String, Int, Int>> { it.second }.thenBy { it.third })
+            .firstOrNull()
+        return best?.first
+    }
+
     fun analyze(text: String, doctors: List<Doctor>, today: LocalDate = LocalDate.now()): DocSuggestion {
-        val category = RULES.firstOrNull { (_, regex) -> regex.containsMatchIn(text) }?.first ?: "Sonstiges"
+        val category = bestCategory(text) ?: "Sonstiges"
         val date = findDate(text, today)
         val doctor = findDoctor(text, doctors)
         val title = buildString {

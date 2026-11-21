@@ -4,15 +4,15 @@ by Sunshine@R
 
 Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbezogenen Daten bleiben lokal auf dem Gerät.
 
-## Stand: v0.35.0
+## Stand: v0.36.0
 
 ### Funktionsübersicht
 
 **Heute (Tag · Woche · Monat)**
-- Tagesansicht: Kurz nachgefragt (offene Antworten), Wichtig und demnächst (dringend, überfällig, nächste 3 Tage), Bald nachbestellen, Heute einnehmen (Abhaken im Zeitfenster, früher/später/vergessen/bewusst nicht gegeben), Termine der nächsten 7 Tage (stattgefunden, abgesagt, verschoben mit Folge-Aufgabe), Aufgaben, Bemerkung zum Tag, Auswertung
+- Tagesansicht: Kurz nachgefragt (offene Antworten), Wichtig und demnächst (dringend, überfällig, Termine heute zum Abhaken, nächste 3 Tage, Termine bis 7 Tage), Bald nachbestellen, Heute einnehmen (Abhaken im Zeitfenster, früher/später/vergessen/bewusst nicht gegeben), Aufgaben, Bemerkung zum Tag, Auswertung
 - Jede Karte einklappbar mit Kurzinfo, Zustand wird gemerkt
-- Wochen- und Monatsübersicht: alles antippbar, bearbeiten, löschen, neu anlegen, Aufgaben abhaken
-- Auswertung für Tag, Woche, Monat (lokal berechnet, nur Anhaltspunkte)
+- Wochen- und Monatsübersicht: alles antippbar, bearbeiten, löschen, neu anlegen, Aufgaben und Einnahmen abhaken, Termin-Status eintragen, erledigte Aufgaben am Erledigungstag
+- Auswertung für Tag, Woche, Monat mit erledigten Aufgaben (lokal berechnet, nur Anhaltspunkte)
 
 **Medikamente**
 - Einnahmezeiten, Dosierung, Vorrat mit automatischem Verbrauch, Warnung bei knappem Vorrat
@@ -22,15 +22,17 @@ Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbe
 
 **Termine**
 - Kommende zuerst, vergangene eingeklappt; Beginn und Ende, Erinnerung pro Termin
+- Wiederkehrende Termine (wöchentlich, alle 2/3/4 Wochen, monatlich), Ändern/Löschen für einen oder alle folgenden
 - Kontakt, Route, Fahrdienst (feste Fahrdienste, Umkreissuche, vorbereitete Anfrage, Infos zur Krankenfahrt), Nachricht, Unterlagen mit Vorschlägen, In Kalender eintragen
 
 **Aufgaben**
-- Kontakt, Wichtigkeit, Frist, Fahrdienst, verknüpfte Unterlagen; erledigte eingeklappt und entfernbar
+- Kontakt, Wichtigkeit, Frist, Fahrdienst, verknüpfte Unterlagen; beim Erledigen Ergebnis und Sterne festhalten
+- Verlauf mit Suche (auch nach Jahren); frühere Aufgaben zum gleichen Thema werden automatisch angezeigt
 - Vorschläge aus Dokument-Zusammenfassungen, Wegweiser und Auswertung
 
 **Dokumente**
 - Fotografieren (mehrseitig) oder Datei laden, verschlüsselt gespeichert, Text wird gelesen
-- Kategorien, Suche, Filter (Jahr, Arzt), Zusammenfassung (selbst oder per KI)
+- Kategorien (u. a. Krankenhaus / Entlassbericht) mit gewichteter Erkennung, Suche, Filter (Jahr, Arzt), Zusammenfassung (selbst oder per KI)
 - Eingebauter Betrachter (PDF, Fotos, Text) mit Zoom, Drucken, Teilen, „Andere App“ (einstellbar)
 - Schreiben und Vollmachten als PDF (Vollmacht, Schweigepflicht, Pflegegrad, Höherstufung, Widerspruch, Verhinderungspflege, Pflegehilfsmittel, Unterlagen anfordern, Folgerezept, frei)
 

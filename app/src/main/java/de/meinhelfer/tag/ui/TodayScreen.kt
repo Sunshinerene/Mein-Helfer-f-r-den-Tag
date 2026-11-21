@@ -110,11 +110,6 @@ fun TodayScreen(
         .sortedBy { it.first }
     val intakesDone = intakes.count { (time, m) -> medChecks[time to m.id]?.done == true }
 
-    // Termine: heute und die naechsten 7 Tage
-    val upcoming = appointments.filter {
-        val d = Instant.ofEpochMilli(it.whenMillis).atZone(zone).toLocalDate()
-        !d.isBefore(today) && !d.isAfter(today.plusDays(7))
-    }.sortedBy { it.whenMillis }
 
     val context = LocalContext.current
     val window = AppPrefs.intakeWindow(context)
@@ -223,7 +218,38 @@ fun TodayScreen(
         }
         }
 
-        item { DayAheadCard(todos = todos, appointments = appointments, doctors = doctors, todayDay = todayDay, vm = vm) }
+        item {
+            DayAheadCard(todos = todos, appointments = appointments, doctors = doctors, todayDay = todayDay, vm = vm) { a ->
+                val day = Instant.ofEpochMilli(a.whenMillis).atZone(zone).toLocalDate().toEpochDay()
+                val check = apptChecks[a.id to day]
+                val done = check?.done == true
+                val doctor = doctors.firstOrNull { it.id == a.doctorId }
+                val sub = listOfNotNull(doctor?.let { doctorLabel(it) }, statusText(check)).joinToString(" · ").ifEmpty { null }
+                CheckRow(
+                    state = when {
+                        done -> ToggleableState.On
+                        check?.status == Checkin.CANCELLED || check?.status == Checkin.MOVED -> ToggleableState.Indeterminate
+                        else -> ToggleableState.Off
+                    },
+                    title = formatAppointmentTime(a.whenMillis, a.endMillis) + " – " + a.title,
+                    subtitle = sub,
+                    warn = false,
+                    note = check?.note.orEmpty(),
+                    onClick = {
+                        statusTarget = StatusTarget(
+                            Checkin.APPT, a.id, day, "", a.title,
+                            "Wie ist der Termin gelaufen?", APPT_OPTIONS, check, a,
+                        )
+                    },
+                    onNote = {
+                        noteTarget = NoteTarget(
+                            Checkin.APPT, a.id, day, "", "Bemerkung: ${a.title}",
+                            check?.note.orEmpty(), APPT_SUGGESTIONS,
+                        )
+                    },
+                )
+            }
+        }
 
         if (!caregiver.isSet) {
             item { CaregiverPromptCard(onEditCaregiver) }
@@ -337,58 +363,6 @@ fun TodayScreen(
                                 noteTarget = NoteTarget(
                                     Checkin.MED, m.id, todayDay, time, "Bemerkung: ${m.name}, $time Uhr",
                                     check?.note.orEmpty(), MED_SUGGESTIONS,
-                                )
-                            },
-                        )
-                    }
-                }
-            }
-        }
-        }
-
-        // ---- Termine
-        item {
-            Foldable(key = "termine", title = "Termine in den nächsten 7 Tagen", summary = when (upcoming.size) { 0 -> "Keine Termine"; 1 -> "1 Termin: " + upcoming[0].title; else -> "${upcoming.size} Termine, nächster: " + upcoming[0].title }) {
-            HCard(Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(start = 8.dp, end = 8.dp, top = 16.dp, bottom = 8.dp)) {
-                    Text(
-                        "Termine in den nächsten 7 Tagen",
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(start = 8.dp, bottom = 4.dp),
-                    )
-                    if (upcoming.isEmpty()) {
-                        Text(
-                            "Keine anstehenden Termine.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.padding(start = 8.dp, bottom = 8.dp),
-                        )
-                    }
-                    upcoming.forEach { a ->
-                        val day = Instant.ofEpochMilli(a.whenMillis).atZone(zone).toLocalDate().toEpochDay()
-                        val check = apptChecks[a.id to day]
-                        val done = check?.done == true
-                        val doctor = doctors.firstOrNull { it.id == a.doctorId }
-                        val sub = listOfNotNull(doctor?.let { doctorLabel(it) }, statusText(check)).joinToString(" · ").ifEmpty { null }
-                        CheckRow(
-                            state = when {
-                                done -> ToggleableState.On
-                                check?.status == Checkin.CANCELLED || check?.status == Checkin.MOVED -> ToggleableState.Indeterminate
-                                else -> ToggleableState.Off
-                            },
-                            title = formatAppointmentTime(a.whenMillis, a.endMillis) + " – " + a.title,
-                            subtitle = sub,
-                            warn = false,
-                            note = check?.note.orEmpty(),
-                            onClick = {
-                                statusTarget = StatusTarget(
-                                    Checkin.APPT, a.id, day, "", a.title,
-                                    "Wie ist der Termin gelaufen?", APPT_OPTIONS, check, a,
-                                )
-                            },
-                            onNote = {
-                                noteTarget = NoteTarget(
-                                    Checkin.APPT, a.id, day, "", "Bemerkung: ${a.title}",
-                                    check?.note.orEmpty(), APPT_SUGGESTIONS,
                                 )
                             },
                         )

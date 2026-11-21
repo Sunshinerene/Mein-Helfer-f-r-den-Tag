@@ -25,6 +25,8 @@ data class Summary(
     val advice: List<String>,
     val notes: List<String>,
     val perDay: List<String>,
+    /** Im Zeitraum erledigte Aufgaben mit Ergebnis. */
+    val tasksDone: List<String> = emptyList(),
 ) {
     fun toText(): String = buildString {
         appendLine("Auswertung: $title")
@@ -38,6 +40,7 @@ data class Summary(
         section("Gut gelaufen", good)
         section("Auffällig", notable)
         section("Empfehlungen", advice)
+        section("Erledigte Aufgaben", tasksDone)
         section("Bemerkungen", notes)
         section("Verlauf", perDay)
         appendLine()
@@ -102,6 +105,7 @@ object SummaryBuilder {
         appointments: List<Appointment>,
         checkins: List<Checkin>,
         dayNotes: List<DayNote>,
+        todos: List<de.meinhelfer.tag.data.Todo> = emptyList(),
     ): Summary {
         val zone = ZoneId.systemDefault()
         val nowMillis = System.currentTimeMillis()
@@ -270,6 +274,17 @@ object SummaryBuilder {
                 (if (apptMissed.isNotEmpty()) ", ${apptMissed.size} ohne Antwort" else "") +
                 ", $apptUpcoming anstehend"
         }
+        // ------------------------------------------------ Erledigte Aufgaben
+        val fromMillis = start.atStartOfDay(zone).toInstant().toEpochMilli()
+        val toMillis = end.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli()
+        val doneTasks = todos.filter { t -> t.done && t.doneMillis != null && t.doneMillis in fromMillis until toMillis }
+            .sortedBy { it.doneMillis }
+        val tasksDone = doneTasks.map { t ->
+            val at = java.time.Instant.ofEpochMilli(t.doneMillis ?: 0).atZone(zone).toLocalDate().format(DATE_ONLY)
+            val stars = if (t.rating in 1..5) " " + "★".repeat(t.rating) + "☆".repeat(5 - t.rating) else ""
+            "$at ${t.text}" + (if (t.result.isNotBlank()) " – Ergebnis: ${t.result}" else "") + stars
+        }
+        if (doneTasks.isNotEmpty()) overview += "Aufgaben erledigt: ${doneTasks.size}"
         if (notes.isNotEmpty()) overview += "Bemerkungen: ${notes.size}"
         if (overview.isEmpty()) overview += "Für diesen Zeitraum liegen noch keine Einträge vor."
 
@@ -357,7 +372,8 @@ object SummaryBuilder {
             good += "Vorrat reicht bei allen Medikamenten für mehr als 7 Tage."
         }
         if (notable.isEmpty() && (planned > 0 || apptsInRange.isNotEmpty())) good += "Keine Auffälligkeiten festgestellt."
-        if (planned == 0 && apptsInRange.isEmpty() && notes.isEmpty()) {
+        if (doneTasks.isNotEmpty()) good += "${doneTasks.size} Aufgabe(n) erledigt."
+        if (planned == 0 && apptsInRange.isEmpty() && notes.isEmpty() && doneTasks.isEmpty()) {
             advice += "Einnahmen und Termine auf der Heute-Seite abhaken und Bemerkungen ergänzen – dann wird die Auswertung aussagekräftiger."
         }
 
@@ -369,6 +385,7 @@ object SummaryBuilder {
             advice = advice.distinct(),
             notes = notes,
             perDay = if (period == Period.Day) emptyList() else perDay,
+            tasksDone = tasksDone,
         )
     }
 }

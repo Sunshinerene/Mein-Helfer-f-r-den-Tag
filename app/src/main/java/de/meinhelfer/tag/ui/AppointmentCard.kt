@@ -91,9 +91,10 @@ internal fun AppointmentCard(
     onCalendar: () -> Unit,
     onFahrdienst: () -> Unit,
     onMail: (() -> Unit)? = null,
+    /** z. B. "Jede Woche · noch 12 weitere Termine" bei Serien */
+    seriesInfo: String? = null,
 ) {
     val context = LocalContext.current
-    var confirmDelete by remember { mutableStateOf(false) }
 
     val zone = ZoneId.systemDefault()
     val start = Instant.ofEpochMilli(a.whenMillis).atZone(zone)
@@ -177,6 +178,9 @@ internal fun AppointmentCard(
                         style = MaterialTheme.typography.bodySmall,
                     )
                 }
+                seriesInfo?.let {
+                    Text("Wiederkehrend: $it", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                }
                 if (!past) {
                     reminderText(a.reminderMinutes)?.let {
                         Text(it, style = MaterialTheme.typography.bodySmall)
@@ -190,7 +194,7 @@ internal fun AppointmentCard(
                     )
                 }
             }
-            IconButton(onClick = { confirmDelete = true }) {
+            IconButton(onClick = onDelete) {
                 Icon(Icons.Default.Delete, contentDescription = "Löschen")
             }
         }
@@ -221,20 +225,5 @@ internal fun AppointmentCard(
             }
             if (!past) TextButton(onClick = onCalendar) { Text("In Kalender eintragen") }
         }
-    }
-
-    if (confirmDelete) {
-        AlertDialog(
-            onDismissRequest = { confirmDelete = false },
-            title = { Text("Löschen?") },
-            text = { Text("„${a.title}“ wirklich löschen?") },
-            confirmButton = {
-                TextButton(onClick = {
-                    confirmDelete = false
-                    onDelete()
-                }) { Text("Löschen") }
-            },
-            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Abbrechen") } },
-        )
     }
 }

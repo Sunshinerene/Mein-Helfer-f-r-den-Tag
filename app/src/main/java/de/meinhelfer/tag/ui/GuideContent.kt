@@ -96,7 +96,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
         items = listOf(
             GuideItem(
                 "Tag, Woche, Monat",
-                "Oben auf dem ersten Reiter („Heute“) wählst du zwischen Tag, Woche und Monat. „Tag“ ist immer der aktuelle Tag. „Woche“ zeigt sieben Tage untereinander mit Terminen, Aufgaben und Einnahmen. „Monat“ zeigt einen Kalender mit Punkten (blau = Termin, grün = Aufgabe, rot = dringend oder überfällig); ein Tipp auf einen Tag zeigt ihn darunter. Mit ‹ und › blätterst du, ein Tipp auf den Titel springt zu heute. Alles ist antippbar: Termin oder Aufgabe antippen zum Bearbeiten oder Löschen, Aufgaben direkt abhaken, mit „+ Termin“ und „+ Aufgabe“ legst du etwas für genau diesen Tag an.",
+                "Oben auf dem ersten Reiter („Heute“) wählst du zwischen Tag, Woche und Monat. „Tag“ ist immer der aktuelle Tag. „Woche“ zeigt sieben Tage untereinander mit Terminen, Aufgaben, erledigten Aufgaben und Einnahmen. Einnahmen klappst du je Tag mit „Einnahmen: … ▾“ auf und hakst sie dort ab (vergangene werden wie auf der Heute-Seite nachgefragt). Bei Terminen trägst du mit „Wie lief es?“ ein, ob sie stattgefunden haben. „Monat“ zeigt einen Kalender mit Punkten (blau = Termin, grün = Aufgabe, rot = dringend oder überfällig); ein Tipp auf einen Tag zeigt ihn darunter. Mit ‹ und › blätterst du, ein Tipp auf den Titel springt zu heute. Alles ist antippbar: Termin oder Aufgabe antippen zum Bearbeiten oder Löschen, Aufgaben direkt abhaken, mit „+ Termin“ und „+ Aufgabe“ legst du etwas für genau diesen Tag an.",
             ),
             GuideItem(
                 "Karten einklappen",
@@ -104,7 +104,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Wichtig und demnächst",
-                "Auf der Tagesansicht steht oben die Karte „Wichtig und demnächst“. Zuerst kommt, was dringend (hohe Priorität), überfällig oder heute fällig ist, rot hervorgehoben und nach Priorität sortiert. Darunter siehst du Termine und Aufgaben der nächsten 3 Tage. Dringende Aufgaben legst du mit Priorität „hoch“ an.",
+                "Auf der Tagesansicht steht oben die Karte „Wichtig und demnächst“. Zuerst kommt, was dringend (hohe Priorität), überfällig oder heute fällig ist, rot hervorgehoben und nach Priorität sortiert. Darunter: die Termine von heute (zum Abhaken), die nächsten 3 Tage mit Terminen und Aufgaben und weitere Termine bis 7 Tage. Dringende Aufgaben legst du mit Priorität „hoch“ an.",
             ),
             GuideItem(
                 "Einnahmen abhaken",
@@ -128,7 +128,11 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Aufgaben",
-                "Hier stehen Dinge, die erledigt werden sollen, z. B. „Blutuntersuchung beim Hausarzt“. Mit „+ Aufgabe hinzufügen“ legst du eine an: Text, Wichtigkeit (niedrig, normal, hoch), „Erledigt bis“ und optional den zuständigen Arzt bzw. die Stelle aus deinen Kontakten. Die Liste ist nach Wichtigkeit und Frist sortiert. Dringendes und Überfälliges steht in Rot. Mit dem Haken erledigst du eine Aufgabe, erledigte rutschen nach unten. Hast du einen Kontakt gewählt, kannst du direkt „Anrufen“ oder „E-Mail“ tippen. Ist „Außer Haus“ angehakt, gibt es zusätzlich „Fahrdienst“ (siehe Termine). „Bearbeiten“ ändert alles, „Löschen“ entfernt die Aufgabe.",
+                "Hier stehen Dinge, die erledigt werden sollen, z. B. „Blutuntersuchung beim Hausarzt“. Mit „+ Aufgabe hinzufügen“ legst du eine an: Text, Wichtigkeit (niedrig, normal, hoch), „Erledigt bis“ und optional den zuständigen Arzt bzw. die Stelle aus deinen Kontakten. Die Liste ist nach Wichtigkeit und Frist sortiert. Dringendes und Überfälliges steht in Rot. Mit dem Haken erledigst du eine Aufgabe. Die App fragt dann, was dabei herausgekommen ist (z. B. Firma, Telefonnummer, Erfahrung) und nach einer Bewertung mit Sternen, beides freiwillig. Erledigte sind eingeklappt („Erledigte anzeigen“). Hast du einen Kontakt gewählt, kannst du direkt „Anrufen“ oder „E-Mail“ tippen. Ist „Außer Haus“ angehakt, gibt es zusätzlich „Fahrdienst“ (siehe Termine). „Bearbeiten“ ändert alles, „Löschen“ entfernt eine versehentlich angelegte Aufgabe ganz.",
+            ),
+            GuideItem(
+                "Aufgaben-Verlauf und frühere Themen",
+                "Erledigte Aufgaben gehen nicht verloren. „In den Verlauf“ nimmt sie nur aus der Liste. Unter „Verlauf und Suche“ findest du alle Aufgaben mit Datum, Ergebnis und Sternen, auch nach Jahren, z. B. mit dem Suchwort „Rollstuhl“. Erledigte Aufgaben stehen außerdem in der Auswertung und in der Wochen- und Monatsansicht am Tag der Erledigung. Legst du eine neue Aufgabe an, prüft die App automatisch, ob es früher schon etwas zum gleichen Thema gab, und zeigt es mit Ergebnis an („Dazu gab es schon etwas“). Das passiert nur auf deinem Handy.",
             ),
             GuideItem(
                 "Unterlagen zur Aufgabe",
@@ -139,8 +143,8 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
                 "Die rote Karte oben erscheint, wenn der Vorrat eines Medikaments nur noch für etwa 7 Tage reicht.",
             ),
             GuideItem(
-                "Termine der nächsten 7 Tage",
-                "Hier siehst du, was in der kommenden Woche ansteht. Auch Termine lassen sich abhaken und mit einer Notiz versehen.",
+                "Termine abhaken",
+                "Die Termine von heute und der nächsten 7 Tage stehen in „Wichtig und demnächst“. Ein Tipp aufs Kästchen fragt, wie es lief. Mit „Notiz“ schreibst du etwas dazu.",
             ),
         ),
     ),
@@ -278,6 +282,10 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
                 "Im Bereich „Termine“ auf das Plus tippen. Den Titel kannst du aus der Liste wählen oder selbst eintippen, z. B. für etwas, das nicht in der Liste steht.",
             ),
             GuideItem(
+                "Wiederkehrende Termine",
+                "Bei „Wiederholen“ wählst du: jede Woche, alle 2, 3 oder 4 Wochen oder jeden Monat. Optional „Wiederholen bis“. Ohne Ende legt die App die Termine immer etwa ein halbes Jahr im Voraus an. Jeder Termin der Serie hat eine eigene Erinnerung, lässt sich einzeln abhaken und bekommt eigene Unterlagen. In der Liste „Termine“ steht nur der nächste Termin einer Serie, alle stehen in Woche und Monat. Beim Ändern oder Löschen fragt die App: „Nur diesen Termin“ oder „Diesen und alle folgenden“.",
+            ),
+            GuideItem(
                 "Von – bis",
                 "Datum über den Kalender wählen, dann „Von“ und optional „Bis“. Lässt du das Ende leer, ist der Termin ohne Endzeit.",
             ),
@@ -350,7 +358,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Kategorien und Vorschläge",
-                "Passt keine Standard-Kategorie, schlägt die App unter „Kategorie“ einen Namen vor (z. B. „Wohnung / Miete“ oder „Schwerbehinderung“). Antippen übernimmt ihn. Du kannst auch eine vorhandene Kategorie wählen oder selbst einen Namen eintippen. Eigene Kategorien stehen danach in der Auswahl und im Filter.",
+                "Die App erkennt die Kategorie aus dem Text, gewichtet nach eindeutigen Wörtern: z. B. „Entlassung“ oder „stationär“ für „Krankenhaus / Entlassbericht“, „Medikationsplan“ für den Medikamentenplan. Stimmt die Kategorie bei einem älteren Dokument nicht, öffne es mit „Bearbeiten“, dort steht oft ein besserer „Vorschlag“ zum Antippen. Passt keine Standard-Kategorie, schlägt die App unter „Kategorie“ einen Namen vor (z. B. „Wohnung / Miete“ oder „Schwerbehinderung“). Antippen übernimmt ihn. Du kannst auch eine vorhandene Kategorie wählen oder selbst einen Namen eintippen. Eigene Kategorien stehen danach in der Auswahl und im Filter.",
             ),
             GuideItem(
                 "Text nicht erkannt?",

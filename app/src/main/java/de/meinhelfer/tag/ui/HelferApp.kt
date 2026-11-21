@@ -463,9 +463,13 @@ private fun AppointmentScreen(
 
     // Kommende Termine (ab heute) zuerst, vergangene eingeklappt und neueste zuerst
     val todayStart = java.time.LocalDate.now().atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
-    val coming = items.filter { it.whenMillis >= todayStart }.sortedBy { it.whenMillis }
+    val comingAll = items.filter { it.whenMillis >= todayStart }.sortedBy { it.whenMillis }
+    // Bei Serien nur den naechsten Termin zeigen (alle stehen in Woche und Monat)
+    val seriesRest = comingAll.filter { it.seriesId != 0L }.groupBy { it.seriesId }
+    val coming = comingAll.filter { a -> a.seriesId == 0L || seriesRest[a.seriesId]?.firstOrNull()?.id == a.id }
     val earlier = items.filter { it.whenMillis < todayStart }.sortedByDescending { it.whenMillis }
     var showPast by rememberSaveable { mutableStateOf(false) }
+    var deleteFor by remember { mutableStateOf<Appointment?>(null) }
 
     val apptItem: @Composable (Appointment) -> Unit = { a ->
         val doctor = doctors.firstOrNull { it.id == a.doctorId }
@@ -475,11 +479,15 @@ private fun AppointmentScreen(
             doctor = doctor,
             attached = attached,
             onEdit = { editItem = a },
-            onDelete = { vm.delete(a) },
+            onDelete = { deleteFor = a },
             onDocs = { docsFor = a },
             onCalendar = { addToCalendar(context, a, doctor?.let { doctorLabel(it) }) },
             onFahrdienst = { rideFor = a },
             onMail = { mailFor = a },
+            seriesInfo = de.meinhelfer.tag.data.Recurrence.describe(a)?.let { rule ->
+                val more = (seriesRest[a.seriesId]?.size ?: 1) - 1
+                if (a.whenMillis >= todayStart && more > 0) "$rule · danach noch $more Termine (alle in Woche und Monat)" else rule
+            },
         )
     }
 
@@ -568,20 +576,12 @@ private fun AppointmentScreen(
     }
 
     if (showAdd || editItem != null) {
-        AppointmentDialog(
-            initial = editItem,
-            doctors = doctors,
-            onDismiss = {
-                showAdd = false
-                editItem = null
-            },
-            onSave = { saved ->
-                if (editItem == null) vm.add(saved) else vm.update(saved)
-                showAdd = false
-                editItem = null
-            },
-        )
+        AppointmentEditor(initial = editItem, doctors = doctors, vm = vm) {
+            showAdd = false
+            editItem = null
+        }
     }
+    deleteFor?.let { a -> AppointmentDeleteDialog(a, vm) { deleteFor = null } }
 }
 
 // ---------------------------------------------------------------- Ärzte

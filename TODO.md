@@ -5,6 +5,16 @@
 - [ ] Vorlagen erweitern (Kündigung Pflegedienst, Antrag Schwerbehindertenausweis, Widerruf), Unterschrift-Scan automatisch dem Entwurf zuordnen
 - [ ] Erkennung von Packungsfoto weiter verbessern (Wirkstoff, Packungsbeilage), Kamera-Scan für Barcodes live
 
+## Version 0.36.0 (fertig)
+
+- [x] Aufgaben: Erledigt-Datum, Ergebnis und Sterne-Bewertung; „Erledigte entfernen“ verschiebt nur in den Verlauf
+- [x] Aufgaben-Verlauf mit Suche; frühere Aufgaben zum gleichen Thema werden beim Anlegen und an offenen Aufgaben automatisch gezeigt
+- [x] Erledigte Aufgaben in Auswertung (Tag, Woche, Monat) und in Woche/Monat am Erledigungstag
+- [x] Kategorie „Krankenhaus / Entlassbericht“, gewichtete Kategorie-Erkennung
+- [x] Wiederkehrende Termine (wöchentlich, 2/3/4 Wochen, monatlich, mit oder ohne Ende), Ändern/Löschen „nur diesen“ oder „diesen und alle folgenden“
+- [x] Einnahmen und Termin-Status auch in Woche und Monat eintragen
+- [x] Heute: „Termine der nächsten 7 Tage“ in „Wichtig und demnächst“ aufgenommen
+
 ## Version 0.35.0 (fertig) – Gesamt-Check
 
 - [x] Logik: keine Einnahme-Erinnerung, wenn schon abgehakt; Benachrichtigung öffnet die richtige Person
@@ -35,7 +45,6 @@
 - [x] Heute-Reiter mit Umschalter Tag · Woche · Monat
 - [x] Tagesansicht: Karte „Wichtig und demnächst“ (dringend/überfällig zuerst, dann nächste 3 Tage)
 - [x] Wochen- und Monatsübersicht, antippbar und änderbar (Termine/Aufgaben bearbeiten, löschen, neu anlegen, Aufgaben abhaken)
-- [ ] Offen: Einnahmen in der Übersicht abhaken, Wiederholungstermine
 
 ## Version 0.30.0 (fertig)
 

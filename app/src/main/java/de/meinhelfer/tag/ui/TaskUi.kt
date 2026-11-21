@@ -31,6 +31,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -114,6 +115,10 @@ internal fun TasksCard(
     var confirmDelete by remember { mutableStateOf<Todo?>(null) }
     var showDone by remember { mutableStateOf(false) }
     var confirmClear by remember { mutableStateOf(false) }
+    var resultFor by remember { mutableStateOf<Todo?>(null) }
+    var pastFor by remember { mutableStateOf<Todo?>(null) }
+    var showHistory by remember { mutableStateOf(false) }
+    val history by vm.taskHistory.collectAsStateWithLifecycle()
     val today = LocalDate.now().toEpochDay()
     val openCount = todos.count { !it.done }
 
@@ -136,13 +141,19 @@ internal fun TasksCard(
                 val doctor = doctors.firstOrNull { it.id == t.doctorId }
                 val overdue = !t.done && t.dueDay != null && t.dueDay < today
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
-                    Checkbox(checked = t.done, onCheckedChange = { vm.setTodoDone(t, it) })
+                    Checkbox(checked = t.done, onCheckedChange = { checked ->
+                        vm.setTodoDone(t, checked)
+                        if (checked) resultFor = t
+                    })
                     Column(Modifier.weight(1f).padding(top = 4.dp, bottom = 2.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         Text(
                             t.text,
                             style = MaterialTheme.typography.bodyMedium,
                             textDecoration = if (t.done) TextDecoration.LineThrough else TextDecoration.None,
-                            modifier = Modifier.clickable { vm.setTodoDone(t, !t.done) }.padding(vertical = 4.dp),
+                            modifier = Modifier.clickable {
+                                vm.setTodoDone(t, !t.done)
+                                if (!t.done) resultFor = t
+                            }.padding(vertical = 4.dp),
                         )
                         if (!t.done) {
                             val meta = listOfNotNull(
@@ -162,6 +173,15 @@ internal fun TasksCard(
                                 )
                             }
                             doctor?.let { Text(doctorLabel(it), style = MaterialTheme.typography.bodySmall) }
+                            val past = TopicMatcher.similar(t.text, t.doctorId, history, excludeId = t.id)
+                            if (past.isNotEmpty()) {
+                                Text(
+                                    "Dazu gab es schon etwas (${past.size}) – antippen",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.clickable { pastFor = t }.padding(vertical = 2.dp),
+                                )
+                            }
                             FlowRow {
                                 val pad = PaddingValues(horizontal = 8.dp)
                                 if (doctor != null && doctor.phone.isNotBlank()) {
@@ -185,7 +205,19 @@ internal fun TasksCard(
                                 TextButton(contentPadding = pad, onClick = { confirmDelete = t }) { Text("Löschen") }
                             }
                         } else {
-                            TextButton(contentPadding = PaddingValues(horizontal = 0.dp), onClick = { confirmDelete = t }) { Text("Löschen") }
+                            val meta = listOfNotNull(
+                                doneDateText(t)?.let { "erledigt am $it" },
+                                stars(t.rating).takeIf { it.isNotEmpty() },
+                            ).joinToString(" · ")
+                            if (meta.isNotEmpty()) Text(meta, style = MaterialTheme.typography.labelMedium)
+                            if (t.result.isNotBlank()) Text("Ergebnis: ${t.result}", style = MaterialTheme.typography.bodySmall)
+                            FlowRow {
+                                val pad = PaddingValues(horizontal = 8.dp)
+                                TextButton(contentPadding = pad, onClick = { resultFor = t }) {
+                                    Text(if (t.result.isBlank()) "Ergebnis eintragen" else "Ergebnis ändern")
+                                }
+                                TextButton(contentPadding = pad, onClick = { vm.archiveTodo(t) }) { Text("In den Verlauf") }
+                            }
                         }
                     }
                 }
@@ -196,25 +228,54 @@ internal fun TasksCard(
                         Text(if (showDone) "Erledigte ausblenden" else "Erledigte anzeigen (${doneTasks.size})")
                     }
                     if (showDone) {
-                        TextButton(onClick = { confirmClear = true }) { Text("Erledigte entfernen") }
+                        TextButton(onClick = { confirmClear = true }) { Text("Alle in den Verlauf") }
                     }
                 }
             }
-            TextButton(onClick = { showAdd = true }) { Text("+ Aufgabe hinzufügen") }
+            FlowRow {
+                TextButton(onClick = { showAdd = true }) { Text("+ Aufgabe hinzufügen") }
+                TextButton(onClick = { showHistory = true }) { Text("Verlauf und Suche") }
+            }
         }
+    }
+
+    resultFor?.let { t ->
+        TaskResultDialog(
+            task = t,
+            onSave = { r, st ->
+                vm.saveTodoResult(t, r, st)
+                resultFor = null
+            },
+            onDismiss = { resultFor = null },
+        )
+    }
+    pastFor?.let { t ->
+        AlertDialog(
+            onDismissRequest = { pastFor = null },
+            title = { Text("Früher schon einmal") },
+            text = {
+                Column(Modifier.heightIn(max = 480.dp).verticalScroll(rememberScrollState())) {
+                    PastTopicsBox(TopicMatcher.similar(t.text, t.doctorId, history, excludeId = t.id, limit = 5), doctors)
+                }
+            },
+            confirmButton = { TextButton(onClick = { pastFor = null }) { Text("Schließen") } },
+        )
+    }
+    if (showHistory) {
+        TaskHistoryDialog(history = history, doctors = doctors, vm = vm, onClose = { showHistory = false })
     }
 
     if (confirmClear) {
         AlertDialog(
             onDismissRequest = { confirmClear = false },
-            title = { Text("Erledigte entfernen?") },
-            text = { Text("Alle erledigten Aufgaben dieser Person werden gelöscht. Offene Aufgaben bleiben.") },
+            title = { Text("Erledigte in den Verlauf?") },
+            text = { Text("Die erledigten Aufgaben verschwinden aus dieser Liste. Sie bleiben im Verlauf, in der Auswertung und in der Suche und werden bei ähnlichen Aufgaben wieder angezeigt.") },
             confirmButton = {
                 TextButton(onClick = {
-                    vm.deleteDoneTodos()
+                    vm.archiveDoneTodos()
                     confirmClear = false
                     showDone = false
-                }) { Text("Entfernen") }
+                }) { Text("Verschieben") }
             },
             dismissButton = { TextButton(onClick = { confirmClear = false }) { Text("Abbrechen") } },
         )
@@ -222,6 +283,7 @@ internal fun TasksCard(
 
     if (showAdd || editItem != null) {
         TaskDialog(
+            history = history,
             initial = editItem,
             doctors = doctors,
             onDismiss = {
@@ -304,6 +366,7 @@ internal fun TaskDialog(
     doctors: List<Doctor>,
     onDismiss: () -> Unit,
     onSave: (TaskDraft) -> Unit,
+    history: List<Todo> = emptyList(),
 ) {
     var text by remember { mutableStateOf(initial?.text ?: "") }
     var priority by remember { mutableStateOf(initial?.priority ?: 1) }
@@ -328,6 +391,11 @@ internal fun TaskDialog(
                     minLines = 2,
                     modifier = Modifier.fillMaxWidth(),
                 )
+                // Automatisch pruefen, ob es frueher schon etwas zum Thema gab
+                val past = remember(text, doctorId, history) {
+                    TopicMatcher.similar(text, doctorId, history, excludeId = initial?.id ?: 0L)
+                }
+                PastTopicsBox(past, doctors)
                 Text("Wichtigkeit", style = MaterialTheme.typography.labelLarge)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf(0, 1, 2).forEach { p ->

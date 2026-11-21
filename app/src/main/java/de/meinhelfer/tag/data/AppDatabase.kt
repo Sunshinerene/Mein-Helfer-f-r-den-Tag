@@ -9,7 +9,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [Medication::class, Appointment::class, Doctor::class, Checkin::class, DayNote::class, Person::class, Todo::class, Document::class],
-    version = 17,
+    version = 18,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -197,6 +197,18 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_17_18 = object : Migration(17, 18) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE Todo ADD COLUMN doneMillis INTEGER")
+                db.execSQL("ALTER TABLE Todo ADD COLUMN result TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE Todo ADD COLUMN rating INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE Todo ADD COLUMN archived INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE Appointment ADD COLUMN seriesId INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE Appointment ADD COLUMN repeatDays INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE Appointment ADD COLUMN repeatUntil INTEGER")
+            }
+        }
+
         fun get(context: Context): AppDatabase =
             instance ?: synchronized(this) {
                 instance ?: open(context.applicationContext).also { instance = it }
@@ -204,7 +216,7 @@ abstract class AppDatabase : RoomDatabase() {
 
         private fun build(context: Context, encrypted: Boolean): AppDatabase {
             val builder = Room.databaseBuilder(context, AppDatabase::class.java, DbCrypto.DB_NAME)
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18)
             if (encrypted) {
                 builder.openHelperFactory(
                     net.zetetic.database.sqlcipher.SupportOpenHelperFactory(DbCrypto.passphrase(context).toByteArray(Charsets.UTF_8)),

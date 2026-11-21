@@ -114,6 +114,8 @@ object ReminderScheduler {
         if (appointment.reminderMinutes < 0) return
         val trigger = appointment.whenMillis - appointment.reminderMinutes * 60_000L
         if (trigger <= System.currentTimeMillis()) return
+        // Nur die naechsten 60 Tage planen (Serien); spaetere werden beim naechsten App-Start oder Neustart geplant.
+        if (trigger > System.currentTimeMillis() + 60L * 24 * 60 * 60 * 1000) return
         setAlarm(
             context = context,
             requestCode = "appt:${appointment.id}".hashCode(),

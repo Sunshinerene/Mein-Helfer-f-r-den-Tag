@@ -116,6 +116,7 @@ fun SummaryScreen(vm: MainViewModel, onBack: () -> Unit) {
                     },
                     added = addedTodos,
                 )?.let { item { it() } }
+                block("Erledigte Aufgaben", s.tasksDone, null)?.let { item { it() } }
                 block("Bemerkungen", s.notes, null)?.let { item { it() } }
                 block("Verlauf", s.perDay, null)?.let { item { it() } }
                 item {

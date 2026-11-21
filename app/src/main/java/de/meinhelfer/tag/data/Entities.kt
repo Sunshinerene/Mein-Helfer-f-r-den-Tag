@@ -95,6 +95,12 @@ data class Appointment(
     val reminderMinutes: Int = 60,
     /** Angehaengte Dokumente (IDs, kommagetrennt), optional. */
     val docIds: String = "",
+    /** Gehoert zu einer Terminserie (0 = Einzeltermin). Alle Termine einer Serie haben dieselbe Nummer. */
+    val seriesId: Long = 0,
+    /** Wiederholung: 0 = keine, 7/14/21/28 = alle so viele Tage, -1 = jeden Monat am gleichen Tag. */
+    val repeatDays: Int = 0,
+    /** Wiederholen bis einschliesslich (Epoch-Tag), null = ohne Ende. */
+    val repeatUntil: Long? = null,
 )
 
 @Entity
@@ -182,6 +188,14 @@ data class Todo(
     val outside: Boolean = false,
     /** Verknuepfte Dokumente (IDs, kommagetrennt). */
     val docIds: String = "",
+    /** Wann erledigt (Millisekunden), null = offen bzw. unbekannt (vor Version 0.36). */
+    val doneMillis: Long? = null,
+    /** Was dabei herausgekommen ist (z. B. Firma, Telefonnummer, Erfahrung), optional. */
+    val result: String = "",
+    /** Bewertung 1 bis 5 Sterne, 0 = keine. */
+    val rating: Int = 0,
+    /** Aus der Liste ausgeblendet, bleibt aber im Verlauf, in der Auswertung und in der Suche. */
+    val archived: Boolean = false,
 )
 
 /** Dokument (Arztbericht, Befund, Bescheid ...). Die Datei liegt verschluesselt im App-Ordner, der erkannte Text in der Datenbank. */
