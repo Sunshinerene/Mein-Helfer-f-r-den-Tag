@@ -273,6 +273,10 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
                 "Einstellungen → KI-Assistent. Dienst wählen: kostenlos nutzbar sind Google Gemini, Groq, Mistral und OpenRouter (Modelle mit „:free“). Kostenpflichtig sind OpenAI, Anthropic (Claude) und DeepSeek. Dann den eigenen API-Schlüssel eintragen („Schlüssel besorgen“ öffnet die Seite des Anbieters) und „Testen“ antippen. Ein Abo bei ChatGPT oder Claude reicht nicht, es braucht den API-Schlüssel.",
             ),
             GuideItem(
+                "Einschätzung zu einem Medikament",
+                "Im Medikament („Infos & Beschreibung“) kannst du per KI eine grobe Einschätzung holen: Skalen von 1 bis 5 für Wirkstärke, Nebenwirkungen und mögliche Wechselwirkungen mit den übrigen Medikamenten der Person, dazu ein paar Stichpunkte zum Nachfragen. Das ist nur eine Orientierung, kein Urteil. Dosis, Alter und Vorerkrankungen sind nicht berücksichtigt. Gesendet werden die Medikamentennamen (ohne Namen der Person) erst nach deiner Bestätigung. Das Ergebnis bleibt auf dem Handy gespeichert. Ändert sich der Plan, lass es neu einschätzen.",
+            ),
+            GuideItem(
                 "Modell auswählen",
                 "Nach dem Eintragen des Schlüssels kannst du „Verfügbare Modelle laden“ antippen. Dann zeigt das Feld „Modell“ eine Auswahlliste dieses Dienstes. Der Modellname ist sonst vorausgefüllt und lässt sich auch selbst eintippen.",
             ),

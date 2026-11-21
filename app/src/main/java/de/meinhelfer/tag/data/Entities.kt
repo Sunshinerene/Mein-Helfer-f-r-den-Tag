@@ -55,6 +55,8 @@ data class Medication(
     val description: String = "",
     /** Quelle der Beschreibung, z. B. Link zur Wikipedia-Seite. */
     val descriptionSource: String = "",
+    /** KI-Einschaetzung (Staerke, Nebenwirkungen, Wechselwirkungen) als JSON, nur Anhaltspunkt, optional. */
+    val rating: String = "",
 ) {
     fun timeList(): List<String> =
         times.split(",").map { it.trim() }.filter { it.isNotEmpty() }

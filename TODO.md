@@ -4,6 +4,11 @@
 
 - [ ] Erkennung von Packungsfoto weiter verbessern (Wirkstoff, Packungsbeilage), Kamera-Scan für Barcodes live
 
+## Version 0.18.0 (fertig)
+
+- [x] Medikamentenliste schlanker: nur Foto, Name, Einnahme, Vorrat; alles Weitere über „Infos & Beschreibung“
+- [x] KI-Einschätzung je Medikament mit Skalen (Wirkstärke, Nebenwirkungen, Wechselwirkungen) als Anhaltspunkt
+
 ## Version 0.17.0 (fertig)
 
 - [x] KI-Dienst direkt bei den KI-Hinweisen wechseln (Schnellwahl bei mehreren eingerichteten Diensten)

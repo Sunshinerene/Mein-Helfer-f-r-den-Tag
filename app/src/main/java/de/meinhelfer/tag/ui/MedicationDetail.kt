@@ -39,6 +39,7 @@ import kotlinx.coroutines.launch
 fun MedicationDetailDialog(
     med: Medication,
     doctors: List<Doctor>,
+    otherNames: List<String>,
     onEdit: () -> Unit,
     onClose: () -> Unit,
     onUpdate: (Medication) -> Unit,
@@ -113,6 +114,9 @@ fun MedicationDetailDialog(
                     }
                 }
                 Text(MedicationInfo.DISCLAIMER, style = MaterialTheme.typography.bodySmall)
+
+                Text("Einschätzung (Anhaltspunkt)", style = MaterialTheme.typography.labelLarge)
+                MedRatingBox(med = med, otherNames = otherNames, onUpdate = onUpdate)
 
                 Text("KI-Hinweis (Anhaltspunkt)", style = MaterialTheme.typography.labelLarge)
                 AiHintBox(

@@ -287,11 +287,6 @@ private fun MedicationScreen(items: List<Medication>, doctors: List<Doctor>, vm:
                 lines = listOfNotNull(
                     m.times.takeIf { it.isNotBlank() }?.let { "Einnahme: ${it.replace(",", ", ")} Uhr" },
                     "Vorrat: ${m.currentStock()} Stück" + (days?.let { " (ca. $it Tage)" } ?: ""),
-                    m.pzn.takeIf { it.isNotBlank() }?.let { "PZN: $it" },
-                    doctors.firstOrNull { it.id == m.doctorId }?.let { "Arzt: ${it.name}" },
-                    doctors.firstOrNull { it.id == m.pharmacyId }?.let { "Apotheke: ${it.name}" },
-                    m.notes.takeIf { it.isNotBlank() },
-                    m.description.takeIf { it.isNotBlank() }?.let { d -> if (d.length > 110) d.take(110).trimEnd() + " …" else d },
                 ),
                 onClick = { detailId = m.id },
                 onDelete = { vm.delete(m) },
@@ -309,6 +304,7 @@ private fun MedicationScreen(items: List<Medication>, doctors: List<Doctor>, vm:
         MedicationDetailDialog(
             med = med,
             doctors = doctors,
+            otherNames = items.filter { it.id != med.id }.map { it.name },
             onEdit = {
                 editItem = med
                 detailId = null

@@ -215,6 +215,8 @@ fun MedicationDialog(
                     pzn = pzn.trim(),
                     description = description.trim(),
                     descriptionSource = if (description.isBlank()) "" else descriptionSource,
+                    // Einschaetzung bleibt nur, solange der Name gleich ist
+                    rating = if (initial != null && initial.name == name.trim()) initial.rating else "",
                     // Leer = Anzahl der Einnahmen pro Tag
                     dailyUse = dailyUse.trim().toIntOrNull() ?: maxOf(1, times.size),
                     notes = notes.trim(),
