@@ -34,6 +34,15 @@ object AppPrefs {
         prefs(context).edit().putBoolean(KEY_TOUR_SEEN, true).apply()
     }
 
+    private const val KEY_STYLE = "layout"
+
+    /** Schluessel des gewaehlten Designs, siehe DesignStyle. */
+    fun designStyle(context: Context): String = prefs(context).getString(KEY_STYLE, "schlicht") ?: "schlicht"
+
+    fun setDesignStyle(context: Context, key: String) {
+        prefs(context).edit().putString(KEY_STYLE, key).apply()
+    }
+
     private fun prefs(context: Context) = context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
 
     fun autoUpdateCheck(context: Context): Boolean = prefs(context).getBoolean(KEY_AUTO_UPDATE, true)

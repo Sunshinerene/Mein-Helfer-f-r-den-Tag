@@ -69,7 +69,7 @@ fun GuideScreen(onBack: () -> Unit, onStartTour: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item {
-                Card(
+                HCard(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
                 ) {
@@ -97,7 +97,7 @@ fun GuideScreen(onBack: () -> Unit, onStartTour: () -> Unit) {
             }
             items(shown, key = { it.first.id }) { (section, entries) ->
                 val expanded = q.isNotEmpty() || open == section.id
-                Card(
+                HCard(
                     onClick = { open = if (open == section.id) null else section.id },
                     modifier = Modifier.fillMaxWidth(),
                 ) {

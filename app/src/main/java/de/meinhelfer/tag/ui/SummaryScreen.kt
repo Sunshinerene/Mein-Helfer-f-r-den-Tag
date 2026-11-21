@@ -151,12 +151,12 @@ private fun block(
 ): (@Composable () -> Unit)? {
     if (lines.isEmpty()) return null
     return {
-        Card(
+        HCard(
             modifier = Modifier.fillMaxWidth(),
             colors = if (warning == true) {
                 CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
             } else {
-                CardDefaults.cardColors()
+                null
             },
         ) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {

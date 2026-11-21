@@ -3,7 +3,14 @@ package de.meinhelfer.tag.ui
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.RadioButton
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -112,7 +119,7 @@ private fun UpdateCard(
     onDownload: () -> Unit,
     context: Context,
 ) {
-    Card(Modifier.fillMaxWidth()) {
+    HCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("App-Updates", style = MaterialTheme.typography.titleMedium)
             Text("Installierte Version: ${UpdateChecker.installedVersion(context)}")
@@ -178,7 +185,7 @@ private fun UpdateCard(
 
 @Composable
 private fun FeedbackCard(context: Context) {
-    Card(Modifier.fillMaxWidth()) {
+    HCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Feedback", style = MaterialTheme.typography.titleMedium)
             Text("Fehler gefunden oder eine Idee? Dein Feedback hilft, die App gemeinsam weiterzuentwickeln.")
@@ -195,7 +202,7 @@ private fun FeedbackCard(context: Context) {
 
 @Composable
 private fun RoadmapCard(roadmap: List<RoadmapLine>?, error: Boolean) {
-    Card(Modifier.fillMaxWidth()) {
+    HCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text("Vorschau: das ist geplant", style = MaterialTheme.typography.titleMedium)
             when {
@@ -229,12 +236,47 @@ private fun openUrl(context: Context, url: String) {
 @Composable
 private fun ThemeCard(vm: MainViewModel) {
     val mode by vm.themeMode.collectAsStateWithLifecycle()
-    Card(Modifier.fillMaxWidth()) {
+    val style by vm.designStyle.collectAsStateWithLifecycle()
+    val darkNow = when (mode) {
+        "dark" -> true
+        "light" -> false
+        else -> isSystemInDarkTheme()
+    }
+    HCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Darstellung", style = MaterialTheme.typography.titleMedium)
+            Text("Hell oder dunkel", style = MaterialTheme.typography.labelLarge)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf("system" to "Wie das Handy", "light" to "Hell", "dark" to "Dunkel").forEach { (key, label) ->
                     FilterChip(selected = mode == key, onClick = { vm.setThemeMode(key) }, label = { Text(label) })
+                }
+            }
+            Text("Design", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 8.dp))
+            DesignStyle.entries.forEach { option ->
+                val colors = designSpec(option, darkNow).preview
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .clickable { vm.setDesignStyle(option) }
+                        .padding(vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    RadioButton(selected = style == option, onClick = null)
+                    Row(horizontalArrangement = Arrangement.spacedBy((-6).dp)) {
+                        colors.forEach { color ->
+                            Box(
+                                Modifier
+                                    .size(24.dp)
+                                    .background(color, CircleShape)
+                                    .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape),
+                            )
+                        }
+                    }
+                    Column {
+                        Text(option.label, style = MaterialTheme.typography.bodyLarge)
+                        Text(option.description, style = MaterialTheme.typography.bodySmall)
+                    }
                 }
             }
         }
@@ -243,7 +285,7 @@ private fun ThemeCard(vm: MainViewModel) {
 
 @Composable
 private fun HelpCard(onOpenGuide: () -> Unit, onStartTour: () -> Unit) {
-    Card(Modifier.fillMaxWidth()) {
+    HCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Hilfe", style = MaterialTheme.typography.titleMedium)
             Text("Die Anleitung erklärt alles nach Themen, der Rundgang zeigt es Schritt für Schritt mit Bildern.", style = MaterialTheme.typography.bodyMedium)
@@ -257,7 +299,7 @@ private fun HelpCard(onOpenGuide: () -> Unit, onStartTour: () -> Unit) {
 
 @Composable
 private fun AboutCard(context: Context) {
-    Card(Modifier.fillMaxWidth()) {
+    HCard(Modifier.fillMaxWidth()) {
         Row(
             Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,

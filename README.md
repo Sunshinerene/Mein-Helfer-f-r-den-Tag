@@ -4,7 +4,7 @@ by Sunshine@R
 
 Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbezogenen Daten bleiben lokal auf dem Gerät.
 
-## Stand: v0.8.0
+## Stand: v0.9.0
 
 - Heute-Übersicht: Einnahmen und Termine abhaken, Bemerkungen, Tagesnotiz, Nachbestell-Warnung
 - Auswertung für Tag, Woche, Monat (lokal berechnet, nur Anhaltspunkte, kein ärztlicher Rat)
@@ -13,7 +13,8 @@ Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbe
 - Kontakte: Ärzte, Pflegedienst, Apotheke, Kassen usw. mit Direktkontakt (Anruf, E-Mail), Filter nach Art
 - Mehrere betreute Personen, Wechsel oben auf jeder Seite
 - Erinnerungen: Medikamenten-Einnahme (mit Knopf "Eingenommen") und Termine (Zeit pro Termin einstellbar)
-- To-do-Liste, Termin in den Kalender übernehmen, Dunkelmodus
+- To-do-Liste, Termin in den Kalender übernehmen
+- Darstellung: hell, dunkel oder wie das Handy, dazu sechs Designs (Schlicht, Minimalistisch, Glas, Liquid, Sonnig, Natur)
 - Anleitung zum Lesen (mit Suche) und geführter Rundgang in der App
 - Alle Einträge bearbeitbar, Kalender- und Zeitauswahl, Vorauswahlen, Arzt-Auswahl beim Termin
 - Medikament per Foto der Packung anlegen: Text wird lokal auf dem Handy erkannt, das Foto bleibt im privaten App-Ordner

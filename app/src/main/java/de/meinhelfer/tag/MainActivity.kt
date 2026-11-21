@@ -18,6 +18,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import de.meinhelfer.tag.ui.HelferTheme
 import de.meinhelfer.tag.ui.MainViewModel
 import androidx.core.content.ContextCompat
 import de.meinhelfer.tag.ui.HelferApp
@@ -44,6 +45,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val vm: MainViewModel = viewModel()
             val mode by vm.themeMode.collectAsStateWithLifecycle()
+            val style by vm.designStyle.collectAsStateWithLifecycle()
             val dark = when (mode) {
                 "dark" -> true
                 "light" -> false
@@ -57,7 +59,7 @@ class MainActivity : ComponentActivity() {
                 )
                 onDispose { }
             }
-            MaterialTheme(colorScheme = if (dark) darkColorScheme() else lightColorScheme()) {
+            HelferTheme(style = style, dark = dark) {
                 HelferApp(vm)
             }
         }

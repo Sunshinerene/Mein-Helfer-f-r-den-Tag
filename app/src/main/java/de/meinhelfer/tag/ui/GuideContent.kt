@@ -242,7 +242,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Darstellung",
-                "In den Einstellungen wählst du, ob die App wie das Handy, immer hell oder immer dunkel aussehen soll.",
+                "In den Einstellungen wählst du, ob die App wie das Handy, immer hell oder immer dunkel aussehen soll. Außerdem gibt es sechs Designs zur Auswahl: Schlicht, Minimalistisch, Glas, Liquid, Sonnig und Natur. Die Vorschau zeigt die Farben, ausprobieren kannst du jedes mit einem Tipp.",
             ),
             GuideItem(
                 "Feedback",

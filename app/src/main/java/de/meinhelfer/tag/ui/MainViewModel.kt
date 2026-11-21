@@ -82,6 +82,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         AppPrefs.setThemeMode(getApplication(), mode)
     }
 
+    private val _designStyle = MutableStateFlow(DesignStyle.fromKey(AppPrefs.designStyle(app)))
+    val designStyle: StateFlow<DesignStyle> = _designStyle
+
+    fun setDesignStyle(style: DesignStyle) {
+        _designStyle.value = style
+        AppPrefs.setDesignStyle(getApplication(), style.key)
+    }
+
     private val _updateState = MutableStateFlow<UpdateState>(UpdateState.Idle)
     val updateState: StateFlow<UpdateState> = _updateState
 

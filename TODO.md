@@ -6,6 +6,11 @@
 - [ ] KI-Hinweise in der Auswertung, z. B. "Medikamentenplan vom Hausarzt prüfen lassen": immer mit Bestätigung und Datenschutz-Filter, nur Anhaltspunkt, ersetzt nie Arzt oder Apotheke; Hinweis lässt sich auf eine eigene To-do-Liste setzen ("beim Hausarzt ansprechen")
 - [ ] Erkennung von Packungsfoto verbessern (Wirkstoff, Packungsbeilage, Barcode/PZN)
 
+## Version 0.9.0 (fertig)
+
+- [x] Sechs Designs zur Auswahl (Einstellungen → Darstellung): Schlicht, Minimalistisch, Glas, Liquid, Sonnig, Natur, jeweils hell und dunkel, mit Farbvorschau
+- [x] Hell, Dunkel oder wie das Handy bleibt getrennt einstellbar
+
 ## Version 0.8.0 (fertig)
 
 - [x] Anleitung zum Lesen: nach Themen aufklappbar, mit Suchfeld (Info-Symbol oben oder Einstellungen)
@@ -58,6 +63,7 @@
 ## Weitere Ideen
 
 - [ ] Anleitung und Rundgang bei neuen Funktionen mitpflegen (Datei GuideContent.kt und TourScreen.kt)
+- [ ] Designs verfeinern (Schriftarten, Übergänge, weitere Varianten, Hochkontrast für bessere Lesbarkeit)
 - [ ] Dokumente scannen und verschlüsselt ablegen
 - [ ] Datenbank verschlüsseln, App-Sperre
 - [ ] KI-Vorschläge aus Dokumenten (immer mit Bestätigung), Datenschutz-Filter vor jeder Übertragung

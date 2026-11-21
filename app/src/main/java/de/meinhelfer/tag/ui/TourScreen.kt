@@ -204,7 +204,7 @@ private fun MockCard(content: @Composable () -> Unit) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
-        color = MaterialTheme.colorScheme.surface,
+        color = MaterialTheme.colorScheme.surfaceContainerLowest,
     ) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) { content() }
     }
@@ -214,7 +214,7 @@ private fun MockCard(content: @Composable () -> Unit) {
 private fun MockButton(text: String, filled: Boolean = false) {
     Surface(
         shape = RoundedCornerShape(20.dp),
-        color = if (filled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
+        color = if (filled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerLowest,
         border = if (filled) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
     ) {
         Text(
@@ -231,7 +231,7 @@ private fun MockField(label: String, value: String, modifier: Modifier = Modifie
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(6.dp),
-        color = MaterialTheme.colorScheme.surface,
+        color = MaterialTheme.colorScheme.surfaceContainerLowest,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
     ) {
         Column(Modifier.padding(horizontal = 12.dp, vertical = 6.dp)) {
@@ -245,7 +245,7 @@ private fun MockField(label: String, value: String, modifier: Modifier = Modifie
 private fun MockChip(text: String, selected: Boolean = false) {
     Surface(
         shape = RoundedCornerShape(8.dp),
-        color = if (selected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface,
+        color = if (selected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerLowest,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
         Text(text, Modifier.padding(horizontal = 10.dp, vertical = 6.dp), style = MaterialTheme.typography.labelMedium)

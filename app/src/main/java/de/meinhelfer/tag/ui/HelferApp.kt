@@ -446,7 +446,7 @@ private fun ItemCard(
 ) {
     var confirmDelete by remember { mutableStateOf(false) }
 
-    Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+    HCard(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
         Row(
             Modifier.padding(start = 16.dp, top = 12.dp, bottom = 8.dp, end = 4.dp),
             verticalAlignment = Alignment.Top,

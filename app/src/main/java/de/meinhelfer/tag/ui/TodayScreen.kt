@@ -119,7 +119,7 @@ fun TodayScreen(
     ) {
         if (newVersion != null) {
             item {
-                Card(
+                HCard(
                     onClick = onOpenSettings,
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
@@ -134,7 +134,7 @@ fun TodayScreen(
 
         if (lowStock.isNotEmpty()) {
             item {
-                Card(
+                HCard(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
                 ) {
@@ -154,7 +154,7 @@ fun TodayScreen(
 
         // ---- Einnahmen
         item {
-            Card(Modifier.fillMaxWidth()) {
+            HCard(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(start = 8.dp, end = 8.dp, top = 16.dp, bottom = 8.dp)) {
                     Text(
                         "Heute einnehmen" + if (intakes.isNotEmpty()) " ($intakesDone von ${intakes.size})" else "",
@@ -194,7 +194,7 @@ fun TodayScreen(
 
         // ---- Termine
         item {
-            Card(Modifier.fillMaxWidth()) {
+            HCard(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(start = 8.dp, end = 8.dp, top = 16.dp, bottom = 8.dp)) {
                     Text(
                         "Termine in den nächsten 7 Tagen",
@@ -234,7 +234,7 @@ fun TodayScreen(
 
         // ---- To-dos
         item {
-            Card(Modifier.fillMaxWidth()) {
+            HCard(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(start = 8.dp, end = 8.dp, top = 16.dp, bottom = 8.dp)) {
                     Text(
                         "To-dos" + if (todos.any { !it.done }) " (${todos.count { !it.done }} offen)" else "",
@@ -269,7 +269,7 @@ fun TodayScreen(
 
         // ---- Bemerkung zum Tag
         item {
-            Card(Modifier.fillMaxWidth()) {
+            HCard(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Bemerkung zum Tag", style = MaterialTheme.typography.titleMedium)
                     Text(
@@ -286,7 +286,7 @@ fun TodayScreen(
 
         // ---- Auswertung
         item {
-            Card(
+            HCard(
                 onClick = onOpenSummary,
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
