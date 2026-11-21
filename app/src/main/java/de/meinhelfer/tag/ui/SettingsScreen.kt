@@ -68,6 +68,7 @@ fun SettingsScreen(
     onStartTour: () -> Unit,
     caregiver: de.meinhelfer.tag.data.CaregiverProfile = de.meinhelfer.tag.data.CaregiverProfile(),
     onEditCaregiver: () -> Unit = {},
+    onConsentRevoked: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val updateState by vm.updateState.collectAsStateWithLifecycle()
@@ -123,6 +124,7 @@ fun SettingsScreen(
             item { SectionTitle("Daten und Sicherheit") }
             item { SecurityCard() }
             item { BackupCard() }
+            item { ConsentCard(onRevoked = onConsentRevoked) }
             item { SectionTitle("Hilfen aus dem Internet (freiwillig)") }
             item { MedInfoCard() }
             item { AiCard() }

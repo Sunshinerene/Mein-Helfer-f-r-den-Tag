@@ -4,7 +4,7 @@ by Sunshine@R
 
 Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbezogenen Daten bleiben lokal auf dem Gerät.
 
-## Stand: v0.37.0
+## Stand: v0.38.0
 
 ### Funktionsübersicht
 
@@ -55,6 +55,9 @@ Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbe
 
 **Erinnerungen**
 - Einnahme mit Knopf „Eingenommen“ (keine Erinnerung, wenn schon abgehakt), Nachfrage bei offener Einnahme, Termin-Erinnerung; Antippen öffnet die richtige Person
+
+**Nutzungsbedingungen**
+- Pflicht-Zustimmung vor der Nutzung (kein Ersatz für Arzt, Apotheke, Krankenhaus; Einschätzungen nur Anhaltspunkte; Haftung), Nachweis verschlüsselt auf dem Handy, teilbar, widerrufbar, frühere Nachweise werden nach Frist automatisch gelöscht
 
 **Einstellungen**
 - Darstellung (hell/dunkel, 6 Designs, eigene Farben, Schriftgröße), Heute-Seite, Einnahme-Zeitfenster, Dokument-Betrachter

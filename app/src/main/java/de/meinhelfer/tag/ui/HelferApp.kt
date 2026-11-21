@@ -86,6 +86,24 @@ private enum class Tab(val label: String, val icon: ImageVector) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HelferApp(vm: MainViewModel = viewModel()) {
+    // Ohne Zustimmung zu den Nutzungsbedingungen keine Nutzung
+    val gateContext = LocalContext.current
+    var consentOk by remember { mutableStateOf<Boolean?>(null) }
+    LaunchedEffect(Unit) { consentOk = de.meinhelfer.tag.legal.ConsentStore.current(gateContext) != null }
+    when (consentOk) {
+        null -> {
+            Box(Modifier.fillMaxSize())
+            return
+        }
+        false -> {
+            ConsentScreen(
+                onAccepted = { consentOk = true },
+                onDecline = { (gateContext as? android.app.Activity)?.finish() },
+            )
+            return
+        }
+        else -> Unit
+    }
     var tabIndex by rememberSaveable { mutableIntStateOf(0) }
     var periodIndex by rememberSaveable { mutableIntStateOf(0) }
     var showSettings by rememberSaveable { mutableStateOf(false) }
@@ -160,6 +178,10 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
     } else if (showSettings) {
         SettingsScreen(
             vm = vm,
+            onConsentRevoked = {
+                showSettings = false
+                consentOk = false
+            },
             onBack = { showSettings = false },
             onOpenGuide = { showGuide = true },
             onStartTour = { showTour = true },

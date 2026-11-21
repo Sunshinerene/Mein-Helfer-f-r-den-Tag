@@ -512,6 +512,10 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
         summary = "Wo deine Daten liegen",
         items = listOf(
             GuideItem(
+                "Nutzungsbedingungen und Zustimmung",
+                "Vor der ersten Nutzung (und nach jeder neuen Fassung) bestätigst du einzeln: Die App ersetzt keinen Arzt, keine Apotheke, keine Pflegefachkraft und kein Krankenhaus, im Notfall gilt 112. Einschätzungen und Empfehlungen sind nur Anhaltspunkte, die du prüfst bzw. prüfen lässt. Und du akzeptierst die Nutzungsbedingungen mit der Haftungsregelung. Dazu gibst du Name und Rolle an. Ohne Zustimmung lässt sich die App nicht nutzen. Die Zustimmung wird als Nachweis verschlüsselt auf dem Handy gespeichert (Name, Rolle, Zeitpunkt, App-Version, Gerät, Fassung und Prüfsumme des Textes, verkettet gegen nachträgliche Änderungen). Unter Einstellungen → „Nutzungsbedingungen und Zustimmung“ kannst du den Text lesen, den Nachweis teilen und die Zustimmung widerrufen. Frühere Nachweise werden bis zum Ende des dritten Kalenderjahres aufbewahrt und dann automatisch gelöscht.",
+            ),
+            GuideItem(
                 "Nur auf deinem Handy",
                 "Alle Angaben zu Personen, Medikamenten, Terminen, Dokumenten und Notizen werden nur lokal im privaten App-Ordner gespeichert, und zwar verschlüsselt. Es gibt kein Benutzerkonto und keine Cloud.",
             ),
