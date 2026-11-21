@@ -77,6 +77,7 @@ internal fun searchDocuments(items: List<Document>, doctors: List<Doctor>, query
             if (d.category.contains(t, ignoreCase = true)) s += 3
             if (doctorText.contains(t, ignoreCase = true)) s += 3
             if (d.notes.contains(t, ignoreCase = true)) s += 2
+            if (d.summary.contains(t, ignoreCase = true)) s += 2
             if (dateText.contains(t)) s += 2
             val i = d.text.indexOf(t, ignoreCase = true)
             if (i >= 0) {

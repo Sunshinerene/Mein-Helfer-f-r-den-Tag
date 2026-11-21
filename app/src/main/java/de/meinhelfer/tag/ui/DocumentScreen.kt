@@ -2,6 +2,7 @@ package de.meinhelfer.tag.ui
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -42,6 +43,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import de.meinhelfer.tag.data.Doctor
 import de.meinhelfer.tag.data.Document
+import de.meinhelfer.tag.data.Person
 import de.meinhelfer.tag.media.DOC_CATEGORIES
 import de.meinhelfer.tag.media.DocKind
 import de.meinhelfer.tag.media.DocumentAnalyzer
@@ -77,7 +79,7 @@ private fun Document.dateText(): String? = docDate?.let { LocalDate.ofEpochDay(i
 
 /** Dokumente: Berichte, Befunde, Bescheide. Fotografieren, aus der Galerie oder als Datei laden. */
 @Composable
-fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, vm: MainViewModel) {
+fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?, vm: MainViewModel) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var query by remember { mutableStateOf("") }
@@ -90,6 +92,8 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, vm: MainViewMod
     var working by remember { mutableStateOf(false) }
     var pendingCamera by remember { mutableStateOf<File?>(null) }
     var addingPage by remember { mutableStateOf(false) }
+    var appendMode by remember { mutableStateOf(false) }
+    var showAddPage by remember { mutableStateOf(false) }
     var detailId by remember { mutableStateOf<Long?>(null) }
     var editItem by remember { mutableStateOf<Document?>(null) }
 
@@ -115,7 +119,7 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, vm: MainViewMod
             val current = draft!!
             scope.launch {
                 working = true
-                draft = runCatching { DocumentReader.appendImage(current, file) }.getOrDefault(current)
+                draft = runCatching { DocumentReader.appendFiles(context, current, listOf(file)) }.getOrDefault(current)
                 working = false
             }
         } else {
@@ -123,22 +127,34 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, vm: MainViewMod
         }
         addingPage = false
     }
-    val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia(10)) { uris ->
-        if (uris.isNotEmpty()) {
-            startDraft {
-                val files = uris.map { uri ->
-                    val file = DocumentStore.newTempFile(context, "jpg")
-                    withContext(Dispatchers.IO) {
-                        context.contentResolver.openInputStream(uri)?.use { input -> file.outputStream().use { input.copyTo(it) } }
-                    }
-                    file
+    // Mehrere Fotos oder Dateien (PDF, Bild) werden zu einem Dokument zusammengefuegt, ggf. an den offenen Entwurf.
+    fun handleUris(uris: List<Uri>) {
+        val base = if (appendMode) draft else null
+        appendMode = false
+        scope.launch {
+            working = true
+            val result = runCatching { DocumentReader.fromUris(context, uris, base) }.getOrNull()
+            working = false
+            val pending = result?.first
+            if (pending == null) {
+                Toast.makeText(context, "Das Dokument konnte nicht gelesen werden.", Toast.LENGTH_SHORT).show()
+            } else {
+                draft = pending
+                if (result.second > 0) {
+                    Toast.makeText(
+                        context,
+                        "${result.second} Datei(en) übersprungen. Zusammengefügt werden nur Fotos und PDFs, andere Dateien bitte einzeln laden.",
+                        Toast.LENGTH_LONG,
+                    ).show()
                 }
-                DocumentReader.fromImages(files)
             }
         }
     }
-    val fileLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null) startDraft { DocumentReader.fromUri(context, uri) }
+    val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia(20)) { uris ->
+        if (uris.isNotEmpty()) handleUris(uris) else appendMode = false
+    }
+    val fileLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+        if (uris.isNotEmpty()) handleUris(uris) else appendMode = false
     }
 
     fun launchCamera(forNewPage: Boolean) {
@@ -225,7 +241,8 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, vm: MainViewMod
                 lines = listOfNotNull(
                     listOfNotNull(d.category, d.dateText()).joinToString(" · "),
                     doctors.firstOrNull { it.id == d.doctorId }?.let { doctorLabel(it) },
-                    hit.snippet ?: d.text.replace(Regex("\\s+"), " ").trim().takeIf { it.isNotEmpty() }?.let { if (it.length > 100) it.take(100).trimEnd() + " …" else it },
+                    d.summary.takeIf { it.isNotBlank() }?.let { sm -> sm.replace(Regex("\\s+"), " ").let { if (it.length > 140) it.take(140).trimEnd() + " …" else it } },
+                    hit.snippet ?: d.text.takeIf { d.summary.isBlank() }?.replace(Regex("\\s+"), " ")?.trim()?.takeIf { it.isNotEmpty() }?.let { if (it.length > 100) it.take(100).trimEnd() + " …" else it },
                 ),
                 onClick = { detailId = d.id },
                 onDelete = { vm.delete(d) },
@@ -246,19 +263,48 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, vm: MainViewMod
                     OutlinedButton(onClick = {
                         showSource = false
                         galleryLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-                    }, modifier = Modifier.fillMaxWidth()) { Text("Foto(s) aus der Galerie") }
+                    }, modifier = Modifier.fillMaxWidth()) { Text("Foto(s) aus der Galerie (mehrere = ein Dokument)") }
                     OutlinedButton(onClick = {
                         showSource = false
                         fileLauncher.launch(arrayOf("application/pdf", "image/*", "text/plain", "*/*"))
-                    }, modifier = Modifier.fillMaxWidth()) { Text("Datei laden (PDF, Bild, Text …)") }
+                    }, modifier = Modifier.fillMaxWidth()) { Text("Datei(en) laden (PDF, Bild, Word, Text …)") }
                     Text(
-                        "Der Text wird direkt auf dem Handy gelesen. Das Dokument wird verschlüsselt in der App gespeichert und nirgends hin gesendet.",
+                        "Besteht ein Dokument aus mehreren Seiten, wähle sie zusammen aus oder füge nach dem Einlesen weitere Seiten hinzu. Sie bleiben ein Dokument. " +
+                            "Der Text wird direkt auf dem Handy gelesen. Das Dokument wird verschlüsselt in der App gespeichert und nirgends hin gesendet.",
                         style = MaterialTheme.typography.bodySmall,
                     )
                 }
             },
             confirmButton = {},
             dismissButton = { TextButton(onClick = { showSource = false }) { Text("Abbrechen") } },
+        )
+    }
+
+    if (showAddPage) {
+        AlertDialog(
+            onDismissRequest = { showAddPage = false },
+            title = { Text("Weitere Seiten hinzufügen") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(onClick = {
+                        showAddPage = false
+                        launchCamera(true)
+                    }, modifier = Modifier.fillMaxWidth()) { Text("Seite fotografieren") }
+                    OutlinedButton(onClick = {
+                        showAddPage = false
+                        appendMode = true
+                        galleryLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                    }, modifier = Modifier.fillMaxWidth()) { Text("Foto(s) aus der Galerie") }
+                    OutlinedButton(onClick = {
+                        showAddPage = false
+                        appendMode = true
+                        fileLauncher.launch(arrayOf("application/pdf", "image/*"))
+                    }, modifier = Modifier.fillMaxWidth()) { Text("PDF oder Bild(er) laden") }
+                    Text("Die Seiten werden hinten angefügt, der Text wird mitgelesen.", style = MaterialTheme.typography.bodySmall)
+                }
+            },
+            confirmButton = {},
+            dismissButton = { TextButton(onClick = { showAddPage = false }) { Text("Abbrechen") } },
         )
     }
 
@@ -282,7 +328,15 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, vm: MainViewMod
                 initial = null,
                 doctors = doctors,
                 categoryOptions = categoryOptions,
-                onAddPage = { launchCamera(true) },
+                person = person,
+                onAddPage = { showAddPage = true },
+                onRemoveLast = {
+                    scope.launch {
+                        working = true
+                        draft = runCatching { DocumentReader.removeLastPage(pending) }.getOrDefault(pending)
+                        working = false
+                    }
+                },
                 onDismiss = {
                     DocumentStore.discard(pending)
                     draft = null
@@ -318,7 +372,9 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, vm: MainViewMod
             initial = doc,
             doctors = doctors,
             categoryOptions = categoryOptions,
+            person = person,
             onAddPage = {},
+            onRemoveLast = {},
             onDismiss = { editItem = null },
             onSave = {
                 vm.update(it)
@@ -335,7 +391,9 @@ private fun DocumentDialog(
     initial: Document?,
     doctors: List<Doctor>,
     categoryOptions: List<String>,
+    person: Person?,
     onAddPage: () -> Unit,
+    onRemoveLast: () -> Unit,
     onDismiss: () -> Unit,
     onSave: (Document) -> Unit,
 ) {
@@ -347,6 +405,7 @@ private fun DocumentDialog(
     }
     var doctorId by remember { mutableStateOf(initial?.doctorId ?: suggestion?.doctorId) }
     var notes by remember { mutableStateOf(initial?.notes ?: "") }
+    var summary by remember { mutableStateOf(initial?.summary ?: "") }
     var text by remember { mutableStateOf(initial?.text ?: pending?.text ?: "") }
 
     val context = LocalContext.current
@@ -371,8 +430,13 @@ private fun DocumentDialog(
                         "Datei: ${pending.displayName}$pages",
                         style = MaterialTheme.typography.bodySmall,
                     )
-                    if (pending.kind == DocKind.IMAGES) {
-                        OutlinedButton(onClick = onAddPage) { Text("Weitere Seite fotografieren") }
+                    if (pending.kind == DocKind.IMAGES || pending.kind == DocKind.PDF) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedButton(onClick = onAddPage) { Text("Weitere Seiten hinzufügen") }
+                            if (pending.kind == DocKind.IMAGES && pending.files.size > 1) {
+                                TextButton(onClick = onRemoveLast) { Text("Letzte Seite entfernen") }
+                            }
+                        }
                     }
                     if (pending.text.isBlank()) {
                         Text(
@@ -433,6 +497,7 @@ private fun DocumentDialog(
                     label = { Text("Notizen") },
                     modifier = Modifier.fillMaxWidth(),
                 )
+                DocSummaryBox(text = text, person = person, summary = summary, onSummary = { summary = it })
                 if (initial != null && DocumentReader.canExtract(initial.mimeType)) {
                     OutlinedButton(
                         enabled = !rereading,
@@ -479,6 +544,7 @@ private fun DocumentDialog(
                             docDate = date?.toEpochDay(),
                             doctorId = doctorId?.takeIf { id -> doctors.any { it.id == id } },
                             notes = notes.trim(),
+                            summary = summary.trim(),
                             text = text.trim(),
                             mimeType = initial?.mimeType ?: pending?.mime ?: "application/pdf",
                         ),
@@ -529,6 +595,10 @@ internal fun DocumentDetailDialog(
                     doc.notes.takeIf { it.isNotBlank() }?.let { "Notizen: $it" },
                 )
                 facts.forEach { Text(it, style = MaterialTheme.typography.bodyMedium) }
+                if (doc.summary.isNotBlank()) {
+                    Text("Zusammenfassung (Anhaltspunkt)", style = MaterialTheme.typography.labelLarge)
+                    Text(doc.summary, style = MaterialTheme.typography.bodyMedium)
+                }
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     OutlinedButton(onClick = {
                         withDecrypted { file ->

@@ -152,10 +152,112 @@ object DocumentReader {
         return PendingDoc(files, DocKind.IMAGES, "image/jpeg", "jpg", texts.joinToString("\n\n"), "Dokument")
     }
 
-    /** Eine neue Seite zu einem Foto-Dokument hinzufuegen. */
-    suspend fun appendImage(pending: PendingDoc, file: File): PendingDoc {
-        val added = fromImages(listOf(file))
-        return pending.copy(files = pending.files + file, text = listOf(pending.text, added.text).filter { it.isNotBlank() }.joinToString("\n\n"))
+    private const val MAX_PAGES = 30
+
+    /** PDF in einzelne Seitenbilder (JPG im Zwischenordner) zerlegen, damit Seiten verschiedener Quellen zusammenbleiben koennen. */
+    suspend fun pdfToImages(context: Context, pdf: File, limit: Int = MAX_PAGES): List<File> = withContext(Dispatchers.IO) {
+        val out = mutableListOf<File>()
+        try {
+            ParcelFileDescriptor.open(pdf, ParcelFileDescriptor.MODE_READ_ONLY).use { fd ->
+                PdfRenderer(fd).use { renderer ->
+                    for (i in 0 until minOf(renderer.pageCount, limit)) {
+                        renderer.openPage(i).use { page ->
+                            val width = 1500
+                            val height = (width.toFloat() * page.height / page.width).toInt().coerceAtLeast(1)
+                            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                            bitmap.eraseColor(Color.WHITE)
+                            page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                            val file = DocumentStore.newTempFile(context, "jpg")
+                            file.outputStream().use { bitmap.compress(Bitmap.CompressFormat.JPEG, 85, it) }
+                            bitmap.recycle()
+                            out.add(file)
+                        }
+                    }
+                }
+            }
+        } catch (_: Exception) {
+        }
+        out
+    }
+
+    /**
+     * Neue Seiten (Fotos im Zwischenordner) an ein Dokument anhaengen. Ein PDF-Entwurf wird dafuer in Seitenbilder zerlegt.
+     * Der Text der neuen Seiten wird erkannt und hinten angefuegt. Alle Seiten bleiben ein Dokument.
+     */
+    suspend fun appendFiles(context: Context, base: PendingDoc, newImages: List<File>): PendingDoc {
+        val baseImages: List<File>
+        when (base.kind) {
+            DocKind.IMAGES -> baseImages = base.files
+            DocKind.PDF -> {
+                baseImages = pdfToImages(context, base.files.first())
+                if (baseImages.isEmpty()) return base
+                base.files.forEach { it.delete() }
+            }
+            else -> return base
+        }
+        val room = (MAX_PAGES - baseImages.size).coerceAtLeast(0)
+        newImages.drop(room).forEach { it.delete() }
+        val accepted = newImages.take(room)
+        if (accepted.isEmpty()) return base.copy(kind = DocKind.IMAGES, files = baseImages, mime = "image/jpeg", ext = "jpg")
+        val added = fromImages(accepted)
+        return PendingDoc(
+            files = baseImages + accepted,
+            kind = DocKind.IMAGES,
+            mime = "image/jpeg",
+            ext = "jpg",
+            text = listOf(base.text, added.text).filter { it.isNotBlank() }.joinToString("\n\n"),
+            displayName = base.displayName,
+        )
+    }
+
+    /** Letzte Seite eines mehrseitigen Foto-Dokuments entfernen. Der Text wird aus den restlichen Seiten neu gelesen. */
+    suspend fun removeLastPage(pending: PendingDoc): PendingDoc {
+        if (pending.kind != DocKind.IMAGES || pending.files.size < 2) return pending
+        pending.files.last().delete()
+        return fromImages(pending.files.dropLast(1)).copy(displayName = pending.displayName)
+    }
+
+    /**
+     * Mehrere ausgewaehlte Dateien (Fotos und PDFs) zu einem Dokument zusammenfuegen, ggf. an einen bestehenden Entwurf.
+     * Gibt den Entwurf und die Zahl der uebersprungenen Dateien (z. B. Word) zurueck. Eine einzelne Datei laeuft wie bisher.
+     */
+    suspend fun fromUris(context: Context, uris: List<Uri>, base: PendingDoc? = null): Pair<PendingDoc?, Int> {
+        if (base == null && uris.size == 1) return fromUri(context, uris.first()) to 0
+        val resolver = context.contentResolver
+        val images = mutableListOf<File>()
+        var skipped = 0
+        var firstName: String? = null
+        for (uri in uris) {
+            val mime = resolver.getType(uri) ?: ""
+            val name = withContext(Dispatchers.IO) {
+                resolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { c ->
+                    if (c.moveToFirst()) c.getString(0) else null
+                }
+            }
+            val ext = name?.substringAfterLast('.', "")?.lowercase().orEmpty()
+            val isPdf = mime == "application/pdf" || ext == "pdf"
+            val isImage = mime.startsWith("image/")
+            if (!isPdf && !isImage) {
+                skipped++
+                continue
+            }
+            if (firstName == null) firstName = name?.substringBeforeLast('.')
+            val temp = DocumentStore.newTempFile(context, if (isPdf) "pdf" else "jpg")
+            withContext(Dispatchers.IO) {
+                resolver.openInputStream(uri)?.use { input -> temp.outputStream().use { input.copyTo(it) } }
+            }
+            if (isPdf) {
+                images.addAll(pdfToImages(context, temp))
+                temp.delete()
+            } else {
+                images.add(temp)
+            }
+        }
+        if (images.isEmpty()) return base to skipped
+        if (base != null) return appendFiles(context, base, images) to skipped
+        val limited = images.take(MAX_PAGES)
+        images.drop(MAX_PAGES).forEach { it.delete() }
+        return fromImages(limited).copy(displayName = firstName ?: "Dokument") to skipped
     }
 
     /** Datei aus dem Dateiauswahl-Dialog (PDF, Bild, Text, sonstiges). */

@@ -214,7 +214,7 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
                     )
                     Tab.Medikamente -> MedicationScreen(meds, doctors, vm, onReorder = { showReorder = true })
                     Tab.Termine -> AppointmentScreen(appointments, doctors, documents, meds.size, persons.firstOrNull { it.id == personId }, vm)
-                    Tab.Dokumente -> DocumentScreen(documents, doctors, vm)
+                    Tab.Dokumente -> DocumentScreen(documents, doctors, persons.firstOrNull { it.id == personId }, vm)
                     Tab.Aerzte -> DoctorScreen(doctors, vm)
                     Tab.Infos -> InfoScreen(
                         person = persons.firstOrNull { it.id == personId },

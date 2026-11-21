@@ -4,6 +4,11 @@
 
 - [ ] Erkennung von Packungsfoto weiter verbessern (Wirkstoff, Packungsbeilage), Kamera-Scan für Barcodes live
 
+## Version 0.21.0 (fertig)
+
+- [x] Mehrseitige Dokumente: mehrere Fotos/PDFs zusammen auswählen, weitere Seiten nachträglich hinzufügen (Kamera, Galerie, Datei), letzte Seite entfernen; alles bleibt ein Dokument
+- [x] Zusammenfassung je Dokument (selbst schreiben oder per KI, mit Bestätigung und Platzhaltern für Name/Nummern), auf Karte, im Detail und in der Suche
+
 ## Version 0.20.0 (fertig)
 
 - [x] Neuer Reiter „Infos“: aktuelle Themenkarten (Pflegereform/PNOG mit Stand, Beratung, Pflege und Beruf, Entlastung, Medikamente), Meldungssuche, eigene Themen, Themenvorschläge aus den eigenen Daten

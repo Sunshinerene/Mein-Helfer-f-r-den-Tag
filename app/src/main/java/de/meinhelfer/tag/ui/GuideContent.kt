@@ -242,6 +242,14 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
         summary = "Berichte, Befunde, Bescheide fotografieren oder laden",
         items = listOf(
             GuideItem(
+                "Mehrere Seiten, ein Dokument",
+                "Besteht ein Dokument aus mehreren Blättern, bleiben alle zusammen. Wähle mehrere Fotos oder PDFs auf einmal aus (sie werden in der gewählten Reihenfolge zu einem Dokument), oder tippe nach dem Einlesen auf „Weitere Seiten hinzufügen“ (fotografieren, Galerie oder PDF/Bild laden). Der Text aller Seiten wird gelesen und zusammengefügt, gespeichert wird eine PDF. „Letzte Seite entfernen“ nimmt eine versehentliche Seite wieder weg. Word- und Textdateien werden nicht zusammengefügt, die lädst du einzeln.",
+            ),
+            GuideItem(
+                "Zusammenfassung",
+                "Im Formular gibt es „Zusammenfassung“. Du kannst sie selbst schreiben oder per KI erstellen lassen („Per KI zusammenfassen“). Vor dem Senden siehst du den genauen Text. Name, Geburtsdatum, Versichertennummer und Straße der Person werden durch Platzhalter ersetzt, andere Namen im Dokument können aber enthalten sein. Brich ab, wenn etwas nicht raus soll. Die Zusammenfassung ist ein Anhaltspunkt in einfacher Sprache und kann Fehler enthalten. Sie steht danach auf der Karte, im Detail und wird von der Suche gefunden.",
+            ),
+            GuideItem(
                 "Dokument hinzufügen",
                 "Im Bereich „Dokumente“ auf das Plus tippen und auswählen: „Dokument fotografieren“ (bei mehreren Seiten mit „Weitere Seite fotografieren“), „Foto(s) aus der Galerie“ oder „Datei laden“. Bei „Datei laden“ suchst du eine Datei aus einem Ordner auf dem Handy, z. B. eine PDF vom Arzt, ein Bild oder eine Textdatei.",
             ),

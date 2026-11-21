@@ -160,4 +160,6 @@ data class Document(
     val notes: String = "",
     val doctorId: Long? = null,
     val createdMillis: Long = System.currentTimeMillis(),
+    /** Zusammenfassung in einfacher Sprache (per KI erstellt oder selbst geschrieben), optional. */
+    val summary: String = "",
 )
