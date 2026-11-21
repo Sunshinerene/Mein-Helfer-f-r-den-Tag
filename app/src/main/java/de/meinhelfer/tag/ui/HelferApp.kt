@@ -67,6 +67,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import de.meinhelfer.tag.data.Appointment
 import de.meinhelfer.tag.data.Doctor
+import de.meinhelfer.tag.data.Document
+import de.meinhelfer.tag.data.Person
 import de.meinhelfer.tag.data.Medication
 import de.meinhelfer.tag.update.AppPrefs
 import kotlinx.coroutines.delay
@@ -210,7 +212,7 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
                         onOpenWegweiser = { showWegweiser = true },
                     )
                     Tab.Medikamente -> MedicationScreen(meds, doctors, vm, onReorder = { showReorder = true })
-                    Tab.Termine -> AppointmentScreen(appointments, doctors, vm)
+                    Tab.Termine -> AppointmentScreen(appointments, doctors, documents, meds.size, persons.firstOrNull { it.id == personId }, vm)
                     Tab.Dokumente -> DocumentScreen(documents, doctors, vm)
                     Tab.Aerzte -> DoctorScreen(doctors, vm)
                 }
@@ -334,11 +336,20 @@ private fun MedicationScreen(items: List<Medication>, doctors: List<Doctor>, vm:
 
 // ---------------------------------------------------------------- Termine
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun AppointmentScreen(items: List<Appointment>, doctors: List<Doctor>, vm: MainViewModel) {
+private fun AppointmentScreen(
+    items: List<Appointment>,
+    doctors: List<Doctor>,
+    documents: List<Document>,
+    medCount: Int,
+    person: Person?,
+    vm: MainViewModel,
+) {
     val context = LocalContext.current
     var showAdd by remember { mutableStateOf(false) }
     var editItem by remember { mutableStateOf<Appointment?>(null) }
+    var docsFor by remember { mutableStateOf<Appointment?>(null) }
 
     ListScreen(
         items = items,
@@ -346,6 +357,7 @@ private fun AppointmentScreen(items: List<Appointment>, doctors: List<Doctor>, v
         onAdd = { showAdd = true },
     ) { a ->
         val doctor = doctors.firstOrNull { it.id == a.doctorId }
+        val attached = a.attachedIds().mapNotNull { id -> documents.firstOrNull { it.id == id } }
         ItemCard(
             title = a.title,
             lines = listOfNotNull(
@@ -353,14 +365,37 @@ private fun AppointmentScreen(items: List<Appointment>, doctors: List<Doctor>, v
                 doctor?.let { doctorLabel(it) },
                 a.place.takeIf { it.isNotBlank() },
                 a.notes.takeIf { it.isNotBlank() },
+                attached.takeIf { it.isNotEmpty() }?.let { list -> "Unterlagen: " + list.joinToString(", ") { it.title } },
             ),
             onClick = { editItem = a },
             onDelete = { vm.delete(a) },
         ) {
-            TextButton(onClick = { addToCalendar(context, a, doctor?.let { doctorLabel(it) }) }) {
-                Text("In Kalender eintragen")
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                TextButton(onClick = { docsFor = a }) {
+                    Text(if (attached.isEmpty()) "Unterlagen" else "Unterlagen (${attached.size})")
+                }
+                TextButton(onClick = { addToCalendar(context, a, doctor?.let { doctorLabel(it) }) }) {
+                    Text("In Kalender eintragen")
+                }
             }
         }
+    }
+
+    docsFor?.let { a ->
+        AppointmentDocsDialog(
+            appointment = a,
+            doctor = doctors.firstOrNull { it.id == a.doctorId },
+            doctors = doctors,
+            docs = documents,
+            medCount = medCount,
+            person = person,
+            onSave = { ids ->
+                vm.update(a.copy(docIds = ids.joinToString(",")))
+                docsFor = null
+            },
+            onAddTodo = { vm.addTodo(it) },
+            onClose = { docsFor = null },
+        )
     }
 
     if (showAdd || editItem != null) {

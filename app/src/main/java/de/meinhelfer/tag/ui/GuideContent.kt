@@ -200,6 +200,10 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
                 "Wähle den Arzt oder Dienst aus deinen Kontakten. Der Ort wird dann mit dessen Adresse vorbelegt, wenn er noch leer ist.",
             ),
             GuideItem(
+                "Unterlagen anhängen",
+                "Auf der Terminkarte „Unterlagen“ antippen. Die App schlägt passende Dokumente vor (gleicher Arzt, passende Kategorie, z. B. Medikamentenplan oder Befund). Du hakst an, was zum Termin gehört, und kannst jedes Dokument mit „Ansehen“ öffnen. Angehängte Unterlagen stehen auf der Karte. Darunter findest du Anregungen, was man mitnehmen könnte (z. B. Versichertenkarte, Medikamentenplan). Jeden Punkt kannst du mit „+ To-do“ auf deine Liste setzen. Das sind allgemeine Anregungen, was gebraucht wird, sagt die Praxis.",
+            ),
+            GuideItem(
                 "Erinnerung",
                 "Pro Termin einstellbar: keine, 15 oder 30 Minuten, 1 oder 2 Stunden, 1 Tag vorher.",
             ),
@@ -224,7 +228,11 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Suchen",
-                "Oben in der Dokumentenliste suchst du nach Titel, Kategorie oder einem Wort aus dem Text, z. B. dem Namen eines Medikaments.",
+                "Oben in der Dokumentenliste suchst du nach Titel, Kategorie, Arzt, Datum oder Wörtern aus dem Text, z. B. dem Namen eines Medikaments. Du kannst mehrere Wörter eingeben („Befund 2025“), alle müssen vorkommen. Die besten Treffer stehen oben, bei Treffern im Text siehst du den passenden Ausschnitt.",
+            ),
+            GuideItem(
+                "Filtern und sortieren",
+                "Die Leiste unter dem Suchfeld zeigt alle Kategorien mit Anzahl. Ein Tipp filtert, nochmal tippen hebt den Filter auf. Unter „Sortierung und mehr Filter“ gibt es Sortierung (neueste, älteste, A bis Z, nach Kategorie) sowie Filter nach Jahr und nach Arzt oder Stelle. „Zurücksetzen“ löscht alle Filter.",
             ),
             GuideItem(
                 "Öffnen und teilen",

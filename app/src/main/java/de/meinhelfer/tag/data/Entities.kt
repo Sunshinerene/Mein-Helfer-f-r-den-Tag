@@ -87,6 +87,8 @@ data class Appointment(
     val personId: Long = 1,
     /** Erinnerung so viele Minuten vor dem Termin; negativ = keine Erinnerung. */
     val reminderMinutes: Int = 60,
+    /** Angehaengte Dokumente (IDs, kommagetrennt), optional. */
+    val docIds: String = "",
 )
 
 @Entity

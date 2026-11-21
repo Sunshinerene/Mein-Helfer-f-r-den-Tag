@@ -482,6 +482,7 @@ fun AppointmentDialog(
                         doctorId = doctorId?.takeIf { id -> doctors.any { it.id == id } },
                         personId = initial?.personId ?: 1,
                         reminderMinutes = reminder,
+                        docIds = initial?.docIds ?: "",
                     ),
                 )
             }

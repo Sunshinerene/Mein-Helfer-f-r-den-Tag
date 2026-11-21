@@ -80,6 +80,10 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, vm: MainViewMod
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var query by remember { mutableStateOf("") }
+    var category by remember { mutableStateOf<String?>(null) }
+    var doctorFilter by remember { mutableStateOf<Long?>(null) }
+    var yearFilter by remember { mutableStateOf<Int?>(null) }
+    var sort by remember { mutableStateOf(DocSort.NEWEST) }
     var showSource by remember { mutableStateOf(false) }
     var draft by remember { mutableStateOf<PendingDoc?>(null) }
     var working by remember { mutableStateOf(false) }
@@ -149,38 +153,77 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, vm: MainViewMod
         }
     }
 
-    val q = query.trim().lowercase()
-    val shown = if (q.isEmpty()) items else items.filter { d ->
-        listOf(d.title, d.category, d.text, d.notes, doctors.firstOrNull { it.id == d.doctorId }?.name.orEmpty())
-            .any { it.lowercase().contains(q) }
+    val activeCategory = category?.takeIf { c -> items.any { it.category == c } }
+    val activeDoctor = doctorFilter?.takeIf { id -> items.any { it.doctorId == id } }
+    val years = items.map { docYear(it) }.distinct().sortedDescending()
+    val activeYear = yearFilter?.takeIf { it in years }
+    val counts = items.groupingBy { it.category }.eachCount()
+    val categories = DOC_CATEGORIES.filter { it in counts } + counts.keys.filter { it !in DOC_CATEGORIES }.sorted()
+    val doctorsUsed = doctors.filter { d -> items.any { it.doctorId == d.id } }
+
+    val filtered = items.filter { d ->
+        (activeCategory == null || d.category == activeCategory) &&
+            (activeDoctor == null || d.doctorId == activeDoctor) &&
+            (activeYear == null || docYear(d) == activeYear)
+    }
+    val hits = searchDocuments(filtered, doctors, query)
+    val ordered = if (query.isNotBlank()) {
+        hits.sortedWith(compareByDescending<DocHit> { it.score }.thenByDescending { docEpochDay(it.doc) })
+    } else {
+        when (sort) {
+            DocSort.NEWEST -> hits.sortedByDescending { docEpochDay(it.doc) }
+            DocSort.OLDEST -> hits.sortedBy { docEpochDay(it.doc) }
+            DocSort.TITLE -> hits.sortedBy { it.doc.title.lowercase() }
+            DocSort.CATEGORY -> hits.sortedWith(
+                compareBy<DocHit> { categories.indexOf(it.doc.category) }.thenByDescending { docEpochDay(it.doc) },
+            )
+        }
     }
 
     Column(Modifier.fillMaxSize()) {
         if (items.isNotEmpty()) {
-            OutlinedTextField(
-                value = query,
-                onValueChange = { query = it },
-                label = { Text("Suchen (Titel, Text, Kategorie)") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp),
+            DocumentFilterBar(
+                query = query,
+                onQuery = { query = it },
+                categories = categories,
+                counts = counts,
+                total = items.size,
+                activeCategory = activeCategory,
+                onCategory = { category = it },
+                years = years,
+                activeYear = activeYear,
+                onYear = { yearFilter = it },
+                doctorsUsed = doctorsUsed,
+                activeDoctor = activeDoctor,
+                onDoctor = { doctorFilter = it },
+                sort = sort,
+                onSort = { sort = it },
+                shown = ordered.size,
+                onReset = {
+                    query = ""
+                    category = null
+                    yearFilter = null
+                    doctorFilter = null
+                },
             )
         }
         ListScreen(
-            items = shown,
+            items = ordered,
             emptyText = if (items.isEmpty()) {
                 "Noch keine Dokumente. Mit + Berichte, Befunde oder Bescheide fotografieren oder als Datei laden."
             } else {
-                "Nichts gefunden."
+                "Nichts gefunden. Ändere die Suche oder setze die Filter zurück."
             },
             onAdd = { showSource = true },
             modifier = Modifier.weight(1f),
-        ) { d ->
+        ) { hit ->
+            val d = hit.doc
             ItemCard(
                 title = d.title,
                 lines = listOfNotNull(
                     listOfNotNull(d.category, d.dateText()).joinToString(" · "),
                     doctors.firstOrNull { it.id == d.doctorId }?.let { doctorLabel(it) },
-                    d.text.replace(Regex("\\s+"), " ").trim().takeIf { it.isNotEmpty() }?.let { if (it.length > 100) it.take(100).trimEnd() + " …" else it },
+                    hit.snippet ?: d.text.replace(Regex("\\s+"), " ").trim().takeIf { it.isNotEmpty() }?.let { if (it.length > 100) it.take(100).trimEnd() + " …" else it },
                 ),
                 onClick = { detailId = d.id },
                 onDelete = { vm.delete(d) },
@@ -395,10 +438,10 @@ private fun DocumentDialog(
 }
 
 @Composable
-private fun DocumentDetailDialog(
+internal fun DocumentDetailDialog(
     doc: Document,
     doctors: List<Doctor>,
-    onEdit: () -> Unit,
+    onEdit: (() -> Unit)?,
     onClose: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -470,7 +513,7 @@ private fun DocumentDetailDialog(
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onEdit) { Text("Bearbeiten") } },
+        confirmButton = { if (onEdit != null) TextButton(onClick = onEdit) { Text("Bearbeiten") } },
         dismissButton = { TextButton(onClick = onClose) { Text("Schließen") } },
     )
 }

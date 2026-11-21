@@ -4,6 +4,12 @@
 
 - [ ] Erkennung von Packungsfoto weiter verbessern (Wirkstoff, Packungsbeilage), Kamera-Scan für Barcodes live
 
+## Version 0.19.0 (fertig)
+
+- [x] Dokumente: Kategorie-Filter mit Anzahl, Filter nach Jahr und Arzt/Stelle, Sortierung
+- [x] Dokumente: bessere Suche (mehrere Wörter, Arzt, Datum, Fundstelle im Text, beste Treffer zuerst)
+- [x] Termine: Unterlagen anhängen, passende Dokumente vorgeschlagen, Mitnehm-Anregungen mit „+ To-do“
+
 ## Version 0.18.0 (fertig)
 
 - [x] Medikamentenliste schlanker: nur Foto, Name, Einnahme, Vorrat; alles Weitere über „Infos & Beschreibung“
