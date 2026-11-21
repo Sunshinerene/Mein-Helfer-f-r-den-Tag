@@ -185,7 +185,13 @@ fun TodayScreen(
         }
 
         item {
-            ProfileCard(person, todayDay, onEditProfile, onOpenWegweiser)
+            if (person != null) {
+                Foldable(
+                    key = "profil",
+                    title = person.name,
+                    summary = person.careLevel.takeIf { it in 1..5 }?.let { "Pflegegrad $it" } ?: "Profil",
+                ) { ProfileCard(person, todayDay, onEditProfile, onOpenWegweiser) }
+            }
         }
 
         item { DayAheadCard(todos = todos, appointments = appointments, doctors = doctors, todayDay = todayDay, vm = vm) }
@@ -200,6 +206,7 @@ fun TodayScreen(
 
         if (lowStock.isNotEmpty()) {
             item {
+            Foldable(key = "nachbestellen", title = "Bald nachbestellen", summary = if (lowStock.size == 1) "1 Medikament" else "${lowStock.size} Medikamente", colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)) {
                 HCard(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
@@ -218,10 +225,12 @@ fun TodayScreen(
                 }
             }
         }
+        }
 
         // ---- Rueckfragen
         if (followUps.isNotEmpty()) {
             item {
+            Foldable(key = "nachgefragt", title = "Kurz nachgefragt", summary = "${followUps.size} offen", colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
                 HCard(
                     Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
@@ -245,9 +254,11 @@ fun TodayScreen(
                 }
             }
         }
+        }
 
         // ---- Einnahmen
         item {
+            Foldable(key = "einnahmen", title = "Heute einnehmen", summary = if (intakes.isEmpty()) "Keine Einnahmen eingetragen" else "$intakesDone von ${intakes.size} abgehakt, ${intakes.size - intakesDone} offen") {
             HCard(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(start = 8.dp, end = 8.dp, top = 16.dp, bottom = 8.dp)) {
                     Text(
@@ -327,9 +338,11 @@ fun TodayScreen(
                 }
             }
         }
+        }
 
         // ---- Termine
         item {
+            Foldable(key = "termine", title = "Termine in den nächsten 7 Tagen", summary = when (upcoming.size) { 0 -> "Keine Termine"; 1 -> "1 Termin: " + upcoming[0].title; else -> "${upcoming.size} Termine, nächster: " + upcoming[0].title }) {
             HCard(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(start = 8.dp, end = 8.dp, top = 16.dp, bottom = 8.dp)) {
                     Text(
@@ -377,12 +390,24 @@ fun TodayScreen(
                 }
             }
         }
+        }
 
         // ---- Aufgaben
-        item { TasksCard(todos = todos, doctors = doctors, person = person, vm = vm, meds = meds, caregiver = caregiver, onEditCaregiver = onEditCaregiver, documents = documents) }
+        item {
+            val openTodos = todos.count { !it.done }
+            val urgentTodos = todos.count { !it.done && it.priority == 2 }
+            Foldable(
+                key = "aufgaben",
+                title = "Aufgaben",
+                summary = if (openTodos == 0) "Nichts offen" else "$openTodos offen" + if (urgentTodos > 0) ", davon $urgentTodos dringend" else "",
+            ) {
+                TasksCard(todos = todos, doctors = doctors, person = person, vm = vm, meds = meds, caregiver = caregiver, onEditCaregiver = onEditCaregiver, documents = documents)
+            }
+        }
 
         // ---- Bemerkung zum Tag
         item {
+            Foldable(key = "bemerkung", title = "Bemerkung zum Tag", summary = dayNote?.text?.takeIf { it.isNotBlank() }?.let { if (it.length > 60) it.take(60) + "…" else it } ?: "Noch nichts notiert") {
             HCard(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Bemerkung zum Tag", style = MaterialTheme.typography.titleMedium)
@@ -396,6 +421,7 @@ fun TodayScreen(
                     }
                 }
             }
+        }
         }
 
         // ---- Auswertung

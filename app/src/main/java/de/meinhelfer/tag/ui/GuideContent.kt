@@ -99,6 +99,10 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
                 "Oben auf dem ersten Reiter („Heute“) wählst du zwischen Tag, Woche und Monat. „Tag“ ist immer der aktuelle Tag. „Woche“ zeigt sieben Tage untereinander mit Terminen, Aufgaben und Einnahmen. „Monat“ zeigt einen Kalender mit Punkten (blau = Termin, grün = Aufgabe, rot = dringend oder überfällig); ein Tipp auf einen Tag zeigt ihn darunter. Mit ‹ und › blätterst du, ein Tipp auf den Titel springt zu heute. Alles ist antippbar: Termin oder Aufgabe antippen zum Bearbeiten oder Löschen, Aufgaben direkt abhaken, mit „+ Termin“ und „+ Aufgabe“ legst du etwas für genau diesen Tag an.",
             ),
             GuideItem(
+                "Karten einklappen",
+                "Auf der Tagesansicht lässt sich jede Karte mit „Einklappen ▴“ unter der Karte verkleinern. Dann bleibt nur Titel und eine Kurzinfo stehen, z. B. „2 von 3 abgehakt, 1 offen“ oder „3 offen, davon 1 dringend“. Ein Tipp auf die kleine Karte klappt sie wieder auf. Die App merkt sich, was eingeklappt ist.",
+            ),
+            GuideItem(
                 "Wichtig und demnächst",
                 "Auf der Tagesansicht steht oben die Karte „Wichtig und demnächst“. Zuerst kommt, was dringend (hohe Priorität), überfällig oder heute fällig ist, rot hervorgehoben und nach Priorität sortiert. Darunter siehst du Termine und Aufgaben der nächsten 3 Tage. Dringende Aufgaben legst du mit Priorität „hoch“ an.",
             ),

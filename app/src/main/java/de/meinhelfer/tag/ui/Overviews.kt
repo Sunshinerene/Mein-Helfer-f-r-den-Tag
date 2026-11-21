@@ -196,6 +196,15 @@ internal fun DayAheadCard(
         .sortedWith(compareByDescending<Todo> { it.priority }.thenBy { it.dueDay ?: Long.MAX_VALUE })
     val next = (1L..3L).map { LocalDate.ofEpochDay(todayDay + it) }
 
+    val ahead = next.sumOf { d ->
+        appointments.count { dayOf(it.whenMillis) == d } + todos.count { !it.done && it.dueDay == d.toEpochDay() && it.priority != 2 }
+    }
+    Foldable(
+        key = "wichtig",
+        title = "Wichtig und demnächst",
+        summary = (if (urgent.isEmpty()) "Nichts Dringendes" else "${urgent.size} dringend oder fällig") +
+            " · " + (if (ahead == 0) "nächste 3 Tage frei" else "$ahead in den nächsten 3 Tagen"),
+    ) {
     HCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(start = 8.dp, end = 8.dp, top = 16.dp, bottom = 12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text("Wichtig und demnächst", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(start = 8.dp))
@@ -250,6 +259,7 @@ internal fun DayAheadCard(
                 Text("In den nächsten 3 Tagen ist nichts geplant.", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(start = 8.dp))
             }
         }
+    }
     }
     OverviewEditors(edit, doctors, vm)
 }

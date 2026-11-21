@@ -33,6 +33,13 @@ object AppPrefs {
         prefs(context).edit().putFloat("schrift_faktor", factor).apply()
     }
 
+    /** Eingeklappte Karten auf der Heute-Seite. */
+    fun folded(context: Context, key: String): Boolean = prefs(context).getBoolean("eingeklappt_$key", false)
+
+    fun setFolded(context: Context, key: String, value: Boolean) {
+        prefs(context).edit().putBoolean("eingeklappt_$key", value).apply()
+    }
+
     private const val KEY_TOUR_SEEN = "rundgang_gesehen"
 
     fun tourSeen(context: Context): Boolean = prefs(context).getBoolean(KEY_TOUR_SEEN, false)
