@@ -43,6 +43,15 @@ object AppPrefs {
         prefs(context).edit().putString(KEY_STYLE, key).apply()
     }
 
+    private const val KEY_INFO_AUTO = "beschreibung_automatisch"
+
+    /** true = Medikamenten-Beschreibung wird automatisch geladen, false = nur auf Knopfdruck (Standard). */
+    fun medInfoAuto(context: Context): Boolean = prefs(context).getBoolean(KEY_INFO_AUTO, false)
+
+    fun setMedInfoAuto(context: Context, value: Boolean) {
+        prefs(context).edit().putBoolean(KEY_INFO_AUTO, value).apply()
+    }
+
     private fun prefs(context: Context) = context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
 
     fun autoUpdateCheck(context: Context): Boolean = prefs(context).getBoolean(KEY_AUTO_UPDATE, true)

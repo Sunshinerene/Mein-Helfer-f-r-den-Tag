@@ -10,7 +10,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 // TODO (vor echten Nutzern): Datenbank verschluesseln (z. B. SQLCipher) und App-Sperre ergaenzen.
 @Database(
     entities = [Medication::class, Appointment::class, Doctor::class, Checkin::class, DayNote::class, Person::class, Todo::class],
-    version = 7,
+    version = 8,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -108,6 +108,15 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /** Version 8: PZN und Beschreibung je Medikament. */
+        private val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE Medication ADD COLUMN pzn TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE Medication ADD COLUMN description TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE Medication ADD COLUMN descriptionSource TEXT NOT NULL DEFAULT ''")
+            }
+        }
+
         fun get(context: Context): AppDatabase =
             instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(
@@ -115,7 +124,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "mein_helfer.db",
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
                     .build()
                     .also { instance = it }
             }

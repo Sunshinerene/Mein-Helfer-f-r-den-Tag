@@ -249,6 +249,7 @@ private fun MedicationScreen(items: List<Medication>, doctors: List<Doctor>, vm:
                 lines = listOfNotNull(
                     m.times.takeIf { it.isNotBlank() }?.let { "Einnahme: ${it.replace(",", ", ")} Uhr" },
                     "Vorrat: ${m.currentStock()} Stück" + (days?.let { " (ca. $it Tage)" } ?: ""),
+                    m.pzn.takeIf { it.isNotBlank() }?.let { "PZN: $it" },
                     doctors.firstOrNull { it.id == m.doctorId }?.let { "Arzt: ${it.name}" },
                     doctors.firstOrNull { it.id == m.pharmacyId }?.let { "Apotheke: ${it.name}" },
                     m.notes.takeIf { it.isNotBlank() },

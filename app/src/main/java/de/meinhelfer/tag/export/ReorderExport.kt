@@ -54,7 +54,8 @@ object ReorderExport {
         meds.map { m ->
             val days = m.daysLeft(today)
             ReorderRow(
-                name = m.name + if (m.dosage.isNotBlank()) " (${m.dosage})" else "",
+                name = m.name + (if (m.dosage.isNotBlank()) " (${m.dosage})" else "") +
+                    (if (m.pzn.isNotBlank()) "\nPZN ${m.pzn}" else ""),
                 intake = m.times.split(",").map { it.trim() }.filter { it.isNotEmpty() }.joinToString(", ")
                     .let { if (it.isBlank()) "" else "$it Uhr" },
                 stock = "${m.currentStock(today)} Stück" + (days?.let { ", ca. $it Tage" } ?: ""),
@@ -78,6 +79,7 @@ object ReorderExport {
         val lines = meds.joinToString("\n") { m ->
             val days = m.daysLeft(today)
             "- ${m.name}" + (if (m.dosage.isNotBlank()) " (${m.dosage})" else "") +
+                (if (m.pzn.isNotBlank()) ", PZN ${m.pzn}" else "") +
                 (days?.let { " – Vorrat reicht noch ca. $it Tage" } ?: "")
         }
         return head + lines + "\n\nVielen Dank und freundliche Grüße"

@@ -84,7 +84,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
     GuideSection(
         id = "medikamente",
         title = "Medikamente",
-        summary = "Anlegen, Foto der Packung, Einnahmezeiten, Vorrat",
+        summary = "Anlegen, Foto, PZN, Beschreibung, Vorrat",
         items = listOf(
             GuideItem(
                 "Medikament anlegen",
@@ -105,6 +105,14 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             GuideItem(
                 "Dosierung und Notizen",
                 "Die Dosierung (z. B. „1 Tablette“) wählst du aus oder tippst sie selbst. In die Notizen gehört alles, was wichtig ist, z. B. „zum Essen“.",
+            ),
+            GuideItem(
+                "PZN und Barcode",
+                "Beim Foto sucht die App auf dem Handy auch nach dem Barcode bzw. der aufgedruckten PZN (Pharmazentralnummer) und trägt sie ein, wenn sie eine gültige Prüfziffer hat. Du kannst sie auch von Hand eintippen. Sie steht dann in der Nachbestell-Liste, was die Apotheke freut. „PZN im Internet nachschlagen“ öffnet eine Suche in deinem Browser.",
+            ),
+            GuideItem(
+                "Beschreibung aus dem Internet",
+                "Im Medikament ganz unten „Beschreibung aus dem Internet laden“ antippen. Die App holt einen kurzen Text aus Wikipedia und zeigt die Quelle. Es wird nur der Name des Medikaments gesendet. In den Einstellungen kannst du umschalten: nur auf Knopfdruck (Standard) oder automatisch laden. Die Beschreibung ist nur ein Anhaltspunkt, keine ärztliche Empfehlung, und ersetzt weder Arzt, Apotheke noch Packungsbeilage.",
             ),
             GuideItem(
                 "Arzt und Apotheke zuordnen",
@@ -258,7 +266,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Wann geht die App ins Internet?",
-                "Nur um nach App-Updates zu suchen, sie über GitHub zu laden und die Vorschau auf geplante Funktionen anzuzeigen. Dabei werden keine persönlichen Daten gesendet.",
+                "Um nach App-Updates zu suchen, sie über GitHub zu laden und die Vorschau auf geplante Funktionen anzuzeigen. Außerdem für die Medikamenten-Beschreibung (Wikipedia), aber nur auf Knopfdruck oder wenn du das automatische Laden einschaltest. Gesendet wird dabei nur der Medikamentenname, keine persönlichen Daten.",
             ),
             GuideItem(
                 "Aktueller Stand",

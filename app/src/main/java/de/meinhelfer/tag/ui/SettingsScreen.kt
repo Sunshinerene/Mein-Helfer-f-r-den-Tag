@@ -103,6 +103,7 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit, onOpenGuide: () -> Uni
             }
             item { HelpCard(onOpenGuide, onStartTour) }
             item { ThemeCard(vm) }
+            item { MedInfoCard() }
             item { FeedbackCard(context) }
             item { RoadmapCard(roadmap, roadmapError) }
             item { AboutCard(context) }
@@ -279,6 +280,32 @@ private fun ThemeCard(vm: MainViewModel) {
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun MedInfoCard() {
+    val context = LocalContext.current
+    var auto by remember { mutableStateOf(AppPrefs.medInfoAuto(context)) }
+    HCard(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Medikamenten-Beschreibung", style = MaterialTheme.typography.titleMedium)
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Switch(checked = auto, onCheckedChange = {
+                    auto = it
+                    AppPrefs.setMedInfoAuto(context, it)
+                })
+                Text(
+                    if (auto) "Automatisch laden" else "Nur auf Knopfdruck laden",
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            Text(
+                "Beim Anlegen oder Bearbeiten eines Medikaments sucht die App im Internet (Wikipedia) eine kurze Beschreibung. Aus: nur nach Tipp auf den Knopf. An: automatisch, kurz nachdem du den Namen getippt hast. In beiden Fällen wird nur der Medikamentenname gesendet. Die Beschreibung ist nur ein Anhaltspunkt und ersetzt nie Arzt oder Apotheke.",
+                style = MaterialTheme.typography.bodySmall,
+            )
         }
     }
 }

@@ -11,9 +11,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
+import de.meinhelfer.tag.update.AppPrefs
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
+import de.meinhelfer.tag.info.MedicationInfo
 import de.meinhelfer.tag.media.PackageScanner
 import de.meinhelfer.tag.media.PhotoStore
 import de.meinhelfer.tag.media.ScanResult
@@ -99,6 +103,37 @@ fun MedicationDialog(
     var notes by remember { mutableStateOf(initial?.notes ?: "") }
     var doctorId by remember { mutableStateOf<Long?>(initial?.doctorId) }
     var pharmacyId by remember { mutableStateOf<Long?>(initial?.pharmacyId) }
+    var pzn by remember { mutableStateOf(initial?.pzn ?: "") }
+    var description by remember { mutableStateOf(initial?.description ?: "") }
+    var descriptionSource by remember { mutableStateOf(initial?.descriptionSource ?: "") }
+    var infoLoading by remember { mutableStateOf(false) }
+    var infoMissing by remember { mutableStateOf(false) }
+    var infoDismissed by remember { mutableStateOf(false) }
+    val autoInfo = remember { AppPrefs.medInfoAuto(context) }
+
+    fun loadInfo() {
+        if (infoLoading || name.isBlank()) return
+        scope.launch {
+            infoLoading = true
+            infoMissing = false
+            val info = runCatching { MedicationInfo.load(name) }.getOrNull()
+            if (info != null) {
+                description = info.text
+                descriptionSource = info.sourceUrl
+            } else {
+                infoMissing = true
+            }
+            infoLoading = false
+        }
+    }
+
+    // Einstellung "automatisch laden": nach kurzer Tipp-Pause den Namen nachschlagen
+    LaunchedEffect(name) {
+        if (autoInfo && description.isBlank() && !infoDismissed && name.trim().length >= 4) {
+            delay(1500)
+            loadInfo()
+        }
+    }
 
     val originalPhoto = initial?.photoPath
     var photoName by remember { mutableStateOf(originalPhoto) }
@@ -126,6 +161,7 @@ fun MedicationDialog(
                 if (name.isBlank()) result.nameCandidates.firstOrNull()?.let { name = it }
                 if (stock.isBlank()) result.packSize?.let { stock = it.toString() }
                 if (notes.isBlank()) result.strength?.let { notes = "Stärke: $it" }
+                if (pzn.isBlank()) result.pzn?.let { pzn = it }
             }
             scanning = false
         }
@@ -176,6 +212,9 @@ fun MedicationDialog(
                     personId = initial?.personId ?: 1,
                     doctorId = doctorId?.takeIf { id -> doctors.any { it.id == id } },
                     pharmacyId = pharmacyId?.takeIf { id -> doctors.any { it.id == id } },
+                    pzn = pzn.trim(),
+                    description = description.trim(),
+                    descriptionSource = if (description.isBlank()) "" else descriptionSource,
                     // Leer = Anzahl der Einnahmen pro Tag
                     dailyUse = dailyUse.trim().toIntOrNull() ?: maxOf(1, times.size),
                     notes = notes.trim(),
@@ -227,6 +266,9 @@ fun MedicationDialog(
             }
         }
         scan?.let { result ->
+            if (result.pzn != null) {
+                Text("PZN auf der Packung erkannt: ${result.pzn}", style = MaterialTheme.typography.bodySmall)
+            }
             if (result.nameCandidates.isEmpty()) {
                 Text(
                     "Auf dem Foto wurde kein Text erkannt. Bitte die Daten von Hand eintragen.",
@@ -256,6 +298,27 @@ fun MedicationDialog(
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )
+        OutlinedTextField(
+            value = pzn,
+            onValueChange = { v -> pzn = v.filter { it.isDigit() }.take(8) },
+            label = { Text("PZN (Pharmazentralnummer, optional)") },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.fillMaxWidth(),
+        )
+        if (pzn.length == 8) {
+            TextButton(onClick = {
+                try {
+                    context.startActivity(
+                        android.content.Intent(
+                            android.content.Intent.ACTION_VIEW,
+                            android.net.Uri.parse("https://www.google.com/search?q=PZN+$pzn"),
+                        ),
+                    )
+                } catch (_: ActivityNotFoundException) {
+                }
+            }) { Text("PZN im Internet nachschlagen") }
+        }
         DropdownField(
             label = "Dosierung pro Einnahme",
             value = dosage,
@@ -315,6 +378,55 @@ fun MedicationDialog(
             label = { Text("Notizen") },
             modifier = Modifier.fillMaxWidth(),
         )
+
+        // ---- Beschreibung aus dem Internet (nur Anhaltspunkt)
+        Text("Beschreibung (Anhaltspunkt)", style = MaterialTheme.typography.labelLarge)
+        if (description.isNotBlank()) {
+            Text(description, style = MaterialTheme.typography.bodyMedium)
+            if (descriptionSource.isNotBlank()) {
+                TextButton(onClick = {
+                    try {
+                        context.startActivity(
+                            android.content.Intent(
+                                android.content.Intent.ACTION_VIEW,
+                                android.net.Uri.parse(descriptionSource),
+                            ),
+                        )
+                    } catch (_: ActivityNotFoundException) {
+                    }
+                }) { Text("Quelle: Wikipedia (CC BY-SA) öffnen") }
+            }
+            TextButton(onClick = {
+                description = ""
+                descriptionSource = ""
+                infoDismissed = true
+            }) { Text("Beschreibung entfernen") }
+        } else if (infoLoading) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+                Text("Suche Beschreibung …", style = MaterialTheme.typography.bodyMedium)
+            }
+        } else {
+            OutlinedButton(
+                enabled = name.isNotBlank(),
+                onClick = {
+                    infoDismissed = false
+                    loadInfo()
+                },
+            ) { Text("Beschreibung aus dem Internet laden") }
+            if (infoMissing) {
+                Text(
+                    "Dazu wurde nichts Passendes gefunden. Versuche es mit dem Namen des Wirkstoffs.",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+            Text(
+                if (autoInfo) "Automatisches Laden ist in den Einstellungen eingeschaltet. Es wird nur der Name gesendet."
+                else "Nur auf Knopfdruck. Es wird nur der Name gesendet, kein Name der Person, keine Termine.",
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
+        Text(MedicationInfo.DISCLAIMER, style = MaterialTheme.typography.bodySmall)
     }
 }
 

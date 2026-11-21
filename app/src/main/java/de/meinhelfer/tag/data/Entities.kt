@@ -36,6 +36,12 @@ data class Medication(
     val doctorId: Long? = null,
     /** Zustaendige Apotheke (Kontakt) fuer die Nachbestellung, optional. */
     val pharmacyId: Long? = null,
+    /** Pharmazentralnummer (8 Ziffern) von der Packung, optional. */
+    val pzn: String = "",
+    /** Beschreibung aus dem Internet (nur Anhaltspunkt), optional. */
+    val description: String = "",
+    /** Quelle der Beschreibung, z. B. Link zur Wikipedia-Seite. */
+    val descriptionSource: String = "",
 ) {
     fun timeList(): List<String> =
         times.split(",").map { it.trim() }.filter { it.isNotEmpty() }

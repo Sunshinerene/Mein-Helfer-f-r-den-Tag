@@ -2,9 +2,13 @@
 
 ## Als Nächstes
 
-- [ ] Beschreibung zum Medikament aus dem Internet (nur auf Knopfdruck, nur Wirkstoff/Name, als Anhaltspunkt, kein ärztlicher Rat)
 - [ ] KI-Hinweise in der Auswertung, z. B. "Medikamentenplan vom Hausarzt prüfen lassen": immer mit Bestätigung und Datenschutz-Filter, nur Anhaltspunkt, ersetzt nie Arzt oder Apotheke; Hinweis lässt sich auf eine eigene To-do-Liste setzen ("beim Hausarzt ansprechen")
-- [ ] Erkennung von Packungsfoto verbessern (Wirkstoff, Packungsbeilage, Barcode/PZN)
+- [ ] Erkennung von Packungsfoto weiter verbessern (Wirkstoff, Packungsbeilage), Kamera-Scan für Barcodes live
+
+## Version 0.11.0 (fertig)
+
+- [x] Beschreibung zum Medikament aus dem Internet (Wikipedia), nur Name wird gesendet, nur Anhaltspunkt; in den Einstellungen wählbar: nur auf Knopfdruck oder automatisch
+- [x] PZN-/Barcode-Erkennung vom Packungsfoto (auf dem Handy), PZN steht auch in der Nachbestell-Liste
 
 ## Version 0.10.0 (fertig)
 
