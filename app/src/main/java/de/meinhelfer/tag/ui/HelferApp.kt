@@ -79,6 +79,7 @@ private enum class Tab(val label: String, val icon: ImageVector) {
     Termine("Termine", Icons.Default.DateRange),
     Dokumente("Dokumente", DocumentIcon),
     Aerzte("Kontakte", Icons.Default.Person),
+    Infos("Infos", InfoIcon),
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -183,7 +184,7 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
                             selected = i == tabIndex,
                             onClick = { tabIndex = i },
                             icon = { Icon(t.icon, contentDescription = t.label) },
-                            label = { Text(t.label, maxLines = 1, softWrap = false, fontSize = 11.sp) },
+                            label = { Text(t.label, maxLines = 1, softWrap = false, fontSize = 10.sp) },
                         )
                     }
                 }
@@ -215,6 +216,12 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
                     Tab.Termine -> AppointmentScreen(appointments, doctors, documents, meds.size, persons.firstOrNull { it.id == personId }, vm)
                     Tab.Dokumente -> DocumentScreen(documents, doctors, vm)
                     Tab.Aerzte -> DoctorScreen(doctors, vm)
+                    Tab.Infos -> InfoScreen(
+                        person = persons.firstOrNull { it.id == personId },
+                        meds = meds,
+                        documents = documents,
+                        onOpenWegweiser = { showWegweiser = true },
+                    )
                 }
               }
             }

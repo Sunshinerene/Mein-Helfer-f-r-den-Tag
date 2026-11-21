@@ -19,6 +19,35 @@ data class DocSuggestion(
 )
 
 object DocumentAnalyzer {
+    /** Zusaetzliche Kategorien, die vorgeschlagen werden, wenn keine der Standard-Kategorien passt. */
+    private val EXTRA_CATEGORIES: List<Pair<String, Regex>> = listOf(
+        "Wohnung / Miete" to Regex("Mietvertrag|Miete|Vermieter|Mieter|Wohnungs(?:übergabe|vertrag)|Nebenkosten", RegexOption.IGNORE_CASE),
+        "Schwerbehinderung" to Regex("Schwerbehinder|Grad der Behinderung|\\bGdB\\b|Merkzeichen", RegexOption.IGNORE_CASE),
+        "Pflegeheim / Tagespflege" to Regex("Heimvertrag|Pflegeheim|Heimplatz|Tagespflege|Kurzzeitpflege", RegexOption.IGNORE_CASE),
+        "Pflegedienst" to Regex("Pflegedienst|Pflegevertrag|Leistungsnachweis|Pflegetagebuch", RegexOption.IGNORE_CASE),
+        "Hilfsmittel" to Regex("Hilfsmittel|Rollator|Rollstuhl|Pflegebett|Hausnotruf", RegexOption.IGNORE_CASE),
+        "Reha / Kur" to Regex("Rehabilitation|\\bReha\\b|\\bKur\\b", RegexOption.IGNORE_CASE),
+        "Antrag / Widerspruch" to Regex("Antrag|Widerspruch|Kostenübernahme|Genehmigung", RegexOption.IGNORE_CASE),
+        "Versicherung" to Regex("Versicherungsschein|Police|Haftpflicht|Unfallversicherung|Sterbegeld|Versicherung", RegexOption.IGNORE_CASE),
+        "Rente / Finanzen" to Regex("Rentenbescheid|Rentenversicherung|Rente|Kontoauszug|Sparkasse|Einkommensteuer|Steuer", RegexOption.IGNORE_CASE),
+        "Testament / Nachlass" to Regex("Testament|Erbschein|Nachlass|Erbe\\b", RegexOption.IGNORE_CASE),
+        "Impfungen" to Regex("Impfpass|Impfausweis|Impfung", RegexOption.IGNORE_CASE),
+        "Zahnarzt / Bonusheft" to Regex("Bonusheft|Zahnersatz|Heil- und Kostenplan|Zahnarzt", RegexOption.IGNORE_CASE),
+        "Urkunden / Ausweise" to Regex("Personalausweis|Reisepass|Geburtsurkunde|Heiratsurkunde|Sterbeurkunde|Urkunde", RegexOption.IGNORE_CASE),
+    )
+
+    /** Name fuer eine neue Kategorie, wenn Titel oder Text auf ein anderes Thema hindeuten. Titel zaehlt zuerst. */
+    fun suggestNewCategory(title: String, text: String): String? {
+        EXTRA_CATEGORIES.firstOrNull { (_, regex) -> regex.containsMatchIn(title) }?.let { return it.first }
+        return EXTRA_CATEGORIES.firstOrNull { (_, regex) -> regex.containsMatchIn(text.take(4000)) }?.first
+    }
+
+    /** Passende Standard-Kategorie aus dem Text, oder null. */
+    fun suggestKnownCategory(title: String, text: String): String? {
+        val joined = title + "\n" + text
+        return RULES.firstOrNull { (_, regex) -> regex.containsMatchIn(joined) }?.first
+    }
+
     private val DATE = Regex("""\b(\d{1,2})\.\s?(\d{1,2})\.\s?(\d{4})\b""")
     private val SHOWN = DateTimeFormatter.ofPattern("dd.MM.yyyy", Locale.GERMANY)
 

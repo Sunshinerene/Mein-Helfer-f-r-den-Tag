@@ -37,6 +37,13 @@ enum class DocSort(val label: String) {
     CATEGORY("Nach Kategorie"),
 }
 
+/** Standard-Kategorien plus eigene, die schon bei Dokumenten verwendet werden ("Sonstiges" bleibt am Ende). */
+internal fun allDocCategories(items: List<Document>): List<String> {
+    val base = de.meinhelfer.tag.media.DOC_CATEGORIES
+    val custom = items.map { it.category.trim() }.filter { it.isNotEmpty() && it !in base }.distinct().sorted()
+    return base.dropLast(1) + custom + base.last()
+}
+
 /** Datum des Dokuments, sonst der Tag, an dem es gespeichert wurde. */
 internal fun docEpochDay(d: Document): Long = d.docDate ?: (d.createdMillis / 86_400_000L)
 

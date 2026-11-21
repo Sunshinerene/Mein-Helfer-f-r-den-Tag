@@ -77,6 +77,24 @@ object AppPrefs {
         prefs(context).edit().putBoolean(KEY_SECURE, value).apply()
     }
 
+    private const val KEY_INFO_TOPICS = "info_themen"
+    private const val KEY_INFO_PERSONAL = "info_vorschlaege"
+
+    /** Eigene Themen der Infoseite (Suchwoerter). */
+    fun infoTopics(context: Context): List<String> =
+        (prefs(context).getString(KEY_INFO_TOPICS, "") ?: "").split("\n").map { it.trim() }.filter { it.isNotEmpty() }
+
+    fun setInfoTopics(context: Context, topics: List<String>) {
+        prefs(context).edit().putString(KEY_INFO_TOPICS, topics.take(20).joinToString("\n")).apply()
+    }
+
+    /** Themen-Vorschlaege aus den eigenen Daten (nur auf dem Handy ausgewertet). */
+    fun infoPersonalized(context: Context): Boolean = prefs(context).getBoolean(KEY_INFO_PERSONAL, true)
+
+    fun setInfoPersonalized(context: Context, value: Boolean) {
+        prefs(context).edit().putBoolean(KEY_INFO_PERSONAL, value).apply()
+    }
+
     private fun prefs(context: Context) = context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
 
     fun autoUpdateCheck(context: Context): Boolean = prefs(context).getBoolean(KEY_AUTO_UPDATE, true)

@@ -156,6 +156,29 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
         ),
     ),
     GuideSection(
+        id = "infos",
+        title = "Infos",
+        summary = "Aktuelles zu Pflege, Gesetzen und deinen Themen",
+        items = listOf(
+            GuideItem(
+                "Was ist das?",
+                "Der Reiter „Infos“ sammelt aktuelle Themen rund um Pflege: Pflegereform und Gesetze, Beratung und Hilfe, Pflege und Beruf, Entlastung für Angehörige. Die Themenkarten tragen ein Datum („Stand“) und sind ohne Gewähr. Gesetze ändern sich, maßgeblich sind Gesetzestext, Pflegekasse und Beratungsstellen.",
+            ),
+            GuideItem(
+                "Meldungen suchen",
+                "Gib ein Thema ein (z. B. Pflegegeld, Demenz) und tippe auf „Suchen“. Die App zeigt aktuelle Überschriften mit Quelle und Datum. Ein Tipp öffnet die Seite der Quelle im Browser. Dabei wird nur dein Suchwort an Google News gesendet, nie ein Name oder Daten aus der App. „Aktuelle Meldungen“ auf einer Themenkarte sucht direkt zu diesem Thema.",
+            ),
+            GuideItem(
+                "Eigene Themen",
+                "Nach einer Suche kannst du „Thema merken“ antippen. Gemerkte Themen stehen unter „Meine Themen“ und lassen sich mit einem Tipp erneut suchen. Zum Entfernen das Thema suchen und „Thema entfernen“ antippen.",
+            ),
+            GuideItem(
+                "Themen für dich",
+                "Aus Pflegegrad, Krankenkasse, Medikamenten, Dokumenten und „Wichtig zu wissen“ schlägt die App passende Themen vor, z. B. „Pflegegrad 3“ oder ein Thema zu einem erkannten Medikament. Das wird nur auf deinem Handy ausgewertet, ist keine Diagnose und lässt sich mit dem Schalter ausschalten. Erst beim Antippen eines Vorschlags wird das Suchwort gesendet.",
+            ),
+        ),
+    ),
+    GuideSection(
         id = "wegweiser",
         title = "Wegweiser Leistungen",
         summary = "Welche Hilfen und Anträge je Pflegegrad",
@@ -233,6 +256,14 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             GuideItem(
                 "Filtern und sortieren",
                 "Die Leiste unter dem Suchfeld zeigt alle Kategorien mit Anzahl. Ein Tipp filtert, nochmal tippen hebt den Filter auf. Unter „Sortierung und mehr Filter“ gibt es Sortierung (neueste, älteste, A bis Z, nach Kategorie) sowie Filter nach Jahr und nach Arzt oder Stelle. „Zurücksetzen“ löscht alle Filter.",
+            ),
+            GuideItem(
+                "Kategorien und Vorschläge",
+                "Passt keine Standard-Kategorie, schlägt die App unter „Kategorie“ einen Namen vor (z. B. „Wohnung / Miete“ oder „Schwerbehinderung“). Antippen übernimmt ihn. Du kannst auch eine vorhandene Kategorie wählen oder selbst einen Namen eintippen. Eigene Kategorien stehen danach in der Auswahl und im Filter.",
+            ),
+            GuideItem(
+                "Text nicht erkannt?",
+                "Word-Dateien (docx) und LibreOffice-Dateien (odt) werden jetzt gelesen. Wurde bei einem Dokument kein Text erkannt, öffne es mit „Bearbeiten“ und tippe auf „Text neu auslesen“. Den Text kannst du dort auch selbst eintragen oder korrigieren, dann findet ihn die Suche.",
             ),
             GuideItem(
                 "Öffnen und teilen",

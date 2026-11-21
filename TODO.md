@@ -4,6 +4,12 @@
 
 - [ ] Erkennung von Packungsfoto weiter verbessern (Wirkstoff, Packungsbeilage), Kamera-Scan für Barcodes live
 
+## Version 0.20.0 (fertig)
+
+- [x] Neuer Reiter „Infos“: aktuelle Themenkarten (Pflegereform/PNOG mit Stand, Beratung, Pflege und Beruf, Entlastung, Medikamente), Meldungssuche, eigene Themen, Themenvorschläge aus den eigenen Daten
+- [x] Dokumente: Vorschlag für neue Kategorie mit Namen, eigene Kategorien in Auswahl und Filter
+- [x] Dokumente: Word (docx) und LibreOffice (odt) werden gelesen, „Text neu auslesen“ bei bestehenden Dokumenten
+
 ## Version 0.19.0 (fertig)
 
 - [x] Dokumente: Kategorie-Filter mit Anzahl, Filter nach Jahr und Arzt/Stelle, Sortierung

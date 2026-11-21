@@ -18,6 +18,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -160,6 +161,7 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, vm: MainViewMod
     val counts = items.groupingBy { it.category }.eachCount()
     val categories = DOC_CATEGORIES.filter { it in counts } + counts.keys.filter { it !in DOC_CATEGORIES }.sorted()
     val doctorsUsed = doctors.filter { d -> items.any { it.doctorId == d.id } }
+    val categoryOptions = allDocCategories(items)
 
     val filtered = items.filter { d ->
         (activeCategory == null || d.category == activeCategory) &&
@@ -279,6 +281,7 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, vm: MainViewMod
                 pending = pending,
                 initial = null,
                 doctors = doctors,
+                categoryOptions = categoryOptions,
                 onAddPage = { launchCamera(true) },
                 onDismiss = {
                     DocumentStore.discard(pending)
@@ -314,6 +317,7 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, vm: MainViewMod
             pending = null,
             initial = doc,
             doctors = doctors,
+            categoryOptions = categoryOptions,
             onAddPage = {},
             onDismiss = { editItem = null },
             onSave = {
@@ -330,6 +334,7 @@ private fun DocumentDialog(
     pending: PendingDoc?,
     initial: Document?,
     doctors: List<Doctor>,
+    categoryOptions: List<String>,
     onAddPage: () -> Unit,
     onDismiss: () -> Unit,
     onSave: (Document) -> Unit,
@@ -343,6 +348,12 @@ private fun DocumentDialog(
     var doctorId by remember { mutableStateOf(initial?.doctorId ?: suggestion?.doctorId) }
     var notes by remember { mutableStateOf(initial?.notes ?: "") }
     var text by remember { mutableStateOf(initial?.text ?: pending?.text ?: "") }
+
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var rereading by remember { mutableStateOf(false) }
+    val knownSuggestion = remember(text) { DocumentAnalyzer.suggestKnownCategory(title, text) }
+    val newSuggestion = remember(title, text) { DocumentAnalyzer.suggestNewCategory(title, text) }
 
     // Weitere Seite hinzugefuegt: erkannten Text uebernehmen
     LaunchedEffect(pending?.text) {
@@ -386,7 +397,25 @@ private fun DocumentDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
-                DropdownField(label = "Kategorie", value = category, options = DOC_CATEGORIES, onValueChange = { category = it })
+                DropdownField(label = "Kategorie", value = category, options = categoryOptions, onValueChange = { category = it })
+                if (category.isBlank() || category == "Sonstiges") {
+                    val chips = listOfNotNull(
+                        knownSuggestion?.takeIf { it != category }?.let { it to "Vorschlag: $it" },
+                        newSuggestion?.takeIf { it != category && it != knownSuggestion }?.let {
+                            it to (if (it in categoryOptions) "Vorschlag: $it" else "Neue Kategorie: $it")
+                        },
+                    )
+                    if (chips.isNotEmpty()) {
+                        Text("Passt das besser?", style = MaterialTheme.typography.labelMedium)
+                        chips.forEach { (name, label) ->
+                            AssistChip(onClick = { category = name }, label = { Text(label) })
+                        }
+                        Text(
+                            "Antippen übernimmt den Namen. Du kannst oben auch eine bestehende Kategorie wählen oder selbst einen Namen eintippen.",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                }
                 DatePickerField(label = "Datum des Dokuments", date = date, onChange = { date = it })
                 if (date != null) TextButton(onClick = { date = null }) { Text("Datum entfernen") }
                 if (doctors.isNotEmpty()) {
@@ -404,6 +433,30 @@ private fun DocumentDialog(
                     label = { Text("Notizen") },
                     modifier = Modifier.fillMaxWidth(),
                 )
+                if (initial != null && DocumentReader.canExtract(initial.mimeType)) {
+                    OutlinedButton(
+                        enabled = !rereading,
+                        onClick = {
+                            scope.launch {
+                                rereading = true
+                                val result = runCatching {
+                                    val file = DocumentStore.decryptToCache(
+                                        context,
+                                        initial.fileName,
+                                        DocumentStore.safeName(initial.title) + "." + DocumentStore.extensionFor(initial.mimeType),
+                                    )
+                                    DocumentReader.extractText(file, initial.mimeType)
+                                }.getOrDefault("")
+                                rereading = false
+                                if (result.isBlank()) {
+                                    Toast.makeText(context, "Es wurde kein Text erkannt.", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    text = result.trim()
+                                }
+                            }
+                        },
+                    ) { Text(if (rereading) "Lese Text …" else "Text neu auslesen") }
+                }
                 OutlinedTextField(
                     value = text,
                     onValueChange = { text = it },

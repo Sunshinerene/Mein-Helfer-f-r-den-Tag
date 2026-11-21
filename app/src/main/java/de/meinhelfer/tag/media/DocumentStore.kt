@@ -88,6 +88,9 @@ object DocumentStore {
         mime == "application/pdf" -> "pdf"
         mime.startsWith("image/") -> "jpg"
         mime.startsWith("text/") -> "txt"
+        mime.contains("wordprocessingml") -> "docx"
+        mime.contains("opendocument.text") -> "odt"
+        mime == "application/msword" -> "doc"
         else -> "bin"
     }
 
@@ -179,9 +182,56 @@ object DocumentReader {
                 val text = withContext(Dispatchers.IO) { temp.readText(Charsets.UTF_8).take(200_000) }
                 PendingDoc(listOf(temp), DocKind.TEXT, "text/plain", "txt", text, base)
             }
+            ext == "docx" || mime.contains("wordprocessingml") -> PendingDoc(
+                listOf(temp), DocKind.OTHER, DOCX_MIME, "docx", readOffice(temp, "word/document.xml"), base,
+            )
+            ext == "odt" || mime.contains("opendocument.text") -> PendingDoc(
+                listOf(temp), DocKind.OTHER, ODT_MIME, "odt", readOffice(temp, "content.xml"), base,
+            )
             else -> PendingDoc(listOf(temp), DocKind.OTHER, mime, ext, "", base)
         }
     }
+
+    private const val DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    private const val ODT_MIME = "application/vnd.oasis.opendocument.text"
+
+    /** Text aus Word- (docx) oder LibreOffice-Dateien (odt): das sind ZIP-Dateien mit XML darin. */
+    private suspend fun readOffice(file: File, entry: String): String = withContext(Dispatchers.IO) {
+        try {
+            java.util.zip.ZipFile(file).use { zip ->
+                val item = zip.getEntry(entry) ?: return@use ""
+                val xml = zip.getInputStream(item).bufferedReader(Charsets.UTF_8).use { it.readText() }
+                xml
+                    .replace(Regex("</w:p>|</text:p>|</text:h>|<w:br/>|<w:tab/>|<text:line-break/>"), "\n")
+                    .replace(Regex("<[^>]+>"), "")
+                    .replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">")
+                    .replace("&quot;", "\"").replace("&apos;", "'")
+                    .lines().joinToString("\n") { it.trim() }
+                    .replace(Regex("\n{3,}"), "\n\n")
+                    .trim()
+                    .take(200_000)
+            }
+        } catch (_: Exception) {
+            ""
+        }
+    }
+
+    /** Text einer bereits gespeicherten (entschluesselten) Datei noch einmal auslesen. */
+    suspend fun extractText(file: File, mime: String): String = when {
+        mime == "application/pdf" -> readPdf(file)
+        mime.startsWith("image/") -> {
+            val bitmap = withContext(Dispatchers.IO) { PhotoStore.decodeSampled(file, 1800) }
+            if (bitmap != null) runCatching { recognize(bitmap) }.getOrDefault("") else ""
+        }
+        mime.startsWith("text/") -> withContext(Dispatchers.IO) { file.readText(Charsets.UTF_8).take(200_000) }
+        mime.contains("wordprocessingml") -> readOffice(file, "word/document.xml")
+        mime.contains("opendocument.text") -> readOffice(file, "content.xml")
+        else -> ""
+    }
+
+    fun canExtract(mime: String): Boolean =
+        mime == "application/pdf" || mime.startsWith("image/") || mime.startsWith("text/") ||
+            mime.contains("wordprocessingml") || mime.contains("opendocument.text")
 
     private suspend fun readPdf(file: File): String = withContext(Dispatchers.IO) {
         try {
