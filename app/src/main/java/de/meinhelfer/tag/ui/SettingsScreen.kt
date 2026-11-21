@@ -46,7 +46,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.meinhelfer.tag.ai.AiClient
+import de.meinhelfer.tag.ai.AiConfig
+import de.meinhelfer.tag.ai.AiProvider
 import de.meinhelfer.tag.update.AppPrefs
+import kotlinx.coroutines.launch
+import androidx.compose.material3.OutlinedTextField
 import de.meinhelfer.tag.update.RoadmapKind
 import de.meinhelfer.tag.update.RoadmapLine
 import de.meinhelfer.tag.update.UpdateChecker
@@ -104,6 +109,7 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit, onOpenGuide: () -> Uni
             item { HelpCard(onOpenGuide, onStartTour) }
             item { ThemeCard(vm) }
             item { MedInfoCard() }
+            item { AiCard() }
             item { FeedbackCard(context) }
             item { RoadmapCard(roadmap, roadmapError) }
             item { AboutCard(context) }
@@ -306,6 +312,105 @@ private fun MedInfoCard() {
                 "Beim Anlegen oder Bearbeiten eines Medikaments sucht die App im Internet (Wikipedia) eine kurze Beschreibung. Aus: nur nach Tipp auf den Knopf. An: automatisch, kurz nachdem du den Namen getippt hast. In beiden Fällen wird nur der Medikamentenname gesendet. Die Beschreibung ist nur ein Anhaltspunkt und ersetzt nie Arzt oder Apotheke.",
                 style = MaterialTheme.typography.bodySmall,
             )
+        }
+    }
+}
+
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+private fun AiCard() {
+    val context = LocalContext.current
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    var provider by remember { mutableStateOf(AiConfig.provider(context)) }
+    var key by remember { mutableStateOf(AiConfig.apiKey(context, provider)) }
+    var model by remember { mutableStateOf(AiConfig.model(context, provider)) }
+    var testing by remember { mutableStateOf(false) }
+    var testResult by remember { mutableStateOf<String?>(null) }
+    val storageOk = remember { AiConfig.storageAvailable(context) }
+
+    fun choose(p: AiProvider) {
+        provider = p
+        AiConfig.setProvider(context, p)
+        key = AiConfig.apiKey(context, p)
+        model = AiConfig.model(context, p)
+        testResult = null
+    }
+
+    HCard(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("KI-Assistent (optional)", style = MaterialTheme.typography.titleMedium)
+            Text(
+                "Die KI liefert Anhaltspunkte, z. B. „Medikamentenplan vom Hausarzt prüfen lassen“. Sie ist kein Arzt und kein Apotheker. " +
+                    "Du wählst den Dienst und hinterlegst deinen eigenen Schlüssel (API-Key). Gesendet wird nur nach deiner Bestätigung und immer ohne Namen der Person. " +
+                    "Ein Abo bei ChatGPT oder Claude reicht dafür nicht, es braucht einen API-Schlüssel des jeweiligen Anbieters.",
+                style = MaterialTheme.typography.bodySmall,
+            )
+            if (!storageOk) {
+                Text(
+                    "Der verschlüsselte Speicher ist auf diesem Handy nicht verfügbar, deshalb können keine Schlüssel gespeichert werden.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
+            Text("Kostenlos nutzbar", style = MaterialTheme.typography.labelLarge)
+            androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                AiProvider.entries.filter { it.free }.forEach { p ->
+                    FilterChip(selected = provider == p, onClick = { choose(p) }, label = { Text(p.label) })
+                }
+            }
+            Text("Kostenpflichtig", style = MaterialTheme.typography.labelLarge)
+            androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                AiProvider.entries.filter { !it.free }.forEach { p ->
+                    FilterChip(selected = provider == p, onClick = { choose(p) }, label = { Text(p.label) })
+                }
+            }
+            Text(provider.note, style = MaterialTheme.typography.bodySmall)
+            OutlinedTextField(
+                value = key,
+                onValueChange = {
+                    key = it
+                    AiConfig.setApiKey(context, provider, it)
+                    testResult = null
+                },
+                label = { Text("API-Schlüssel für ${provider.label}") },
+                singleLine = true,
+                visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                enabled = storageOk,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            OutlinedTextField(
+                value = model,
+                onValueChange = {
+                    model = it
+                    AiConfig.setModel(context, provider, it)
+                    testResult = null
+                },
+                label = { Text("Modell") },
+                singleLine = true,
+                enabled = storageOk,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Text(
+                "Der Modellname ist vorausgefüllt. Falls der Anbieter ihn ändert, trage hier den neuen Namen ein. Der Schlüssel wird verschlüsselt nur auf diesem Handy gespeichert.",
+                style = MaterialTheme.typography.bodySmall,
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                OutlinedButton(onClick = { openUrl(context, provider.keyUrl) }) { Text("Schlüssel besorgen") }
+                Button(
+                    enabled = key.isNotBlank() && !testing,
+                    onClick = {
+                        testing = true
+                        testResult = null
+                        scope.launch {
+                            AiClient.ask(context, "Antworte nur mit dem Wort OK.", "Test")
+                                .onSuccess { testResult = "Verbindung klappt." }
+                                .onFailure { testResult = it.message ?: "Das hat nicht geklappt." }
+                            testing = false
+                        }
+                    },
+                ) { Text(if (testing) "Teste …" else "Testen") }
+            }
+            testResult?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
         }
     }
 }

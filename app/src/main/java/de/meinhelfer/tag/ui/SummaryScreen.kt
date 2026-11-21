@@ -20,6 +20,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -46,6 +47,7 @@ fun SummaryScreen(vm: MainViewModel, onBack: () -> Unit) {
     var offset by remember { mutableIntStateOf(0) }
     var summary by remember { mutableStateOf<Summary?>(null) }
     val addedTodos = remember { mutableStateListOf<String>() }
+    var withNotes by remember { mutableStateOf(false) }
 
     // Bei jedem Wechsel von Zeitraum oder Seite neu berechnen (alles lokal auf dem Geraet).
     LaunchedEffect(period, offset) {
@@ -116,6 +118,28 @@ fun SummaryScreen(vm: MainViewModel, onBack: () -> Unit) {
                 )?.let { item { it() } }
                 block("Bemerkungen", s.notes, null)?.let { item { it() } }
                 block("Verlauf", s.perDay, null)?.let { item { it() } }
+                item {
+                    HCard(Modifier.fillMaxWidth()) {
+                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text("KI-Einschätzung (nur Anhaltspunkt)", style = MaterialTheme.typography.titleMedium)
+                            Text(
+                                "Optional. Die KI bekommt nur diese Auswertung, ohne Namen der Person. Du siehst den Text vor dem Senden und entscheidest.",
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Switch(checked = withNotes, onCheckedChange = { withNotes = it })
+                                Text("Meine Bemerkungen mitsenden", style = MaterialTheme.typography.bodyMedium)
+                            }
+                            val sendable = if (withNotes) s else s.copy(notes = emptyList())
+                            AiHintBox(
+                                buttonLabel = "KI-Hinweise holen",
+                                promptText = "Hier ist eine automatisch erstellte Zusammenfassung zu Medikamenteneinnahme und Terminen einer betreuten Person. " +
+                                    "Nenne Anhaltspunkte, was man mit Hausarzt oder Apotheke besprechen könnte.\n\n" + sendable.toText(),
+                                onTodo = { vm.addTodo(it) },
+                            )
+                        }
+                    }
+                }
                 item {
                     Text(Summary.DISCLAIMER, style = MaterialTheme.typography.bodySmall)
                 }

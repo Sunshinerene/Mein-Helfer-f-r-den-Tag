@@ -226,6 +226,7 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
 private fun MedicationScreen(items: List<Medication>, doctors: List<Doctor>, vm: MainViewModel, onReorder: () -> Unit) {
     var showAdd by remember { mutableStateOf(false) }
     var editItem by remember { mutableStateOf<Medication?>(null) }
+    var detailId by remember { mutableStateOf<Long?>(null) }
 
     val lowCount = lowStockMeds(items).size
     Column(Modifier.fillMaxSize()) {
@@ -253,12 +254,32 @@ private fun MedicationScreen(items: List<Medication>, doctors: List<Doctor>, vm:
                     doctors.firstOrNull { it.id == m.doctorId }?.let { "Arzt: ${it.name}" },
                     doctors.firstOrNull { it.id == m.pharmacyId }?.let { "Apotheke: ${it.name}" },
                     m.notes.takeIf { it.isNotBlank() },
+                    m.description.takeIf { it.isNotBlank() }?.let { d -> if (d.length > 110) d.take(110).trimEnd() + " …" else d },
                 ),
-                onClick = { editItem = m },
+                onClick = { detailId = m.id },
                 onDelete = { vm.delete(m) },
                 photoName = m.photoPath,
-            )
+            ) {
+                Row {
+                    TextButton(onClick = { detailId = m.id }) { Text("Infos & Beschreibung") }
+                    TextButton(onClick = { editItem = m }) { Text("Bearbeiten") }
+                }
+            }
         }
+    }
+
+    items.firstOrNull { it.id == detailId }?.let { med ->
+        MedicationDetailDialog(
+            med = med,
+            doctors = doctors,
+            onEdit = {
+                editItem = med
+                detailId = null
+            },
+            onClose = { detailId = null },
+            onUpdate = { vm.update(it) },
+            onAddTodo = { vm.addTodo(it) },
+        )
     }
 
     if (showAdd || editItem != null) {

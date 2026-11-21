@@ -88,7 +88,11 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
         items = listOf(
             GuideItem(
                 "Medikament anlegen",
-                "Im Bereich „Medikamente“ auf das Plus tippen. Pflicht ist nur der Name. Eine Karte antippen öffnet sie zum Bearbeiten, der Papierkorb löscht sie (mit Rückfrage).",
+                "Im Bereich „Medikamente“ auf das Plus tippen. Pflicht ist nur der Name. Der Papierkorb auf der Karte löscht das Medikament (mit Rückfrage).",
+            ),
+            GuideItem(
+                "Infos auf einen Blick",
+                "Eine Medikamentenkarte antippen (oder „Infos & Beschreibung“) zeigt alles in einer Übersicht: Einnahme, Vorrat, PZN, Arzt, Apotheke, Notizen, Beschreibung und KI-Hinweis. Von dort kommst du mit „Bearbeiten“ zum Ändern. Eine gekürzte Beschreibung steht schon auf der Karte.",
             ),
             GuideItem(
                 "Per Foto der Packung",
@@ -194,6 +198,33 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             GuideItem(
                 "Für alle Personen gleich",
                 "Kontakte gelten für alle betreuten Personen. Du legst sie nur einmal an.",
+            ),
+        ),
+    ),
+    GuideSection(
+        id = "ki",
+        title = "KI-Assistent",
+        summary = "Optionale Hinweise, Dienst frei wählbar",
+        items = listOf(
+            GuideItem(
+                "Wofür?",
+                "Die KI gibt Anhaltspunkte, z. B. „Medikamentenplan vom Hausarzt prüfen lassen“ oder Fragen für den Apotheker. Sie ist kein Arzt und kein Apotheker und ersetzt beide nie. Sie stellt keine Diagnosen und empfiehlt keine Dosierungen.",
+            ),
+            GuideItem(
+                "Einrichten",
+                "Einstellungen → KI-Assistent. Dienst wählen: kostenlos nutzbar sind Google Gemini, Groq, Mistral und OpenRouter (Modelle mit „:free“). Kostenpflichtig sind OpenAI, Anthropic (Claude) und DeepSeek. Dann den eigenen API-Schlüssel eintragen („Schlüssel besorgen“ öffnet die Seite des Anbieters) und „Testen“ antippen. Ein Abo bei ChatGPT oder Claude reicht nicht, es braucht den API-Schlüssel.",
+            ),
+            GuideItem(
+                "Wo erscheint sie?",
+                "In der Auswertung („KI-Hinweise holen“) und im Medikament („KI-Hinweis zu diesem Medikament“). Bei jeder Antwort kannst du einen Punkt mit „Auf meine To-do-Liste“ übernehmen und später beim Arzt ansprechen oder eben nicht.",
+            ),
+            GuideItem(
+                "Was wird gesendet?",
+                "Nichts passiert von allein. Vor dem Senden zeigt die App den genauen Text und du bestätigst. Der Name der Person ist nie dabei. Deine Bemerkungen werden nur mitgesendet, wenn du es einschaltest. Beim Medikament geht nur der Medikamentenname raus.",
+            ),
+            GuideItem(
+                "Schlüssel und Kosten",
+                "Der Schlüssel wird verschlüsselt nur auf diesem Handy gespeichert. Bei kostenlosen Diensten gibt es Mengengrenzen, bei kostenpflichtigen zahlst du nach Verbrauch direkt beim Anbieter (für diese kurzen Anfragen meist wenige Cent).",
             ),
         ),
     ),

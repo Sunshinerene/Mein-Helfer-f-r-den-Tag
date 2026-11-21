@@ -13,8 +13,8 @@ android {
         applicationId = "de.meinhelfer.tag"
         minSdk = 26
         targetSdk = 35
-        versionCode = 11
-        versionName = "0.11.0"
+        versionCode = 12
+        versionName = "0.12.0"
     }
 
     // Fester Test-Schluessel, damit spaetere APK-Updates ueber die alte Version installiert werden koennen.
@@ -64,6 +64,7 @@ dependencies {
     // Texterkennung direkt auf dem Handy (Modell ist in der App enthalten, keine Datenuebertragung)
     implementation("com.google.mlkit:text-recognition:16.0.1")
     implementation("com.google.mlkit:barcode-scanning:17.3.0")
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
 
     val room = "2.6.1"
     implementation("androidx.room:room-runtime:$room")

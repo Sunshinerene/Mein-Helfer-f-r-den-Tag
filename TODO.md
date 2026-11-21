@@ -2,8 +2,14 @@
 
 ## Als Nächstes
 
-- [ ] KI-Hinweise in der Auswertung, z. B. "Medikamentenplan vom Hausarzt prüfen lassen": immer mit Bestätigung und Datenschutz-Filter, nur Anhaltspunkt, ersetzt nie Arzt oder Apotheke; Hinweis lässt sich auf eine eigene To-do-Liste setzen ("beim Hausarzt ansprechen")
 - [ ] Erkennung von Packungsfoto weiter verbessern (Wirkstoff, Packungsbeilage), Kamera-Scan für Barcodes live
+
+## Version 0.12.0 (fertig)
+
+- [x] Medikament antippen zeigt alle Infos auf einen Blick (Beschreibung, PZN, Arzt, Apotheke, Notizen), Beschreibung auch gekürzt auf der Karte
+- [x] KI-Assistent frei wählbar: Gemini, Groq, Mistral, OpenRouter (kostenlos), OpenAI, Anthropic, DeepSeek (kostenpflichtig), eigener Schlüssel verschlüsselt auf dem Handy
+- [x] KI-Hinweise in Auswertung und Medikament: nur nach Bestätigung mit Textvorschau, ohne Namen der Person, als To-do übernehmbar
+- [x] Anleitung aktualisiert
 
 ## Version 0.11.0 (fertig)
 
