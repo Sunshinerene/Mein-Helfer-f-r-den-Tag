@@ -227,7 +227,7 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?
                 onLetters = onOpenLetters,
             )
         } else {
-            OutlinedButton(onClick = onOpenLetters, modifier = Modifier.padding(start = 16.dp, top = 8.dp)) {
+            OutlinedButton(shape = buttonShape(), onClick = onOpenLetters, modifier = Modifier.padding(start = 16.dp, top = 8.dp)) {
                 Text("Schreiben / Vollmacht erstellen")
             }
         }
@@ -262,15 +262,15 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?
             title = { Text("Dokument hinzufügen") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = {
+                    OutlinedButton(shape = buttonShape(), onClick = {
                         showSource = false
                         launchCamera(false)
                     }, modifier = Modifier.fillMaxWidth()) { Text("Dokument fotografieren") }
-                    OutlinedButton(onClick = {
+                    OutlinedButton(shape = buttonShape(), onClick = {
                         showSource = false
                         galleryLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                     }, modifier = Modifier.fillMaxWidth()) { Text("Foto(s) aus der Galerie (mehrere = ein Dokument)") }
-                    OutlinedButton(onClick = {
+                    OutlinedButton(shape = buttonShape(), onClick = {
                         showSource = false
                         fileLauncher.launch(arrayOf("application/pdf", "image/*", "text/plain", "*/*"))
                     }, modifier = Modifier.fillMaxWidth()) { Text("Datei(en) laden (PDF, Bild, Word, Text …)") }
@@ -292,16 +292,16 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?
             title = { Text("Weitere Seiten hinzufügen") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = {
+                    OutlinedButton(shape = buttonShape(), onClick = {
                         showAddPage = false
                         launchCamera(true)
                     }, modifier = Modifier.fillMaxWidth()) { Text("Seite fotografieren") }
-                    OutlinedButton(onClick = {
+                    OutlinedButton(shape = buttonShape(), onClick = {
                         showAddPage = false
                         appendMode = true
                         galleryLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                     }, modifier = Modifier.fillMaxWidth()) { Text("Foto(s) aus der Galerie") }
-                    OutlinedButton(onClick = {
+                    OutlinedButton(shape = buttonShape(), onClick = {
                         showAddPage = false
                         appendMode = true
                         fileLauncher.launch(arrayOf("application/pdf", "image/*"))
@@ -441,7 +441,7 @@ private fun DocumentDialog(
                     )
                     if (pending.kind == DocKind.IMAGES || pending.kind == DocKind.PDF) {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            OutlinedButton(onClick = onAddPage) { Text("Weitere Seiten hinzufügen") }
+                            OutlinedButton(shape = buttonShape(), onClick = onAddPage) { Text("Weitere Seiten hinzufügen") }
                             if (pending.kind == DocKind.IMAGES && pending.files.size > 1) {
                                 TextButton(onClick = onRemoveLast) { Text("Letzte Seite entfernen") }
                             }
@@ -516,7 +516,7 @@ private fun DocumentDialog(
                     onAddTasks = onAddTasks,
                 )
                 if (initial != null && DocumentReader.canExtract(initial.mimeType)) {
-                    OutlinedButton(
+                    OutlinedButton(shape = buttonShape(), 
                         enabled = !rereading,
                         onClick = {
                             scope.launch {
@@ -628,7 +628,7 @@ internal fun DocumentDetailDialog(
                 )
                 facts.forEach { Text(it, style = MaterialTheme.typography.bodyMedium) }
                 androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    OutlinedButton(onClick = {
+                    OutlinedButton(shape = buttonShape(), onClick = {
                         if (AppPrefs.internalViewer(context) && canViewInside(doc)) {
                             showViewer = true
                         } else {
@@ -642,7 +642,7 @@ internal fun DocumentDetailDialog(
                         }
                     }) { Text("Öffnen") }
                     if (canPrint(doc)) {
-                        OutlinedButton(onClick = {
+                        OutlinedButton(shape = buttonShape(), onClick = {
                             withDecryptedSuspend { file ->
                                 if (!printDocument(context, doc, file)) {
                                     Toast.makeText(context, "Drucken ist nicht möglich.", Toast.LENGTH_SHORT).show()
@@ -650,7 +650,7 @@ internal fun DocumentDetailDialog(
                             }
                         }) { Text("Drucken") }
                     }
-                    OutlinedButton(onClick = {
+                    OutlinedButton(shape = buttonShape(), onClick = {
                         withDecrypted { file ->
                             val send = Intent(Intent.ACTION_SEND).apply {
                                 type = doc.mimeType

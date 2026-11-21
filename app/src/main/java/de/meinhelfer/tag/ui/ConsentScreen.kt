@@ -136,7 +136,7 @@ internal fun ConsentScreen(
             }
         }
 
-        Button(
+        Button(shape = buttonShape(), 
             enabled = ready,
             modifier = Modifier.fillMaxWidth(),
             onClick = {
@@ -151,7 +151,7 @@ internal fun ConsentScreen(
                 }
             },
         ) { Text("Zustimmen und App nutzen") }
-        OutlinedButton(onClick = onDecline, modifier = Modifier.fillMaxWidth()) { Text("Ablehnen und schließen") }
+        OutlinedButton(shape = buttonShape(), onClick = onDecline, modifier = Modifier.fillMaxWidth()) { Text("Ablehnen und schließen") }
         Text(
             "Deine Zustimmung wird mit Name, Rolle, Zeitpunkt, App-Version, Gerät und einer Prüfsumme dieses Textes verschlüsselt auf diesem Handy gespeichert. " +
                 "Es wird nichts übertragen.",
@@ -185,8 +185,8 @@ internal fun ConsentCard(onRevoked: () -> Unit) {
                 style = MaterialTheme.typography.bodySmall,
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = { showTerms = true }) { Text("Lesen") }
-                OutlinedButton(onClick = {
+                OutlinedButton(shape = buttonShape(), onClick = { showTerms = true }) { Text("Lesen") }
+                OutlinedButton(shape = buttonShape(), onClick = {
                     shareProof(context, ConsentStore.proofText(history, ::roleLabel))
                 }) { Text("Nachweis teilen") }
             }

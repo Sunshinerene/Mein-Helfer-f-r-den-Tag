@@ -125,7 +125,7 @@ internal fun AppointmentCard(
             Column(
                 Modifier
                     .width(62.dp)
-                    .background(blockColor, RoundedCornerShape(14.dp))
+                    .background(blockColor, MaterialTheme.shapes.small)
                     .padding(vertical = 8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {

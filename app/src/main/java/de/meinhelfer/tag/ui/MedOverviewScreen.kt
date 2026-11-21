@@ -185,11 +185,11 @@ fun MedOverviewScreen(
                             )
                         }
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            OutlinedButton(onClick = {
+                            OutlinedButton(shape = buttonShape(), onClick = {
                                 addTask("Medikamentenplan beim Hausarzt prüfen lassen (Wechselwirkungen, Zeiten, noch alles nötig?)", hausarzt)
                             }) { Text("Aufgabe: beim Hausarzt prüfen") }
                             if (meds.size >= 5) {
-                                OutlinedButton(onClick = {
+                                OutlinedButton(shape = buttonShape(), onClick = {
                                     addTask("Erweiterte Medikationsberatung in der Apotheke anfragen (alle Medikamente und Packungen mitnehmen)", apotheke)
                                 }) { Text("Aufgabe: Apotheke") }
                             }
@@ -226,7 +226,7 @@ fun MedOverviewScreen(
                                         2 -> MaterialTheme.colorScheme.onTertiary
                                         else -> MaterialTheme.colorScheme.onPrimary
                                     },
-                                    modifier = Modifier.background(color, RoundedCornerShape(8.dp)).padding(horizontal = 8.dp, vertical = 3.dp),
+                                    modifier = Modifier.background(color, MaterialTheme.shapes.small).padding(horizontal = 8.dp, vertical = 3.dp),
                                 )
                                 Column(Modifier.weight(1f)) {
                                     Text("${c.a} + ${c.b}", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
@@ -275,7 +275,7 @@ fun MedOverviewScreen(
                                     Text("${provider.label} prüft den Plan …", style = MaterialTheme.typography.bodyMedium)
                                 }
                             } else if (configured) {
-                                Button(onClick = { confirm = true }) {
+                                Button(shape = buttonShape(), onClick = { confirm = true }) {
                                     Text(if (check == null) "Gesamt-Check per KI" else "Gesamt-Check erneuern")
                                 }
                             }
@@ -325,8 +325,8 @@ fun MedOverviewScreen(
             // ---- Teilen und Hinweis
             item {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = { shareText(context, overviewText(meds, check, person)) }) { Text("Teilen") }
-                    OutlinedButton(onClick = {
+                    OutlinedButton(shape = buttonShape(), onClick = { shareText(context, overviewText(meds, check, person)) }) { Text("Teilen") }
+                    OutlinedButton(shape = buttonShape(), onClick = {
                         val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                         cm.setPrimaryClip(ClipData.newPlainText("Medikamente", overviewText(meds, check, person)))
                         Toast.makeText(context, "Text kopiert", Toast.LENGTH_SHORT).show()

@@ -166,7 +166,7 @@ fun MailDraftDialog(
                         color = MaterialTheme.colorScheme.error,
                     )
                 }
-                OutlinedButton(onClick = {
+                OutlinedButton(shape = buttonShape(), onClick = {
                     val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                     cm.setPrimaryClip(ClipData.newPlainText("E-Mail", subject + "\n\n" + body))
                     Toast.makeText(context, "Text kopiert", Toast.LENGTH_SHORT).show()

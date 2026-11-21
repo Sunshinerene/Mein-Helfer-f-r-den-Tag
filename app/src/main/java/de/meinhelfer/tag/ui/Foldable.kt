@@ -1,5 +1,6 @@
 package de.meinhelfer.tag.ui
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -39,6 +40,8 @@ internal fun Foldable(
         folded = value
         AppPrefs.setFolded(context, key, value)
     }
+    val animate = LocalEffects.current.animations
+    Column(if (animate) Modifier.animateContentSize() else Modifier) {
     if (folded) {
         HCard(Modifier.fillMaxWidth(), onClick = { set(false) }, colors = colors) {
             Row(
@@ -62,5 +65,6 @@ internal fun Foldable(
                 }
             }
         }
+    }
     }
 }

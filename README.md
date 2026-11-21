@@ -4,7 +4,7 @@ by Sunshine@R
 
 Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbezogenen Daten bleiben lokal auf dem Gerät.
 
-## Stand: v0.40.0
+## Stand: v0.41.0
 
 ### Funktionsübersicht
 
@@ -62,7 +62,8 @@ Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbe
 - Jede Fassung im genauen Wortlaut mit Prüfsumme archiviert: [docs/nutzungsbedingungen](docs/nutzungsbedingungen/README.md)
 
 **Einstellungen**
-- Darstellung (hell/dunkel, 6 Designs, eigene Farben, Schriftgröße), Heute-Seite, Einnahme-Zeitfenster, Dokument-Betrachter
+- Meine Daten mit Adresse (für Schreiben, Vollmachten, Notfallkarte)
+- Darstellung (hell/dunkel, 7 Designs inkl. Aurora, eigene Farben, Schriftgröße, einheitliche Ecken), Effekte (Beta: Glas, Leuchtrand, bewegter Hintergrund, Animationen, Glanz), Heute-Seite, Einnahme-Zeitfenster, Dokument-Betrachter
 - Freigaben (Android): Benachrichtigungen, Ton, pünktliche Wecker, Akku, Updates – mit Status und Sprung in die Android-Einstellungen
 - App-Sperre, Bildschirmschutz, verschlüsselte Datenbank, Sicherung und Wiederherstellung
 - App zurücksetzen mit Warnung, Angebot zur Sicherung und Bestätigung per Bildschirmsperre

@@ -1,5 +1,6 @@
 package de.meinhelfer.tag.ui
 
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -33,7 +34,7 @@ fun PhotoThumb(photoName: String, size: Dp, modifier: Modifier = Modifier) {
             bitmap = image,
             contentDescription = "Foto der Packung",
             contentScale = ContentScale.Crop,
-            modifier = modifier.size(size).clip(RoundedCornerShape(8.dp)),
+            modifier = modifier.size(size).clip(MaterialTheme.shapes.small),
         )
     }
 }

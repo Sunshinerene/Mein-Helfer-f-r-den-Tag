@@ -290,71 +290,77 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
             Column(Modifier.padding(inner).fillMaxSize()) {
               PersonBar(persons = persons, currentId = personId, vm = vm)
               Box(Modifier.weight(1f).fillMaxWidth()) {
-                when (tab) {
-                    Tab.Heute -> Column(Modifier.fillMaxSize()) {
-                        PeriodSwitch(selected = ViewPeriod.entries[periodIndex]) { periodIndex = it.ordinal }
-                        Box(Modifier.weight(1f).fillMaxWidth()) {
-                            when (ViewPeriod.entries[periodIndex]) {
-                                ViewPeriod.Tag -> TodayScreen(
-                                    vm = vm,
-                                    meds = meds,
-                                    appointments = appointments,
-                                    doctors = doctors,
-                                    checkins = checkins,
-                                    dayNote = dayNote,
-                                    todos = todos,
-                                    todayDay = todayDay,
-                                    nowMillis = nowMillis,
-                                    updateState = updateState,
-                                    onOpenSettings = { showSettings = true },
-                                    onOpenSummary = { showSummary = true },
-                                    onOpenReorder = { showReorder = true },
-                                    person = persons.firstOrNull { it.id == personId },
-                                    onEditProfile = { showProfile = true },
-                                    onOpenWegweiser = { showWegweiser = true },
-                                    caregiver = caregiver,
-                                    documents = documents,
-                                    onEditCaregiver = { showCaregiver = true },
-                                    onOpenDailyStart = { planOnly ->
-                                        dailyPlanOnly = planOnly
-                                        showDailyStart = true
-                                    },
-                                )
-                                ViewPeriod.Woche -> WeekOverview(
-                                    vm = vm,
-                                    appointments = appointments,
-                                    todos = todos,
-                                    meds = meds,
-                                    doctors = doctors,
-                                    todayDay = todayDay,
-                                )
-                                ViewPeriod.Monat -> MonthOverview(
-                                    vm = vm,
-                                    appointments = appointments,
-                                    todos = todos,
-                                    meds = meds,
-                                    doctors = doctors,
-                                    todayDay = todayDay,
-                                )
-                            }
-                        }
-                    }
-                    Tab.Medikamente -> MedicationScreen(meds, doctors, vm, onReorder = { showReorder = true }, onOverview = { showMedOverview = true })
-                    Tab.Termine -> AppointmentScreen(appointments, doctors, documents, meds, persons.firstOrNull { it.id == personId }, vm, caregiver) { showCaregiver = true }
-                    Tab.Dokumente -> DocumentScreen(documents, doctors, persons.firstOrNull { it.id == personId }, vm, onOpenLetters = { showLetters = true })
-                    Tab.Aerzte -> DoctorScreen(
-                        doctors, vm, persons.firstOrNull { it.id == personId }, meds,
-                        caregiver, onEditCaregiver = { showCaregiver = true },
-                        onOpenLetters = { showLetters = true },
-                    )
-                    Tab.Infos -> InfoScreen(
-                        person = persons.firstOrNull { it.id == personId },
-                        meds = meds,
-                        documents = documents,
-                        onOpenWegweiser = { showWegweiser = true },
-                        caregiver = caregiver,
-                        onEditCaregiver = { showCaregiver = true },
-                    )
+                androidx.compose.animation.Crossfade(
+                    targetState = tab,
+                    animationSpec = if (LocalEffects.current.animations) androidx.compose.animation.core.tween<Float>(220) else androidx.compose.animation.core.snap<Float>(),
+                    label = "reiter",
+                ) { tab ->
+                  when (tab) {
+                      Tab.Heute -> Column(Modifier.fillMaxSize()) {
+                          PeriodSwitch(selected = ViewPeriod.entries[periodIndex]) { periodIndex = it.ordinal }
+                          Box(Modifier.weight(1f).fillMaxWidth()) {
+                              when (ViewPeriod.entries[periodIndex]) {
+                                  ViewPeriod.Tag -> TodayScreen(
+                                      vm = vm,
+                                      meds = meds,
+                                      appointments = appointments,
+                                      doctors = doctors,
+                                      checkins = checkins,
+                                      dayNote = dayNote,
+                                      todos = todos,
+                                      todayDay = todayDay,
+                                      nowMillis = nowMillis,
+                                      updateState = updateState,
+                                      onOpenSettings = { showSettings = true },
+                                      onOpenSummary = { showSummary = true },
+                                      onOpenReorder = { showReorder = true },
+                                      person = persons.firstOrNull { it.id == personId },
+                                      onEditProfile = { showProfile = true },
+                                      onOpenWegweiser = { showWegweiser = true },
+                                      caregiver = caregiver,
+                                      documents = documents,
+                                      onEditCaregiver = { showCaregiver = true },
+                                      onOpenDailyStart = { planOnly ->
+                                          dailyPlanOnly = planOnly
+                                          showDailyStart = true
+                                      },
+                                  )
+                                  ViewPeriod.Woche -> WeekOverview(
+                                      vm = vm,
+                                      appointments = appointments,
+                                      todos = todos,
+                                      meds = meds,
+                                      doctors = doctors,
+                                      todayDay = todayDay,
+                                  )
+                                  ViewPeriod.Monat -> MonthOverview(
+                                      vm = vm,
+                                      appointments = appointments,
+                                      todos = todos,
+                                      meds = meds,
+                                      doctors = doctors,
+                                      todayDay = todayDay,
+                                  )
+                              }
+                          }
+                      }
+                      Tab.Medikamente -> MedicationScreen(meds, doctors, vm, onReorder = { showReorder = true }, onOverview = { showMedOverview = true })
+                      Tab.Termine -> AppointmentScreen(appointments, doctors, documents, meds, persons.firstOrNull { it.id == personId }, vm, caregiver) { showCaregiver = true }
+                      Tab.Dokumente -> DocumentScreen(documents, doctors, persons.firstOrNull { it.id == personId }, vm, onOpenLetters = { showLetters = true })
+                      Tab.Aerzte -> DoctorScreen(
+                          doctors, vm, persons.firstOrNull { it.id == personId }, meds,
+                          caregiver, onEditCaregiver = { showCaregiver = true },
+                          onOpenLetters = { showLetters = true },
+                      )
+                      Tab.Infos -> InfoScreen(
+                          person = persons.firstOrNull { it.id == personId },
+                          meds = meds,
+                          documents = documents,
+                          onOpenWegweiser = { showWegweiser = true },
+                          caregiver = caregiver,
+                          onEditCaregiver = { showCaregiver = true },
+                      )
+                  }
                 }
               }
             }
@@ -446,10 +452,10 @@ private fun MedicationScreen(
                 Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                OutlinedButton(onClick = onOverview, modifier = Modifier.weight(1f)) {
+                OutlinedButton(shape = buttonShape(), onClick = onOverview, modifier = Modifier.weight(1f)) {
                     FitText("Überblick & Check", maxSize = 14.sp)
                 }
-                OutlinedButton(onClick = onReorder, modifier = Modifier.weight(1f)) {
+                OutlinedButton(shape = buttonShape(), onClick = onReorder, modifier = Modifier.weight(1f)) {
                     FitText(if (lowCount > 0) "Nachbestellen ($lowCount)" else "Nachbestellen", maxSize = 14.sp)
                 }
             }
@@ -594,7 +600,7 @@ private fun AppointmentScreen(
                 lazyItems(coming, key = { it.id }) { apptItem(it) }
                 if (earlier.isNotEmpty()) {
                     item {
-                        OutlinedButton(onClick = { showPast = !showPast }, modifier = Modifier.fillMaxWidth()) {
+                        OutlinedButton(shape = buttonShape(), onClick = { showPast = !showPast }, modifier = Modifier.fillMaxWidth()) {
                             Text(if (showPast) "Vergangene Termine ausblenden" else "Vergangene Termine anzeigen (${earlier.size})")
                         }
                     }
@@ -693,8 +699,8 @@ private fun DoctorScreen(
         Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        OutlinedButton(onClick = { showNearby = true }) { Text("In der Nähe suchen") }
-        OutlinedButton(onClick = onOpenLetters) { Text("Schreiben / Vollmacht") }
+        OutlinedButton(shape = buttonShape(), onClick = { showNearby = true }) { Text("In der Nähe suchen") }
+        OutlinedButton(shape = buttonShape(), onClick = onOpenLetters) { Text("Schreiben / Vollmacht") }
     }
     if (categories.size > 1) {
         FlowRow(

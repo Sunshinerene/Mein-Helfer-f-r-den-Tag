@@ -320,7 +320,7 @@ fun InfoScreen(
                         keyboardActions = KeyboardActions(onSearch = { search(query) }),
                         modifier = Modifier.fillMaxWidth(),
                     )
-                    Button(enabled = query.trim().length >= 2 && !loading, onClick = { search(query) }) { Text("Suchen") }
+                    Button(shape = buttonShape(), enabled = query.trim().length >= 2 && !loading, onClick = { search(query) }) { Text("Suchen") }
                     Text(
                         "Beim Suchen wird nur dein Suchwort an Google News gesendet, nie ein Name oder Daten aus der App. " +
                             "Angezeigt werden Überschriften mit Quelle. Gelesen wird auf der Seite der Quelle.",
@@ -452,8 +452,8 @@ private fun InfoCardView(
             Text(card.title, style = MaterialTheme.typography.titleMedium)
             Text(card.text, style = MaterialTheme.typography.bodyMedium)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                if (card.wegweiser) OutlinedButton(onClick = onOpenWegweiser) { Text("Wegweiser öffnen") }
-                card.query?.let { q -> OutlinedButton(onClick = { onSearch(q) }) { Text("Aktuelle Meldungen") } }
+                if (card.wegweiser) OutlinedButton(shape = buttonShape(), onClick = onOpenWegweiser) { Text("Wegweiser öffnen") }
+                card.query?.let { q -> OutlinedButton(shape = buttonShape(), onClick = { onSearch(q) }) { Text("Aktuelle Meldungen") } }
                 TextButton(onClick = onToggleFavorite) { Text(if (favorite) "★ Gemerkt" else "☆ Merken") }
             }
             card.links.forEach { (label, url) ->

@@ -1,6 +1,21 @@
 package de.meinhelfer.tag.ui
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.graphicsLayer
+import kotlin.math.cos
+import kotlin.math.sin
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
@@ -35,6 +50,7 @@ enum class DesignStyle(val key: String, val label: String, val description: Stri
     Liquid("liquid", "Liquid", "Weiche Formen und fließende Farben"),
     Sonnig("sonnig", "Sonnig", "Warm und freundlich in Gelb und Orange"),
     Natur("natur", "Natur", "Beruhigendes, sanftes Grün"),
+    Aurora("aurora", "Aurora (Beta)", "Leuchtende Farbverläufe mit Glas und Leuchtrand"),
     ;
 
     companion object {
@@ -49,7 +65,7 @@ class Blob(val color: Color, val x: Float, val y: Float, val radius: Float)
 class Backdrop(val base: Color, val gradient: List<Color>?, val blobs: List<Blob>)
 
 /** Alles, was ein Design ausmacht. */
-class DesignSpec(
+data class DesignSpec(
     val scheme: ColorScheme,
     val shapes: Shapes,
     /** null = Standardfarbe der Karten aus dem Farbschema */
@@ -59,22 +75,101 @@ class DesignSpec(
     val backdrop: Backdrop?,
     /** Drei Farbtupfer fuer die Vorschau in den Einstellungen */
     val preview: List<Color>,
+    /** Leuchtrand der Karten (0 = aus, 1 = kraeftig) */
+    val glow: Float = 0f,
+    /** Form der Knoepfe; null = ganz rund (Pille), wie bei Material ueblich */
+    val buttonShape: Shape? = null,
 )
+
+/** Ecken der ganzen App: einheitlich fuer Karten, Knoepfe, Felder, Chips und Fenster. */
+enum class CornerStyle(val key: String, val label: String, val radius: Int?) {
+    Design("design", "Wie im Design", null),
+    Eckig("eckig", "Eckig", 0),
+    DezentEckig("dezent_eckig", "Dezent eckig", 4),
+    DezentRund("dezent_rund", "Dezent rund", 10),
+    Rund("rund", "Rund", 18),
+    ;
+
+    companion object {
+        fun fromKey(key: String?): CornerStyle = entries.firstOrNull { it.key == key } ?: Design
+    }
+}
+
+/** Einstellbare Effekte (Beta). -1 = wie im Design. */
+data class Effects(
+    /** Deckkraft der Karten 0..1 */
+    val cardAlpha: Float = -1f,
+    /** Leuchtrand 0..1 */
+    val glow: Float = -1f,
+    /** Staerke der Farbflecken im Hintergrund 0..2 */
+    val backdrop: Float = -1f,
+    /** Hintergrund bewegt sich sanft */
+    val motion: Boolean = false,
+    /** Animationen beim Antippen, Auf- und Zuklappen und beim Wechsel der Reiter */
+    val animations: Boolean = false,
+    /** Glanz auf Skalen und Balken */
+    val gloss: Boolean = false,
+)
+
+val LocalEffects = staticCompositionLocalOf { Effects() }
+
+/** Knopf-Form passend zur gewaehlten Ecken-Einstellung. */
+@Composable
+fun buttonShape(): Shape = LocalDesign.current.buttonShape ?: CircleShape
+
+/** Wendet Ecken und Effekte auf ein Design an. */
+fun DesignSpec.adjusted(corners: CornerStyle, effects: Effects): DesignSpec {
+    var spec = this
+    corners.radius?.let { r ->
+        val shape = RoundedCornerShape(r.dp)
+        spec = spec.copy(shapes = Shapes(shape, shape, shape, shape, shape), buttonShape = shape)
+    }
+    if (effects.cardAlpha >= 0f) {
+        val base = spec.cardColor ?: spec.scheme.surfaceContainerHighest
+        spec = spec.copy(cardColor = base.copy(alpha = effects.cardAlpha.coerceIn(0.03f, 1f)))
+    }
+    if (effects.glow >= 0f) spec = spec.copy(glow = effects.glow.coerceIn(0f, 1f))
+    val bd = spec.backdrop
+    if (effects.backdrop >= 0f && bd != null) {
+        val k = effects.backdrop.coerceIn(0f, 2f)
+        spec = spec.copy(
+            backdrop = Backdrop(bd.base, bd.gradient, bd.blobs.map { Blob(it.color.copy(alpha = (it.color.alpha * k).coerceIn(0f, 1f)), it.x, it.y, it.radius) }),
+        )
+    }
+    return spec
+}
 
 val LocalDesign = staticCompositionLocalOf { designSpec(DesignStyle.Schlicht, false) }
 
 /** Wendet Farben, Formen und Hintergrund des gewaehlten Designs auf die ganze App an. */
 @Composable
-fun HelferTheme(style: DesignStyle, dark: Boolean, tweak: DesignTweak? = null, content: @Composable () -> Unit) {
-    val spec = remember(style, dark, tweak) { tweakedSpec(style, dark, tweak) }
-    CompositionLocalProvider(LocalDesign provides spec) {
+fun HelferTheme(
+    style: DesignStyle,
+    dark: Boolean,
+    tweak: DesignTweak? = null,
+    corners: CornerStyle = CornerStyle.Design,
+    effects: Effects = Effects(),
+    content: @Composable () -> Unit,
+) {
+    val spec = remember(style, dark, tweak, corners, effects) { tweakedSpec(style, dark, tweak).adjusted(corners, effects) }
+    // Sanft bewegter Hintergrund (nur wenn eingeschaltet und das Design Farbflecken hat)
+    val phase = if (effects.motion && spec.backdrop != null) {
+        val transition = rememberInfiniteTransition(label = "hintergrund")
+        transition.animateFloat(
+            initialValue = 0f,
+            targetValue = (2 * Math.PI).toFloat(),
+            animationSpec = infiniteRepeatable(tween(durationMillis = 45_000, easing = LinearEasing)),
+            label = "phase",
+        )
+    } else null
+    CompositionLocalProvider(LocalDesign provides spec, LocalEffects provides effects) {
         MaterialTheme(colorScheme = spec.scheme, shapes = spec.shapes) {
-            Box(Modifier.fillMaxSize().drawBackdrop(spec.backdrop)) { content() }
+            Box(Modifier.fillMaxSize().drawBackdrop(spec.backdrop, phase)) { content() }
         }
     }
 }
 
-private fun Modifier.drawBackdrop(backdrop: Backdrop?): Modifier {
+private fun Modifier.drawBackdrop(backdrop: Backdrop?, phase: State<Float>?): Modifier {
     if (backdrop == null) return this
     return drawBehind {
         val gradient = backdrop.gradient
@@ -83,9 +178,12 @@ private fun Modifier.drawBackdrop(backdrop: Backdrop?): Modifier {
         } else {
             drawRect(backdrop.base)
         }
-        backdrop.blobs.forEach { blob ->
+        val p = phase?.value ?: 0f
+        backdrop.blobs.forEachIndexed { i, blob ->
             val radius = size.width * blob.radius
-            val center = Offset(size.width * blob.x, size.height * blob.y)
+            val dx = if (phase != null) sin(p + i * 1.7f) * 0.10f * size.width else 0f
+            val dy = if (phase != null) cos(p * 0.8f + i * 1.1f) * 0.07f * size.height else 0f
+            val center = Offset(size.width * blob.x + dx, size.height * blob.y + dy)
             drawCircle(
                 brush = Brush.radialGradient(listOf(blob.color, Color.Transparent), center = center, radius = radius),
                 radius = radius,
@@ -104,18 +202,35 @@ fun HCard(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val design = LocalDesign.current
+    val effects = LocalEffects.current
     val cardColors = colors ?: design.cardColor?.let { CardDefaults.cardColors(containerColor = it) }
         ?: CardDefaults.cardColors()
     val elevation = CardDefaults.cardElevation(defaultElevation = design.cardElevation)
     val shape = MaterialTheme.shapes.medium
+    // Leuchtrand: Farbverlauf aus Haupt- und Akzentfarbe
+    val border = if (design.glow > 0f) {
+        val a = 0.25f + 0.75f * design.glow
+        val sc = MaterialTheme.colorScheme
+        BorderStroke(
+            (1f + design.glow).dp,
+            Brush.linearGradient(listOf(sc.primary.copy(alpha = a), sc.tertiary.copy(alpha = a), sc.primary.copy(alpha = a * 0.6f))),
+        )
+    } else design.cardBorder
     if (onClick != null) {
+        val source = remember { MutableInteractionSource() }
+        val pressed by source.collectIsPressedAsState()
+        val scale by animateFloatAsState(if (effects.animations && pressed) 0.97f else 1f, label = "druck")
         Card(
             onClick = onClick,
-            modifier = modifier,
+            modifier = modifier.graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            },
             shape = shape,
             colors = cardColors,
             elevation = elevation,
-            border = design.cardBorder,
+            border = border,
+            interactionSource = source,
             content = content,
         )
     } else {
@@ -124,7 +239,7 @@ fun HCard(
             shape = shape,
             colors = cardColors,
             elevation = elevation,
-            border = design.cardBorder,
+            border = border,
             content = content,
         )
     }
@@ -345,6 +460,58 @@ fun designSpec(style: DesignStyle, dark: Boolean): DesignSpec = when (style) {
         )
     }
 
+    DesignStyle.Aurora -> {
+        val p = if (dark) {
+            Palette(
+                c(0xFFD7A8FF), c(0xFF2A0B4A), c(0xFF5B2A86), c(0xFFF3E4FF), c(0x33FFFFFF), c(0xFFF4ECFF),
+                Color.Transparent, c(0xFFF4F0FF), c(0xFF2A2245), c(0xFFC9C0E6), c(0xFF8E85B3), c(0xFF463C6E),
+                c(0xFF0B0A1F), c(0xFF120F2B), c(0xF0161333), c(0xFF1E1A3E), c(0xFF27224D),
+            )
+        } else {
+            Palette(
+                c(0xFF7A2FD0), c(0xFFFFFFFF), c(0xFFEBD9FF), c(0xFF2C0B55), c(0xB3FFFFFF), c(0xFF2A1A40),
+                Color.Transparent, c(0xFF22183A), c(0xFFF0E8FF), c(0xFF4C4168), c(0xFF8A80A8), c(0xFFC9BDE6),
+                c(0xFFFFFFFF), c(0xFFFAF6FF), c(0xF2F6F0FF), c(0xFFF2EAFF), c(0xFFEADFFF),
+            )
+        }
+        val backdrop = if (dark) {
+            Backdrop(
+                base = c(0xFF0B0A1F),
+                gradient = listOf(c(0xFF0B0A1F), c(0xFF1B0F3A), c(0xFF0A1E2E)),
+                blobs = listOf(
+                    Blob(c(0x8C2EC4B6), 0.85f, 0.05f, 0.80f),
+                    Blob(c(0x807B2FF7), 0.10f, 0.35f, 0.85f),
+                    Blob(c(0x66F72585), 0.80f, 0.70f, 0.75f),
+                    Blob(c(0x664361EE), 0.25f, 0.95f, 0.70f),
+                ),
+            )
+        } else {
+            Backdrop(
+                base = c(0xFFF4EEFF),
+                gradient = listOf(c(0xFFF4EEFF), c(0xFFEAF6FF), c(0xFFFFEEF6)),
+                blobs = listOf(
+                    Blob(c(0x9988E6DC), 0.85f, 0.05f, 0.80f),
+                    Blob(c(0x88C8A2FF), 0.10f, 0.35f, 0.85f),
+                    Blob(c(0x77FF9CCB), 0.80f, 0.70f, 0.75f),
+                    Blob(c(0x6699B4FF), 0.25f, 0.95f, 0.70f),
+                ),
+            )
+        }
+        DesignSpec(
+            scheme = scheme(p, dark).copy(
+                tertiary = if (dark) c(0xFFFF6FB5) else c(0xFFD1307A),
+                onTertiary = if (dark) c(0xFF3D0024) else c(0xFFFFFFFF),
+            ),
+            shapes = shapes(12, 16, 24, 28, 32),
+            cardColor = if (dark) c(0x1AFFFFFF) else c(0x99FFFFFF),
+            cardBorder = null,
+            cardElevation = 0.dp,
+            backdrop = backdrop,
+            preview = listOf(p.primary, c(0xFF2EC4B6), c(0xFFF72585)),
+            glow = 0.7f,
+        )
+    }
+
     DesignStyle.Natur -> {
         val p = if (dark) {
             Palette(
@@ -384,7 +551,7 @@ data class DesignTweak(val a: Long? = null, val b: Long? = null, val c: Long? = 
 }
 
 /** Ob das Design einen farbigen Hintergrund mit Farbflecken hat (Glas, Liquid). */
-fun DesignStyle.hasBackdrop(): Boolean = this == DesignStyle.Glas || this == DesignStyle.Liquid
+fun DesignStyle.hasBackdrop(): Boolean = this == DesignStyle.Glas || this == DesignStyle.Liquid || this == DesignStyle.Aurora
 
 /** Hellt eine Farbe im dunklen Modus auf bzw. dunkelt sie im hellen Modus ab, bis Text in dieser Farbe gut lesbar ist. */
 private fun readableOn(color: Color, dark: Boolean): Color {
@@ -473,5 +640,6 @@ fun tweakedSpec(style: DesignStyle, dark: Boolean, tweak: DesignTweak?): DesignS
         cardElevation = base.cardElevation,
         backdrop = backdrop,
         preview = preview,
+        glow = base.glow,
     )
 }

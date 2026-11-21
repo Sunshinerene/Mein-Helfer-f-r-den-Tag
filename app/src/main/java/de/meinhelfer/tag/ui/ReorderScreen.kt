@@ -276,7 +276,7 @@ fun ReorderScreen(
                             "Die PDF wird in deinem privaten App-Ordner abgelegt. Von dort kannst du sie speichern, herunterladen, drucken oder weiterleiten.",
                             style = MaterialTheme.typography.bodySmall,
                         )
-                        Button(
+                        Button(shape = buttonShape(), 
                             enabled = selected.isNotEmpty(),
                             onClick = {
                                 createPdf(selected)

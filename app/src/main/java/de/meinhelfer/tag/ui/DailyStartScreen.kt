@@ -245,7 +245,7 @@ internal fun DailyStartScreen(
                 }
                 item {
                     Column {
-                        Button(modifier = Modifier.fillMaxWidth(), onClick = {
+                        Button(shape = buttonShape(), modifier = Modifier.fillMaxWidth(), onClick = {
                             if (noteLoaded) vm.saveDayNote(yesterday, note)
                             AppPrefs.setReviewConfirmed(context, person?.id ?: 0L, yesterday, System.currentTimeMillis())
                             step = 1
@@ -282,10 +282,10 @@ internal fun DailyStartScreen(
                 }
                 item {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedButton(onClick = {
+                        OutlinedButton(shape = buttonShape(), onClick = {
                             scope.launch { runCatching { pdf() }.onSuccess { sharePdf(context, it) }.onFailure { toast(context, "PDF konnte nicht erstellt werden.") } }
                         }) { Text("Als PDF teilen") }
-                        OutlinedButton(onClick = {
+                        OutlinedButton(shape = buttonShape(), onClick = {
                             scope.launch {
                                 runCatching { pdf() }.onSuccess { f ->
                                     val pm = context.getSystemService(Context.PRINT_SERVICE) as PrintManager
@@ -297,7 +297,7 @@ internal fun DailyStartScreen(
                 }
                 item {
                     Column {
-                    Button(onClick = onDone, modifier = Modifier.fillMaxWidth()) { Text("Fertig") }
+                    Button(shape = buttonShape(), onClick = onDone, modifier = Modifier.fillMaxWidth()) { Text("Fertig") }
                     Text(
                         "Den Tagesstart findest du jederzeit oben auf der Heute-Seite. Automatisch erscheint er einmal am Tag (abschaltbar unter Einstellungen → Heute-Seite).",
                         style = MaterialTheme.typography.bodySmall,

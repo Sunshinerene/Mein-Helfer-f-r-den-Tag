@@ -42,7 +42,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
         items = listOf(
             GuideItem(
                 "Meine Daten",
-                "Unter Einstellungen → Meine Daten (und beim ersten Start) trägst du ein, wer du bist: pflegende/r Angehörige/r, Pflegekraft vom Pflegedienst, Betreuungs- oder Haushaltskraft, Betreuer/in oder Bevollmächtigte/r, Nachbar/in oder Ehrenamt, du selbst oder etwas anderes. Dazu kommen Name, ggf. Beziehung (z. B. Sohn) oder Pflegedienst, Telefon und E-Mail. Das bleibt nur auf deinem Handy und wird nie automatisch gesendet. Name und Rolle stammen aus deiner Zustimmung zu den Nutzungsbedingungen. Änderst du sie hier, musst du die Nutzungsbedingungen neu bestätigen.",
+                "Unter Einstellungen → Meine Daten (und beim ersten Start) trägst du ein, wer du bist: pflegende/r Angehörige/r, Pflegekraft vom Pflegedienst, Betreuungs- oder Haushaltskraft, Betreuer/in oder Bevollmächtigte/r, Nachbar/in oder Ehrenamt, du selbst oder etwas anderes. Dazu kommen Name, ggf. Beziehung (z. B. Sohn) oder Pflegedienst, Telefon, E-Mail und deine Adresse. Die Adresse steht dann bei Bedarf unter E-Mails und Schreiben, in der Vollmacht und Schweigepflicht-Entbindung (als Adresse der bevollmächtigten Person) und auf der Notfallkarte bei der Ansprechperson. Das bleibt nur auf deinem Handy und wird nie automatisch gesendet. Name und Rolle stammen aus deiner Zustimmung zu den Nutzungsbedingungen. Änderst du sie hier, musst du die Nutzungsbedingungen neu bestätigen.",
             ),
             GuideItem(
                 "Vorbereitete E-Mails",
@@ -606,7 +606,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Allgemein",
-                "Meine Daten (wer du bist, für E-Mails und Zustimmung), Freigaben (Android) für zuverlässige Erinnerungen, Darstellung (hell/dunkel, Design, eigene Farben, Schriftgröße), Heute-Seite (Notfallkarte einblenden, Tagesstart automatisch), Einnahmen abhaken (Zeitfenster und Nachfrage) und Dokumente ansehen (Betrachter in der App oder andere App).",
+                "Meine Daten (wer du bist, für E-Mails und Zustimmung), Freigaben (Android) für zuverlässige Erinnerungen, Darstellung (hell/dunkel, Schriftgröße, Design, Ecken, eigene Farben), Effekte (Beta), Heute-Seite (Notfallkarte einblenden, Tagesstart automatisch), Einnahmen abhaken (Zeitfenster und Nachfrage) und Dokumente ansehen (Betrachter in der App oder andere App).",
             ),
             GuideItem(
                 "Daten und Sicherheit",
@@ -625,7 +625,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
     GuideSection(
         id = "updates",
         title = "Updates, Darstellung und Feedback",
-        summary = "App aktualisieren, Schrift und Design, Notfallkarte, Feedback",
+        summary = "App aktualisieren, Schrift, Design, Ecken und Effekte, Notfallkarte, Feedback",
         items = listOf(
             GuideItem(
                 "App aktualisieren",
@@ -633,7 +633,11 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Darstellung",
-                "In den Einstellungen wählst du, ob die App wie das Handy, immer hell oder immer dunkel aussehen soll. Die Schriftgröße der ganzen App stellst du von „Klein“ bis „Riesig“ ein (zusätzlich zur Schriftgröße des Handys). Außerdem gibt es sechs Designs zur Auswahl: Schlicht, Minimalistisch, Glas, Liquid, Sonnig und Natur. Die Vorschau zeigt die Farben, ausprobieren kannst du jedes mit einem Tipp. Mit „Farben anpassen“ änderst du die drei Farben des gewählten Designs selbst: Hauptfarbe, Zweitfarbe und Hintergrund (bei Glas und Liquid die beiden Hintergrundfarben). Du siehst die Änderung sofort, „Standard“ und „Alles zurücksetzen“ stellen das Original wieder her.",
+                "In den Einstellungen wählst du, ob die App wie das Handy, immer hell oder immer dunkel aussehen soll. Die Schriftgröße der ganzen App stellst du von „Klein“ bis „Riesig“ ein (zusätzlich zur Schriftgröße des Handys). Außerdem gibt es sieben Designs zur Auswahl: Schlicht, Minimalistisch, Glas, Liquid, Sonnig, Natur und Aurora (Beta, leuchtende Farbverläufe mit Glas-Karten und Leuchtrand). Die Vorschau zeigt die Farben, ausprobieren kannst du jedes mit einem Tipp. Mit „Farben anpassen“ änderst du die drei Farben des gewählten Designs selbst: Hauptfarbe, Zweitfarbe und Hintergrund (bei Glas und Liquid die beiden Hintergrundfarben). Du siehst die Änderung sofort, „Standard“ und „Alles zurücksetzen“ stellen das Original wieder her. Unter „Ecken“ legst du einheitlich für Karten, Knöpfe, Eingabefelder und Fenster fest, wie die Ecken aussehen: eckig, dezent eckig, dezent rund oder rund („Wie im Design“ nimmt die Ecken des gewählten Designs).",
+            ),
+            GuideItem(
+                "Effekte (Beta)",
+                "Unter Einstellungen → „Effekte (Beta)“ → „Einstellen“ machst du die App lebendiger: Deckkraft der Karten (weniger = mehr Glas, der Hintergrund scheint durch), Leuchtrand um die Karten, Stärke der Farbflecken im Hintergrund, ein sanft bewegter Hintergrund, lebendige Animationen (Karten geben beim Antippen nach, Auf- und Zuklappen und Reiterwechsel gleiten weich) und Glanz auf Skalen und Balken. Am schönsten wirkt das mit „Aurora“, „Glas“ oder „Liquid“. „Alles wie im Design“ stellt die Werte des Designs wieder her. Der bewegte Hintergrund braucht etwas mehr Akku. Die Effekte sind neu und noch in Erprobung.",
             ),
             GuideItem(
                 "Notfallkarte",

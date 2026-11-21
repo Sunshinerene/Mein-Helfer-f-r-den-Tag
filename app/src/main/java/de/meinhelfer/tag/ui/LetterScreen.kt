@@ -148,6 +148,7 @@ internal fun LetterScreen(
         t.fields.forEach { if (it.default.isNotEmpty()) values[it.key] = it.default }
         if (t.id == "vollmacht" || t.id == "schweigepflicht") {
             values["vertreter"] = caregiver.name
+            if (caregiver.address.isNotBlank()) values["vertreterAdresse"] = caregiver.address
         }
         recipientId = null
         recipientText = ""
@@ -158,6 +159,7 @@ internal fun LetterScreen(
             val zc = listOf(person?.zip.orEmpty(), person?.city.orEmpty()).filter { it.isNotBlank() }.joinToString(" ")
             if (zc.isNotBlank()) add(zc)
             if (proxy && caregiver.name.isNotBlank()) add("Ansprechperson: " + caregiver.name)
+            if (proxy && caregiver.address.isNotBlank()) add(caregiver.address)
             if (caregiver.phone.isNotBlank()) add("Tel.: " + caregiver.phone)
         }
         senderText = lines.joinToString("\n")
@@ -317,7 +319,7 @@ internal fun LetterScreen(
                             modifier = Modifier.fillMaxWidth(),
                         )
                     }
-                    Button(onClick = {
+                    Button(shape = buttonShape(), onClick = {
                         val built = buildText(t)
                         subject = built.subject
                         reference = built.reference
@@ -371,7 +373,7 @@ internal fun LetterScreen(
                         "Unterschrift: " + signatures.joinToString("; "),
                         style = MaterialTheme.typography.bodySmall,
                     )
-                    Button(
+                    Button(shape = buttonShape(), 
                         enabled = !working && body.isNotBlank(),
                         onClick = {
                             working = true
@@ -408,12 +410,12 @@ internal fun LetterScreen(
                         }
                         val fileName = DocumentStore.safeName(t.title + " " + LocalDate.now()) + ".pdf"
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            OutlinedButton(onClick = {
+                            OutlinedButton(shape = buttonShape(), onClick = {
                                 val pm = context.getSystemService(Context.PRINT_SERVICE) as PrintManager
                                 pm.print(fileName, PdfPrintAdapter(file, fileName), PrintAttributes.Builder().build())
                             }) { Text("Drucken") }
-                            OutlinedButton(onClick = { saveLauncher.launch(fileName) }) { Text("Speichern unter …") }
-                            OutlinedButton(onClick = {
+                            OutlinedButton(shape = buttonShape(), onClick = { saveLauncher.launch(fileName) }) { Text("Speichern unter …") }
+                            OutlinedButton(shape = buttonShape(), onClick = {
                                 val send = Intent(Intent.ACTION_SEND).apply {
                                     type = "application/pdf"
                                     putExtra(Intent.EXTRA_STREAM, DocumentStore.uriFor(context, file))
@@ -423,7 +425,7 @@ internal fun LetterScreen(
                             }) { Text("Teilen") }
                         }
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            OutlinedButton(enabled = !savedToDocs, onClick = {
+                            OutlinedButton(shape = buttonShape(), enabled = !savedToDocs, onClick = {
                                 scope.launch {
                                     try {
                                         val stored = DocumentStore.store(context, file)
@@ -446,7 +448,7 @@ internal fun LetterScreen(
                                     }
                                 }
                             }) { Text(if (savedToDocs) "Abgelegt ✓" else "In Dokumente ablegen") }
-                            OutlinedButton(enabled = !taskAdded, onClick = {
+                            OutlinedButton(shape = buttonShape(), enabled = !taskAdded, onClick = {
                                 vm.addTodo("„" + t.title + "“ ausdrucken, unterschreiben und abschicken; unterschriebene Fassung einscannen")
                                 taskAdded = true
                                 Toast.makeText(context, "Aufgabe angelegt.", Toast.LENGTH_SHORT).show()

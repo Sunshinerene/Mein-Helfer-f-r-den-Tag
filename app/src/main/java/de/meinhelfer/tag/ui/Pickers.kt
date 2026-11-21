@@ -111,7 +111,7 @@ fun DropdownField(
 private fun PickerButton(label: String, value: String, modifier: Modifier, onClick: () -> Unit) {
     Column(modifier) {
         Text(label, style = MaterialTheme.typography.labelMedium)
-        OutlinedButton(
+        OutlinedButton(shape = buttonShape(), 
             onClick = onClick,
             modifier = Modifier.fillMaxWidth(),
             contentPadding = PaddingValues(horizontal = 8.dp),

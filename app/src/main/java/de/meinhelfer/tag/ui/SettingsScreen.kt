@@ -119,6 +119,7 @@ fun SettingsScreen(
             item { CaregiverCard(caregiver, onEditCaregiver) }
             item { PermissionsCard() }
             item { ThemeCard(vm) }
+            item { EffectsCard(vm) }
             item { HomeCardsCard() }
             item { IntakeCard() }
             item { ViewerCard() }
@@ -167,7 +168,7 @@ private fun UpdateCard(
                     if (state.info.notes.isNotBlank()) {
                         Text(state.info.notes.trim(), style = MaterialTheme.typography.bodySmall)
                     }
-                    Button(onClick = onDownload) { Text("Herunterladen") }
+                    Button(shape = buttonShape(), onClick = onDownload) { Text("Herunterladen") }
                 }
                 is UpdateState.Downloading -> {
                     Text("Lade Version ${state.info.version} …")
@@ -175,7 +176,7 @@ private fun UpdateCard(
                 }
                 is UpdateState.Ready -> {
                     Text("Version ${state.info.version} ist heruntergeladen.", fontWeight = FontWeight.Bold)
-                    Button(
+                    Button(shape = buttonShape(), 
                         onClick = {
                             if (UpdateChecker.canInstall(context)) {
                                 UpdateChecker.install(context, state.file)
@@ -194,7 +195,7 @@ private fun UpdateCard(
                 is UpdateState.Error -> Text(state.message, color = MaterialTheme.colorScheme.error)
             }
 
-            OutlinedButton(
+            OutlinedButton(shape = buttonShape(), 
                 onClick = onCheck,
                 enabled = state !is UpdateState.Checking && state !is UpdateState.Downloading,
             ) { Text("Nach Updates suchen") }
@@ -217,7 +218,7 @@ private fun FeedbackCard(context: Context) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Feedback", style = MaterialTheme.typography.titleMedium)
             Text("Fehler gefunden oder eine Idee? Dein Feedback hilft, die App gemeinsam weiterzuentwickeln.")
-            Button(onClick = { openUrl(context, UpdateChecker.ISSUES_NEW_URL) }) {
+            Button(shape = buttonShape(), onClick = { openUrl(context, UpdateChecker.ISSUES_NEW_URL) }) {
                 Text("Idee oder Fehler melden")
             }
             Text(
@@ -329,7 +330,21 @@ private fun ThemeCard(vm: MainViewModel) {
                     }
                 }
             }
-            OutlinedButton(onClick = { tweaking = true }, modifier = Modifier.fillMaxWidth()) {
+            Text("Ecken", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 8.dp))
+            val corners by vm.cornerStyle.collectAsStateWithLifecycle()
+            androidx.compose.foundation.layout.FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                CornerStyle.entries.forEach { option ->
+                    FilterChip(selected = corners == option, onClick = { vm.setCornerStyle(option) }, label = { Text(option.label) })
+                }
+            }
+            Text(
+                "Gilt einheitlich für Karten, Knöpfe, Eingabefelder und Fenster. „Wie im Design“ nimmt die Ecken des gewählten Designs.",
+                style = MaterialTheme.typography.bodySmall,
+            )
+            OutlinedButton(shape = buttonShape(), onClick = { tweaking = true }, modifier = Modifier.fillMaxWidth()) {
                 Text("Farben von „${style.label}“ anpassen" + if (tweaks[style]?.isEmpty == false) " (geändert)" else "")
             }
         }
@@ -623,7 +638,7 @@ private fun AiCard() {
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
-            OutlinedButton(
+            OutlinedButton(shape = buttonShape(), 
                 enabled = key.isNotBlank() && !loadingModels,
                 onClick = {
                     loadingModels = true
@@ -645,8 +660,8 @@ private fun AiCard() {
                 style = MaterialTheme.typography.bodySmall,
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                OutlinedButton(onClick = { openUrl(context, provider.keyUrl) }) { Text("Schlüssel besorgen") }
-                Button(
+                OutlinedButton(shape = buttonShape(), onClick = { openUrl(context, provider.keyUrl) }) { Text("Schlüssel besorgen") }
+                Button(shape = buttonShape(), 
                     enabled = key.isNotBlank() && !testing,
                     onClick = {
                         testing = true
@@ -672,8 +687,8 @@ private fun HelpCard(onOpenGuide: () -> Unit, onStartTour: () -> Unit) {
             Text("Hilfe", style = MaterialTheme.typography.titleMedium)
             Text("Die Anleitung erklärt alles nach Themen, der Rundgang zeigt es Schritt für Schritt mit Bildern.", style = MaterialTheme.typography.bodyMedium)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = onOpenGuide) { Text("Anleitung lesen") }
-                Button(onClick = onStartTour) { Text("Rundgang") }
+                OutlinedButton(shape = buttonShape(), onClick = onOpenGuide) { Text("Anleitung lesen") }
+                Button(shape = buttonShape(), onClick = onStartTour) { Text("Rundgang") }
             }
         }
     }
@@ -726,5 +741,118 @@ private fun ViewerCard() {
                 style = MaterialTheme.typography.bodySmall,
             )
         }
+    }
+}
+
+/** Effekte (Beta): Transparenz, Leuchtrand, Hintergrund, Bewegung, Animationen, Glanz. */
+@Composable
+private fun EffectsCard(vm: MainViewModel) {
+    val effects by vm.effects.collectAsStateWithLifecycle()
+    val style by vm.designStyle.collectAsStateWithLifecycle()
+    val design = LocalDesign.current
+    var open by remember { mutableStateOf(effects != Effects()) }
+    HCard(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("Effekte (Beta)", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        "Glas, Leuchtrand, bewegter Hintergrund und Animationen. Am schönsten mit dem Design „Aurora“, „Glas“ oder „Liquid“.",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+                androidx.compose.material3.TextButton(onClick = { open = !open }) { Text(if (open) "Zuklappen" else "Einstellen") }
+            }
+            if (open) {
+                if (design.backdrop == null) {
+                    Text(
+                        "Das Design „${style.label}“ hat keinen farbigen Hintergrund. Durchsichtige Karten und der bewegte Hintergrund wirken erst mit „Aurora“, „Glas“ oder „Liquid“.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                    OutlinedButton(shape = buttonShape(), onClick = { vm.setDesignStyle(DesignStyle.Aurora) }) { Text("Aurora ausprobieren") }
+                }
+                EffectSlider(
+                    label = "Deckkraft der Karten",
+                    hint = "Weniger = mehr Glas, der Hintergrund scheint durch.",
+                    value = effects.cardAlpha,
+                    designValue = design.cardColor?.alpha ?: 1f,
+                    range = 0.05f..1f,
+                    percent = true,
+                    onChange = { vm.setEffects(effects.copy(cardAlpha = it)) },
+                )
+                EffectSlider(
+                    label = "Leuchtrand",
+                    hint = "Farbiger Rand um die Karten.",
+                    value = effects.glow,
+                    designValue = design.glow,
+                    range = 0f..1f,
+                    percent = true,
+                    onChange = { vm.setEffects(effects.copy(glow = it)) },
+                )
+                EffectSlider(
+                    label = "Farbflecken im Hintergrund",
+                    hint = "Wie kräftig die leuchtenden Flecken hinter den Karten sind.",
+                    value = effects.backdrop,
+                    designValue = 1f,
+                    range = 0f..2f,
+                    percent = true,
+                    onChange = { vm.setEffects(effects.copy(backdrop = it)) },
+                )
+                EffectSwitch("Bewegter Hintergrund", "Die Farbflecken wandern ganz langsam. Braucht etwas mehr Akku.", effects.motion) {
+                    vm.setEffects(effects.copy(motion = it))
+                }
+                EffectSwitch("Lebendige Animationen", "Karten geben beim Antippen nach, Klappen und Reiterwechsel gleiten weich.", effects.animations) {
+                    vm.setEffects(effects.copy(animations = it))
+                }
+                EffectSwitch("Glanz", "Skalen und Balken bekommen einen glänzenden Verlauf.", effects.gloss) {
+                    vm.setEffects(effects.copy(gloss = it))
+                }
+                OutlinedButton(shape = buttonShape(), onClick = { vm.setEffects(Effects()) }, modifier = Modifier.fillMaxWidth()) {
+                    Text("Alles wie im Design")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun EffectSlider(
+    label: String,
+    hint: String,
+    value: Float,
+    designValue: Float,
+    range: ClosedFloatingPointRange<Float>,
+    percent: Boolean,
+    onChange: (Float) -> Unit,
+) {
+    val shown = if (value >= 0f) value else designValue.coerceIn(range.start, range.endInclusive)
+    var current by remember(shown) { mutableStateOf(shown) }
+    Column {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(label, style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
+            Text(
+                (if (percent) "${(current * 100).toInt()} %" else String.format("%.1f", current)) + if (value < 0f) " (Design)" else "",
+                style = MaterialTheme.typography.labelMedium,
+            )
+        }
+        androidx.compose.material3.Slider(
+            value = current,
+            onValueChange = { current = it },
+            onValueChangeFinished = { onChange(current) },
+            valueRange = range,
+        )
+        Text(hint, style = MaterialTheme.typography.bodySmall)
+    }
+}
+
+@Composable
+private fun EffectSwitch(label: String, hint: String, checked: Boolean, onChange: (Boolean) -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            Text(label, style = MaterialTheme.typography.labelLarge)
+            Text(hint, style = MaterialTheme.typography.bodySmall)
+        }
+        Switch(checked = checked, onCheckedChange = onChange)
     }
 }

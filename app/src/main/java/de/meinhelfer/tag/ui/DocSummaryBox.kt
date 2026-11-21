@@ -143,14 +143,14 @@ fun DocSummaryBox(
                 Text("${provider.label} liest mit …", style = MaterialTheme.typography.bodyMedium)
             }
         } else if (configured) {
-            OutlinedButton(enabled = enoughText, onClick = { confirm = true }) {
+            OutlinedButton(shape = buttonShape(), enabled = enoughText, onClick = { confirm = true }) {
                 Text(if (summary.isBlank()) "Per KI zusammenfassen" else "Neu zusammenfassen")
             }
             if (!enoughText) {
                 Text("Dafür ist zu wenig Text erkannt. Lies den Text neu aus oder trage ihn unten ein.", style = MaterialTheme.typography.bodySmall)
             }
             if (onAddTasks != null) {
-                OutlinedButton(enabled = enoughText || summary.trim().length >= 20, onClick = { confirmTasks = true }) {
+                OutlinedButton(shape = buttonShape(), enabled = enoughText || summary.trim().length >= 20, onClick = { confirmTasks = true }) {
                     Text("Aufgaben vorschlagen")
                 }
                 taskInfo?.let { Text(it, style = MaterialTheme.typography.bodySmall) }

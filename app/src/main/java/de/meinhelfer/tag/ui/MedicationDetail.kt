@@ -105,7 +105,7 @@ fun MedicationDetailDialog(
                         Text("Suche Beschreibung …", style = MaterialTheme.typography.bodyMedium)
                     }
                 } else {
-                    OutlinedButton(onClick = { load() }) { Text("Beschreibung aus dem Internet laden") }
+                    OutlinedButton(shape = buttonShape(), onClick = { load() }) { Text("Beschreibung aus dem Internet laden") }
                     if (missing) {
                         Text(
                             "Dazu wurde nichts Passendes gefunden. Versuche es mit dem Namen des Wirkstoffs (Medikament bearbeiten).",

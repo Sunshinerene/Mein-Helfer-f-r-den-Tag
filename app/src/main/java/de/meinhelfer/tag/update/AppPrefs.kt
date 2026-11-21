@@ -33,6 +33,37 @@ object AppPrefs {
         prefs(context).edit().putFloat("schrift_faktor", factor).apply()
     }
 
+    /** Form der Ecken, siehe CornerStyle ("design" = wie das Design es vorgibt). */
+    fun cornerStyle(context: Context): String = prefs(context).getString("ecken", "design") ?: "design"
+
+    fun setCornerStyle(context: Context, key: String) {
+        prefs(context).edit().putString("ecken", key).apply()
+    }
+
+    /** Effekte (Beta): Deckkraft, Leuchtrand, Hintergrund, Bewegung, Animationen, Glanz. */
+    fun effects(context: Context): de.meinhelfer.tag.ui.Effects {
+        val p = prefs(context)
+        return de.meinhelfer.tag.ui.Effects(
+            cardAlpha = p.getFloat("effekt_deckkraft", -1f),
+            glow = p.getFloat("effekt_leuchtrand", -1f),
+            backdrop = p.getFloat("effekt_hintergrund", -1f),
+            motion = p.getBoolean("effekt_bewegung", false),
+            animations = p.getBoolean("effekt_animationen", false),
+            gloss = p.getBoolean("effekt_glanz", false),
+        )
+    }
+
+    fun setEffects(context: Context, e: de.meinhelfer.tag.ui.Effects) {
+        prefs(context).edit()
+            .putFloat("effekt_deckkraft", e.cardAlpha)
+            .putFloat("effekt_leuchtrand", e.glow)
+            .putFloat("effekt_hintergrund", e.backdrop)
+            .putBoolean("effekt_bewegung", e.motion)
+            .putBoolean("effekt_animationen", e.animations)
+            .putBoolean("effekt_glanz", e.gloss)
+            .apply()
+    }
+
     /** Dokumente im eingebauten Betrachter oeffnen (Standard) oder mit einer anderen App. */
     fun internalViewer(context: Context): Boolean = prefs(context).getBoolean("viewer_intern", true)
 
@@ -212,6 +243,9 @@ object AppPrefs {
     private const val KEY_CG_PHONE = "pflegende_telefon"
     private const val KEY_CG_EMAIL = "pflegende_email"
     private const val KEY_CG_ASKED = "pflegende_gefragt"
+    private const val KEY_CG_STREET = "pflegende_strasse"
+    private const val KEY_CG_ZIP = "pflegende_plz"
+    private const val KEY_CG_CITY = "pflegende_ort"
 
     /** Eigene Daten der pflegenden Person (nur lokal). */
     fun caregiver(context: Context): de.meinhelfer.tag.data.CaregiverProfile {
@@ -223,6 +257,9 @@ object AppPrefs {
             organisation = p.getString(KEY_CG_ORG, "").orEmpty(),
             phone = p.getString(KEY_CG_PHONE, "").orEmpty(),
             email = p.getString(KEY_CG_EMAIL, "").orEmpty(),
+            street = p.getString(KEY_CG_STREET, "").orEmpty(),
+            zip = p.getString(KEY_CG_ZIP, "").orEmpty(),
+            city = p.getString(KEY_CG_CITY, "").orEmpty(),
         )
     }
 
@@ -234,6 +271,9 @@ object AppPrefs {
             .putString(KEY_CG_ORG, c.organisation.trim())
             .putString(KEY_CG_PHONE, c.phone.trim())
             .putString(KEY_CG_EMAIL, c.email.trim())
+            .putString(KEY_CG_STREET, c.street.trim())
+            .putString(KEY_CG_ZIP, c.zip.trim())
+            .putString(KEY_CG_CITY, c.city.trim())
             .apply()
     }
 

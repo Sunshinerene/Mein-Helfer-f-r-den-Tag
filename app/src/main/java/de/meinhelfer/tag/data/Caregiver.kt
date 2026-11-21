@@ -26,7 +26,16 @@ data class CaregiverProfile(
     val organisation: String = "",
     val phone: String = "",
     val email: String = "",
+    /** Eigene Anschrift (fuer Schreiben, Vollmachten, E-Mails), optional. */
+    val street: String = "",
+    val zip: String = "",
+    val city: String = "",
 ) {
+    /** "Musterstr. 1, 12345 Berlin" oder leer */
+    val address: String
+        get() = listOf(street.trim(), listOf(zip.trim(), city.trim()).filter { it.isNotEmpty() }.joinToString(" "))
+            .filter { it.isNotEmpty() }.joinToString(", ")
+
     val isSet: Boolean get() = role.isNotBlank()
     val roleValue: CaregiverRole? get() = CaregiverRole.fromKey(role)
 
@@ -51,6 +60,8 @@ data class CaregiverProfile(
         append(name.ifBlank { "(Name bitte ergänzen)" })
         organisation.takeIf { it.isNotBlank() && (roleValue == CaregiverRole.Pflegedienst || roleValue == CaregiverRole.Betreuung) }
             ?.let { append('\n').append(it) }
+        if (street.isNotBlank()) append('\n').append(street.trim())
+        listOf(zip.trim(), city.trim()).filter { it.isNotEmpty() }.joinToString(" ").takeIf { it.isNotEmpty() }?.let { append('\n').append(it) }
         if (phone.isNotBlank()) append("\nTelefon: ").append(phone)
         if (email.isNotBlank()) append("\nE-Mail: ").append(email)
     }

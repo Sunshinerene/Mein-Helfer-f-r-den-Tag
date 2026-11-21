@@ -46,6 +46,9 @@ fun CaregiverDialog(initial: CaregiverProfile, onDismiss: () -> Unit, onSave: (C
     var organisation by remember { mutableStateOf(initial.organisation) }
     var phone by remember { mutableStateOf(initial.phone) }
     var email by remember { mutableStateOf(initial.email) }
+    var street by remember { mutableStateOf(initial.street) }
+    var zip by remember { mutableStateOf(initial.zip) }
+    var city by remember { mutableStateOf(initial.city) }
     val current = CaregiverRole.fromKey(role)
 
     AlertDialog(
@@ -103,13 +106,41 @@ fun CaregiverDialog(initial: CaregiverProfile, onDismiss: () -> Unit, onSave: (C
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                     modifier = Modifier.fillMaxWidth(),
                 )
+                Text("Deine Anschrift (freiwillig)", style = MaterialTheme.typography.labelLarge)
+                Text(
+                    "Für Vollmachten, Schreiben und als Absender in E-Mails. Wohnst du bei der betreuten Person, reicht deren Adresse im Profil.",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                OutlinedTextField(
+                    value = street, onValueChange = { street = it },
+                    label = { Text("Straße und Hausnummer") }, singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = zip, onValueChange = { zip = it.filter { c -> c.isDigit() }.take(5) },
+                        label = { Text("PLZ") }, singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(0.4f),
+                    )
+                    OutlinedTextField(
+                        value = city, onValueChange = { city = it },
+                        label = { Text("Ort") }, singleLine = true,
+                        modifier = Modifier.weight(0.6f),
+                    )
+                }
             }
         },
         confirmButton = {
             TextButton(
                 enabled = role.isNotBlank(),
                 onClick = {
-                    onSave(CaregiverProfile(role, name.trim(), relation.trim(), organisation.trim(), phone.trim(), email.trim()))
+                    onSave(
+                        CaregiverProfile(
+                            role, name.trim(), relation.trim(), organisation.trim(), phone.trim(), email.trim(),
+                            street.trim(), zip.trim(), city.trim(),
+                        ),
+                    )
                 },
             ) { Text("Speichern") }
         },
@@ -125,7 +156,7 @@ fun CaregiverCard(caregiver: CaregiverProfile, onEdit: () -> Unit) {
             Text("Meine Daten", style = MaterialTheme.typography.titleMedium)
             if (caregiver.isSet) {
                 Text(caregiver.roleValue?.label.orEmpty(), style = MaterialTheme.typography.bodyMedium)
-                val lines = listOf(caregiver.name, caregiver.relation, caregiver.organisation, caregiver.phone, caregiver.email)
+                val lines = listOf(caregiver.name, caregiver.relation, caregiver.organisation, caregiver.address, caregiver.phone, caregiver.email)
                     .filter { it.isNotBlank() }
                 if (lines.isNotEmpty()) Text(lines.joinToString(" · "), style = MaterialTheme.typography.bodyMedium)
             } else {

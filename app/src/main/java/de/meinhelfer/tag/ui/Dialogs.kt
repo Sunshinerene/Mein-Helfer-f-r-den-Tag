@@ -227,7 +227,7 @@ fun MedicationDialog(
     ) {
         // ---- Foto der Packung
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedButton(
+            OutlinedButton(shape = buttonShape(), 
                 onClick = {
                     val file = PhotoStore.newFile(context)
                     pendingFile = file
@@ -241,7 +241,7 @@ fun MedicationDialog(
                 contentPadding = PaddingValues(horizontal = 8.dp),
                 modifier = Modifier.weight(1f),
             ) { Text("Packung fotografieren", maxLines = 1) }
-            OutlinedButton(
+            OutlinedButton(shape = buttonShape(), 
                 onClick = {
                     galleryLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                 },
@@ -409,7 +409,7 @@ fun MedicationDialog(
                 Text("Suche Beschreibung …", style = MaterialTheme.typography.bodyMedium)
             }
         } else {
-            OutlinedButton(
+            OutlinedButton(shape = buttonShape(), 
                 enabled = name.isNotBlank(),
                 onClick = {
                     infoDismissed = false

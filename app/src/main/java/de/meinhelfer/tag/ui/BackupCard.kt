@@ -142,12 +142,12 @@ internal fun BackupCard() {
                     )
             }
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = {
+                OutlinedButton(shape = buttonShape(), onClick = {
                     password = ""
                     repeat = ""
                     step = BackupStep.AskNewPassword
                 }) { Text("Sicherung erstellen") }
-                OutlinedButton(onClick = { openLauncher.launch(arrayOf("*/*")) }) { Text("Wiederherstellen") }
+                OutlinedButton(shape = buttonShape(), onClick = { openLauncher.launch(arrayOf("*/*")) }) { Text("Wiederherstellen") }
             }
             Text(
                 "Nicht enthalten: der Zugangsschlüssel für die KI (bitte neu eintragen). Es wird nichts automatisch gesendet, du wählst selbst, wo die Datei gespeichert wird.",
@@ -304,7 +304,7 @@ internal fun BackupCard() {
                         "Empfehlung: vorher eine Sicherung erstellen. Erhalten bleiben nur die Nachweise deiner Zustimmung zu den Nutzungsbedingungen (mit ihrer Aufbewahrungsfrist).",
                         style = MaterialTheme.typography.bodySmall,
                     )
-                    OutlinedButton(onClick = {
+                    OutlinedButton(shape = buttonShape(), onClick = {
                         password = ""
                         repeat = ""
                         resetAfterBackup = true

@@ -87,6 +87,7 @@ internal fun emergencyText(
         append(caregiver.name.ifBlank { "(ohne Namen)" })
         caregiver.roleValue?.let { append(" – ").append(it.label) }
         if (caregiver.phone.isNotBlank()) append(", ").append(caregiver.phone)
+        if (caregiver.address.isNotBlank()) append(", ").append(caregiver.address)
         append('\n')
     }
     append("\nStand: ").append(LocalDate.now().format(EMERGENCY_DATE)).append(". Ohne Gewähr, Angaben bitte prüfen.")
@@ -110,7 +111,7 @@ fun EmergencyDialog(
         title = { Text("Notfallkarte") },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = {
+                OutlinedButton(shape = buttonShape(), onClick = {
                     try {
                         context.startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:112")))
                     } catch (_: ActivityNotFoundException) {

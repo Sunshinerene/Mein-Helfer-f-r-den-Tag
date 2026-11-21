@@ -91,8 +91,8 @@ fun SummaryScreen(vm: MainViewModel, onBack: () -> Unit) {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
-                    OutlinedButton(onClick = { offset-- }) { Text("‹ Zurück") }
-                    OutlinedButton(onClick = { offset++ }, enabled = offset < 0) { Text("Weiter ›") }
+                    OutlinedButton(shape = buttonShape(), onClick = { offset-- }) { Text("‹ Zurück") }
+                    OutlinedButton(shape = buttonShape(), onClick = { offset++ }, enabled = offset < 0) { Text("Weiter ›") }
                 }
             }
 
@@ -145,7 +145,7 @@ fun SummaryScreen(vm: MainViewModel, onBack: () -> Unit) {
                     Text(Summary.DISCLAIMER, style = MaterialTheme.typography.bodySmall)
                 }
                 item {
-                    Button(
+                    Button(shape = buttonShape(), 
                         onClick = {
                             val send = Intent(Intent.ACTION_SEND).apply {
                                 type = "text/plain"

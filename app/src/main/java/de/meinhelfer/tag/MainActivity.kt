@@ -112,6 +112,8 @@ class MainActivity : FragmentActivity() {
             val style by vm.designStyle.collectAsStateWithLifecycle()
             val tweaks by vm.designTweaks.collectAsStateWithLifecycle()
             val fontFactor by vm.fontFactor.collectAsStateWithLifecycle()
+            val corners by vm.cornerStyle.collectAsStateWithLifecycle()
+            val effects by vm.effects.collectAsStateWithLifecycle()
             val baseDensity = LocalDensity.current
             val wanted = pendingPerson
             LaunchedEffect(wanted) {
@@ -135,7 +137,7 @@ class MainActivity : FragmentActivity() {
             }
             val scaled = Density(baseDensity.density, baseDensity.fontScale * fontFactor)
             CompositionLocalProvider(LocalDensity provides scaled) {
-                HelferTheme(style = style, dark = dark, tweak = tweaks[style]) {
+                HelferTheme(style = style, dark = dark, tweak = tweaks[style], corners = corners, effects = effects) {
                     Box {
                         HelferApp(vm)
                         if (locked) {

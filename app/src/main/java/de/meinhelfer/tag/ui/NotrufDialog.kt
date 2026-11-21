@@ -162,7 +162,7 @@ internal fun NotrufDialog(
                         }) { Text("Kopieren") }
                     }
                 }
-                OutlinedButton(onClick = { showCard = true }, modifier = Modifier.fillMaxWidth()) {
+                OutlinedButton(shape = buttonShape(), onClick = { showCard = true }, modifier = Modifier.fillMaxWidth()) {
                     Text("Notfallkarte zeigen (Medikamente, Kontakte, Wichtiges)")
                 }
                 if (person != null && (person.street + person.city).isBlank()) {
@@ -187,9 +187,9 @@ internal fun NotrufDialog(
 
                 Text("Hilfe in der Nähe", style = MaterialTheme.typography.titleSmall)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = { nearby = NearbyKind.Notaufnahme }) { Text("Notaufnahme") }
-                    OutlinedButton(onClick = { nearby = NearbyKind.Apotheke }) { Text("Apotheke") }
-                    OutlinedButton(onClick = { nearby = NearbyKind.Pflegedienst }) { Text("Pflegedienst") }
+                    OutlinedButton(shape = buttonShape(), onClick = { nearby = NearbyKind.Notaufnahme }) { Text("Notaufnahme") }
+                    OutlinedButton(shape = buttonShape(), onClick = { nearby = NearbyKind.Apotheke }) { Text("Apotheke") }
+                    OutlinedButton(shape = buttonShape(), onClick = { nearby = NearbyKind.Pflegedienst }) { Text("Pflegedienst") }
                 }
 
                 Text("Weitere Nummern", style = MaterialTheme.typography.titleSmall)
@@ -246,7 +246,7 @@ private fun NumberCard(n: EmergencyNumber, strong: Boolean, onDial: () -> Unit) 
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(n.title, style = MaterialTheme.typography.titleSmall)
             Text(n.hint, style = MaterialTheme.typography.bodySmall)
-            Button(
+            Button(shape = buttonShape(), 
                 onClick = onDial,
                 modifier = Modifier.fillMaxWidth(),
                 colors = if (strong) ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error) else ButtonDefaults.buttonColors(),

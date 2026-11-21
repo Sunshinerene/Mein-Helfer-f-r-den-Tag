@@ -123,6 +123,22 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         AppPrefs.setDesignStyle(getApplication(), style.key)
     }
 
+    private val _cornerStyle = MutableStateFlow(CornerStyle.fromKey(AppPrefs.cornerStyle(app)))
+    val cornerStyle: StateFlow<CornerStyle> = _cornerStyle
+
+    fun setCornerStyle(corners: CornerStyle) {
+        _cornerStyle.value = corners
+        AppPrefs.setCornerStyle(getApplication(), corners.key)
+    }
+
+    private val _effects = MutableStateFlow(AppPrefs.effects(app))
+    val effects: StateFlow<Effects> = _effects
+
+    fun setEffects(effects: Effects) {
+        _effects.value = effects
+        AppPrefs.setEffects(getApplication(), effects)
+    }
+
     private val _designTweaks = MutableStateFlow(
         DesignStyle.entries.associateWith { AppPrefs.designTweak(app, it.key) },
     )

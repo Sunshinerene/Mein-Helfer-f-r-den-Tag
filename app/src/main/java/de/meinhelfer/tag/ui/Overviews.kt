@@ -680,9 +680,9 @@ internal fun MonthOverview(
                                         Modifier.weight(1f).height(52.dp).padding(1.dp)
                                             .background(
                                                 if (isSel) MaterialTheme.colorScheme.primaryContainer else androidx.compose.ui.graphics.Color.Transparent,
-                                                RoundedCornerShape(8.dp),
+                                                MaterialTheme.shapes.extraSmall,
                                             )
-                                            .then(if (isToday) Modifier.border(1.5.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(8.dp)) else Modifier)
+                                            .then(if (isToday) Modifier.border(1.5.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.extraSmall) else Modifier)
                                             .clickable { selected = epoch },
                                         horizontalAlignment = Alignment.CenterHorizontally,
                                         verticalArrangement = Arrangement.Center,

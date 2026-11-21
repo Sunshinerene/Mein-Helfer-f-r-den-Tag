@@ -153,7 +153,7 @@ internal fun AppointmentDocsDialog(
                         plan.suggestedDocs.forEach { d ->
                             DocRow(d, plan.reasons[d.id], d.id in selected, { toggle(d.id) }, { viewDoc = d })
                         }
-                        OutlinedButton(onClick = {
+                        OutlinedButton(shape = buttonShape(), onClick = {
                             plan.suggestedDocs.forEach { if (it.id !in selected) selected.add(it.id) }
                         }) { Text("Alle Vorschläge anhängen") }
                     }

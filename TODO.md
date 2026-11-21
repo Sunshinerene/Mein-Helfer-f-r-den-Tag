@@ -1,6 +1,6 @@
 # TODO
 
-Stand: v0.40.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.41.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
@@ -10,6 +10,7 @@ Stand: v0.40.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 - [ ] Dokumenten-Betrachter: Zoom mit zwei Fingern, Text-Dokumente drucken
 - [ ] Notfallkarte als PDF (zum Ausdrucken für Kühlschrank oder Geldbörse)
 - [ ] Vorlagen erweitern (Kündigung Pflegedienst, Antrag Schwerbehindertenausweis, Widerruf), eingescannte unterschriebene Fassung automatisch dem Entwurf zuordnen
+- [ ] Sicherung: auch „Meine Daten“ (inkl. Adresse) und Einstellungen wie Design, Ecken und Effekte mitsichern
 - [ ] Erinnerung an regelmäßige Sicherung (z. B. monatlich), Hinweis wenn lange keine Sicherung
 
 ## Ideen und Optimierungen
@@ -23,7 +24,8 @@ Stand: v0.40.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 - [ ] Startbildschirm-Widget: nächste Einnahme und nächster Termin
 - [ ] Barrierefreiheit: Hochkontrast-Design, Vorlesen, größere Bedienflächen
 - [ ] Mehrsprachigkeit für Betreuungskräfte (z. B. Polnisch, Rumänisch)
-- [ ] Designs verfeinern (Schriftarten, Übergänge, weitere Varianten)
+- [ ] Tages-Motivator (Idee, Richtung noch offen): Satz für den Tag und kleiner Impuls je Rolle im Tagesstart; „Das hast du geschafft“ aus echten Daten (erledigte Aufgaben, gegebene Einnahmen, Termine); optional Stimmungs-Check mit sanften Entlastungs-Hinweisen; optional Pausen-Erinnerung
+- [ ] Designs verfeinern (Schriftarten, weitere Varianten); Effekte: echte Unschärfe hinter Glas-Karten ab Android 12, Glanz auch auf Knöpfen
 
 ## Bitte auf dem Handy prüfen (bisher nicht getestet)
 
@@ -36,6 +38,7 @@ Stand: v0.40.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 - [ ] Umkreissuche und Fahrdienst-Suche (OpenStreetMap)
 - [ ] Benachrichtigung antippen öffnet die richtige Person
 - [ ] App zurücksetzen (am besten erst mit Testdaten und vorheriger Sicherung)
+- [ ] Ecken und Effekte (Beta): alle Ansichten mit „Eckig“ und „Rund“, Aurora hell und dunkel, bewegter Hintergrund flüssig und akkuschonend
 
 ## Rechtliches vor einer Veröffentlichung
 
@@ -43,6 +46,13 @@ Stand: v0.40.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 - [ ] Entscheiden: Aufbewahrung der Nachweise 3 Jahre oder länger (30-Jahres-Frist bei Gesundheitsschäden); zusätzlicher Nachweis beim App-Ersteller (Server) ja oder nein
 - [ ] Medizinprodukte-Recht (MDR) prüfen lassen, vor allem den KI-Gesamt-Check der Medikamente; Zweckbestimmung als Organisationshilfe klar festhalten
 - [ ] Impressum und Datenschutzerklärung für eine Veröffentlichung (z. B. Play Store), eigener Signaturschlüssel statt Test-Schlüssel
+
+## Version 0.41.0 (fertig)
+
+- [x] Meine Daten mit Adresse; wird in Schreiben, Vollmacht, Schweigepflicht-Entbindung und auf der Notfallkarte genutzt
+- [x] Ecken einheitlich einstellbar: wie im Design, eckig, dezent eckig, dezent rund, rund (Karten, Knöpfe, Felder, Fenster)
+- [x] Neues Design „Aurora (Beta)“: leuchtende Farbverläufe, Glas-Karten, Leuchtrand
+- [x] Effekte (Beta): Deckkraft der Karten, Leuchtrand, Farbflecken, bewegter Hintergrund, lebendige Animationen, Glanz
 
 ## Version 0.40.0 (fertig)
 

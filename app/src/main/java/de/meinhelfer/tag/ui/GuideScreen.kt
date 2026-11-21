@@ -79,7 +79,7 @@ fun GuideScreen(onBack: () -> Unit, onStartTour: () -> Unit) {
                             "Der Rundgang führt in wenigen Schritten mit Bildern durch die App.",
                             style = MaterialTheme.typography.bodyMedium,
                         )
-                        Button(onClick = onStartTour) { Text("Rundgang starten") }
+                        Button(shape = buttonShape(), onClick = onStartTour) { Text("Rundgang starten") }
                     }
                 }
             }

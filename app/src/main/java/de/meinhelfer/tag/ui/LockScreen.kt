@@ -39,7 +39,7 @@ fun LockScreen(dark: Boolean, onUnlock: () -> Unit) {
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center,
             )
-            Button(onClick = onUnlock) { Text("Entsperren") }
+            Button(shape = buttonShape(), onClick = onUnlock) { Text("Entsperren") }
         }
     }
 }

@@ -99,7 +99,7 @@ fun AiHintBox(
                 Text("${provider.label} denkt nach …", style = MaterialTheme.typography.bodyMedium)
             }
         } else if (configured) {
-            OutlinedButton(onClick = { confirm = true }) { Text(buttonLabel) }
+            OutlinedButton(shape = buttonShape(), onClick = { confirm = true }) { Text(buttonLabel) }
         }
         error?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
         if (limitHit) {

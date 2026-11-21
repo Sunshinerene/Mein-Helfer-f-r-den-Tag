@@ -185,7 +185,7 @@ internal fun PermissionRows(onlyProblems: Boolean = false, onlyImportant: Boolea
                     )
                     Text(r.text, style = MaterialTheme.typography.bodySmall)
                 }
-                if (!r.ok) OutlinedButton(onClick = r.onFix) { Text(r.action) }
+                if (!r.ok) OutlinedButton(shape = buttonShape(), onClick = r.onFix) { Text(r.action) }
             }
         }
     }

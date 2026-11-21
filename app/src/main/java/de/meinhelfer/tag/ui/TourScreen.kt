@@ -58,7 +58,7 @@ private val TOUR_PAGES = listOf(
     ),
     TourPage(
         title = "Wer du bist",
-        text = "Unter Einstellungen → Meine Daten stehen dein Name und deine Rolle (z. B. Angehörige/r, Pflegedienst, Betreuer/in). Damit unterschreibt die App vorbereitete E-Mails und zeigt passende Tipps. Deine Zustimmung zu den Nutzungsbedingungen gilt für genau diese Person.",
+        text = "Unter Einstellungen → Meine Daten stehen dein Name, deine Rolle (z. B. Angehörige/r, Pflegedienst, Betreuer/in) und auf Wunsch deine Adresse. Damit unterschreibt die App vorbereitete E-Mails und zeigt passende Tipps. Deine Zustimmung zu den Nutzungsbedingungen gilt für genau diese Person.",
         tips = listOf("Änderst du Name oder Rolle, bestätigst du die Nutzungsbedingungen neu.", "Die App ersetzt keinen Arzt und keine Apotheke. Im Notfall immer 112."),
         mock = { MockConsent() },
     ),
@@ -149,7 +149,7 @@ private val TOUR_PAGES = listOf(
     TourPage(
         title = "Sicher und privat",
         text = "Deine Daten bleiben verschlüsselt auf deinem Handy, ohne Konto und ohne Cloud. Ins Internet geht die App nur, wenn du etwas anforderst, z. B. Updates, Meldungen, Umkreissuche oder die KI. Eine App-Sperre und eine verschlüsselte Sicherung findest du in den Einstellungen.",
-        tips = listOf("Lege regelmäßig eine Sicherung an und bewahre sie außerhalb des Handys auf.", "Anleitung: Info-Symbol oben. Einstellungen: Zahnrad oben."),
+        tips = listOf("Lege regelmäßig eine Sicherung an und bewahre sie außerhalb des Handys auf.", "Anleitung: Info-Symbol oben. Einstellungen: Zahnrad oben.", "Aussehen nach Geschmack: Design, Ecken, Schriftgröße und Effekte (Beta) in den Einstellungen."),
         mock = { MockPrivacy() },
     ),
 )
@@ -204,7 +204,7 @@ fun TourScreen(onClose: () -> Unit) {
                     onClick = { scope.launch { pagerState.animateScrollToPage(pagerState.currentPage - 1) } },
                     enabled = pagerState.currentPage > 0,
                 ) { Text("Zurück") }
-                Button(
+                Button(shape = buttonShape(), 
                     onClick = {
                         if (last) onClose() else scope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) }
                     },
@@ -223,7 +223,7 @@ private fun TourPageView(page: TourPage, number: Int, total: Int) {
         // Beispielansicht
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(20.dp),
+            shape = MaterialTheme.shapes.large,
             color = MaterialTheme.colorScheme.surfaceVariant,
         ) {
             Box(Modifier.padding(12.dp)) { page.mock() }
@@ -244,7 +244,7 @@ private fun TourPageView(page: TourPage, number: Int, total: Int) {
 private fun MockCard(content: @Composable () -> Unit) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
+        shape = MaterialTheme.shapes.medium,
         color = MaterialTheme.colorScheme.surfaceContainerLowest,
     ) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) { content() }
@@ -254,7 +254,7 @@ private fun MockCard(content: @Composable () -> Unit) {
 @Composable
 private fun MockButton(text: String, filled: Boolean = false) {
     Surface(
-        shape = RoundedCornerShape(20.dp),
+        shape = MaterialTheme.shapes.large,
         color = if (filled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerLowest,
         border = if (filled) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
     ) {
@@ -271,7 +271,7 @@ private fun MockButton(text: String, filled: Boolean = false) {
 private fun MockField(label: String, value: String, modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier,
-        shape = RoundedCornerShape(6.dp),
+        shape = MaterialTheme.shapes.extraSmall,
         color = MaterialTheme.colorScheme.surfaceContainerLowest,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
     ) {
@@ -285,7 +285,7 @@ private fun MockField(label: String, value: String, modifier: Modifier = Modifie
 @Composable
 private fun MockChip(text: String, selected: Boolean = false) {
     Surface(
-        shape = RoundedCornerShape(8.dp),
+        shape = MaterialTheme.shapes.small,
         color = if (selected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerLowest,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
@@ -525,7 +525,7 @@ private fun MockMedCheck() {
 @Composable
 private fun MockLevel(level: String, color: androidx.compose.ui.graphics.Color, text: String) {
     Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Surface(shape = RoundedCornerShape(8.dp), color = color) {
+        Surface(shape = MaterialTheme.shapes.small, color = color) {
             Text(level, Modifier.padding(horizontal = 8.dp, vertical = 2.dp), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.surface)
         }
         Text(text, style = MaterialTheme.typography.bodyMedium)
@@ -602,7 +602,7 @@ private fun MockDocuments() {
 
 @Composable
 private fun MockNotruf() {
-    Surface(shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.errorContainer, modifier = Modifier.fillMaxWidth()) {
+    Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.errorContainer, modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text("Notruf: Feuerwehr und Rettungsdienst", style = MaterialTheme.typography.titleSmall)
             MockButton("112 wählen", filled = true)

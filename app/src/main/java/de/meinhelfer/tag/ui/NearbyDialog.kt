@@ -102,10 +102,10 @@ internal fun NearbyDialog(
                     )
                 }
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(enabled = canSearch && !loading, onClick = { confirm = true }) {
+                    OutlinedButton(shape = buttonShape(), enabled = canSearch && !loading, onClick = { confirm = true }) {
                         Text(if (loading) "Suche läuft …" else "Suchen")
                     }
-                    OutlinedButton(onClick = {
+                    OutlinedButton(shape = buttonShape(), onClick = {
                         nearbyStart(context, Intent(Intent.ACTION_VIEW, Uri.parse(NearbySearch.mapsUrl(kind, zip, city))))
                     }) { Text("In Karten-App") }
                 }

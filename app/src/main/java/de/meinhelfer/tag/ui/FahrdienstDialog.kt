@@ -246,11 +246,11 @@ internal fun FahrdienstDialog(
                     )
                 }
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(
+                    OutlinedButton(shape = buttonShape(), 
                         enabled = canSearch && !loading,
                         onClick = { confirmSearch = true },
                     ) { Text(if (loading) "Suche läuft …" else "In der Nähe suchen") }
-                    OutlinedButton(onClick = { openUrl(context, FahrdienstSearch.mapsUrl(zip, city)) }) {
+                    OutlinedButton(shape = buttonShape(), onClick = { openUrl(context, FahrdienstSearch.mapsUrl(zip, city)) }) {
                         Text("Karte öffnen")
                     }
                 }

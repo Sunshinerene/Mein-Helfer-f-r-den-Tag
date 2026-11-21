@@ -137,17 +137,17 @@ internal fun DocumentViewer(doc: Document, onClose: () -> Unit) {
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     if (canViewInside(doc) && !doc.mimeType.startsWith("text/")) {
-                        OutlinedButton(enabled = zoomIndex > 0, onClick = { zoomIndex-- }, contentPadding = PaddingValues(horizontal = 14.dp)) { Text("−") }
+                        OutlinedButton(shape = buttonShape(), enabled = zoomIndex > 0, onClick = { zoomIndex-- }, contentPadding = PaddingValues(horizontal = 14.dp)) { Text("−") }
                         Text("${(ZOOMS[zoomIndex] * 100).toInt()} %", style = MaterialTheme.typography.labelLarge)
-                        OutlinedButton(enabled = zoomIndex < ZOOMS.lastIndex, onClick = { zoomIndex++ }, contentPadding = PaddingValues(horizontal = 14.dp)) { Text("+") }
+                        OutlinedButton(shape = buttonShape(), enabled = zoomIndex < ZOOMS.lastIndex, onClick = { zoomIndex++ }, contentPadding = PaddingValues(horizontal = 14.dp)) { Text("+") }
                     }
                     if (canPrint(doc)) {
-                        OutlinedButton(enabled = ready != null, onClick = {
+                        OutlinedButton(shape = buttonShape(), enabled = ready != null, onClick = {
                             val src = ready ?: return@OutlinedButton
                             scope.launch { if (!runCatching { printDocument(context, doc, src) }.getOrDefault(false)) toast("Drucken ist nicht möglich.") }
                         }) { Text("Drucken") }
                     }
-                    OutlinedButton(enabled = ready != null, onClick = {
+                    OutlinedButton(shape = buttonShape(), enabled = ready != null, onClick = {
                         val src = ready ?: return@OutlinedButton
                         try {
                             val send = Intent(Intent.ACTION_SEND).apply {
@@ -160,7 +160,7 @@ internal fun DocumentViewer(doc: Document, onClose: () -> Unit) {
                             toast("Teilen ist nicht möglich.")
                         }
                     }) { Text("Teilen") }
-                    OutlinedButton(enabled = ready != null, onClick = {
+                    OutlinedButton(shape = buttonShape(), enabled = ready != null, onClick = {
                         val src = ready ?: return@OutlinedButton
                         try {
                             context.startActivity(

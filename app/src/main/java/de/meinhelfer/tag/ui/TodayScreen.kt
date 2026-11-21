@@ -195,10 +195,10 @@ fun TodayScreen(
 
         item {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = { onOpenDailyStart(false) }, modifier = Modifier.weight(1f)) {
+                OutlinedButton(shape = buttonShape(), onClick = { onOpenDailyStart(false) }, modifier = Modifier.weight(1f)) {
                     FitText("Rückblick gestern", maxSize = 14.sp)
                 }
-                OutlinedButton(onClick = { onOpenDailyStart(true) }, modifier = Modifier.weight(1f)) {
+                OutlinedButton(shape = buttonShape(), onClick = { onOpenDailyStart(true) }, modifier = Modifier.weight(1f)) {
                     FitText("Tagesplan (PDF)", maxSize = 14.sp)
                 }
             }
@@ -232,7 +232,7 @@ fun TodayScreen(
                         followUps.forEach { f ->
                             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                                 Text(f.title, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-                                OutlinedButton(onClick = { statusTarget = f }, contentPadding = PaddingValues(horizontal = 12.dp)) {
+                                OutlinedButton(shape = buttonShape(), onClick = { statusTarget = f }, contentPadding = PaddingValues(horizontal = 12.dp)) {
                                     Text("Antworten")
                                 }
                             }
@@ -300,7 +300,7 @@ fun TodayScreen(
                                 style = MaterialTheme.typography.bodyMedium,
                             )
                         }
-                        androidx.compose.material3.Button(
+                        androidx.compose.material3.Button(shape = buttonShape(), 
                             onClick = onOpenReorder,
                             colors = androidx.compose.material3.ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.error,
@@ -421,7 +421,7 @@ fun TodayScreen(
                             ?: "Noch nichts notiert, z. B. wie der Tag lief oder was aufgefallen ist.",
                         style = MaterialTheme.typography.bodyMedium,
                     )
-                    OutlinedButton(onClick = { editDayNote = true }) {
+                    OutlinedButton(shape = buttonShape(), onClick = { editDayNote = true }) {
                         Text(if (dayNote?.text.isNullOrBlank()) "Bemerkung schreiben" else "Bemerkung ändern")
                     }
                 }

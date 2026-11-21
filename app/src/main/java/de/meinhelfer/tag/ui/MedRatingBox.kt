@@ -58,14 +58,30 @@ internal fun ScaleRow(label: String, level: Int, emptyText: String? = null) {
             else -> MaterialTheme.colorScheme.primary
         }
         val empty = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)
+        val gloss = LocalEffects.current.gloss
+        val shape = MaterialTheme.shapes.extraSmall
+        val accent = MaterialTheme.colorScheme.tertiary
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.fillMaxWidth()) {
             for (i in 1..5) {
-                Box(
-                    Modifier
-                        .weight(1f)
-                        .height(10.dp)
-                        .background(if (i <= level) fill else empty, RoundedCornerShape(5.dp)),
-                )
+                val on = i <= level
+                val base = Modifier
+                    .weight(1f)
+                    .height(if (gloss) 12.dp else 10.dp)
+                if (gloss && on) {
+                    // Glaenzender Balken: Verlauf von Akzent- zur Fuellfarbe mit hellem Lichtstreifen oben
+                    Box(
+                        base
+                            .background(androidx.compose.ui.graphics.Brush.horizontalGradient(listOf(accent, fill)), shape)
+                            .background(
+                                androidx.compose.ui.graphics.Brush.verticalGradient(
+                                    listOf(androidx.compose.ui.graphics.Color.White.copy(alpha = 0.45f), androidx.compose.ui.graphics.Color.Transparent),
+                                ),
+                                shape,
+                            ),
+                    )
+                } else {
+                    Box(base.background(if (on) fill else empty, shape))
+                }
             }
         }
     }
@@ -125,7 +141,7 @@ fun MedRatingBox(med: Medication, otherNames: List<String>, onUpdate: (Medicatio
                 Text("${provider.label} denkt nach …", style = MaterialTheme.typography.bodyMedium)
             }
         } else if (configured) {
-            OutlinedButton(onClick = { confirm = true }) {
+            OutlinedButton(shape = buttonShape(), onClick = { confirm = true }) {
                 Text(if (rating == null) "Einschätzung per KI holen" else "Neu einschätzen lassen")
             }
         }
