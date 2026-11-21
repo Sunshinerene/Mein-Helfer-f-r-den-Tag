@@ -90,6 +90,7 @@ internal fun AppointmentCard(
     onDocs: () -> Unit,
     onCalendar: () -> Unit,
     onFahrdienst: () -> Unit,
+    onMail: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     var confirmDelete by remember { mutableStateOf(false) }
@@ -208,6 +209,9 @@ internal fun AppointmentCard(
             }
             if (outside) {
                 TextButton(onClick = onFahrdienst) { Text("Fahrdienst") }
+            }
+            if (onMail != null && doctor != null) {
+                TextButton(onClick = onMail) { Text("Nachricht") }
             }
             TextButton(onClick = onDocs) {
                 Text(if (attached.isEmpty()) "Unterlagen" else "Unterlagen (${attached.size})")

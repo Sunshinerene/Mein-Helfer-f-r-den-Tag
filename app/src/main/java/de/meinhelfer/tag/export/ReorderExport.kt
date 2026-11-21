@@ -69,12 +69,19 @@ object ReorderExport {
         (if (toPharmacy) "Bestellung Medikamente" else "Bitte um Folgerezept") +
             (personName?.takeIf { it.isNotBlank() }?.let { " – $it" } ?: "")
 
-    fun mailText(personName: String?, meds: List<Medication>, today: Long, toPharmacy: Boolean): String {
+    fun mailText(
+        personName: String?,
+        meds: List<Medication>,
+        today: Long,
+        toPharmacy: Boolean,
+        caregiver: de.meinhelfer.tag.data.CaregiverProfile? = null,
+    ): String {
         val who = personName?.takeIf { it.isNotBlank() }?.let { " für $it" } ?: ""
+        val intro = caregiver?.takeIf { it.isSet }?.let { it.intro(personName) + "\n\n" }.orEmpty()
         val head = if (toPharmacy) {
-            "Guten Tag,\n\nich möchte folgende Medikamente$who bestellen bzw. abholen:\n\n"
+            "Guten Tag,\n\n${intro}ich möchte folgende Medikamente$who bestellen bzw. abholen:\n\n"
         } else {
-            "Guten Tag,\n\nich bitte um ein Folgerezept für folgende Medikamente$who:\n\n"
+            "Guten Tag,\n\n${intro}ich bitte um ein Folgerezept für folgende Medikamente$who:\n\n"
         }
         val lines = meds.joinToString("\n") { m ->
             val days = m.daysLeft(today)
@@ -82,7 +89,9 @@ object ReorderExport {
                 (if (m.pzn.isNotBlank()) ", PZN ${m.pzn}" else "") +
                 (days?.let { " – Vorrat reicht noch ca. $it Tage" } ?: "")
         }
-        return head + lines + "\n\nVielen Dank und freundliche Grüße"
+        val tail = if (caregiver?.isSet == true) "\n\nVielen Dank!\n\n" + caregiver.signature()
+        else "\n\nVielen Dank und freundliche Grüße"
+        return head + lines + tail
     }
 
     /** Erstellt die PDF im privaten App-Ordner und gibt die Datei zurueck. */

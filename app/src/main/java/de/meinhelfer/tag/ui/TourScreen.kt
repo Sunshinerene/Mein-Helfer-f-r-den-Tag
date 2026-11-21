@@ -69,6 +69,12 @@ private val TOUR_PAGES: List<TourPage> = listOf(
         mock = { MockContacts() },
     ),
     TourPage(
+        title = "E-Mails vorbereiten",
+        text = "Trag unter Einstellungen → Meine Daten ein, wer du bist. Dann bereitet die App E-Mails an Ärzte, Pflegekasse, Pflegedienst oder Apotheke passend zum Thema vor, mit deinen Kontaktdaten und den wichtigen Angaben.",
+        tips = listOf("Du prüfst den Text und schickst selbst ab. Gesendet wird nichts automatisch.", "Je nach Rolle zeigt „Infos“ außerdem Tipps und Hilfen für dich."),
+        mock = { MockMail() },
+    ),
+    TourPage(
         title = "Medikamente anlegen",
         text = "Foto der Packung machen, die App liest Name und Packungsgröße direkt auf dem Handy aus. Dann Einnahmezeiten wählen und den Vorrat eintragen.",
         tips = listOf("Alles vom Foto ist nur ein Vorschlag, bitte kurz prüfen.", "Der Vorrat sinkt jeden Tag automatisch, du wirst rechtzeitig zum Nachbestellen erinnert."),
@@ -324,6 +330,25 @@ private fun MockContacts() {
             MockButton("Anrufen")
             MockButton("E-Mail")
         }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun MockMail() {
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        MockChip("Termin anfragen", selected = true)
+        MockChip("Rezept anfordern")
+        MockChip("Überweisung")
+    }
+    MockField("Betreff", "Terminanfrage – Anita Muster")
+    MockCard {
+        Text("Guten Tag, ich melde mich als Tochter von Anita Muster …", style = MaterialTheme.typography.bodyMedium)
+        Text("Mit freundlichen Grüßen, dein Name, Telefon, E-Mail", style = MaterialTheme.typography.bodySmall)
+    }
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        MockButton("In E-Mail-App öffnen")
+        MockButton("Text kopieren")
     }
 }
 

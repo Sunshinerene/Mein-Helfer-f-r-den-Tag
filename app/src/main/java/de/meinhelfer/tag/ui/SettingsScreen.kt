@@ -61,7 +61,14 @@ import de.meinhelfer.tag.update.UpdateWorker
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit, onOpenGuide: () -> Unit, onStartTour: () -> Unit) {
+fun SettingsScreen(
+    vm: MainViewModel,
+    onBack: () -> Unit,
+    onOpenGuide: () -> Unit,
+    onStartTour: () -> Unit,
+    caregiver: de.meinhelfer.tag.data.CaregiverProfile = de.meinhelfer.tag.data.CaregiverProfile(),
+    onEditCaregiver: () -> Unit = {},
+) {
     val context = LocalContext.current
     val updateState by vm.updateState.collectAsStateWithLifecycle()
     var autoCheck by remember { mutableStateOf(AppPrefs.autoUpdateCheck(context)) }
@@ -108,6 +115,7 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit, onOpenGuide: () -> Uni
                 )
             }
             item { HelpCard(onOpenGuide, onStartTour) }
+            item { CaregiverCard(caregiver, onEditCaregiver) }
             item { ThemeCard(vm) }
             item { IntakeCard() }
             item { SecurityCard() }

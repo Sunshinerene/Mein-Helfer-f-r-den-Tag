@@ -104,6 +104,44 @@ object AppPrefs {
         prefs(context).edit().putInt(KEY_INTAKE_WINDOW, minutes).apply()
     }
 
+    private const val KEY_CG_ROLE = "pflegende_rolle"
+    private const val KEY_CG_NAME = "pflegende_name"
+    private const val KEY_CG_REL = "pflegende_beziehung"
+    private const val KEY_CG_ORG = "pflegende_organisation"
+    private const val KEY_CG_PHONE = "pflegende_telefon"
+    private const val KEY_CG_EMAIL = "pflegende_email"
+    private const val KEY_CG_ASKED = "pflegende_gefragt"
+
+    /** Eigene Daten der pflegenden Person (nur lokal). */
+    fun caregiver(context: Context): de.meinhelfer.tag.data.CaregiverProfile {
+        val p = prefs(context)
+        return de.meinhelfer.tag.data.CaregiverProfile(
+            role = p.getString(KEY_CG_ROLE, "").orEmpty(),
+            name = p.getString(KEY_CG_NAME, "").orEmpty(),
+            relation = p.getString(KEY_CG_REL, "").orEmpty(),
+            organisation = p.getString(KEY_CG_ORG, "").orEmpty(),
+            phone = p.getString(KEY_CG_PHONE, "").orEmpty(),
+            email = p.getString(KEY_CG_EMAIL, "").orEmpty(),
+        )
+    }
+
+    fun setCaregiver(context: Context, c: de.meinhelfer.tag.data.CaregiverProfile) {
+        prefs(context).edit()
+            .putString(KEY_CG_ROLE, c.role)
+            .putString(KEY_CG_NAME, c.name.trim())
+            .putString(KEY_CG_REL, c.relation.trim())
+            .putString(KEY_CG_ORG, c.organisation.trim())
+            .putString(KEY_CG_PHONE, c.phone.trim())
+            .putString(KEY_CG_EMAIL, c.email.trim())
+            .apply()
+    }
+
+    fun caregiverAsked(context: Context): Boolean = prefs(context).getBoolean(KEY_CG_ASKED, false)
+
+    fun setCaregiverAsked(context: Context) {
+        prefs(context).edit().putBoolean(KEY_CG_ASKED, true).apply()
+    }
+
     private fun prefs(context: Context) = context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
 
     fun autoUpdateCheck(context: Context): Boolean = prefs(context).getBoolean(KEY_AUTO_UPDATE, true)

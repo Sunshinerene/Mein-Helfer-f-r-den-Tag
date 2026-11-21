@@ -41,8 +41,44 @@ object PersonalTopics {
             Regex("niereninsuffizienz|nierenschwäche|dialyse", RegexOption.IGNORE_CASE),
     )
 
-    fun suggest(person: Person?, meds: List<Medication>, docs: List<Document>): List<TopicSuggestion> {
+    fun forRole(role: de.meinhelfer.tag.data.CaregiverRole?): List<TopicSuggestion> = when (role) {
+        de.meinhelfer.tag.data.CaregiverRole.Angehoeriger -> listOf(
+            TopicSuggestion("Entlastung für Pflegende", "pflegende Angehörige Entlastung"),
+            TopicSuggestion("Pflegekurs", "Pflegekurs pflegende Angehörige"),
+            TopicSuggestion("Verhinderungspflege", "Verhinderungspflege Kurzzeitpflege"),
+        )
+        de.meinhelfer.tag.data.CaregiverRole.Pflegedienst -> listOf(
+            TopicSuggestion("Pflegekräfte: Gesundheit", "Pflegekräfte Gesundheit Rücken"),
+            TopicSuggestion("Pflegedienst: Neuigkeiten", "ambulanter Pflegedienst Pflegereform"),
+        )
+        de.meinhelfer.tag.data.CaregiverRole.Betreuung -> listOf(
+            TopicSuggestion("24-Stunden-Betreuung", "24-Stunden-Betreuung Rechte"),
+            TopicSuggestion("Faire Mobilität", "Faire Mobilität Pflege Beratung"),
+        )
+        de.meinhelfer.tag.data.CaregiverRole.Betreuer -> listOf(
+            TopicSuggestion("Rechtliche Betreuung", "rechtliche Betreuung Aufgaben"),
+            TopicSuggestion("Vorsorgevollmacht", "Vorsorgevollmacht Betreuungsrecht"),
+        )
+        de.meinhelfer.tag.data.CaregiverRole.Ehrenamt -> listOf(
+            TopicSuggestion("Nachbarschaftshilfe", "Nachbarschaftshilfe Pflege Entlastungsbetrag"),
+            TopicSuggestion("Pflegekurs", "Pflegekurs kostenlos ehrenamtlich"),
+        )
+        de.meinhelfer.tag.data.CaregiverRole.Selbst -> listOf(
+            TopicSuggestion("Pflegegrad beantragen", "Pflegegrad beantragen Begutachtung"),
+            TopicSuggestion("Hilfsmittel", "Hilfsmittel Pflegekasse Antrag"),
+            TopicSuggestion("Patientenverfügung", "Patientenverfügung Vorsorgevollmacht"),
+        )
+        else -> emptyList()
+    }
+
+    fun suggest(
+        person: Person?,
+        meds: List<Medication>,
+        docs: List<Document>,
+        role: de.meinhelfer.tag.data.CaregiverRole? = null,
+    ): List<TopicSuggestion> {
         val result = mutableListOf<TopicSuggestion>()
+        result.addAll(forRole(role))
         if (person != null) {
             if (person.careLevel > 0) {
                 result.add(TopicSuggestion("Pflegegrad ${person.careLevel}", "Pflegegrad ${person.careLevel} Leistungen"))

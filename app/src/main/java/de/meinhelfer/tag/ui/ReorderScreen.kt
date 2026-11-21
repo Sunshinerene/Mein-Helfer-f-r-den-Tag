@@ -72,6 +72,7 @@ fun ReorderScreen(
     doctors: List<Doctor>,
     personName: String?,
     onBack: () -> Unit,
+    caregiver: de.meinhelfer.tag.data.CaregiverProfile = de.meinhelfer.tag.data.CaregiverProfile(),
 ) {
     val context = LocalContext.current
     val today = LocalDate.now().toEpochDay()
@@ -244,7 +245,7 @@ fun ReorderScreen(
                                     val mail = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:")).apply {
                                         contact?.email?.takeIf { it.isNotBlank() }?.let { putExtra(Intent.EXTRA_EMAIL, arrayOf(it)) }
                                         putExtra(Intent.EXTRA_SUBJECT, ReorderExport.mailSubject(name, byPharmacy))
-                                        putExtra(Intent.EXTRA_TEXT, ReorderExport.mailText(name, list, today, byPharmacy))
+                                        putExtra(Intent.EXTRA_TEXT, ReorderExport.mailText(name, list, today, byPharmacy, caregiver))
                                     }
                                     startIntent(context, mail)
                                 }) { Text(if (contact?.email.isNullOrBlank()) "E-Mail (ohne Empfänger)" else "E-Mail mit Liste") }
@@ -254,7 +255,7 @@ fun ReorderScreen(
                                         type = "application/pdf"
                                         contact?.email?.takeIf { it.isNotBlank() }?.let { putExtra(Intent.EXTRA_EMAIL, arrayOf(it)) }
                                         putExtra(Intent.EXTRA_SUBJECT, ReorderExport.mailSubject(name, byPharmacy))
-                                        putExtra(Intent.EXTRA_TEXT, ReorderExport.mailText(name, list, today, byPharmacy))
+                                        putExtra(Intent.EXTRA_TEXT, ReorderExport.mailText(name, list, today, byPharmacy, caregiver))
                                         putExtra(Intent.EXTRA_STREAM, uriFor(context, file))
                                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                                     }

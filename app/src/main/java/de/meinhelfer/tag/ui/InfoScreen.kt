@@ -42,6 +42,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import de.meinhelfer.tag.data.CaregiverProfile
 import de.meinhelfer.tag.data.Document
 import de.meinhelfer.tag.data.Medication
 import de.meinhelfer.tag.data.Person
@@ -71,7 +72,7 @@ val InfoIcon: ImageVector = ImageVector.Builder(
 /** Stand der festen Themenkarten. Bitte bei Aenderungen aktualisieren. */
 private const val INFO_STAND = "21.11.2026"
 
-private class InfoCard(
+internal class InfoCard(
     val title: String,
     val text: String,
     val query: String? = null,
@@ -154,9 +155,23 @@ fun InfoScreen(
     meds: List<Medication>,
     documents: List<Document>,
     onOpenWegweiser: () -> Unit,
+    caregiver: CaregiverProfile = CaregiverProfile(),
+    onEditCaregiver: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val role = caregiver.roleValue
+    val roleCards = role?.let { ROLE_TIPS[it] }.orEmpty()
+    val generalCards = remember(role) {
+        val first = infoOrder(role)
+        val last = infoLast(role)
+        fun rank(c: InfoCard): Int = when {
+            first.any { c.title.startsWith(it) } -> first.indexOfFirst { c.title.startsWith(it) }
+            last.any { c.title.startsWith(it) } -> 1000
+            else -> 500
+        }
+        INFO_CARDS.sortedBy { rank(it) }
+    }
     var query by remember { mutableStateOf("") }
     var active by remember { mutableStateOf<String?>(null) }
     var loading by remember { mutableStateOf(false) }
@@ -164,8 +179,8 @@ fun InfoScreen(
     var error by remember { mutableStateOf<String?>(null) }
     var topics by remember { mutableStateOf(AppPrefs.infoTopics(context)) }
     var personalized by remember { mutableStateOf(AppPrefs.infoPersonalized(context)) }
-    val suggestions = remember(person, meds, documents, personalized) {
-        if (personalized) PersonalTopics.suggest(person, meds, documents) else emptyList()
+    val suggestions = remember(person, meds, documents, personalized, role) {
+        if (personalized) PersonalTopics.suggest(person, meds, documents, role) else emptyList()
     }
 
     fun search(raw: String) {
@@ -189,6 +204,30 @@ fun InfoScreen(
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        if (role == null) {
+            item {
+                HCard(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text("Tipps für dich", style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            "Sag der App, wer du bist (z. B. pflegende/r Angehörige/r, Pflegedienst, Betreuung). Dann stehen hier Tipps, Entlastungsangebote und Hilfen, die zu dir passen.",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                        TextButton(onClick = onEditCaregiver, contentPadding = PaddingValues(horizontal = 8.dp)) { Text("Meine Daten eintragen") }
+                    }
+                }
+            }
+        } else {
+            item {
+                Text("Für dich: ${role.label}", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(top = 4.dp))
+                Text(
+                    "Tipps und Hilfen passend zu deiner Rolle (Stand $INFO_STAND, ohne Gewähr). Rolle ändern unter Einstellungen → Meine Daten.",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+            roleCards.forEach { card -> item { InfoCardView(card, onOpenWegweiser, ::search, context) } }
+        }
+
         item {
             HCard(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -311,21 +350,23 @@ fun InfoScreen(
                 style = MaterialTheme.typography.bodySmall,
             )
         }
-        INFO_CARDS.forEach { card ->
-            item {
-                HCard(Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text(card.title, style = MaterialTheme.typography.titleMedium)
-                        Text(card.text, style = MaterialTheme.typography.bodyMedium)
-                        FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            if (card.wegweiser) OutlinedButton(onClick = onOpenWegweiser) { Text("Wegweiser öffnen") }
-                            card.query?.let { q -> OutlinedButton(onClick = { search(q) }) { Text("Aktuelle Meldungen") } }
-                        }
-                        card.links.forEach { (label, url) ->
-                            TextButton(onClick = { openWeb(context, url) }, contentPadding = PaddingValues(0.dp)) { Text(label) }
-                        }
-                    }
-                }
+        generalCards.forEach { card -> item { InfoCardView(card, onOpenWegweiser, ::search, context) } }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun InfoCardView(card: InfoCard, onOpenWegweiser: () -> Unit, onSearch: (String) -> Unit, context: Context) {
+    HCard(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(card.title, style = MaterialTheme.typography.titleMedium)
+            Text(card.text, style = MaterialTheme.typography.bodyMedium)
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                if (card.wegweiser) OutlinedButton(onClick = onOpenWegweiser) { Text("Wegweiser öffnen") }
+                card.query?.let { q -> OutlinedButton(onClick = { onSearch(q) }) { Text("Aktuelle Meldungen") } }
+            }
+            card.links.forEach { (label, url) ->
+                TextButton(onClick = { openWeb(context, url) }, contentPadding = PaddingValues(0.dp)) { Text(label) }
             }
         }
     }

@@ -32,6 +32,33 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
         ),
     ),
     GuideSection(
+        id = "meinedaten",
+        title = "Meine Daten und E-Mails",
+        summary = "Wer du bist, vorbereitete E-Mails, Tipps für dich",
+        items = listOf(
+            GuideItem(
+                "Meine Daten",
+                "Unter Einstellungen → Meine Daten (und beim ersten Start) trägst du ein, wer du bist: pflegende/r Angehörige/r, Pflegekraft vom Pflegedienst, Betreuungs- oder Haushaltskraft, Betreuer/in oder Bevollmächtigte/r, Nachbar/in oder Ehrenamt, du selbst oder etwas anderes. Dazu kommen Name, ggf. Beziehung (z. B. Sohn) oder Pflegedienst, Telefon und E-Mail. Das bleibt nur auf deinem Handy und wird nie automatisch gesendet.",
+            ),
+            GuideItem(
+                "Vorbereitete E-Mails",
+                "Bei Kontakten („E-Mail“), bei Aufgaben und bei Terminen („Nachricht“) öffnet sich ein Entwurf. Wähle oben das Thema, z. B. Termin anfragen, Termin absagen oder verschieben, Rezept anfordern, Überweisung, Befund, Krankenfahrt, Hausbesuch, Pflegeberatung, Verhinderungspflege oder Pflegegrad beantragen. Die Themen passen zur Art des Kontakts (Arzt, Pflegekasse, Pflegedienst, Apotheke).",
+            ),
+            GuideItem(
+                "Was schon drinsteht",
+                "Anrede, wer du bist, Name der betreuten Person, passende Angaben zum Thema (bei Rezepten die Medikamente mit Vorrat und PZN, bei Terminen Datum und Uhrzeit) und am Ende deine Kontaktdaten. Mit den Haken legst du fest, ob Geburtsdatum, Pflegegrad, Versichertennummer oder Adresse im Text stehen. Stellen mit „(bitte ergänzen)“ füllst du über „Grund / Anliegen“ oder direkt im Text aus.",
+            ),
+            GuideItem(
+                "Prüfen und abschicken",
+                "Du kannst Betreff und Text frei ändern. „In E-Mail-App öffnen“ übergibt alles an dein Mailprogramm, dort schickst du selbst ab. „Text kopieren“ legt ihn in die Zwischenablage. Die App sendet nie selbst. Normale E-Mails sind nicht verschlüsselt, schreibe darum nur, was nötig ist.",
+            ),
+            GuideItem(
+                "Tipps für dich",
+                "Je nach Rolle zeigt der Reiter „Infos“ zuerst Tipps und Hilfen für dich: z. B. Auszeit und Entlastung, Absicherung, Pflegekurs und Austausch, Kur für Pflegende, bei Pflegediensten Zusammenarbeit und Gesundheit im Beruf, bei Betreuungskräften Absprachen und Pausen, bei Betreuern Aufgaben und Nachweise. Auch die Reihenfolge der allgemeinen Themen und die Themenvorschläge richten sich danach. Alle Angaben ohne Gewähr.",
+            ),
+        ),
+    ),
+    GuideSection(
         id = "person",
         title = "Personen",
         summary = "Für wen gilt was – mehrere Personen betreuen",
@@ -318,7 +345,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Direkt anrufen oder schreiben",
-                "Auf der Karte öffnet „Anrufen“ die Telefon-App mit der Nummer und „E-Mail“ dein Mailprogramm. Es wird nichts automatisch gesendet.",
+                "Auf der Karte öffnet „Anrufen“ die Telefon-App mit der Nummer. „E-Mail“ öffnet einen vorbereiteten Entwurf zu einem Thema, den du prüfst und in deiner E-Mail-App abschickst (siehe „Meine Daten und E-Mails“). Es wird nichts automatisch gesendet.",
             ),
             GuideItem(
                 "Filtern",

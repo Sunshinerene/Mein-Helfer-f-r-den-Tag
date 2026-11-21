@@ -88,6 +88,8 @@ fun TodayScreen(
     person: Person? = null,
     onEditProfile: () -> Unit = {},
     onOpenWegweiser: () -> Unit = {},
+    caregiver: de.meinhelfer.tag.data.CaregiverProfile = de.meinhelfer.tag.data.CaregiverProfile(),
+    onEditCaregiver: () -> Unit = {},
 ) {
     val zone = ZoneId.systemDefault()
     val today = LocalDate.ofEpochDay(todayDay)
@@ -182,6 +184,10 @@ fun TodayScreen(
 
         item {
             ProfileCard(person, todayDay, onEditProfile, onOpenWegweiser)
+        }
+
+        if (!caregiver.isSet) {
+            item { CaregiverPromptCard(onEditCaregiver) }
         }
 
         if (lowStock.isNotEmpty()) {
@@ -365,7 +371,7 @@ fun TodayScreen(
         }
 
         // ---- Aufgaben
-        item { TasksCard(todos = todos, doctors = doctors, person = person, vm = vm) }
+        item { TasksCard(todos = todos, doctors = doctors, person = person, vm = vm, meds = meds, caregiver = caregiver, onEditCaregiver = onEditCaregiver) }
 
         // ---- Bemerkung zum Tag
         item {

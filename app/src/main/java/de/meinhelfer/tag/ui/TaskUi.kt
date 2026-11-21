@@ -95,8 +95,12 @@ internal fun TasksCard(
     doctors: List<Doctor>,
     person: Person?,
     vm: MainViewModel,
+    meds: List<de.meinhelfer.tag.data.Medication> = emptyList(),
+    caregiver: de.meinhelfer.tag.data.CaregiverProfile = de.meinhelfer.tag.data.CaregiverProfile(),
+    onEditCaregiver: () -> Unit = {},
 ) {
     val context = LocalContext.current
+    var mailFor by remember { mutableStateOf<Todo?>(null) }
     var showAdd by remember { mutableStateOf(false) }
     var editItem by remember { mutableStateOf<Todo?>(null) }
     var rideFor by remember { mutableStateOf<Todo?>(null) }
@@ -156,9 +160,7 @@ internal fun TasksCard(
                                     }) { Text("Anrufen") }
                                 }
                                 if (doctor != null && doctor.email.isNotBlank()) {
-                                    TextButton(contentPadding = pad, onClick = {
-                                        startIntent(context, Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:${doctor.email}")).putExtra(Intent.EXTRA_SUBJECT, t.text))
-                                    }) { Text("E-Mail") }
+                                    TextButton(contentPadding = pad, onClick = { mailFor = t }) { Text("E-Mail") }
                                 }
                                 if (t.outside) {
                                     TextButton(contentPadding = pad, onClick = { rideFor = t }) { Text("Fahrdienst") }
@@ -192,6 +194,22 @@ internal fun TasksCard(
                 editItem = null
             },
         )
+    }
+
+    mailFor?.let { t ->
+        val d = doctors.firstOrNull { it.id == t.doctorId }
+        if (d != null) {
+            MailDraftDialog(
+                recipient = d,
+                person = person,
+                caregiver = caregiver,
+                meds = meds,
+                note = t.text,
+                initialTopic = de.meinhelfer.tag.export.MailTemplates.guessTopic(de.meinhelfer.tag.export.MailTemplates.kindOf(d), t.text),
+                onEditProfile = onEditCaregiver,
+                onClose = { mailFor = null },
+            )
+        }
     }
 
     rideFor?.let { t ->

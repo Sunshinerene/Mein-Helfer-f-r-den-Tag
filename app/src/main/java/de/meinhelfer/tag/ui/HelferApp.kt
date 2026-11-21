@@ -93,10 +93,20 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
     var showWegweiser by rememberSaveable { mutableStateOf(false) }
     var showProfile by rememberSaveable { mutableStateOf(false) }
     var showTour by rememberSaveable { mutableStateOf(false) }
+    var showCaregiver by rememberSaveable { mutableStateOf(false) }
     val appContext = LocalContext.current
+    var caregiver by remember { mutableStateOf(AppPrefs.caregiver(appContext)) }
     // Beim ersten Start einmal den Rundgang anbieten
     var showTourOffer by rememberSaveable { mutableStateOf(!AppPrefs.tourSeen(appContext)) }
     val tab = Tab.entries[tabIndex]
+
+    // Nach dem Willkommens-Dialog einmal nach den eigenen Daten fragen
+    LaunchedEffect(showTourOffer, showTour) {
+        if (!showTourOffer && !showTour && !caregiver.isSet && !AppPrefs.caregiverAsked(appContext)) {
+            AppPrefs.setCaregiverAsked(appContext)
+            showCaregiver = true
+        }
+    }
 
     val meds by vm.medications.collectAsStateWithLifecycle()
     val appointments by vm.appointments.collectAsStateWithLifecycle()
@@ -146,6 +156,8 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
             onBack = { showSettings = false },
             onOpenGuide = { showGuide = true },
             onStartTour = { showTour = true },
+            caregiver = caregiver,
+            onEditCaregiver = { showCaregiver = true },
         )
     } else if (showWegweiser) {
         WegweiserScreen(
@@ -159,6 +171,7 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
             doctors = doctors,
             personName = persons.firstOrNull { it.id == personId }?.name,
             onBack = { showReorder = false },
+            caregiver = caregiver,
         )
     } else if (showSummary) {
         SummaryScreen(vm = vm, onBack = { showSummary = false })
@@ -211,16 +224,23 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
                         person = persons.firstOrNull { it.id == personId },
                         onEditProfile = { showProfile = true },
                         onOpenWegweiser = { showWegweiser = true },
+                        caregiver = caregiver,
+                        onEditCaregiver = { showCaregiver = true },
                     )
                     Tab.Medikamente -> MedicationScreen(meds, doctors, vm, onReorder = { showReorder = true })
-                    Tab.Termine -> AppointmentScreen(appointments, doctors, documents, meds.size, persons.firstOrNull { it.id == personId }, vm)
+                    Tab.Termine -> AppointmentScreen(appointments, doctors, documents, meds, persons.firstOrNull { it.id == personId }, vm, caregiver) { showCaregiver = true }
                     Tab.Dokumente -> DocumentScreen(documents, doctors, persons.firstOrNull { it.id == personId }, vm)
-                    Tab.Aerzte -> DoctorScreen(doctors, vm)
+                    Tab.Aerzte -> DoctorScreen(
+                        doctors, vm, persons.firstOrNull { it.id == personId }, meds,
+                        caregiver, onEditCaregiver = { showCaregiver = true },
+                    )
                     Tab.Infos -> InfoScreen(
                         person = persons.firstOrNull { it.id == personId },
                         meds = meds,
                         documents = documents,
                         onOpenWegweiser = { showWegweiser = true },
+                        caregiver = caregiver,
+                        onEditCaregiver = { showCaregiver = true },
                     )
                 }
               }
@@ -239,6 +259,18 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
                 },
             )
         }
+    }
+
+    if (showCaregiver) {
+        CaregiverDialog(
+            initial = caregiver,
+            onDismiss = { showCaregiver = false },
+            onSave = {
+                AppPrefs.setCaregiver(appContext, it)
+                caregiver = it
+                showCaregiver = false
+            },
+        )
     }
 
     if (showTourOffer && !showTour) {
@@ -349,11 +381,15 @@ private fun AppointmentScreen(
     items: List<Appointment>,
     doctors: List<Doctor>,
     documents: List<Document>,
-    medCount: Int,
+    meds: List<Medication>,
     person: Person?,
     vm: MainViewModel,
+    caregiver: de.meinhelfer.tag.data.CaregiverProfile,
+    onEditCaregiver: () -> Unit,
 ) {
+    val medCount = meds.size
     val context = LocalContext.current
+    var mailFor by remember { mutableStateOf<Appointment?>(null) }
     var showAdd by remember { mutableStateOf(false) }
     var editItem by remember { mutableStateOf<Appointment?>(null) }
     var docsFor by remember { mutableStateOf<Appointment?>(null) }
@@ -375,7 +411,23 @@ private fun AppointmentScreen(
             onDocs = { docsFor = a },
             onCalendar = { addToCalendar(context, a, doctor?.let { doctorLabel(it) }) },
             onFahrdienst = { rideFor = a },
+            onMail = { mailFor = a },
         )
+    }
+
+    mailFor?.let { a ->
+        val d = doctors.firstOrNull { it.id == a.doctorId }
+        if (d != null) {
+            MailDraftDialog(
+                recipient = d,
+                person = person,
+                caregiver = caregiver,
+                meds = meds,
+                appointment = a,
+                onEditProfile = onEditCaregiver,
+                onClose = { mailFor = null },
+            )
+        }
     }
 
     rideFor?.let { a ->
@@ -428,7 +480,15 @@ private fun AppointmentScreen(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun DoctorScreen(items: List<Doctor>, vm: MainViewModel) {
+private fun DoctorScreen(
+    items: List<Doctor>,
+    vm: MainViewModel,
+    person: Person?,
+    meds: List<Medication>,
+    caregiver: de.meinhelfer.tag.data.CaregiverProfile,
+    onEditCaregiver: () -> Unit,
+) {
+    var mailTo by remember { mutableStateOf<Doctor?>(null) }
     var showAdd by remember { mutableStateOf(false) }
     var editItem by remember { mutableStateOf<Doctor?>(null) }
     val context = LocalContext.current
@@ -475,13 +535,22 @@ private fun DoctorScreen(items: List<Doctor>, vm: MainViewModel) {
                     }
                 }
                 if (d.email.isNotBlank()) {
-                    TextButton(onClick = { launch(context, Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:${d.email}"))) }) {
-                        Text("E-Mail")
-                    }
+                    TextButton(onClick = { mailTo = d }) { Text("E-Mail") }
                 }
             }
         }
     }
+    }
+
+    mailTo?.let { d ->
+        MailDraftDialog(
+            recipient = d,
+            person = person,
+            caregiver = caregiver,
+            meds = meds,
+            onEditProfile = onEditCaregiver,
+            onClose = { mailTo = null },
+        )
     }
 
     if (showAdd || editItem != null) {

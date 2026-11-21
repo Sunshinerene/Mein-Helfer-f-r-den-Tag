@@ -4,6 +4,13 @@
 
 - [ ] Erkennung von Packungsfoto weiter verbessern (Wirkstoff, Packungsbeilage), Kamera-Scan für Barcodes live
 
+## Version 0.25.0 (fertig)
+
+- [x] „Meine Daten“: Rolle (pflegende/r Angehörige/r, Pflegedienst, Betreuungskraft, Betreuer/in, Ehrenamt, selbst, sonstiges), Name, Beziehung bzw. Pflegedienst, Telefon, E-Mail; einmalige Nachfrage beim Start, Hinweiskarte auf Heute, Karte in den Einstellungen
+- [x] Vorbereitete E-Mails zu Themen (Arzt: Termin, Absage/Verschiebung, Rezept, Überweisung, Befund, Krankenfahrt, Hausbesuch; Pflegekasse: Beratung, Pflegegrad, Verhinderungspflege, Pflegekurs; Pflegedienst; Apotheke) mit Absender, Kontaktdaten, Angaben zur Person und Medikamenten; prüfen, ändern, in E-Mail-App öffnen oder kopieren; aus Kontakten, Aufgaben und Terminen
+- [x] Nachbestell-Mail enthält deine Kontaktdaten
+- [x] Infos „Für dich“: Tipps und Hilfen je Rolle, Reihenfolge der allgemeinen Themen und Themenvorschläge nach Rolle
+
 ## Version 0.24.0 (fertig)
 
 - [x] Einnahmen nur im Zeitfenster abhaken (30 Min., 1 Std. oder 2 Std. vor und nach der Zeit, einstellbar); davor „abhakbar ab …“, danach Nachtragen
