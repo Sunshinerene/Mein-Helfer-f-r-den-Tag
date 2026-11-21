@@ -24,8 +24,14 @@ object ReminderScheduler {
     const val TYPE_MED = "med"
     const val TYPE_APPT = "appt"
 
-    /** Terminerinnerung: 1 Stunde vorher. */
-    const val APPOINTMENT_LEAD_MS = 60L * 60 * 1000
+    /** "30 Minuten", "1 Stunde", "2 Stunden", "1 Tag" */
+    fun leadText(minutes: Int): String = when {
+        minutes < 60 -> "$minutes Minuten"
+        minutes == 60 -> "1 Stunde"
+        minutes < 1440 -> "${minutes / 60} Stunden"
+        minutes == 1440 -> "1 Tag"
+        else -> "${minutes / 1440} Tage"
+    }
 
     fun parseTime(text: String): Pair<Int, Int>? {
         val parts = text.trim().split(":")
@@ -67,7 +73,8 @@ object ReminderScheduler {
     }
 
     fun scheduleAppointment(context: Context, appointment: Appointment) {
-        val trigger = appointment.whenMillis - APPOINTMENT_LEAD_MS
+        if (appointment.reminderMinutes < 0) return
+        val trigger = appointment.whenMillis - appointment.reminderMinutes * 60_000L
         if (trigger <= System.currentTimeMillis()) return
         setAlarm(
             context = context,

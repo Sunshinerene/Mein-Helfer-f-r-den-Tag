@@ -17,6 +17,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -93,6 +94,7 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit) {
                     context = context,
                 )
             }
+            item { ThemeCard(vm) }
             item { FeedbackCard(context) }
             item { RoadmapCard(roadmap, roadmapError) }
         }
@@ -219,5 +221,20 @@ private fun openUrl(context: Context, url: String) {
         context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     } catch (_: Exception) {
         // kein Browser installiert
+    }
+}
+
+@Composable
+private fun ThemeCard(vm: MainViewModel) {
+    val mode by vm.themeMode.collectAsStateWithLifecycle()
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Darstellung", style = MaterialTheme.typography.titleMedium)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf("system" to "Wie das Handy", "light" to "Hell", "dark" to "Dunkel").forEach { (key, label) ->
+                    FilterChip(selected = mode == key, onClick = { vm.setThemeMode(key) }, label = { Text(label) })
+                }
+            }
+        }
     }
 }

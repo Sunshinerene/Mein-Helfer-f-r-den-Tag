@@ -21,11 +21,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -43,6 +45,7 @@ fun SummaryScreen(vm: MainViewModel, onBack: () -> Unit) {
     var period by remember { mutableStateOf(Period.Day) }
     var offset by remember { mutableIntStateOf(0) }
     var summary by remember { mutableStateOf<Summary?>(null) }
+    val addedTodos = remember { mutableStateListOf<String>() }
 
     // Bei jedem Wechsel von Zeitraum oder Seite neu berechnen (alles lokal auf dem Geraet).
     LaunchedEffect(period, offset) {
@@ -101,7 +104,16 @@ fun SummaryScreen(vm: MainViewModel, onBack: () -> Unit) {
                 block("Überblick", s.overview, null)?.let { item { it() } }
                 block("Gut gelaufen", s.good, null)?.let { item { it() } }
                 block("Auffällig", s.notable, warning = true)?.let { item { it() } }
-                block("Empfehlungen (nur Anhaltspunkte)", s.advice, null)?.let { item { it() } }
+                block(
+                    "Empfehlungen (nur Anhaltspunkte)",
+                    s.advice,
+                    null,
+                    onTodo = { line ->
+                        vm.addTodo(line)
+                        addedTodos.add(line)
+                    },
+                    added = addedTodos,
+                )?.let { item { it() } }
                 block("Bemerkungen", s.notes, null)?.let { item { it() } }
                 block("Verlauf", s.perDay, null)?.let { item { it() } }
                 item {
@@ -130,7 +142,13 @@ fun SummaryScreen(vm: MainViewModel, onBack: () -> Unit) {
 }
 
 /** Karte mit Titel und Stichpunkten; null, wenn es nichts anzuzeigen gibt. */
-private fun block(title: String, lines: List<String>, warning: Boolean?): (@Composable () -> Unit)? {
+private fun block(
+    title: String,
+    lines: List<String>,
+    warning: Boolean?,
+    onTodo: ((String) -> Unit)? = null,
+    added: List<String> = emptyList(),
+): (@Composable () -> Unit)? {
     if (lines.isEmpty()) return null
     return {
         Card(
@@ -143,7 +161,15 @@ private fun block(title: String, lines: List<String>, warning: Boolean?): (@Comp
         ) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(title, style = MaterialTheme.typography.titleMedium)
-                lines.forEach { Text("• $it", style = MaterialTheme.typography.bodyMedium) }
+                lines.forEach { line ->
+                    Text("• $line", style = MaterialTheme.typography.bodyMedium)
+                    if (onTodo != null) {
+                        val isAdded = line in added
+                        TextButton(onClick = { onTodo(line) }, enabled = !isAdded) {
+                            Text(if (isAdded) "✓ Auf der To-do-Liste" else "+ Auf meine To-do-Liste")
+                        }
+                    }
+                }
             }
         }
     }

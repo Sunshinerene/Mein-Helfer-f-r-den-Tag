@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import de.meinhelfer.tag.data.Appointment
 import de.meinhelfer.tag.data.Doctor
 import de.meinhelfer.tag.data.Medication
+import de.meinhelfer.tag.reminder.ReminderScheduler
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -308,6 +309,7 @@ fun AppointmentDialog(
             initial?.endMillis?.let { Instant.ofEpochMilli(it).atZone(zone).toLocalTime().withSecond(0).withNano(0) },
         )
     }
+    var reminder by remember { mutableStateOf(initial?.reminderMinutes ?: 60) }
     var place by remember { mutableStateOf(initial?.place ?: "") }
     var notes by remember { mutableStateOf(initial?.notes ?: "") }
 
@@ -332,6 +334,7 @@ fun AppointmentDialog(
                         notes = notes.trim(),
                         doctorId = doctorId?.takeIf { id -> doctors.any { it.id == id } },
                         personId = initial?.personId ?: 1,
+                        reminderMinutes = reminder,
                     ),
                 )
             }
@@ -395,6 +398,15 @@ fun AppointmentDialog(
                 )
             }
         }
+
+        DropdownField(
+            label = "Erinnerung",
+            value = REMINDER_OPTIONS.firstOrNull { it.first == reminder }?.second
+                ?: ReminderScheduler.leadText(reminder) + " vorher",
+            options = REMINDER_OPTIONS.map { it.second },
+            editable = false,
+            onValueChange = { chosen -> REMINDER_OPTIONS.firstOrNull { it.second == chosen }?.let { reminder = it.first } },
+        )
 
         OutlinedTextField(
             value = place,

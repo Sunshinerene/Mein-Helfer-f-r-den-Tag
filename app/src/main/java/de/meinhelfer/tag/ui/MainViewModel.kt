@@ -10,6 +10,7 @@ import de.meinhelfer.tag.data.DayNote
 import de.meinhelfer.tag.data.Doctor
 import de.meinhelfer.tag.data.Medication
 import de.meinhelfer.tag.data.Person
+import de.meinhelfer.tag.data.Todo
 import de.meinhelfer.tag.media.PhotoStore
 import de.meinhelfer.tag.reminder.ReminderScheduler
 import de.meinhelfer.tag.update.AppPrefs
@@ -66,6 +67,20 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         .flatMapLatest { (d, p) -> db.dayNoteDao().range(p, d, d) }
         .map { it.firstOrNull() }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val todos: StateFlow<List<Todo>> = _personId
+        .flatMapLatest { p -> db.todoDao().all(p) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // ---- Theme (System / Hell / Dunkel)
+    private val _themeMode = MutableStateFlow(AppPrefs.themeMode(app))
+    val themeMode: StateFlow<String> = _themeMode
+
+    fun setThemeMode(mode: String) {
+        _themeMode.value = mode
+        AppPrefs.setThemeMode(getApplication(), mode)
+    }
 
     private val _updateState = MutableStateFlow<UpdateState>(UpdateState.Idle)
     val updateState: StateFlow<UpdateState> = _updateState
@@ -164,6 +179,17 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    // ---------------------------------------------------------------- To-dos
+
+    fun addTodo(text: String) = viewModelScope.launch {
+        if (text.isBlank()) return@launch
+        db.todoDao().insert(Todo(personId = _personId.value, text = text.trim(), createdMillis = System.currentTimeMillis()))
+    }
+
+    fun setTodoDone(item: Todo, done: Boolean) = viewModelScope.launch { db.todoDao().update(item.copy(done = done)) }
+
+    fun deleteTodo(item: Todo) = viewModelScope.launch { db.todoDao().delete(item) }
+
     // ---------------------------------------------------------------- Personen
 
     fun selectPerson(id: Long) {
@@ -194,6 +220,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             db.checkinDao().deleteFor(Checkin.APPT, it.id)
         }
         db.dayNoteDao().deleteForPerson(person.id)
+        db.todoDao().deleteForPerson(person.id)
         db.personDao().delete(person)
         if (_personId.value == person.id) selectPerson(others.first().id)
         ReminderScheduler.rescheduleAll(getApplication())

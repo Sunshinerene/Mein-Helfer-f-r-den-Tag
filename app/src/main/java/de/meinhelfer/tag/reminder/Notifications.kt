@@ -37,7 +37,14 @@ object Notifications {
     }
 
     @SuppressLint("MissingPermission")
-    fun show(context: Context, id: Int, title: String, text: String, updates: Boolean = false) {
+    fun show(
+        context: Context,
+        id: Int,
+        title: String,
+        text: String,
+        updates: Boolean = false,
+        actions: List<Pair<String, PendingIntent>> = emptyList(),
+    ) {
         if (Build.VERSION.SDK_INT >= 33 &&
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
             PackageManager.PERMISSION_GRANTED
@@ -50,7 +57,7 @@ object Notifications {
             Intent(context, MainActivity::class.java),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
-        val notification = NotificationCompat.Builder(context, if (updates) CHANNEL_UPDATES else CHANNEL_REMINDERS)
+        val builder = NotificationCompat.Builder(context, if (updates) CHANNEL_UPDATES else CHANNEL_REMINDERS)
             .setSmallIcon(android.R.drawable.ic_popup_reminder)
             .setContentTitle(title)
             .setContentText(text)
@@ -58,7 +65,7 @@ object Notifications {
             .setPriority(if (updates) NotificationCompat.PRIORITY_DEFAULT else NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .setContentIntent(open)
-            .build()
-        NotificationManagerCompat.from(context).notify(id, notification)
+        actions.forEach { (label, intent) -> builder.addAction(0, label, intent) }
+        NotificationManagerCompat.from(context).notify(id, builder.build())
     }
 }

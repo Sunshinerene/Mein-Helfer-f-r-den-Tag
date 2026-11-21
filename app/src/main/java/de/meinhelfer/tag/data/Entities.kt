@@ -60,6 +60,8 @@ data class Appointment(
     val doctorId: Long? = null,
     /** Zu welcher betreuten Person der Termin gehoert. */
     val personId: Long = 1,
+    /** Erinnerung so viele Minuten vor dem Termin; negativ = keine Erinnerung. */
+    val reminderMinutes: Int = 60,
 )
 
 @Entity
@@ -102,4 +104,14 @@ data class DayNote(
     val day: Long,
     val personId: Long = 1,
     val text: String = "",
+)
+
+/** Eigene To-do-Liste je Person (z. B. "Medikamentenplan beim Hausarzt besprechen"). */
+@Entity
+data class Todo(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val personId: Long = 1,
+    val text: String,
+    val done: Boolean = false,
+    val createdMillis: Long = 0,
 )

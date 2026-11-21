@@ -132,3 +132,21 @@ interface PersonDao {
     @Delete
     suspend fun delete(item: Person)
 }
+
+@Dao
+interface TodoDao {
+    @Query("SELECT * FROM Todo WHERE personId = :personId ORDER BY done, createdMillis")
+    fun all(personId: Long): Flow<List<Todo>>
+
+    @Insert
+    suspend fun insert(item: Todo)
+
+    @Update
+    suspend fun update(item: Todo)
+
+    @Delete
+    suspend fun delete(item: Todo)
+
+    @Query("DELETE FROM Todo WHERE personId = :personId")
+    suspend fun deleteForPerson(personId: Long)
+}

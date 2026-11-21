@@ -86,6 +86,7 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
     val checkins by vm.checkins.collectAsStateWithLifecycle()
     val dayNote by vm.dayNote.collectAsStateWithLifecycle()
     val todayDay by vm.today.collectAsStateWithLifecycle()
+    val todos by vm.todos.collectAsStateWithLifecycle()
     val persons by vm.persons.collectAsStateWithLifecycle()
     val personId by vm.personId.collectAsStateWithLifecycle()
 
@@ -143,6 +144,7 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
                         doctors = doctors,
                         checkins = checkins,
                         dayNote = dayNote,
+                        todos = todos,
                         todayDay = todayDay,
                         nowMillis = nowMillis,
                         updateState = updateState,
@@ -205,6 +207,7 @@ private fun MedicationScreen(items: List<Medication>, vm: MainViewModel) {
 
 @Composable
 private fun AppointmentScreen(items: List<Appointment>, doctors: List<Doctor>, vm: MainViewModel) {
+    val context = LocalContext.current
     var showAdd by remember { mutableStateOf(false) }
     var editItem by remember { mutableStateOf<Appointment?>(null) }
 
@@ -224,7 +227,11 @@ private fun AppointmentScreen(items: List<Appointment>, doctors: List<Doctor>, v
             ),
             onClick = { editItem = a },
             onDelete = { vm.delete(a) },
-        )
+        ) {
+            TextButton(onClick = { addToCalendar(context, a, doctor?.let { doctorLabel(it) }) }) {
+                Text("In Kalender eintragen")
+            }
+        }
     }
 
     if (showAdd || editItem != null) {
@@ -318,6 +325,23 @@ private fun DoctorScreen(items: List<Doctor>, vm: MainViewModel) {
             },
         )
     }
+}
+
+/** Oeffnet den Kalender mit vorausgefuelltem Termin; gespeichert wird erst nach Bestaetigung dort. */
+private fun addToCalendar(context: Context, a: Appointment, doctorText: String?) {
+    val intent = Intent(Intent.ACTION_INSERT).apply {
+        data = android.provider.CalendarContract.Events.CONTENT_URI
+        putExtra(android.provider.CalendarContract.Events.TITLE, a.title)
+        putExtra(android.provider.CalendarContract.EXTRA_EVENT_BEGIN_TIME, a.whenMillis)
+        putExtra(
+            android.provider.CalendarContract.EXTRA_EVENT_END_TIME,
+            a.endMillis ?: (a.whenMillis + 60L * 60 * 1000),
+        )
+        if (a.place.isNotBlank()) putExtra(android.provider.CalendarContract.Events.EVENT_LOCATION, a.place)
+        val description = listOfNotNull(doctorText, a.notes.takeIf { it.isNotBlank() }).joinToString("\n")
+        if (description.isNotBlank()) putExtra(android.provider.CalendarContract.Events.DESCRIPTION, description)
+    }
+    launch(context, intent)
 }
 
 private fun launch(context: Context, intent: Intent) {

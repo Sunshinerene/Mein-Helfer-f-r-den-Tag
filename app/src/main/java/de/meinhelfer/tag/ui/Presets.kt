@@ -76,3 +76,13 @@ val APPOINTMENT_TITLES = listOf(
     "Rezept abholen",
     "Fußpflege",
 )
+
+/** Erinnerung vor dem Termin: Minuten -> Beschriftung (negativ = keine). */
+val REMINDER_OPTIONS = listOf(
+    -1 to "Keine Erinnerung",
+    15 to "15 Minuten vorher",
+    30 to "30 Minuten vorher",
+    60 to "1 Stunde vorher",
+    120 to "2 Stunden vorher",
+    1440 to "1 Tag vorher",
+)

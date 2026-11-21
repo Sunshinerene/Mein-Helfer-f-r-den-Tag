@@ -1,5 +1,6 @@
 package de.meinhelfer.tag.reminder
 
+import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -43,11 +44,25 @@ class ReminderReceiver : BroadcastReceiver() {
                 if (med.timeList().none { ReminderScheduler.parseTime(it) == wanted }) return
 
                 val text = med.name + if (med.dosage.isNotBlank()) " (${med.dosage})" else ""
+                val notifId = "med:$id:$time".hashCode()
+                val taken = Intent(context, TakenReceiver::class.java).apply {
+                    putExtra(TakenReceiver.EXTRA_MED, id)
+                    putExtra(TakenReceiver.EXTRA_TIME, time)
+                    putExtra(TakenReceiver.EXTRA_DAY, java.time.LocalDate.now().toEpochDay())
+                    putExtra(TakenReceiver.EXTRA_NOTIF, notifId)
+                }
+                val takenPending = PendingIntent.getBroadcast(
+                    context,
+                    "taken:$id:$time".hashCode(),
+                    taken,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+                )
                 Notifications.show(
                     context,
-                    "med:$id:$time".hashCode(),
+                    notifId,
                     "Medikament${forPerson(med.personId)} einnehmen ($time Uhr)",
                     text,
+                    actions = listOf("Eingenommen" to takenPending),
                 )
                 ReminderScheduler.scheduleMedication(context, id, time)
             }
@@ -56,7 +71,9 @@ class ReminderReceiver : BroadcastReceiver() {
                 val appointment = db.appointmentDao().byId(id) ?: return
                 // Termin wurde verschoben oder liegt in der Vergangenheit: alter Alarm, nichts anzeigen.
                 val remaining = appointment.whenMillis - System.currentTimeMillis()
-                if (remaining < 0 || remaining > ReminderScheduler.APPOINTMENT_LEAD_MS + 5 * 60 * 1000L) return
+                if (appointment.reminderMinutes < 0) return
+                val lead = appointment.reminderMinutes * 60_000L
+                if (remaining < 0 || remaining > lead + 5 * 60 * 1000L) return
                 val whenText = SimpleDateFormat("HH:mm", Locale.GERMANY).format(appointment.whenMillis)
                 val text = appointment.title +
                     " um $whenText Uhr" +
@@ -64,7 +81,7 @@ class ReminderReceiver : BroadcastReceiver() {
                 Notifications.show(
                     context,
                     "appt:$id".hashCode(),
-                    "Termin${forPerson(appointment.personId)} in 1 Stunde",
+                    "Termin${forPerson(appointment.personId)} in ${ReminderScheduler.leadText(appointment.reminderMinutes)}",
                     text,
                 )
             }

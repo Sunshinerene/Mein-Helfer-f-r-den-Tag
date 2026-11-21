@@ -10,7 +10,15 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import de.meinhelfer.tag.ui.MainViewModel
 import androidx.core.content.ContextCompat
 import de.meinhelfer.tag.ui.HelferApp
 import de.meinhelfer.tag.update.AppPrefs
@@ -21,11 +29,6 @@ class MainActivity : ComponentActivity() {
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Die App ist hell gestaltet: Statusleisten-Symbole dunkel, auch wenn das Handy im Dunkelmodus ist.
-        enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
-            navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
-        )
         super.onCreate(savedInstanceState)
 
         if (Build.VERSION.SDK_INT >= 33 &&
@@ -39,8 +42,23 @@ class MainActivity : ComponentActivity() {
         if (AppPrefs.autoUpdateCheck(this)) UpdateWorker.schedule(this) else UpdateWorker.cancel(this)
 
         setContent {
-            MaterialTheme {
-                HelferApp()
+            val vm: MainViewModel = viewModel()
+            val mode by vm.themeMode.collectAsStateWithLifecycle()
+            val dark = when (mode) {
+                "dark" -> true
+                "light" -> false
+                else -> isSystemInDarkTheme()
+            }
+            // Statusleisten-Symbole passend zur Helligkeit der App
+            DisposableEffect(dark) {
+                enableEdgeToEdge(
+                    statusBarStyle = if (dark) SystemBarStyle.dark(Color.TRANSPARENT) else SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
+                    navigationBarStyle = if (dark) SystemBarStyle.dark(Color.TRANSPARENT) else SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
+                )
+                onDispose { }
+            }
+            MaterialTheme(colorScheme = if (dark) darkColorScheme() else lightColorScheme()) {
+                HelferApp(vm)
             }
         }
     }

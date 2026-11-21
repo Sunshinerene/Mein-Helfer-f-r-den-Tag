@@ -17,6 +17,15 @@ object AppPrefs {
         prefs(context).edit().putLong(KEY_PERSON, id).apply()
     }
 
+    private const val KEY_THEME = "design"
+
+    /** "system", "light" oder "dark" */
+    fun themeMode(context: Context): String = prefs(context).getString(KEY_THEME, "system") ?: "system"
+
+    fun setThemeMode(context: Context, mode: String) {
+        prefs(context).edit().putString(KEY_THEME, mode).apply()
+    }
+
     private fun prefs(context: Context) = context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
 
     fun autoUpdateCheck(context: Context): Boolean = prefs(context).getBoolean(KEY_AUTO_UPDATE, true)

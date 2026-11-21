@@ -124,8 +124,9 @@ fun PersonBar(persons: List<Person>, currentId: Long, vm: MainViewModel) {
     }
 }
 
+/** Einfacher Dialog mit einem Textfeld (Name, To-do usw.). */
 @Composable
-private fun NameDialog(
+fun NameDialog(
     title: String,
     label: String,
     initial: String,

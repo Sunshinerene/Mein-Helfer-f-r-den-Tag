@@ -2,11 +2,17 @@
 
 ## Als Nächstes
 
-- [ ] "Eingenommen" direkt in der Benachrichtigung antippen, Vorrat verringert sich automatisch
-- [ ] Erinnerungszeit pro Termin einstellbar
 - [ ] Beschreibung zum Medikament aus dem Internet (nur auf Knopfdruck, nur Wirkstoff/Name, als Anhaltspunkt, kein ärztlicher Rat)
 - [ ] KI-Hinweise in der Auswertung, z. B. "Medikamentenplan vom Hausarzt prüfen lassen": immer mit Bestätigung und Datenschutz-Filter, nur Anhaltspunkt, ersetzt nie Arzt oder Apotheke; Hinweis lässt sich auf eine eigene To-do-Liste setzen ("beim Hausarzt ansprechen")
 - [ ] Erkennung von Packungsfoto verbessern (Wirkstoff, Packungsbeilage, Barcode/PZN)
+
+## Version 0.7.0 (fertig)
+
+- [x] "Eingenommen"-Knopf direkt in der Erinnerung (hakt ab, schließt die Benachrichtigung). Der Vorrat sinkt schon täglich automatisch
+- [x] Erinnerungszeit pro Termin (keine, 15 Min., 30 Min., 1 Std., 2 Std., 1 Tag vorher)
+- [x] Eigene To-do-Liste je Person auf der Heute-Seite, Empfehlungen aus der Auswertung lassen sich dorthin übernehmen
+- [x] Termin per Knopf in den Handy-Kalender übernehmen
+- [x] Darstellung: wie das Handy, hell oder dunkel (Einstellungen)
 
 ## Version 0.6.0 (fertig)
 
@@ -47,8 +53,6 @@
 
 - [ ] Dokumente scannen und verschlüsselt ablegen
 - [ ] Datenbank verschlüsseln, App-Sperre
-- [ ] Kalender-Eintrag aus Terminen
 - [ ] KI-Vorschläge aus Dokumenten (immer mit Bestätigung), Datenschutz-Filter vor jeder Übertragung
 - [ ] Wegweiser: Leistungen und Anträge je Pflegegrad
 - [ ] Umkreissuche für Ärzte und Pflegedienste
-- [ ] Dunkelmodus
