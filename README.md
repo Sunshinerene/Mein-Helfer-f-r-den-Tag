@@ -2,12 +2,15 @@
 
 Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbezogenen Daten bleiben lokal auf dem Gerät.
 
-## Stand: Gerüst (v0.1.0)
+## Stand: v0.2.0
 
 - Heute-Übersicht: Einnahmen, anstehende Termine, Nachbestell-Warnung
 - Medikamente mit Einnahmezeiten und Vorrat
 - Termine
 - Ärzte mit Direktkontakt (Anruf, E-Mail)
+- Erinnerungen: Medikamenten-Einnahme und Termine (1 Stunde vorher)
+
+Offene Punkte und Wünsche: siehe [TODO.md](TODO.md).
 
 ## Geplant
 
