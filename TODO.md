@@ -4,6 +4,14 @@
 
 - [ ] Erkennung von Packungsfoto weiter verbessern (Wirkstoff, Packungsbeilage), Kamera-Scan für Barcodes live
 
+## Version 0.28.0 (fertig)
+
+- [x] Fahrdienst-Anfrage: Hinfahrt und/oder Rückfahrt wählbar, Stockwerk und Aufzug für Abholort und Ziel
+- [x] Stockwerk, Aufzug und Zugangshinweise im Profil der Person und bei jedem Kontakt (auch Notfallkarte, Hausbesuch-Mail, Notruf)
+- [x] Notruf-Schnellzugriff (rotes Telefon oben): 112, 116 117, 110, „Was sage ich?“, eigene Kontakte, Apotheken-Notdienst, Giftnotruf je Bundesland, Telefonseelsorge; „Wählen“ öffnet nur die Telefon-App
+- [x] Umkreissuche für Apotheke, Pflegedienst, Sanitätshaus und Notaufnahme (Kontakte und Notruf), Treffer als Kontakt speichern
+- [x] Aufgaben mit Dokumenten verknüpfen
+
 ## Version 0.27.0 (fertig)
 
 - [x] Datenbank verschlüsselt (SQLCipher, Schlüssel im Android-Schlüsselspeicher), automatische Umwandlung der vorhandenen Daten mit Rückfall auf die alte Datenbank bei Fehlern; Anzeige unter Einstellungen → Sicherheit
@@ -167,12 +175,10 @@
 
 ## Weitere Ideen
 
-- [ ] Aufgabe mit Dokument verknüpfen (Link zurück zum Bericht), Aufgabe in den Kalender oder als Erinnerung
-- [ ] Umkreissuche auch für Apotheken, Sanitätshäuser und Pflegedienste
+- [ ] Aufgabe in den Kalender oder als Erinnerung
 
 - [ ] Anleitung und Rundgang bei neuen Funktionen mitpflegen (Datei GuideContent.kt und TourScreen.kt)
 - [ ] Notfallkarte aus Beta übernehmen, ggf. als PDF und fürs Sperrbildschirm-Widget
 - [ ] Designs verfeinern (Schriftarten, Übergänge, weitere Varianten, Hochkontrast für bessere Lesbarkeit)
 - [ ] Dokumente: Medikamente und Termine aus dem erkannten Text vorschlagen
 - [ ] KI-Vorschläge aus Dokumenten (immer mit Bestätigung), Datenschutz-Filter vor jeder Übertragung
-- [ ] Umkreissuche direkt bei Kontakten (Arzt, Pflegedienst, Apotheke in der Nähe)

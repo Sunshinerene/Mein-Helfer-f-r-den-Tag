@@ -140,6 +140,9 @@ fun PersonDialog(initial: Person?, onDismiss: () -> Unit, onSave: (Person) -> Un
     var city by remember { mutableStateOf(initial?.city ?: "") }
     var insurer by remember { mutableStateOf(initial?.insurer ?: "") }
     var insuranceNumber by remember { mutableStateOf(initial?.insuranceNumber ?: "") }
+    var floor by remember { mutableStateOf(initial?.floor ?: "") }
+    var elevator by remember { mutableStateOf(initial?.elevator ?: 0) }
+    var access by remember { mutableStateOf(initial?.access ?: "") }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(if (initial == null) "Neue Person" else "Profil bearbeiten") },
@@ -188,6 +191,13 @@ fun PersonDialog(initial: Person?, onDismiss: () -> Unit, onSave: (Person) -> Un
                         modifier = Modifier.weight(2f),
                     )
                 }
+                Text("Zugang zur Wohnung", style = MaterialTheme.typography.labelLarge)
+                AccessFields(
+                    floor = floor, onFloor = { floor = it },
+                    elevator = elevator, onElevator = { elevator = it },
+                    access = access, onAccess = { access = it },
+                    hint = "Das wird bei Fahrdienst-Anfragen und in der Notfallkarte als Abholort mit angegeben.",
+                )
                 DropdownField(
                     label = "Krankenkasse / Pflegekasse",
                     value = insurer,
@@ -230,6 +240,9 @@ fun PersonDialog(initial: Person?, onDismiss: () -> Unit, onSave: (Person) -> Un
                             city = city.trim(),
                             insurer = insurer.trim(),
                             insuranceNumber = insuranceNumber.trim(),
+                            floor = floor.trim(),
+                            elevator = elevator,
+                            access = access.trim(),
                         ),
                     )
                 },

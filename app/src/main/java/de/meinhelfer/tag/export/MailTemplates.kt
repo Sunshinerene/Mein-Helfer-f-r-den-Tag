@@ -152,6 +152,8 @@ object MailTemplates {
             val addr = listOf(p.street, listOf(p.zip, p.city).filter { it.isNotBlank() }.joinToString(" "))
                 .filter { it.isNotBlank() }.joinToString(", ")
             if (addr.isNotBlank()) parts += addr
+            de.meinhelfer.tag.ui.accessSummary(p.floor, p.elevator, p.access).takeIf { it.isNotBlank() }
+                ?.let { parts += "Zugang: $it" }
         }
         if (parts.isEmpty()) return null
         return "Betrifft: " + parts.joinToString(", ")

@@ -64,7 +64,10 @@ private fun buildRequest(
     doctor: Doctor?,
     person: Person?,
     extras: Set<String>,
+    outTrip: Boolean,
     returnTrip: Boolean,
+    pickupAccess: String,
+    targetAccess: String,
 ): String {
     val pickup = person?.let {
         listOf(it.street, listOf(it.zip, it.city).filter { s -> s.isNotBlank() }.joinToString(" "))
@@ -73,11 +76,15 @@ private fun buildRequest(
     val target = listOf(place, doctor?.address.orEmpty()).firstOrNull { it.isNotBlank() }
         ?: "(Ziel bitte ergänzen)"
     val sb = StringBuilder("Guten Tag, ich möchte eine Fahrt anfragen.\n")
-    sb.append("Abholung: ").append(pickup).append('\n')
+    sb.append("Abholung: ").append(pickup)
+    if (pickupAccess.isNotBlank()) sb.append(" (").append(pickupAccess).append(')')
+    sb.append('\n')
     sb.append("Ziel: ").append(target)
     doctor?.let { sb.append(" (").append(it.name).append(')') }
+    if (targetAccess.isNotBlank()) sb.append(" (").append(targetAccess).append(')')
     sb.append('\n')
     sb.append("Termin: ").append(whenText).append('\n')
+    sb.append("Hinfahrt: ").append(if (outTrip) "ja" else "nein").append('\n')
     sb.append("Rückfahrt: ").append(if (returnTrip) "ja, bitte nach dem Termin" else "nein").append('\n')
     if (extras.isNotEmpty()) sb.append("Hinweise: ").append(extras.joinToString(", ")).append('\n')
     sb.append("Bitte um Rückmeldung zu Verfügbarkeit und Preis. Danke!")
@@ -130,7 +137,12 @@ internal fun FahrdienstDialog(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var extras by remember { mutableStateOf(emptySet<String>()) }
+    var outTrip by remember { mutableStateOf(true) }
     var returnTrip by remember { mutableStateOf(true) }
+    var pickupFloor by remember { mutableStateOf(person?.floor.orEmpty()) }
+    var pickupElevator by remember { mutableStateOf(person?.elevator ?: 0) }
+    var targetFloor by remember { mutableStateOf(doctor?.floor.orEmpty()) }
+    var targetElevator by remember { mutableStateOf(doctor?.elevator ?: 0) }
     var showInfo by remember { mutableStateOf(false) }
     var confirmSearch by remember { mutableStateOf(false) }
     var loading by remember { mutableStateOf(false) }
@@ -138,7 +150,9 @@ internal fun FahrdienstDialog(
     var hits by remember { mutableStateOf<List<FahrdienstHit>?>(null) }
 
     val fixed = doctors.filter { it.isFahrdienst() }
-    val request = buildRequest(whenText, place, doctor, person, extras, returnTrip)
+    val pickupAccess = accessSummary(pickupFloor, pickupElevator, person?.access.orEmpty())
+    val targetAccess = accessSummary(targetFloor, targetElevator, doctor?.access.orEmpty())
+    val request = buildRequest(whenText, place, doctor, person, extras, outTrip, returnTrip, pickupAccess, targetAccess)
     val subject = "Fahrtanfrage"
     val zip = person?.zip.orEmpty()
     val city = person?.city.orEmpty()
@@ -158,6 +172,11 @@ internal fun FahrdienstDialog(
                 Text("Was soll in der Anfrage stehen?", style = MaterialTheme.typography.titleSmall)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilterChip(
+                        selected = outTrip,
+                        onClick = { outTrip = !outTrip },
+                        label = { Text("Hinfahrt") },
+                    )
+                    FilterChip(
                         selected = returnTrip,
                         onClick = { returnTrip = !returnTrip },
                         label = { Text("Rückfahrt") },
@@ -170,6 +189,14 @@ internal fun FahrdienstDialog(
                         )
                     }
                 }
+                Text("Abholung: Stockwerk und Aufzug", style = MaterialTheme.typography.titleSmall)
+                AccessInline(pickupFloor, { pickupFloor = it }, pickupElevator, { pickupElevator = it })
+                Text("Ziel: Stockwerk und Aufzug", style = MaterialTheme.typography.titleSmall)
+                AccessInline(targetFloor, { targetFloor = it }, targetElevator, { targetElevator = it })
+                Text(
+                    "Vorausgefüllt aus dem Profil der Person bzw. dem Kontakt. Dort kannst du es dauerhaft eintragen, hier änderst du es nur für diese Anfrage.",
+                    style = MaterialTheme.typography.bodySmall,
+                )
                 Text(
                     "Die Anfrage enthält Abholadresse, Ziel und Termin, aber nie den Namen der Person. " +
                         "Du siehst den Text vor dem Senden und kannst ihn dort ändern.",
@@ -321,6 +348,23 @@ internal fun FahrdienstDialog(
             },
             dismissButton = { TextButton(onClick = { confirmSearch = false }) { Text("Abbrechen") } },
         )
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun AccessInline(floor: String, onFloor: (String) -> Unit, elevator: Int, onElevator: (Int) -> Unit) {
+    androidx.compose.material3.OutlinedTextField(
+        value = floor,
+        onValueChange = onFloor,
+        label = { Text("Stockwerk (z. B. EG, 3. Stock)") },
+        singleLine = true,
+        modifier = Modifier.fillMaxWidth(),
+    )
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        listOf(1 to "Aufzug ja", 2 to "Aufzug nein", 0 to "unbekannt").forEach { (v, label) ->
+            FilterChip(selected = elevator == v, onClick = { onElevator(v) }, label = { Text(label) })
+        }
     }
 }
 

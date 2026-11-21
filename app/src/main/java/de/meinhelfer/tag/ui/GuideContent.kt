@@ -23,7 +23,11 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Oben rechts",
-                "Das Info-Symbol öffnet diese Anleitung, das Zahnrad die Einstellungen (Updates, Darstellung, Feedback).",
+                "Das rote Telefon-Symbol öffnet den Notruf-Schnellzugriff, das Info-Symbol diese Anleitung, das Zahnrad die Einstellungen (Updates, Darstellung, Feedback).",
+            ),
+            GuideItem(
+                "Notruf und Hilfe (rotes Telefon)",
+                "Von jeder Seite aus erreichbar. Oben stehen 112 (Notruf), 116 117 (Ärztlicher Bereitschaftsdienst, wenn es nicht lebensbedrohlich ist, aber nicht bis zur Sprechstunde warten kann) und 110 (Polizei). Darunter „Was sage ich?“: Wo (Adresse mit Stockwerk und Aufzug aus dem Profil), Wer (Name, Geburtstag, Pflegegrad), Was ist passiert, Rückrufnummer. Dann deine eigenen Kontakte mit Telefonnummer (Hausarzt, Pflegedienst, Apotheke zuerst), „Hilfe in der Nähe“ (Notaufnahme, Apotheke, Pflegedienst per Umkreissuche) und weitere Nummern: Apotheken-Notdienst (0800 00 22833, vom Handy 22833), Giftnotruf je Bundesland, Telefonseelsorge 0800 111 0111. „Wählen“ öffnet nur die Telefon-App mit der Nummer, die App ruft nie selbst an. Bei Lebensgefahr immer zuerst 112. Stand Nov. 2026, ohne Gewähr.",
             ),
             GuideItem(
                 "Empfohlene Reihenfolge",
@@ -63,6 +67,10 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
         title = "Personen",
         summary = "Für wen gilt was – mehrere Personen betreuen",
         items = listOf(
+            GuideItem(
+                "Stockwerk und Aufzug",
+                "Im Profil der Person (Name antippen, Bearbeiten) trägst du Stockwerk, Aufzug (ja / nein) und Hinweise zum Zugang ein (Klingel, Treppen, Hof). Das wird bei jeder Fahrdienst-Anfrage als Abholort angegeben, steht bei „Was sage ich?“ im Notruf-Fenster, in der Notfallkarte und in Hausbesuch-E-Mails.",
+            ),
             GuideItem(
                 "Für wen gilt es?",
                 "Oben auf jeder Seite steht „Für: Name“. Medikamente, Termine, Abhaken, Bemerkungen, Aufgaben und Auswertung gelten immer für diese Person.",
@@ -109,6 +117,10 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             GuideItem(
                 "Aufgaben",
                 "Hier stehen Dinge, die erledigt werden sollen, z. B. „Blutuntersuchung beim Hausarzt“. Mit „+ Aufgabe hinzufügen“ legst du eine an: Text, Wichtigkeit (niedrig, normal, hoch), „Erledigt bis“ und optional den zuständigen Arzt bzw. die Stelle aus deinen Kontakten. Die Liste ist nach Wichtigkeit und Frist sortiert. Dringendes und Überfälliges steht in Rot. Mit dem Haken erledigst du eine Aufgabe, erledigte rutschen nach unten. Hast du einen Kontakt gewählt, kannst du direkt „Anrufen“ oder „E-Mail“ tippen. Ist „Außer Haus“ angehakt, gibt es zusätzlich „Fahrdienst“ (siehe Termine). „Bearbeiten“ ändert alles, „Löschen“ entfernt die Aufgabe.",
+            ),
+            GuideItem(
+                "Unterlagen zur Aufgabe",
+                "Bei jeder Aufgabe gibt es „Unterlagen“, sobald Dokumente gespeichert sind. Dort hakst du an, welche Dokumente (Befund, Rezept, Bericht, Bescheid) zur Aufgabe gehören. Die Zahl in Klammern zeigt, wie viele verknüpft sind, mit „Ansehen“ öffnest du sie direkt. So findest du den Bericht, aus dem die Aufgabe stammt, immer wieder.",
             ),
             GuideItem(
                 "Bald nachbestellen",
@@ -271,7 +283,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Fahrdienst bestellen",
-                "Bei Terminen außer Haus erscheint „Fahrdienst“. Oben stehen deine festen Fahrdienste, also alle Kontakte mit der Art „Fahrdienst“ (oder Taxi, Krankentransport im Namen), immer zuerst, mit Anrufen, SMS und E-Mail. Die Anfrage (Abholadresse aus dem Profil, Ziel, Termin, Rückfahrt, Rollator/Rollstuhl/Begleitperson) wird vorbereitet und du siehst sie vor dem Senden in deiner SMS- oder E-Mail-App. Der Name der Person steht nie drin. „In der Nähe suchen“ fragt nach Bestätigung bei OpenStreetMap nach Krankenfahrten, Taxis und Fahrdiensten rund um PLZ und Ort der Person (nur Ort wird gesendet) und zeigt Entfernung, Telefon, Zeiten und Rollstuhl-Angaben, soweit eingetragen. Die Daten sind unvollständig und ohne Gewähr, bitte immer telefonisch bestätigen. „Karte öffnen“ sucht zusätzlich in deiner Karten-App.",
+                "Bei Terminen außer Haus erscheint „Fahrdienst“. Oben stehen deine festen Fahrdienste, also alle Kontakte mit der Art „Fahrdienst“ (oder Taxi, Krankentransport im Namen), immer zuerst, mit Anrufen, SMS und E-Mail. Die Anfrage (Abholadresse aus dem Profil mit Stockwerk und Aufzug, Ziel mit Stockwerk und Aufzug, Termin, Hinfahrt und/oder Rückfahrt zum Ankreuzen, Rollator/Rollstuhl/Begleitperson) wird vorbereitet und du siehst sie vor dem Senden in deiner SMS- oder E-Mail-App. Der Name der Person steht nie drin. „In der Nähe suchen“ fragt nach Bestätigung bei OpenStreetMap nach Krankenfahrten, Taxis und Fahrdiensten rund um PLZ und Ort der Person (nur Ort wird gesendet) und zeigt Entfernung, Telefon, Zeiten und Rollstuhl-Angaben, soweit eingetragen. Die Daten sind unvollständig und ohne Gewähr, bitte immer telefonisch bestätigen. „Karte öffnen“ sucht zusätzlich in deiner Karten-App.",
             ),
             GuideItem(
                 "Wer zahlt die Fahrt?",
@@ -354,6 +366,14 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             GuideItem(
                 "Filtern",
                 "Sobald es mehrere Arten gibt, erscheinen oben Filter, z. B. nur „Pflegedienst“.",
+            ),
+            GuideItem(
+                "In der Nähe suchen",
+                "Oben auf der Kontakte-Seite findest du „In der Nähe suchen“. Wähle Apotheke, Pflegedienst, Sanitätshaus oder Notaufnahme / Krankenhaus. Nach deiner Bestätigung wird nur „PLZ Ort“ der Person an OpenStreetMap gesendet (kein Name, keine Straße). Du siehst Entfernung, Adresse, Telefon, Öffnungszeiten (soweit eingetragen) und kannst anrufen, die Route öffnen, die Webseite ansehen oder den Treffer mit „Als Kontakt speichern“ übernehmen. Die Daten sind unvollständig und ohne Gewähr, bitte kurz anrufen und Öffnungszeiten prüfen. „In Karten-App“ sucht zusätzlich in deiner Karten-App.",
+            ),
+            GuideItem(
+                "Stockwerk und Aufzug",
+                "Bei jedem Kontakt kannst du Stockwerk, Aufzug (ja / nein) und Hinweise zum Zugang eintragen, z. B. bei Arztpraxen im 2. Stock ohne Aufzug. Diese Angaben stehen dann bei jeder Fahrdienst-Anfrage zum Ziel.",
             ),
             GuideItem(
                 "Für alle Personen gleich",

@@ -25,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -34,6 +35,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import de.meinhelfer.tag.data.Doctor
+import de.meinhelfer.tag.data.Document
 import de.meinhelfer.tag.data.Person
 import de.meinhelfer.tag.data.Todo
 import org.json.JSONArray
@@ -50,6 +52,9 @@ data class TaskDraft(
     val dueDay: Long? = null,
     val outside: Boolean = false,
 )
+
+/** Verknuepfte Dokumente einer Aufgabe. */
+internal fun Todo.attachedIds(): List<Long> = docIds.split(",").mapNotNull { it.trim().toLongOrNull() }
 
 private const val NO_CONTACT_TASK = "– keine Auswahl –"
 private val TASK_DATE: DateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy", Locale.GERMANY)
@@ -98,8 +103,10 @@ internal fun TasksCard(
     meds: List<de.meinhelfer.tag.data.Medication> = emptyList(),
     caregiver: de.meinhelfer.tag.data.CaregiverProfile = de.meinhelfer.tag.data.CaregiverProfile(),
     onEditCaregiver: () -> Unit = {},
+    documents: List<Document> = emptyList(),
 ) {
     val context = LocalContext.current
+    var docsFor by remember { mutableStateOf<Todo?>(null) }
     var mailFor by remember { mutableStateOf<Todo?>(null) }
     var showAdd by remember { mutableStateOf(false) }
     var editItem by remember { mutableStateOf<Todo?>(null) }
@@ -165,6 +172,12 @@ internal fun TasksCard(
                                 if (t.outside) {
                                     TextButton(contentPadding = pad, onClick = { rideFor = t }) { Text("Fahrdienst") }
                                 }
+                                val attached = t.attachedIds().count { id -> documents.any { it.id == id } }
+                                if (documents.isNotEmpty() || attached > 0) {
+                                    TextButton(contentPadding = pad, onClick = { docsFor = t }) {
+                                        Text(if (attached > 0) "Unterlagen ($attached)" else "Unterlagen")
+                                    }
+                                }
                                 TextButton(contentPadding = pad, onClick = { editItem = t }) { Text("Bearbeiten") }
                                 TextButton(contentPadding = pad, onClick = { confirmDelete = t }) { Text("Löschen") }
                             }
@@ -193,6 +206,19 @@ internal fun TasksCard(
                 showAdd = false
                 editItem = null
             },
+        )
+    }
+
+    docsFor?.let { t ->
+        TaskDocsDialog(
+            task = t,
+            docs = documents,
+            doctors = doctors,
+            onSave = { ids ->
+                vm.updateTodo(t.copy(docIds = ids.joinToString(",")))
+                docsFor = null
+            },
+            onClose = { docsFor = null },
         )
     }
 
@@ -436,4 +462,58 @@ internal fun TaskSuggestDialog(
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Abbrechen") } },
     )
+}
+
+/** Dokumente mit einer Aufgabe verknuepfen (z. B. Befund oder Rezept zur Aufgabe), jederzeit ansehbar. */
+@Composable
+internal fun TaskDocsDialog(
+    task: Todo,
+    docs: List<Document>,
+    doctors: List<Doctor>,
+    onSave: (List<Long>) -> Unit,
+    onClose: () -> Unit,
+) {
+    val selected = remember {
+        mutableStateListOf<Long>().apply { addAll(task.attachedIds().filter { id -> docs.any { it.id == id } }) }
+    }
+    var viewDoc by remember { mutableStateOf<Document?>(null) }
+    val sorted = docs.sortedWith(compareByDescending<Document> { it.id in selected }.thenByDescending { docEpochDay(it) })
+
+    AlertDialog(
+        onDismissRequest = onClose,
+        title = { Text("Unterlagen: ${task.text.take(40)}") },
+        text = {
+            Column(
+                Modifier.heightIn(max = 480.dp).verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                if (docs.isEmpty()) {
+                    Text(
+                        "Noch keine Dokumente gespeichert. Im Tab „Dokumente“ kannst du Berichte, Befunde und Rezepte fotografieren oder als Datei laden und sie dann hier verknüpfen.",
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                } else {
+                    Text(
+                        "Hake an, was zu dieser Aufgabe gehört. Verknüpfte Dokumente stehen oben.",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    sorted.forEach { d ->
+                        DocRow(
+                            d,
+                            null,
+                            d.id in selected,
+                            { if (d.id in selected) selected.remove(d.id) else selected.add(d.id) },
+                            { viewDoc = d },
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = { onSave(selected.toList()) }) { Text("Fertig") } },
+        dismissButton = { TextButton(onClick = onClose) { Text("Abbrechen") } },
+    )
+
+    viewDoc?.let { d ->
+        DocumentDetailDialog(doc = d, doctors = doctors, onEdit = null, onClose = { viewDoc = null })
+    }
 }

@@ -106,7 +106,7 @@ internal object VisitPlanner {
 private val SHORT_DATE = DateTimeFormatter.ofPattern("dd.MM.yyyy", Locale.GERMANY)
 
 @Composable
-private fun DocRow(d: Document, hint: String?, checked: Boolean, onToggle: () -> Unit, onView: () -> Unit) {
+internal fun DocRow(d: Document, hint: String?, checked: Boolean, onToggle: () -> Unit, onView: () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Checkbox(checked = checked, onCheckedChange = { onToggle() })
         Column(Modifier.weight(1f).clickable(onClick = onToggle)) {

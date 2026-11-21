@@ -22,6 +22,12 @@ data class Person(
     val insurer: String = "",
     /** Versichertennummer, nur zum Nachschauen beim Ausfuellen von Antraegen. */
     val insuranceNumber: String = "",
+    /** Stockwerk der Wohnung, z. B. "EG" oder "3. Stock" (fuer Fahrdienst und Notfall). */
+    val floor: String = "",
+    /** Aufzug vorhanden? 0 = unbekannt, 1 = ja, 2 = nein. */
+    val elevator: Int = 0,
+    /** Hinweise zum Zugang (Klingel, Treppen, Hof ...). */
+    val access: String = "",
 )
 
 /** Medikament mit Einnahmezeiten und Vorrat (fuer die Nachbestell-Warnung). */
@@ -99,6 +105,12 @@ data class Doctor(
     val phone: String = "",
     val email: String = "",
     val address: String = "",
+    /** Stockwerk am Ort, z. B. "EG" oder "2. Stock". */
+    val floor: String = "",
+    /** Aufzug vorhanden? 0 = unbekannt, 1 = ja, 2 = nein. */
+    val elevator: Int = 0,
+    /** Hinweise zum Zugang (Eingang, Rampe, Treppen ...). */
+    val access: String = "",
 )
 
 /**
@@ -168,6 +180,8 @@ data class Todo(
     val dueDay: Long? = null,
     /** Findet ausserhalb der Wohnung statt (Fahrdienst anbieten). */
     val outside: Boolean = false,
+    /** Verknuepfte Dokumente (IDs, kommagetrennt). */
+    val docIds: String = "",
 )
 
 /** Dokument (Arztbericht, Befund, Bescheid ...). Die Datei liegt verschluesselt im App-Ordner, der erkannte Text in der Datenbank. */

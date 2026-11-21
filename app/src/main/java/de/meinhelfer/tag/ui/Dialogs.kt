@@ -579,6 +579,9 @@ fun DoctorDialog(initial: Doctor?, onDismiss: () -> Unit, onSave: (Doctor) -> Un
     var phone by remember { mutableStateOf(initial?.phone ?: "") }
     var email by remember { mutableStateOf(initial?.email ?: "") }
     var address by remember { mutableStateOf(initial?.address ?: "") }
+    var floor by remember { mutableStateOf(initial?.floor ?: "") }
+    var elevator by remember { mutableStateOf(initial?.elevator ?: 0) }
+    var access by remember { mutableStateOf(initial?.access ?: "") }
 
     DialogForm(
         title = if (initial == null) "Kontakt hinzufügen" else "Kontakt bearbeiten",
@@ -593,6 +596,9 @@ fun DoctorDialog(initial: Doctor?, onDismiss: () -> Unit, onSave: (Doctor) -> Un
                     phone = phone.trim(),
                     email = email.trim(),
                     address = address.trim(),
+                    floor = floor.trim(),
+                    elevator = elevator,
+                    access = access.trim(),
                 ),
             )
         },
@@ -631,6 +637,13 @@ fun DoctorDialog(initial: Doctor?, onDismiss: () -> Unit, onSave: (Doctor) -> Un
             onValueChange = { address = it },
             label = { Text("Adresse") },
             modifier = Modifier.fillMaxWidth(),
+        )
+        Text("Zugang vor Ort", style = MaterialTheme.typography.labelLarge)
+        AccessFields(
+            floor = floor, onFloor = { floor = it },
+            elevator = elevator, onElevator = { elevator = it },
+            access = access, onAccess = { access = it },
+            hint = "Zum Beispiel Praxis im 2. Stock, Aufzug ja. Das wird bei jeder Fahrdienst-Anfrage zu diesem Ziel mit angegeben.",
         )
     }
 }

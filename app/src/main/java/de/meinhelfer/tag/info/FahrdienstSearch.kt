@@ -21,6 +21,8 @@ data class FahrdienstHit(
     val openingHours: String,
     val wheelchair: String,
     val distanceKm: Double,
+    /** Zusatzhinweis, z. B. "Notaufnahme". */
+    val note: String = "",
 )
 
 /**
@@ -43,25 +45,32 @@ object FahrdienstSearch {
             runCatching {
                 val place = "$zip $city".trim()
                 require(place.isNotBlank()) { "Kein Ort" }
-                val geo = get(
-                    "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=de&q=" +
-                        URLEncoder.encode(place, "UTF-8"),
-                )
-                val arr = org.json.JSONArray(geo)
-                if (arr.length() == 0) throw IllegalStateException("Ort nicht gefunden")
-                val first = arr.getJSONObject(0)
-                val lat = first.getString("lat").toDouble()
-                val lon = first.getString("lon").toDouble()
+                val (lat, lon) = geocode(place)
 
                 val query = "[out:json][timeout:25];" +
                     "nwr[\"name\"~\"Krankenfahrt|Krankentransport|Fahrdienst|Taxi|Behindertenfahr|Patientenfahr\",i]" +
                     "(around:$radiusMeters,$lat,$lon);out center tags 60;"
-                val body = post("https://overpass-api.de/api/interpreter", "data=" + URLEncoder.encode(query, "UTF-8"))
-                parse(body, lat, lon)
+                parse(overpass(query), lat, lon)
             }
         }
 
-    internal fun parse(json: String, lat: Double, lon: Double): List<FahrdienstHit> {
+    /** Ort (PLZ + Name) in Koordinaten umrechnen (Nominatim). */
+    internal fun geocode(place: String): Pair<Double, Double> {
+        val geo = get(
+            "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=de&q=" +
+                URLEncoder.encode(place, "UTF-8"),
+        )
+        val arr = org.json.JSONArray(geo)
+        if (arr.length() == 0) throw IllegalStateException("Ort nicht gefunden")
+        val first = arr.getJSONObject(0)
+        return first.getString("lat").toDouble() to first.getString("lon").toDouble()
+    }
+
+    /** Overpass-Abfrage ausfuehren. */
+    internal fun overpass(query: String): String =
+        post("https://overpass-api.de/api/interpreter", "data=" + URLEncoder.encode(query, "UTF-8"))
+
+    internal fun parse(json: String, lat: Double, lon: Double, phoneFirst: Boolean = true): List<FahrdienstHit> {
         val elements = JSONObject(json).optJSONArray("elements") ?: return emptyList()
         val hits = mutableListOf<FahrdienstHit>()
         for (i in 0 until elements.length()) {
@@ -91,13 +100,17 @@ object FahrdienstSearch {
                     openingHours = tag("opening_hours"),
                     wheelchair = tag("wheelchair"),
                     distanceKm = distance,
+                    note = if (tags.optString("emergency") == "yes") "Notaufnahme" else "",
                 ),
             )
         }
         // Doppelte (gleicher Name, gleiche Telefonnummer) entfernen; mit Telefon zuerst, dann nach Entfernung
         return hits
             .distinctBy { it.name.lowercase() + "|" + it.phone }
-            .sortedWith(compareBy<FahrdienstHit> { it.phone.isEmpty() }.thenBy { it.distanceKm })
+            .sortedWith(
+                if (phoneFirst) compareBy<FahrdienstHit> { it.phone.isEmpty() }.thenBy { it.distanceKm }
+                else compareBy { it.distanceKm },
+            )
             .take(25)
     }
 

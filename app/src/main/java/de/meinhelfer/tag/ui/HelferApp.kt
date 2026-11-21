@@ -26,6 +26,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items as lazyItems
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
@@ -94,6 +95,7 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
     var showProfile by rememberSaveable { mutableStateOf(false) }
     var showTour by rememberSaveable { mutableStateOf(false) }
     var showCaregiver by rememberSaveable { mutableStateOf(false) }
+    var showNotruf by rememberSaveable { mutableStateOf(false) }
     val appContext = LocalContext.current
     var caregiver by remember { mutableStateOf(AppPrefs.caregiver(appContext)) }
     // Beim ersten Start einmal den Rundgang anbieten
@@ -181,6 +183,13 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
                 TopAppBar(
                     title = { Text("Mein Helfer für den Tag") },
                     actions = {
+                        IconButton(onClick = { showNotruf = true }) {
+                            Icon(
+                                Icons.Default.Call,
+                                contentDescription = "Notruf und Hilfe",
+                                tint = MaterialTheme.colorScheme.error,
+                            )
+                        }
                         IconButton(onClick = { showGuide = true }) {
                             Icon(Icons.Default.Info, contentDescription = "Anleitung")
                         }
@@ -225,6 +234,7 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
                         onEditProfile = { showProfile = true },
                         onOpenWegweiser = { showWegweiser = true },
                         caregiver = caregiver,
+                        documents = documents,
                         onEditCaregiver = { showCaregiver = true },
                     )
                     Tab.Medikamente -> MedicationScreen(meds, doctors, vm, onReorder = { showReorder = true })
@@ -259,6 +269,15 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
                 },
             )
         }
+    }
+
+    if (showNotruf) {
+        NotrufDialog(
+            person = persons.firstOrNull { it.id == personId },
+            doctors = doctors,
+            onSaveContact = { vm.add(it) },
+            onClose = { showNotruf = false },
+        )
     }
 
     if (showCaregiver) {
@@ -490,6 +509,7 @@ private fun DoctorScreen(
 ) {
     var mailTo by remember { mutableStateOf<Doctor?>(null) }
     var showAdd by remember { mutableStateOf(false) }
+    var showNearby by remember { mutableStateOf(false) }
     var editItem by remember { mutableStateOf<Doctor?>(null) }
     val context = LocalContext.current
 
@@ -500,6 +520,10 @@ private fun DoctorScreen(
     val shown = if (active == null) items else items.filter { it.specialty.trim() == active }
 
     Column(Modifier.fillMaxSize()) {
+    TextButton(
+        onClick = { showNearby = true },
+        modifier = Modifier.padding(horizontal = 8.dp),
+    ) { Text("In der Nähe suchen: Apotheke, Pflegedienst, Sanitätshaus …") }
     if (categories.size > 1) {
         FlowRow(
             Modifier.fillMaxWidth().padding(horizontal = 16.dp),
@@ -540,6 +564,10 @@ private fun DoctorScreen(
             }
         }
     }
+    }
+
+    if (showNearby) {
+        NearbyDialog(person = person, onSaveContact = { vm.add(it) }, onClose = { showNearby = false })
     }
 
     mailTo?.let { d ->
