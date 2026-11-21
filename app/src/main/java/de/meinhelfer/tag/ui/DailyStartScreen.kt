@@ -262,6 +262,9 @@ internal fun DailyStartScreen(
                         }
                     }
                 }
+                if (de.meinhelfer.tag.update.AppPrefs.motivatorInDailyStart(context)) {
+                    item { DailyMotivatorBlock(vm) }
+                }
                 if (sections.isEmpty()) {
                     item { Text("Für heute ist nichts eingetragen.", style = MaterialTheme.typography.bodyLarge) }
                 }
@@ -324,5 +327,23 @@ private fun sharePdf(context: Context, file: File) {
         context.startActivity(Intent.createChooser(send, "Tagesplan teilen"))
     } catch (_: Exception) {
         toast(context, "Teilen ist nicht möglich.")
+    }
+}
+
+/** Motivator im Tagesstart: Satz fuer den Tag, Geschafftes und Vorhaben. */
+@Composable
+private fun DailyMotivatorBlock(vm: MainViewModel) {
+    val plan by vm.motivator.collectAsStateWithLifecycle()
+    val p = plan ?: return
+    HCard(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(start = 8.dp, end = 16.dp, top = 16.dp, bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Column(Modifier.padding(start = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(p.greeting, style = MaterialTheme.typography.titleSmall)
+                Text(p.sentence, style = MaterialTheme.typography.bodyLarge, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
+                if (p.achieved.isNotEmpty()) Text("Geschafft: " + p.achieved.take(3).joinToString(" · "), style = MaterialTheme.typography.bodySmall)
+                Text("Vorhaben für heute", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 4.dp))
+            }
+            p.intentions.take(4).forEach { IntentionRow(it, vm) }
+        }
     }
 }

@@ -121,6 +121,7 @@ fun SettingsScreen(
             item { ThemeCard(vm) }
             item { EffectsCard(vm) }
             item { HomeCardsCard() }
+            item { MotivatorSettingsCard(vm) }
             item { IntakeCard() }
             item { ViewerCard() }
             item { SectionTitle("Daten und Sicherheit") }
@@ -854,5 +855,69 @@ private fun EffectSwitch(label: String, hint: String, checked: Boolean, onChange
             Text(hint, style = MaterialTheme.typography.bodySmall)
         }
         Switch(checked = checked, onCheckedChange = onChange)
+    }
+}
+
+/** Tages-Motivator: Karte, Tagesstart, Stimmungs-Check und Erinnerung. */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+private fun MotivatorSettingsCard(vm: MainViewModel) {
+    val context = LocalContext.current
+    val onToday by vm.motivatorOnToday.collectAsStateWithLifecycle()
+    val mode by vm.moodMode.collectAsStateWithLifecycle()
+    var inDailyStart by remember { mutableStateOf(AppPrefs.motivatorInDailyStart(context)) }
+    var notify by remember { mutableStateOf(AppPrefs.moodNotify(context)) }
+    HCard(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Tages-Motivator", style = MaterialTheme.typography.titleMedium)
+            Text(
+                "Satz für den Tag, Vorhaben aus deinen letzten Tagen, Ziele Schritt für Schritt und ein kurzer Stimmungs-Check.",
+                style = MaterialTheme.typography.bodySmall,
+            )
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Switch(checked = onToday, onCheckedChange = { vm.setMotivatorOnToday(it) })
+                Text("Auf der Heute-Seite zeigen", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+            }
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Switch(checked = inDailyStart, onCheckedChange = {
+                    inDailyStart = it
+                    AppPrefs.setMotivatorInDailyStart(context, it)
+                })
+                Text("Im Tagesstart zeigen", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+            }
+            Text("Stimmungs-Check", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 8.dp))
+            androidx.compose.foundation.layout.FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                de.meinhelfer.tag.summary.MoodMode.entries.forEach { m ->
+                    FilterChip(selected = mode == m, onClick = { vm.setMoodMode(m) }, label = { Text(m.label) })
+                }
+            }
+            Text(
+                "Gefragt wird " + de.meinhelfer.tag.summary.MoodSchedule.slotText(mode) + ". „Später“ zählt für das jeweilige Zeitfenster, nachts wird nicht gefragt.",
+                style = MaterialTheme.typography.bodySmall,
+            )
+            if (mode.isSlotted) {
+                val hours = de.meinhelfer.tag.summary.MoodSchedule.reminderHours(mode)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Switch(checked = notify, onCheckedChange = {
+                        notify = it
+                        vm.setMoodNotify(it)
+                    })
+                    Column(Modifier.weight(1f)) {
+                        Text("Erinnerung per Benachrichtigung", style = MaterialTheme.typography.bodyLarge)
+                        Text(
+                            "Um " + hours.joinToString(", ") { "$it" }.replace(Regex(", (\\d+)$"), " und $1") + " Uhr, nur wenn du im Zeitfenster noch nichts eingetragen hast.",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                }
+            }
+            Text(
+                "Stimmung, Ziele und Schritte bleiben verschlüsselt auf dem Handy und sind in der Sicherung enthalten. Zur KI geht nur etwas, wenn du es vorher bestätigst.",
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
     }
 }

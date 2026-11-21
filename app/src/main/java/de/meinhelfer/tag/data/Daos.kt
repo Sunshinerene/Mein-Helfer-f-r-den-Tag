@@ -162,6 +162,9 @@ interface TodoDao {
     @Query("SELECT * FROM Todo")
     suspend fun list(): List<Todo>
 
+    @Query("SELECT * FROM Todo")
+    fun everything(): Flow<List<Todo>>
+
     @Query("UPDATE Todo SET doctorId = NULL WHERE doctorId = :contactId")
     suspend fun clearDoctor(contactId: Long)
 

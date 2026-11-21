@@ -121,6 +121,9 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
     var showMedOverview by rememberSaveable { mutableStateOf(false) }
     var showDailyStart by rememberSaveable { mutableStateOf(false) }
     var dailyPlanOnly by rememberSaveable { mutableStateOf(false) }
+    var showMoodCheck by rememberSaveable { mutableStateOf(false) }
+    var showMotivator by rememberSaveable { mutableStateOf(false) }
+    var motivatorTab by rememberSaveable { mutableIntStateOf(0) }
     val appContext = LocalContext.current
     var caregiver by remember { mutableStateOf(AppPrefs.caregiver(appContext)) }
     // Beim ersten Start einmal den Rundgang anbieten
@@ -159,6 +162,24 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
         }
     }
 
+    // Stimmungs-Check: beim Oeffnen der App bzw. im neuen Zeitfenster (nicht beim allerersten Start)
+    var resumeTick by remember { mutableIntStateOf(0) }
+    androidx.lifecycle.compose.LifecycleResumeEffect(Unit) {
+        resumeTick++
+        onPauseOrDispose { }
+    }
+    val moodMode by vm.moodMode.collectAsStateWithLifecycle()
+    val moods by vm.moods.collectAsStateWithLifecycle()
+    LaunchedEffect(resumeTick, moodMode, showTourOffer, showTour, nowSlot(moodMode)) {
+        if (showTourOffer || showTour || showMoodCheck) return@LaunchedEffect
+        val now = System.currentTimeMillis()
+        val last = moods.maxOfOrNull { it.atMillis } ?: 0L
+        if (de.meinhelfer.tag.summary.MoodSchedule.isDue(moodMode, now, last, AppPrefs.moodAsked(appContext))) {
+            AppPrefs.setMoodAsked(appContext, now)
+            showMoodCheck = true
+        }
+    }
+
     // Entschluesselte Dokument-Kopien vom letzten Mal aufraeumen
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) { DocumentStore.clearTemp(appContext) }
@@ -174,9 +195,11 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
         }
     }
 
-    BackHandler(enabled = showSettings || showSummary || showGuide || showTour || showReorder || showWegweiser || showLetters || showMedOverview || showDailyStart) {
+    BackHandler(enabled = showSettings || showSummary || showGuide || showTour || showReorder || showWegweiser || showLetters || showMedOverview || showDailyStart || showMoodCheck || showMotivator) {
         when {
+            showMoodCheck -> showMoodCheck = false
             showDailyStart -> showDailyStart = false
+            showMotivator -> showMotivator = false
             showMedOverview -> showMedOverview = false
             showTour -> showTour = false
             showGuide -> showGuide = false
@@ -190,6 +213,13 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
 
     if (showTour) {
         TourScreen(onClose = { showTour = false })
+    } else if (showMoodCheck) {
+        MoodCheckScreen(
+            name = caregiver.name,
+            professional = de.meinhelfer.tag.summary.Motivator.isProfessional(caregiver),
+            onSave = { m, t, n -> vm.addMood(m, t, n) },
+            onClose = { showMoodCheck = false },
+        )
     } else if (showDailyStart) {
         DailyStartScreen(
             vm = vm,
@@ -202,6 +232,14 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
             todayDay = todayDay,
             startWithPlan = dailyPlanOnly,
             onDone = { showDailyStart = false },
+        )
+    } else if (showMotivator) {
+        MotivatorScreen(
+            vm = vm,
+            caregiver = caregiver,
+            startTab = motivatorTab,
+            onMood = { showMoodCheck = true },
+            onBack = { showMotivator = false },
         )
     } else if (showGuide) {
         GuideScreen(onBack = { showGuide = false }, onStartTour = { showTour = true })
@@ -324,6 +362,11 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
                                           dailyPlanOnly = planOnly
                                           showDailyStart = true
                                       },
+                                      onOpenMotivator = { t ->
+                                          motivatorTab = t
+                                          showMotivator = true
+                                      },
+                                      onOpenMood = { showMoodCheck = true },
                                   )
                                   ViewPeriod.Woche -> WeekOverview(
                                       vm = vm,
@@ -399,6 +442,7 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
                 AppPrefs.setCaregiver(appContext, it)
                 caregiver = it
                 showCaregiver = false
+                vm.refreshMotivator()
                 // Andere pflegende Person (Name oder Rolle): Zustimmung muss neu bestaetigt werden
                 consentCheck++
             },
@@ -885,3 +929,7 @@ internal fun ItemCard(
         )
     }
 }
+
+/** Kennung des aktuellen Zeitfensters (aendert sich z. B. mittags), damit im neuen Fenster gefragt wird. */
+private fun nowSlot(mode: de.meinhelfer.tag.summary.MoodMode): Long =
+    if (mode.isSlotted) de.meinhelfer.tag.summary.MoodSchedule.slotStart(mode, System.currentTimeMillis()) ?: -1L else -1L

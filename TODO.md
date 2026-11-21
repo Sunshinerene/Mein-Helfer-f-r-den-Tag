@@ -10,7 +10,6 @@ Stand: v0.41.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 - [ ] Dokumenten-Betrachter: Zoom mit zwei Fingern, Text-Dokumente drucken
 - [ ] Notfallkarte als PDF (zum Ausdrucken für Kühlschrank oder Geldbörse)
 - [ ] Vorlagen erweitern (Kündigung Pflegedienst, Antrag Schwerbehindertenausweis, Widerruf), eingescannte unterschriebene Fassung automatisch dem Entwurf zuordnen
-- [ ] Sicherung: auch „Meine Daten“ (inkl. Adresse) und Einstellungen wie Design, Ecken und Effekte mitsichern
 - [ ] Erinnerung an regelmäßige Sicherung (z. B. monatlich), Hinweis wenn lange keine Sicherung
 
 ## Ideen und Optimierungen

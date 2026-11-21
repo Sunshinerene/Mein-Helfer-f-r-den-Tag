@@ -23,6 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -93,7 +94,10 @@ fun TodayScreen(
     onEditCaregiver: () -> Unit = {},
     documents: List<de.meinhelfer.tag.data.Document> = emptyList(),
     onOpenDailyStart: (planOnly: Boolean) -> Unit = {},
+    onOpenMotivator: (tab: Int) -> Unit = {},
+    onOpenMood: () -> Unit = {},
 ) {
+    val motivatorOn by vm.motivatorOnToday.collectAsStateWithLifecycle()
     val zone = ZoneId.systemDefault()
     val today = LocalDate.ofEpochDay(todayDay)
     val nowTime = Instant.ofEpochMilli(nowMillis).atZone(zone).toLocalTime()
@@ -212,6 +216,10 @@ fun TodayScreen(
                     summary = person.careLevel.takeIf { it in 1..5 }?.let { "Pflegegrad $it" } ?: "Profil",
                 ) { ProfileCard(person, todayDay, onEditProfile, onOpenWegweiser) }
             }
+        }
+
+        if (motivatorOn) {
+            item { MotivatorCard(vm, onOpen = onOpenMotivator, onMood = onOpenMood) }
         }
 
         // ---- Rueckfragen

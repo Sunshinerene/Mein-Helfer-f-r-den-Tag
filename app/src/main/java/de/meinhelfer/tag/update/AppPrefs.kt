@@ -33,6 +33,61 @@ object AppPrefs {
         prefs(context).edit().putFloat("schrift_faktor", factor).apply()
     }
 
+    // ---- Tages-Motivator und Stimmungs-Check
+
+    /** Motivator-Karte auf der Heute-Seite zeigen */
+    fun motivatorOnToday(context: Context): Boolean = prefs(context).getBoolean("motivator_heute", true)
+
+    fun setMotivatorOnToday(context: Context, on: Boolean) {
+        prefs(context).edit().putBoolean("motivator_heute", on).apply()
+    }
+
+    /** Wie oft der Stimmungs-Check fragt, siehe MoodMode */
+    fun moodMode(context: Context): String = prefs(context).getString("stimmung_modus", "3") ?: "3"
+
+    fun setMoodMode(context: Context, key: String) {
+        prefs(context).edit().putString("stimmung_modus", key).apply()
+    }
+
+    /** Erinnerung an den Stimmungs-Check per Benachrichtigung */
+    fun moodNotify(context: Context): Boolean = prefs(context).getBoolean("stimmung_erinnern", false)
+
+    fun setMoodNotify(context: Context, on: Boolean) {
+        prefs(context).edit().putBoolean("stimmung_erinnern", on).apply()
+    }
+
+    /** Wann zuletzt gefragt (auch "Spaeter" zaehlt) */
+    fun moodAsked(context: Context): Long = prefs(context).getLong("stimmung_gefragt", 0L)
+
+    fun setMoodAsked(context: Context, millis: Long) {
+        prefs(context).edit().putLong("stimmung_gefragt", millis).apply()
+    }
+
+    /** Abgehakte eigene Vorhaben des Tages ("Tag;a,b") */
+    fun motivatorDone(context: Context, day: Long): Set<String> {
+        val raw = prefs(context).getString("motivator_erledigt", "") ?: ""
+        val (d, keys) = raw.split(";", limit = 2).let { (it.getOrNull(0) ?: "") to (it.getOrNull(1) ?: "") }
+        return if (d == day.toString()) keys.split(",").filter { it.isNotBlank() }.toSet() else emptySet()
+    }
+
+    fun setMotivatorDone(context: Context, day: Long, keys: Set<String>) {
+        prefs(context).edit().putString("motivator_erledigt", day.toString() + ";" + keys.joinToString(",")).apply()
+    }
+
+    /** Persoenlicher KI-Impuls des Tages (JSON) */
+    fun motivatorImpulse(context: Context): String = prefs(context).getString("motivator_ki", "") ?: ""
+
+    fun setMotivatorImpulse(context: Context, json: String) {
+        prefs(context).edit().putString("motivator_ki", json).apply()
+    }
+
+    /** Motivator im Tagesstart zeigen */
+    fun motivatorInDailyStart(context: Context): Boolean = prefs(context).getBoolean("motivator_tagesstart", true)
+
+    fun setMotivatorInDailyStart(context: Context, on: Boolean) {
+        prefs(context).edit().putBoolean("motivator_tagesstart", on).apply()
+    }
+
     /** Form der Ecken, siehe CornerStyle ("design" = wie das Design es vorgibt). */
     fun cornerStyle(context: Context): String = prefs(context).getString("ecken", "design") ?: "design"
 

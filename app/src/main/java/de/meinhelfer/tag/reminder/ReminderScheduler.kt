@@ -25,6 +25,7 @@ object ReminderScheduler {
     const val TYPE_APPT = "appt"
     const val TYPE_FOLLOWUP = "followup"
     const val EXTRA_DAY = "day"
+    const val TYPE_MOOD = "mood"
 
     /** "30 Minuten", "1 Stunde", "2 Stunden", "1 Tag" */
     fun leadText(minutes: Int): String = when {
@@ -51,6 +52,51 @@ object ReminderScheduler {
             med.timeList().forEach { scheduleMedication(app, med.id, it) }
         }
         db.appointmentDao().list().forEach { scheduleAppointment(app, it) }
+        scheduleMood(app)
+    }
+
+    /**
+     * Erinnerungen an den Stimmungs-Check (nur wenn eingeschaltet). Alte Alarme werden abgebrochen.
+     * Der Receiver zeigt nur etwas, wenn im aktuellen Zeitfenster noch nichts eingetragen wurde.
+     */
+    fun scheduleMood(context: Context) {
+        val app = context.applicationContext
+        val alarmManager = app.getSystemService(AlarmManager::class.java)
+        for (i in 0..2) {
+            val pending = PendingIntent.getBroadcast(
+                app, "mood:$i".hashCode(), Intent(app, ReminderReceiver::class.java),
+                PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE,
+            )
+            if (pending != null) {
+                alarmManager.cancel(pending)
+                pending.cancel()
+            }
+        }
+        val mode = de.meinhelfer.tag.summary.MoodMode.fromKey(de.meinhelfer.tag.update.AppPrefs.moodMode(app))
+        if (!mode.isSlotted || !de.meinhelfer.tag.update.AppPrefs.moodNotify(app)) return
+        de.meinhelfer.tag.summary.MoodSchedule.reminderHours(mode).forEachIndexed { i, hour -> scheduleMoodAt(app, i, hour) }
+    }
+
+    fun scheduleMoodAt(context: Context, index: Int, hour: Int) {
+        val trigger = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, hour)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+            if (timeInMillis <= System.currentTimeMillis() + 1000) add(Calendar.DAY_OF_YEAR, 1)
+        }.timeInMillis
+        val alarmManager = context.getSystemService(AlarmManager::class.java)
+        val intent = Intent(context, ReminderReceiver::class.java).apply {
+            putExtra(EXTRA_TYPE, TYPE_MOOD)
+            putExtra(EXTRA_ID, index.toLong())
+            putExtra(EXTRA_TIME, "%02d:00".format(hour))
+        }
+        val pending = PendingIntent.getBroadcast(
+            context, "mood:$index".hashCode(), intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+        // Ungefaehr reicht hier, kein genauer Wecker noetig
+        alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, trigger, pending)
     }
 
     /** Plant die naechste Einnahme-Erinnerung zur angegebenen Uhrzeit (heute oder morgen). */

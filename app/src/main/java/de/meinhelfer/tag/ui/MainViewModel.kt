@@ -13,6 +13,12 @@ import de.meinhelfer.tag.data.Medication
 import de.meinhelfer.tag.data.Person
 import de.meinhelfer.tag.data.Recurrence
 import de.meinhelfer.tag.data.Todo
+import de.meinhelfer.tag.data.Goal
+import de.meinhelfer.tag.data.GoalStep
+import de.meinhelfer.tag.data.MoodEntry
+import de.meinhelfer.tag.summary.MoodMode
+import de.meinhelfer.tag.summary.Motivator
+import de.meinhelfer.tag.summary.MotivatorPlan
 import de.meinhelfer.tag.media.DocumentStore
 import de.meinhelfer.tag.media.PhotoStore
 import de.meinhelfer.tag.reminder.ReminderScheduler
@@ -92,6 +98,157 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val taskHistory: StateFlow<List<Todo>> = _personId
         .flatMapLatest { p -> db.todoDao().all(p) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // ---- Tages-Motivator: Stimmung und Ziele der pflegenden Person (fuer alle betreuten Personen)
+    val moods: StateFlow<List<MoodEntry>> = db.moodDao().all()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val goals: StateFlow<List<Goal>> = db.goalDao().all()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val goalSteps: StateFlow<List<GoalStep>> = db.goalDao().allSteps()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    private val _motivatorTick = MutableStateFlow(0)
+
+    /** Neu berechnen (z. B. nach Abhaken eines eigenen Vorhabens oder geaenderten eigenen Daten). */
+    fun refreshMotivator() {
+        _motivatorTick.value++
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val recentCheckins = _today.flatMapLatest { d -> db.checkinDao().range(d - 3, d) }
+
+    val motivator: StateFlow<MotivatorPlan?> = combine(
+        combine(moods, goals, goalSteps) { m, g, s -> Triple(m, g, s) },
+        combine(db.todoDao().everything(), recentCheckins, db.appointmentDao().all()) { t, c, a -> Triple(t, c, a) },
+        combine(_today, _motivatorTick) { d, _ -> d },
+    ) { (m, g, s), (t, c, a), day ->
+        val app = getApplication<Application>()
+        Motivator.plan(
+            today = day,
+            hour = LocalTime.now().hour,
+            caregiver = AppPrefs.caregiver(app),
+            moods = m,
+            todos = t,
+            checkins = c,
+            appointments = a,
+            goals = g,
+            steps = s,
+            doneKeys = AppPrefs.motivatorDone(app, day),
+        )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    private val _motivatorOnToday = MutableStateFlow(AppPrefs.motivatorOnToday(app))
+    val motivatorOnToday: StateFlow<Boolean> = _motivatorOnToday
+
+    fun setMotivatorOnToday(on: Boolean) {
+        _motivatorOnToday.value = on
+        AppPrefs.setMotivatorOnToday(getApplication(), on)
+    }
+
+    private val _moodMode = MutableStateFlow(MoodMode.fromKey(AppPrefs.moodMode(app)))
+    val moodMode: StateFlow<MoodMode> = _moodMode
+
+    fun setMoodMode(mode: MoodMode) {
+        _moodMode.value = mode
+        AppPrefs.setMoodMode(getApplication(), mode.key)
+        ReminderScheduler.scheduleMood(getApplication())
+    }
+
+    fun setMoodNotify(on: Boolean) {
+        AppPrefs.setMoodNotify(getApplication(), on)
+        ReminderScheduler.scheduleMood(getApplication())
+    }
+
+    fun addMood(mood: Int, tags: List<String>, note: String) = viewModelScope.launch {
+        val now = System.currentTimeMillis()
+        db.moodDao().insert(
+            MoodEntry(atMillis = now, day = LocalDate.now().toEpochDay(), mood = mood.coerceIn(1, 5), tags = tags.joinToString(","), note = note.trim()),
+        )
+        AppPrefs.setMoodAsked(getApplication(), now)
+    }
+
+    fun deleteMood(entry: MoodEntry) = viewModelScope.launch { db.moodDao().delete(entry) }
+
+    /** Eigenes Vorhaben (ohne Aufgabe oder Schritt dahinter) abhaken bzw. zuruecknehmen. */
+    fun toggleOwnIntention(key: String) {
+        val app = getApplication<Application>()
+        val day = _today.value
+        val keys = AppPrefs.motivatorDone(app, day).toMutableSet()
+        if (!keys.add(key)) keys.remove(key)
+        AppPrefs.setMotivatorDone(app, day, keys)
+        refreshMotivator()
+    }
+
+    /** Legt ein Ziel an oder aendert es; die Schritte werden in der angegebenen Reihenfolge gespeichert. */
+    fun saveGoal(goal: Goal, steps: List<GoalStep>, onSaved: (Long) -> Unit = {}) = viewModelScope.launch {
+        val id = if (goal.id == 0L) {
+            db.goalDao().insert(goal.copy(createdMillis = if (goal.createdMillis > 0) goal.createdMillis else System.currentTimeMillis()))
+        } else {
+            db.goalDao().update(goal)
+            goal.id
+        }
+        val old = db.goalDao().steps(id)
+        val keep = steps.mapNotNull { it.id.takeIf { s -> s != 0L } }.toSet()
+        old.filter { it.id !in keep }.forEach { db.goalDao().deleteStep(it) }
+        steps.forEachIndexed { i, st ->
+            val s = st.copy(goalId = id, position = i)
+            if (s.id == 0L) db.goalDao().insertStep(s) else db.goalDao().updateStep(s)
+        }
+        onSaved(id)
+    }
+
+    fun setGoalStatus(goal: Goal, status: String) = viewModelScope.launch {
+        db.goalDao().update(goal.copy(status = status, doneMillis = if (status == Goal.REACHED) System.currentTimeMillis() else null))
+    }
+
+    fun setGoalCheck(goal: Goal, json: String) = viewModelScope.launch {
+        db.goalDao().update(goal.copy(aiCheck = json, aiCheckMillis = System.currentTimeMillis()))
+    }
+
+    fun deleteGoal(goal: Goal) = viewModelScope.launch {
+        db.goalDao().deleteSteps(goal.id)
+        db.goalDao().delete(goal)
+    }
+
+    fun toggleStep(step: GoalStep) = viewModelScope.launch {
+        db.goalDao().updateStep(step.copy(doneMillis = if (step.doneMillis == null) System.currentTimeMillis() else null))
+    }
+
+    fun updateStep(step: GoalStep) = viewModelScope.launch { db.goalDao().updateStep(step) }
+
+    fun addStep(goalId: Long, title: String, detail: String = "", dueDay: Long? = null) = viewModelScope.launch {
+        val pos = (db.goalDao().steps(goalId).maxOfOrNull { it.position } ?: -1) + 1
+        db.goalDao().insertStep(GoalStep(goalId = goalId, position = pos, title = title.trim(), detail = detail.trim(), dueDay = dueDay))
+    }
+
+    fun deleteStep(step: GoalStep) = viewModelScope.launch { db.goalDao().deleteStep(step) }
+
+    /** Schritt eine Position nach oben (-1) oder unten (+1) verschieben. */
+    fun moveStep(step: GoalStep, delta: Int) = viewModelScope.launch {
+        val list = db.goalDao().steps(step.goalId).sortedBy { it.position }.toMutableList()
+        val i = list.indexOfFirst { it.id == step.id }
+        val j = i + delta
+        if (i < 0 || j !in list.indices) return@launch
+        val a = list[i]
+        list[i] = list[j]
+        list[j] = a
+        list.forEachIndexed { k, s -> if (s.position != k) db.goalDao().updateStep(s.copy(position = k)) }
+    }
+
+    /** Aufgabe aus dem Motivator heraus abhaken bzw. wieder oeffnen. */
+    fun toggleTodoById(id: Long) = viewModelScope.launch {
+        val t = db.todoDao().list().firstOrNull { it.id == id } ?: return@launch
+        val done = !t.done
+        db.todoDao().update(t.copy(done = done, doneMillis = if (done) System.currentTimeMillis() else null, archived = false))
+    }
+
+    /** Schritt aus dem Motivator heraus abhaken bzw. wieder oeffnen. */
+    fun toggleStepById(id: Long) = viewModelScope.launch {
+        val s = goalSteps.value.firstOrNull { it.id == id } ?: return@launch
+        db.goalDao().updateStep(s.copy(doneMillis = if (s.doneMillis == null) System.currentTimeMillis() else null))
+    }
 
     /** Aufgaben fuer die Listen: ohne ausgeblendete erledigte. */
     val todos: StateFlow<List<Todo>> = taskHistory
@@ -460,6 +617,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
         db.dayNoteDao().deleteForPerson(person.id)
         db.todoDao().deleteForPerson(person.id)
+        db.goalDao().deleteStepsForPerson(person.id)
+        db.goalDao().deleteForPerson(person.id)
         db.personDao().delete(person)
         if (_personId.value == person.id) selectPerson(others.first().id)
         ReminderScheduler.rescheduleAll(getApplication())

@@ -8,8 +8,8 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
-    entities = [Medication::class, Appointment::class, Doctor::class, Checkin::class, DayNote::class, Person::class, Todo::class, Document::class, ConsentRecord::class],
-    version = 19,
+    entities = [Medication::class, Appointment::class, Doctor::class, Checkin::class, DayNote::class, Person::class, Todo::class, Document::class, ConsentRecord::class, MoodEntry::class, Goal::class, GoalStep::class],
+    version = 20,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -22,6 +22,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun todoDao(): TodoDao
     abstract fun documentDao(): DocumentDao
     abstract fun consentDao(): ConsentDao
+    abstract fun moodDao(): MoodDao
+    abstract fun goalDao(): GoalDao
 
     companion object {
         @Volatile private var instance: AppDatabase? = null
@@ -223,6 +225,28 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /** Version 20: Stimmung, Ziele und Schritte (Tages-Motivator). */
+        private val MIGRATION_19_20 = object : Migration(19, 20) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `MoodEntry` (" +
+                        "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `atMillis` INTEGER NOT NULL, `day` INTEGER NOT NULL, " +
+                        "`mood` INTEGER NOT NULL, `tags` TEXT NOT NULL, `note` TEXT NOT NULL)",
+                )
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `Goal` (" +
+                        "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `personId` INTEGER NOT NULL, `title` TEXT NOT NULL, " +
+                        "`kind` TEXT NOT NULL, `details` TEXT NOT NULL, `targetDay` INTEGER, `createdMillis` INTEGER NOT NULL, " +
+                        "`status` TEXT NOT NULL, `doneMillis` INTEGER, `aiCheck` TEXT NOT NULL, `aiCheckMillis` INTEGER)",
+                )
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `GoalStep` (" +
+                        "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `goalId` INTEGER NOT NULL, `position` INTEGER NOT NULL, " +
+                        "`title` TEXT NOT NULL, `detail` TEXT NOT NULL, `dueDay` INTEGER, `doneMillis` INTEGER, `note` TEXT NOT NULL)",
+                )
+            }
+        }
+
         fun get(context: Context): AppDatabase =
             instance ?: synchronized(this) {
                 instance ?: open(context.applicationContext).also { instance = it }
@@ -230,7 +254,7 @@ abstract class AppDatabase : RoomDatabase() {
 
         private fun build(context: Context, encrypted: Boolean): AppDatabase {
             val builder = Room.databaseBuilder(context, AppDatabase::class.java, DbCrypto.DB_NAME)
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20)
             if (encrypted) {
                 builder.openHelperFactory(
                     net.zetetic.database.sqlcipher.SupportOpenHelperFactory(DbCrypto.passphrase(context).toByteArray(Charsets.UTF_8)),

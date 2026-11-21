@@ -17,6 +17,7 @@ import de.meinhelfer.tag.MainActivity
 object Notifications {
     const val CHANNEL_REMINDERS = "erinnerungen"
     private const val CHANNEL_UPDATES = "updates"
+    const val CHANNEL_MOOD = "stimmung"
 
     fun ensureChannels(context: Context) {
         if (Build.VERSION.SDK_INT >= 26) {
@@ -25,6 +26,12 @@ object Notifications {
                 nm.createNotificationChannel(
                     NotificationChannel(CHANNEL_REMINDERS, "Erinnerungen", NotificationManager.IMPORTANCE_HIGH)
                         .apply { description = "Medikamente und Termine" },
+                )
+            }
+            if (nm.getNotificationChannel(CHANNEL_MOOD) == null) {
+                nm.createNotificationChannel(
+                    NotificationChannel(CHANNEL_MOOD, "Stimmungs-Check", NotificationManager.IMPORTANCE_DEFAULT)
+                        .apply { description = "Kurze Frage, wie es dir geht (Tages-Motivator)" },
                 )
             }
             if (nm.getNotificationChannel(CHANNEL_UPDATES) == null) {
@@ -45,6 +52,7 @@ object Notifications {
         updates: Boolean = false,
         actions: List<Pair<String, PendingIntent>> = emptyList(),
         personId: Long? = null,
+        channel: String? = null,
     ) {
         if (Build.VERSION.SDK_INT >= 33 &&
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
@@ -63,12 +71,12 @@ object Notifications {
             openIntent,
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
-        val builder = NotificationCompat.Builder(context, if (updates) CHANNEL_UPDATES else CHANNEL_REMINDERS)
+        val builder = NotificationCompat.Builder(context, channel ?: if (updates) CHANNEL_UPDATES else CHANNEL_REMINDERS)
             .setSmallIcon(android.R.drawable.ic_popup_reminder)
             .setContentTitle(title)
             .setContentText(text)
             .setStyle(NotificationCompat.BigTextStyle().bigText(text))
-            .setPriority(if (updates) NotificationCompat.PRIORITY_DEFAULT else NotificationCompat.PRIORITY_HIGH)
+            .setPriority(if (updates || channel != null) NotificationCompat.PRIORITY_DEFAULT else NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .setContentIntent(open)
         actions.forEach { (label, intent) -> builder.addAction(0, label, intent) }

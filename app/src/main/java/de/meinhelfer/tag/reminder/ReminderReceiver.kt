@@ -97,6 +97,26 @@ class ReminderReceiver : BroadcastReceiver() {
                 )
             }
 
+            ReminderScheduler.TYPE_MOOD -> {
+                val mode = de.meinhelfer.tag.summary.MoodMode.fromKey(de.meinhelfer.tag.update.AppPrefs.moodMode(context))
+                if (!mode.isSlotted || !de.meinhelfer.tag.update.AppPrefs.moodNotify(context)) return
+                val hours = de.meinhelfer.tag.summary.MoodSchedule.reminderHours(mode)
+                val index = id.toInt()
+                if (index in hours.indices) ReminderScheduler.scheduleMoodAt(context, index, hours[index])
+                val now = System.currentTimeMillis()
+                val start = de.meinhelfer.tag.summary.MoodSchedule.slotStart(mode, now) ?: return
+                val today = java.time.LocalDate.now().toEpochDay()
+                val entered = db.moodDao().since(today).any { it.atMillis >= start }
+                if (entered) return
+                Notifications.show(
+                    context,
+                    "mood".hashCode(),
+                    "Wie geht es dir gerade?",
+                    "Tippe kurz auf einen Smiley. Das bleibt nur auf deinem Handy und hilft dem Tages-Motivator.",
+                    channel = Notifications.CHANNEL_MOOD,
+                )
+            }
+
             ReminderScheduler.TYPE_APPT -> {
                 val appointment = db.appointmentDao().byId(id) ?: return
                 // Termin wurde verschoben oder liegt in der Vergangenheit: alter Alarm, nichts anzeigen.
