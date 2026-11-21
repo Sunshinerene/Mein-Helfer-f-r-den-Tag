@@ -357,6 +357,7 @@ private fun AppointmentScreen(
     var showAdd by remember { mutableStateOf(false) }
     var editItem by remember { mutableStateOf<Appointment?>(null) }
     var docsFor by remember { mutableStateOf<Appointment?>(null) }
+    var rideFor by remember { mutableStateOf<Appointment?>(null) }
 
     ListScreen(
         items = items,
@@ -365,27 +366,26 @@ private fun AppointmentScreen(
     ) { a ->
         val doctor = doctors.firstOrNull { it.id == a.doctorId }
         val attached = a.attachedIds().mapNotNull { id -> documents.firstOrNull { it.id == id } }
-        ItemCard(
-            title = a.title,
-            lines = listOfNotNull(
-                formatAppointmentTime(a.whenMillis, a.endMillis),
-                doctor?.let { doctorLabel(it) },
-                a.place.takeIf { it.isNotBlank() },
-                a.notes.takeIf { it.isNotBlank() },
-                attached.takeIf { it.isNotEmpty() }?.let { list -> "Unterlagen: " + list.joinToString(", ") { it.title } },
-            ),
-            onClick = { editItem = a },
+        AppointmentCard(
+            a = a,
+            doctor = doctor,
+            attached = attached,
+            onEdit = { editItem = a },
             onDelete = { vm.delete(a) },
-        ) {
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                TextButton(onClick = { docsFor = a }) {
-                    Text(if (attached.isEmpty()) "Unterlagen" else "Unterlagen (${attached.size})")
-                }
-                TextButton(onClick = { addToCalendar(context, a, doctor?.let { doctorLabel(it) }) }) {
-                    Text("In Kalender eintragen")
-                }
-            }
-        }
+            onDocs = { docsFor = a },
+            onCalendar = { addToCalendar(context, a, doctor?.let { doctorLabel(it) }) },
+            onFahrdienst = { rideFor = a },
+        )
+    }
+
+    rideFor?.let { a ->
+        FahrdienstDialog(
+            appointment = a,
+            doctor = doctors.firstOrNull { it.id == a.doctorId },
+            doctors = doctors,
+            person = person,
+            onClose = { rideFor = null },
+        )
     }
 
     docsFor?.let { a ->

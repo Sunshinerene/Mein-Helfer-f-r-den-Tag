@@ -208,7 +208,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
     GuideSection(
         id = "termine",
         title = "Termine",
-        summary = "Eintragen, von – bis, Erinnerung, Kalender",
+        summary = "Karten, Unterlagen, Fahrdienst, Erinnerung, Kalender",
         items = listOf(
             GuideItem(
                 "Termin anlegen",
@@ -225,6 +225,18 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             GuideItem(
                 "Unterlagen anhängen",
                 "Auf der Terminkarte „Unterlagen“ antippen. Die App schlägt passende Dokumente vor (gleicher Arzt, passende Kategorie, z. B. Medikamentenplan oder Befund). Du hakst an, was zum Termin gehört, und kannst jedes Dokument mit „Ansehen“ öffnen. Angehängte Unterlagen stehen auf der Karte. Darunter findest du Anregungen, was man mitnehmen könnte (z. B. Versichertenkarte, Medikamentenplan). Jeden Punkt kannst du mit „+ To-do“ auf deine Liste setzen. Das sind allgemeine Anregungen, was gebraucht wird, sagt die Praxis.",
+            ),
+            GuideItem(
+                "Die Terminkarte",
+                "Links steht das Datum groß mit Wochentag, daneben Titel, Uhrzeit und wie lange es noch dauert („heute“, „morgen“, „in 3 Tagen“). Termine von heute und morgen sind farblich hervorgehoben, vergangene grau mit „vorbei“. Dazu kommen Arzt bzw. Kontakt, Ort oder Adresse, Notiz, angehängte Unterlagen und die eingestellte Erinnerung. Unten: „Anrufen“ (ruft den verknüpften Kontakt an), „Route“ (öffnet die Karte zum Ziel), „Fahrdienst“, „Unterlagen“ und „In Kalender eintragen“.",
+            ),
+            GuideItem(
+                "Fahrdienst bestellen",
+                "Bei Terminen außer Haus erscheint „Fahrdienst“. Oben stehen deine festen Fahrdienste, also alle Kontakte mit der Art „Fahrdienst“ (oder Taxi, Krankentransport im Namen), immer zuerst, mit Anrufen, SMS und E-Mail. Die Anfrage (Abholadresse aus dem Profil, Ziel, Termin, Rückfahrt, Rollator/Rollstuhl/Begleitperson) wird vorbereitet und du siehst sie vor dem Senden in deiner SMS- oder E-Mail-App. Der Name der Person steht nie drin. „In der Nähe suchen“ fragt nach Bestätigung bei OpenStreetMap nach Krankenfahrten, Taxis und Fahrdiensten rund um PLZ und Ort der Person (nur Ort wird gesendet) und zeigt Entfernung, Telefon, Zeiten und Rollstuhl-Angaben, soweit eingetragen. Die Daten sind unvollständig und ohne Gewähr, bitte immer telefonisch bestätigen. „Karte öffnen“ sucht zusätzlich in deiner Karten-App.",
+            ),
+            GuideItem(
+                "Wer zahlt die Fahrt?",
+                "Unter „Infos zur Krankenfahrt“ im Fahrdienst-Fenster steht, wann die Krankenkasse zahlt: nur bei ärztlicher Verordnung und medizinischer Notwendigkeit. Bei Merkzeichen aG, Bl oder H, Pflegegrad 4 oder 5 und Pflegegrad 3 mit dauerhaft eingeschränkter Mobilität gilt eine verordnete Taxifahrt zum ambulanten Termin als genehmigt. Eigenanteil 10 %, mindestens 5 €, höchstens 10 € pro Fahrt. Das ist eine Orientierung, verbindlich sagt es die Krankenkasse.",
             ),
             GuideItem(
                 "Erinnerung",

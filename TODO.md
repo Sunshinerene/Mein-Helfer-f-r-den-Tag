@@ -4,6 +4,11 @@
 
 - [ ] Erkennung von Packungsfoto weiter verbessern (Wirkstoff, Packungsbeilage), Kamera-Scan für Barcodes live
 
+## Version 0.22.0 (fertig)
+
+- [x] Termine: neue Karten mit großem Datum und Wochentag, Countdown („heute“, „in 3 Tagen“), Uhrzeit, Kontakt mit Anruf, Route, Unterlagen und Erinnerung; vergangene Termine grau
+- [x] Fahrdienst bei Terminen außer Haus: feste Fahrdienste aus den Kontakten immer zuerst, Suche im Umkreis (OpenStreetMap, nur Ort wird nach Bestätigung gesendet), Anruf/SMS/E-Mail mit vorbereiteter Anfrage, Infos zur Krankenfahrt und Kostenübernahme
+
 ## Version 0.21.0 (fertig)
 
 - [x] Mehrseitige Dokumente: mehrere Fotos/PDFs zusammen auswählen, weitere Seiten nachträglich hinzufügen (Kamera, Galerie, Datei), letzte Seite entfernen; alles bleibt ein Dokument
@@ -131,10 +136,11 @@
 
 ## Weitere Ideen
 
-- [ ] Termine: ansprechendere Karten mit mehr Information (Datum groß, Wochentag, Countdown „in 3 Tagen“, Ort, Kontakt mit Anruf/Route, Unterlagen)
-- [ ] Termine außer Haus: Fahrdienst bestellen. Feste Fahrdienste aus den Kontakten (Art „Fahrdienst“) immer zuerst, danach Fahrdienste im Umkreis mit Kontaktdaten und Direktkontakt (Anruf, E-Mail, Karte), dazu Infos (z. B. Krankenfahrt, Verordnung, Kostenübernahme durch die Kasse prüfen). Datenquelle und Datenschutz (Adresse verlässt das Handy nur nach Bestätigung) vorher klären
+- [ ] Aufgaben (v0.23.0): To-do-Liste auf Heute zu „Aufgaben“ ausbauen mit zuständigem Arzt (Direktkontakt), Priorität, Fällig-bis, Fahrdienst bei Aufgaben außer Haus; KI-Zusammenfassung schlägt Aufgaben vor (z. B. „Blutuntersuchung Nierenwerte beim Hausarzt“), du wählst aus, was übernommen wird
+- [ ] Umkreissuche auch für Apotheken, Sanitätshäuser und Pflegedienste
 
 - [ ] Anleitung und Rundgang bei neuen Funktionen mitpflegen (Datei GuideContent.kt und TourScreen.kt)
+- [ ] Designs anpassen: die drei Farbtupfer jedes Designs (z. B. Glas) in den Einstellungen selbst ändern können, Effekt und Farben bleiben erhalten (Wunsch vom 21.11.2026)
 - [ ] Designs verfeinern (Schriftarten, Übergänge, weitere Varianten, Hochkontrast für bessere Lesbarkeit)
 - [ ] Dokumente: Medikamente und Termine aus dem erkannten Text vorschlagen
 - [ ] Datenbank verschlüsseln (SQLCipher, mit Sicherung vor der Umstellung)

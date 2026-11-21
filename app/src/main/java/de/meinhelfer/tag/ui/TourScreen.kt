@@ -77,7 +77,7 @@ private val TOUR_PAGES: List<TourPage> = listOf(
     TourPage(
         title = "Termine eintragen",
         text = "Titel auswählen oder selbst eintippen, Datum im Kalender wählen, Beginn und Ende angeben und einen Kontakt verknüpfen. Die Erinnerung stellst du pro Termin ein.",
-        tips = listOf("Mit „In Kalender eintragen“ landet der Termin im Handy-Kalender.", "Das Ende ist freiwillig."),
+        tips = listOf("Mit „In Kalender eintragen“ landet der Termin im Handy-Kalender.", "Bei Terminen außer Haus gibt es „Fahrdienst“: feste Fahrdienste aus deinen Kontakten stehen zuerst.", "Das Ende ist freiwillig."),
         mock = { MockAppointment() },
     ),
     TourPage(
