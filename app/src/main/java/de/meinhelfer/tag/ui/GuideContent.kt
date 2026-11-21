@@ -206,6 +206,33 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
         ),
     ),
     GuideSection(
+        id = "dokumente",
+        title = "Dokumente",
+        summary = "Berichte, Befunde, Bescheide fotografieren oder laden",
+        items = listOf(
+            GuideItem(
+                "Dokument hinzufügen",
+                "Im Bereich „Dokumente“ auf das Plus tippen und auswählen: „Dokument fotografieren“ (bei mehreren Seiten mit „Weitere Seite fotografieren“), „Foto(s) aus der Galerie“ oder „Datei laden“. Bei „Datei laden“ suchst du eine Datei aus einem Ordner auf dem Handy, z. B. eine PDF vom Arzt, ein Bild oder eine Textdatei.",
+            ),
+            GuideItem(
+                "Text wird gelesen und genutzt",
+                "Die App liest den Text direkt auf dem Handy (bei PDFs bis zu 12 Seiten). Daraus schlägt sie Titel, Kategorie (z. B. Arztbericht, Befund, Rezept, Pflegegrad-Bescheid), Datum und den passenden Kontakt vor. Alles lässt sich ändern. Der erkannte Text ist durchsuchbar und korrigierbar.",
+            ),
+            GuideItem(
+                "Suchen",
+                "Oben in der Dokumentenliste suchst du nach Titel, Kategorie oder einem Wort aus dem Text, z. B. dem Namen eines Medikaments.",
+            ),
+            GuideItem(
+                "Öffnen und teilen",
+                "Eine Karte antippen zeigt die Details. „Öffnen“ zeigt die Datei in einer App deiner Wahl, „Teilen“ gibt sie weiter, z. B. per E-Mail. Das passiert nur nach deinem Tipp.",
+            ),
+            GuideItem(
+                "Sicher abgelegt",
+                "Die Dateien werden verschlüsselt im privaten App-Ordner gespeichert und nirgends hin gesendet. Beim Öffnen entsteht kurz eine Kopie, die beim nächsten App-Start gelöscht wird. Nicht lesbar sind passwortgeschützte PDFs und Dateitypen wie Word. Sie werden trotzdem gespeichert, nur ohne Text.",
+            ),
+        ),
+    ),
+    GuideSection(
         id = "kontakte",
         title = "Kontakte",
         summary = "Ärzte, Pflegedienst, Apotheke, Kassen und mehr",
@@ -328,7 +355,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Aktueller Stand",
-                "Dies ist eine Testversion. Die Daten sind noch nicht verschlüsselt und es gibt noch keine App-Sperre und keine Datensicherung. Beides steht auf der Liste der geplanten Funktionen. Bitte nur mit Testdaten oder auf eigene Verantwortung nutzen.",
+                "Dies ist eine Testversion. Dokumente sind verschlüsselt gespeichert, die übrigen Angaben (Medikamente, Termine, Notizen) aber noch nicht, und es gibt noch keine App-Sperre und keine Datensicherung. Beides steht auf der Liste der geplanten Funktionen. Bitte nur mit Testdaten oder auf eigene Verantwortung nutzen.",
             ),
         ),
     ),

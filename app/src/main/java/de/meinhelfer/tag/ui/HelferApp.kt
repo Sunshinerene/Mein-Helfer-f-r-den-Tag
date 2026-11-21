@@ -5,6 +5,10 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.BackHandler
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
+import de.meinhelfer.tag.media.DocumentStore
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -71,6 +75,7 @@ private enum class Tab(val label: String, val icon: ImageVector) {
     Heute("Heute", Icons.Default.Home),
     Medikamente("Medikamente", Icons.Default.Favorite),
     Termine("Termine", Icons.Default.DateRange),
+    Dokumente("Dokumente", DocumentIcon),
     Aerzte("Kontakte", Icons.Default.Person),
 }
 
@@ -98,8 +103,14 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
     val dayNote by vm.dayNote.collectAsStateWithLifecycle()
     val todayDay by vm.today.collectAsStateWithLifecycle()
     val todos by vm.todos.collectAsStateWithLifecycle()
+    val documents by vm.documents.collectAsStateWithLifecycle()
     val persons by vm.persons.collectAsStateWithLifecycle()
     val personId by vm.personId.collectAsStateWithLifecycle()
+
+    // Entschluesselte Dokument-Kopien vom letzten Mal aufraeumen
+    LaunchedEffect(Unit) {
+        withContext(Dispatchers.IO) { DocumentStore.clearTemp(appContext) }
+    }
 
     // Jede Minute: Uhrzeit und Datum aktualisieren (ueberfaellige Einnahmen, Tageswechsel)
     var nowMillis by remember { mutableLongStateOf(System.currentTimeMillis()) }
@@ -172,7 +183,7 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
                             selected = i == tabIndex,
                             onClick = { tabIndex = i },
                             icon = { Icon(t.icon, contentDescription = t.label) },
-                            label = { Text(t.label, maxLines = 1) },
+                            label = { Text(t.label, maxLines = 1, softWrap = false, fontSize = 11.sp) },
                         )
                     }
                 }
@@ -202,6 +213,7 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
                     )
                     Tab.Medikamente -> MedicationScreen(meds, doctors, vm, onReorder = { showReorder = true })
                     Tab.Termine -> AppointmentScreen(appointments, doctors, vm)
+                    Tab.Dokumente -> DocumentScreen(documents, doctors, vm)
                     Tab.Aerzte -> DoctorScreen(doctors, vm)
                 }
               }
@@ -478,7 +490,7 @@ private fun launch(context: Context, intent: Intent) {
 // ---------------------------------------------------------------- Bausteine
 
 @Composable
-private fun <T> ListScreen(
+internal fun <T> ListScreen(
     items: List<T>,
     emptyText: String,
     onAdd: () -> Unit,
@@ -511,7 +523,7 @@ private fun <T> ListScreen(
 
 /** Karte: Antippen = bearbeiten, Papierkorb = loeschen (mit Rueckfrage). */
 @Composable
-private fun ItemCard(
+internal fun ItemCard(
     title: String,
     lines: List<String>,
     onClick: () -> Unit,

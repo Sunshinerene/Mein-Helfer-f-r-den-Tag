@@ -1,0 +1,476 @@
+package de.meinhelfer.tag.ui
+
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.addPathNodes
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import de.meinhelfer.tag.data.Doctor
+import de.meinhelfer.tag.data.Document
+import de.meinhelfer.tag.media.DOC_CATEGORIES
+import de.meinhelfer.tag.media.DocKind
+import de.meinhelfer.tag.media.DocumentAnalyzer
+import de.meinhelfer.tag.media.DocumentReader
+import de.meinhelfer.tag.media.DocumentStore
+import de.meinhelfer.tag.media.PendingDoc
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
+
+private val DOC_DATE = DateTimeFormatter.ofPattern("dd.MM.yyyy", Locale.GERMANY)
+private const val NO_CONTACT = "Keine Zuordnung"
+
+/** Symbol "Dokument" fuer die Navigationsleiste. */
+val DocumentIcon: ImageVector = ImageVector.Builder(
+    name = "Dokument",
+    defaultWidth = 24.dp,
+    defaultHeight = 24.dp,
+    viewportWidth = 24f,
+    viewportHeight = 24f,
+).addPath(
+    pathData = addPathNodes(
+        "M14,2H6c-1.1,0 -1.99,0.9 -1.99,2L4,20c0,1.1 0.89,2 1.99,2H18c1.1,0 2,-0.9 2,-2V8l-6,-6zM16,18H8v-2h8v2zM16,14H8v-2h8v2zM13,9V3.5L18.5,9H13z",
+    ),
+    fill = SolidColor(Color.Black),
+).build()
+
+private fun Document.dateText(): String? = docDate?.let { LocalDate.ofEpochDay(it).format(DOC_DATE) }
+
+/** Dokumente: Berichte, Befunde, Bescheide. Fotografieren, aus der Galerie oder als Datei laden. */
+@Composable
+fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, vm: MainViewModel) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var query by remember { mutableStateOf("") }
+    var showSource by remember { mutableStateOf(false) }
+    var draft by remember { mutableStateOf<PendingDoc?>(null) }
+    var working by remember { mutableStateOf(false) }
+    var pendingCamera by remember { mutableStateOf<File?>(null) }
+    var addingPage by remember { mutableStateOf(false) }
+    var detailId by remember { mutableStateOf<Long?>(null) }
+    var editItem by remember { mutableStateOf<Document?>(null) }
+
+    fun startDraft(block: suspend () -> PendingDoc?) {
+        scope.launch {
+            working = true
+            val result = runCatching { block() }.getOrNull()
+            working = false
+            if (result == null) {
+                Toast.makeText(context, "Das Dokument konnte nicht gelesen werden.", Toast.LENGTH_SHORT).show()
+            } else {
+                draft = result
+            }
+        }
+    }
+
+    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
+        val file = pendingCamera
+        pendingCamera = null
+        if (!ok || file == null) {
+            file?.delete()
+        } else if (addingPage && draft != null) {
+            val current = draft!!
+            scope.launch {
+                working = true
+                draft = runCatching { DocumentReader.appendImage(current, file) }.getOrDefault(current)
+                working = false
+            }
+        } else {
+            startDraft { DocumentReader.fromImages(listOf(file)) }
+        }
+        addingPage = false
+    }
+    val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia(10)) { uris ->
+        if (uris.isNotEmpty()) {
+            startDraft {
+                val files = uris.map { uri ->
+                    val file = DocumentStore.newTempFile(context, "jpg")
+                    withContext(Dispatchers.IO) {
+                        context.contentResolver.openInputStream(uri)?.use { input -> file.outputStream().use { input.copyTo(it) } }
+                    }
+                    file
+                }
+                DocumentReader.fromImages(files)
+            }
+        }
+    }
+    val fileLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) startDraft { DocumentReader.fromUri(context, uri) }
+    }
+
+    fun launchCamera(forNewPage: Boolean) {
+        val file = DocumentStore.newTempFile(context, "jpg")
+        pendingCamera = file
+        addingPage = forNewPage
+        try {
+            cameraLauncher.launch(DocumentStore.uriFor(context, file))
+        } catch (_: ActivityNotFoundException) {
+            pendingCamera = null
+            addingPage = false
+            Toast.makeText(context, "Keine Kamera-App gefunden.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    val q = query.trim().lowercase()
+    val shown = if (q.isEmpty()) items else items.filter { d ->
+        listOf(d.title, d.category, d.text, d.notes, doctors.firstOrNull { it.id == d.doctorId }?.name.orEmpty())
+            .any { it.lowercase().contains(q) }
+    }
+
+    Column(Modifier.fillMaxSize()) {
+        if (items.isNotEmpty()) {
+            OutlinedTextField(
+                value = query,
+                onValueChange = { query = it },
+                label = { Text("Suchen (Titel, Text, Kategorie)") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp),
+            )
+        }
+        ListScreen(
+            items = shown,
+            emptyText = if (items.isEmpty()) {
+                "Noch keine Dokumente. Mit + Berichte, Befunde oder Bescheide fotografieren oder als Datei laden."
+            } else {
+                "Nichts gefunden."
+            },
+            onAdd = { showSource = true },
+            modifier = Modifier.weight(1f),
+        ) { d ->
+            ItemCard(
+                title = d.title,
+                lines = listOfNotNull(
+                    listOfNotNull(d.category, d.dateText()).joinToString(" · "),
+                    doctors.firstOrNull { it.id == d.doctorId }?.let { doctorLabel(it) },
+                    d.text.replace(Regex("\\s+"), " ").trim().takeIf { it.isNotEmpty() }?.let { if (it.length > 100) it.take(100).trimEnd() + " …" else it },
+                ),
+                onClick = { detailId = d.id },
+                onDelete = { vm.delete(d) },
+            )
+        }
+    }
+
+    if (showSource) {
+        AlertDialog(
+            onDismissRequest = { showSource = false },
+            title = { Text("Dokument hinzufügen") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(onClick = {
+                        showSource = false
+                        launchCamera(false)
+                    }, modifier = Modifier.fillMaxWidth()) { Text("Dokument fotografieren") }
+                    OutlinedButton(onClick = {
+                        showSource = false
+                        galleryLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                    }, modifier = Modifier.fillMaxWidth()) { Text("Foto(s) aus der Galerie") }
+                    OutlinedButton(onClick = {
+                        showSource = false
+                        fileLauncher.launch(arrayOf("application/pdf", "image/*", "text/plain", "*/*"))
+                    }, modifier = Modifier.fillMaxWidth()) { Text("Datei laden (PDF, Bild, Text …)") }
+                    Text(
+                        "Der Text wird direkt auf dem Handy gelesen. Das Dokument wird verschlüsselt in der App gespeichert und nirgends hin gesendet.",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+            },
+            confirmButton = {},
+            dismissButton = { TextButton(onClick = { showSource = false }) { Text("Abbrechen") } },
+        )
+    }
+
+    if (working) {
+        AlertDialog(
+            onDismissRequest = {},
+            title = { Text("Dokument wird gelesen") },
+            text = {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 2.dp)
+                    Text("Erkenne Text …")
+                }
+            },
+            confirmButton = {},
+        )
+    }
+
+    draft?.let { pending ->
+            DocumentDialog(
+                pending = pending,
+                initial = null,
+                doctors = doctors,
+                onAddPage = { launchCamera(true) },
+                onDismiss = {
+                    DocumentStore.discard(pending)
+                    draft = null
+                },
+                onSave = { doc ->
+                    scope.launch {
+                        try {
+                            val (name, mime) = DocumentStore.commit(context, pending)
+                            vm.add(doc.copy(fileName = name, mimeType = mime))
+                            draft = null
+                        } catch (_: Exception) {
+                            Toast.makeText(context, "Speichern hat nicht geklappt.", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                },
+            )
+        }
+
+    items.firstOrNull { it.id == detailId }?.let { doc ->
+        DocumentDetailDialog(
+            doc = doc,
+            doctors = doctors,
+            onEdit = {
+                editItem = doc
+                detailId = null
+            },
+            onClose = { detailId = null },
+        )
+    }
+    editItem?.let { doc ->
+        DocumentDialog(
+            pending = null,
+            initial = doc,
+            doctors = doctors,
+            onAddPage = {},
+            onDismiss = { editItem = null },
+            onSave = {
+                vm.update(it)
+                editItem = null
+            },
+        )
+    }
+}
+
+/** Formular fuer neues oder bestehendes Dokument. Titel, Kategorie, Datum und Kontakt werden aus dem Text vorgeschlagen. */
+@Composable
+private fun DocumentDialog(
+    pending: PendingDoc?,
+    initial: Document?,
+    doctors: List<Doctor>,
+    onAddPage: () -> Unit,
+    onDismiss: () -> Unit,
+    onSave: (Document) -> Unit,
+) {
+    val suggestion = remember { pending?.let { DocumentAnalyzer.analyze(it.text, doctors) } }
+    var title by remember { mutableStateOf(initial?.title ?: suggestion?.title ?: "Dokument") }
+    var category by remember { mutableStateOf(initial?.category ?: suggestion?.category ?: "Sonstiges") }
+    var date by remember {
+        mutableStateOf(initial?.docDate?.let { LocalDate.ofEpochDay(it) } ?: suggestion?.date)
+    }
+    var doctorId by remember { mutableStateOf(initial?.doctorId ?: suggestion?.doctorId) }
+    var notes by remember { mutableStateOf(initial?.notes ?: "") }
+    var text by remember { mutableStateOf(initial?.text ?: pending?.text ?: "") }
+
+    // Weitere Seite hinzugefuegt: erkannten Text uebernehmen
+    LaunchedEffect(pending?.text) {
+        if (pending != null) text = pending.text
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(if (initial == null) "Dokument speichern" else "Dokument bearbeiten") },
+        text = {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (pending != null) {
+                    val pages = if (pending.kind == DocKind.IMAGES) " · ${pending.files.size} Seite(n)" else ""
+                    Text(
+                        "Datei: ${pending.displayName}$pages",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    if (pending.kind == DocKind.IMAGES) {
+                        OutlinedButton(onClick = onAddPage) { Text("Weitere Seite fotografieren") }
+                    }
+                    if (pending.text.isBlank()) {
+                        Text(
+                            if (pending.kind == DocKind.OTHER) {
+                                "Für diesen Dateityp wird kein Text gelesen. Das Dokument wird trotzdem gespeichert."
+                            } else {
+                                "Es wurde kein Text erkannt. Du kannst Titel und Notizen selbst eintragen."
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    } else {
+                        Text(
+                            "Titel, Kategorie, Datum und Kontakt wurden aus dem Text vorgeschlagen. Bitte prüfen.",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                }
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { title = it },
+                    label = { Text("Titel") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                DropdownField(label = "Kategorie", value = category, options = DOC_CATEGORIES, onValueChange = { category = it })
+                DatePickerField(label = "Datum des Dokuments", date = date, onChange = { date = it })
+                if (date != null) TextButton(onClick = { date = null }) { Text("Datum entfernen") }
+                if (doctors.isNotEmpty()) {
+                    DropdownField(
+                        label = "Arzt / Stelle",
+                        value = doctors.firstOrNull { it.id == doctorId }?.let { doctorLabel(it) } ?: "",
+                        options = listOf(NO_CONTACT) + doctors.map { doctorLabel(it) },
+                        editable = false,
+                        onValueChange = { chosen -> doctorId = doctors.firstOrNull { doctorLabel(it) == chosen }?.id },
+                    )
+                }
+                OutlinedTextField(
+                    value = notes,
+                    onValueChange = { notes = it },
+                    label = { Text("Notizen") },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                OutlinedTextField(
+                    value = text,
+                    onValueChange = { text = it },
+                    label = { Text("Erkannter Text (durchsuchbar, korrigierbar)") },
+                    minLines = 3,
+                    maxLines = 8,
+                    keyboardOptions = KeyboardOptions.Default,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                enabled = title.isNotBlank(),
+                onClick = {
+                    onSave(
+                        (initial ?: Document(title = title, fileName = "")).copy(
+                            title = title.trim(),
+                            category = category.ifBlank { "Sonstiges" },
+                            docDate = date?.toEpochDay(),
+                            doctorId = doctorId?.takeIf { id -> doctors.any { it.id == id } },
+                            notes = notes.trim(),
+                            text = text.trim(),
+                            mimeType = initial?.mimeType ?: pending?.mime ?: "application/pdf",
+                        ),
+                    )
+                },
+            ) { Text("Speichern") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Abbrechen") } },
+    )
+}
+
+@Composable
+private fun DocumentDetailDialog(
+    doc: Document,
+    doctors: List<Doctor>,
+    onEdit: () -> Unit,
+    onClose: () -> Unit,
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var showFullText by remember { mutableStateOf(false) }
+
+    fun withDecrypted(action: (File) -> Unit) {
+        scope.launch {
+            try {
+                val ext = DocumentStore.extensionFor(doc.mimeType)
+                action(DocumentStore.decryptToCache(context, doc.fileName, DocumentStore.safeName(doc.title) + "." + ext))
+            } catch (_: ActivityNotFoundException) {
+                Toast.makeText(context, "Dafür ist keine passende App installiert.", Toast.LENGTH_SHORT).show()
+            } catch (_: Exception) {
+                Toast.makeText(context, "Die Datei konnte nicht geöffnet werden.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onClose,
+        title = { Text(doc.title) },
+        text = {
+            Column(
+                Modifier.heightIn(max = 480.dp).verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                val facts = listOfNotNull(
+                    "Kategorie: ${doc.category}",
+                    doc.dateText()?.let { "Datum: $it" },
+                    doctors.firstOrNull { it.id == doc.doctorId }?.let { "Arzt / Stelle: ${doctorLabel(it)}" },
+                    doc.notes.takeIf { it.isNotBlank() }?.let { "Notizen: $it" },
+                )
+                facts.forEach { Text(it, style = MaterialTheme.typography.bodyMedium) }
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    OutlinedButton(onClick = {
+                        withDecrypted { file ->
+                            val view = Intent(Intent.ACTION_VIEW).apply {
+                                setDataAndType(DocumentStore.uriFor(context, file), doc.mimeType)
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            }
+                            context.startActivity(view)
+                        }
+                    }) { Text("Öffnen") }
+                    OutlinedButton(onClick = {
+                        withDecrypted { file ->
+                            val send = Intent(Intent.ACTION_SEND).apply {
+                                type = doc.mimeType
+                                putExtra(Intent.EXTRA_STREAM, DocumentStore.uriFor(context, file))
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            }
+                            context.startActivity(Intent.createChooser(send, "Dokument teilen"))
+                        }
+                    }) { Text("Teilen") }
+                }
+                Text(
+                    "Öffnen und Teilen geben eine Kopie an die gewählte App. Das passiert nur nach deinem Tipp.",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                if (doc.text.isNotBlank()) {
+                    Text("Erkannter Text", style = MaterialTheme.typography.labelLarge)
+                    val shown = if (showFullText || doc.text.length <= 1200) doc.text else doc.text.take(1200).trimEnd() + " …"
+                    Text(shown, style = MaterialTheme.typography.bodyMedium)
+                    if (doc.text.length > 1200) {
+                        TextButton(onClick = { showFullText = !showFullText }) {
+                            Text(if (showFullText) "Weniger anzeigen" else "Alles anzeigen")
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onEdit) { Text("Bearbeiten") } },
+        dismissButton = { TextButton(onClick = onClose) { Text("Schließen") } },
+    )
+}

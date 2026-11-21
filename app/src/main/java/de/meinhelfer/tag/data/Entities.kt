@@ -131,3 +131,22 @@ data class Todo(
     val done: Boolean = false,
     val createdMillis: Long = 0,
 )
+
+/** Dokument (Arztbericht, Befund, Bescheid ...). Die Datei liegt verschluesselt im App-Ordner, der erkannte Text in der Datenbank. */
+@Entity
+data class Document(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val personId: Long = 1,
+    val title: String,
+    val category: String = "Sonstiges",
+    /** Datum des Dokuments als Epoch-Tag, optional. */
+    val docDate: Long? = null,
+    /** Dateiname der verschluesselten Datei im App-Ordner. */
+    val fileName: String,
+    val mimeType: String = "application/pdf",
+    /** Aus dem Dokument ausgelesener Text (durchsuchbar, korrigierbar). */
+    val text: String = "",
+    val notes: String = "",
+    val doctorId: Long? = null,
+    val createdMillis: Long = System.currentTimeMillis(),
+)

@@ -5,4 +5,6 @@
     <files-path name="photos" path="photos/" />
     <!-- Nachbestell-Listen als PDF (zum Teilen/Senden freigegeben) -->
     <files-path name="exports" path="exports/" />
+    <!-- Entschluesselte Kopien von Dokumenten zum Oeffnen/Teilen (werden beim App-Start geloescht) -->
+    <cache-path name="docs" path="docs/" />
 </paths>

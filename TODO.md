@@ -4,6 +4,12 @@
 
 - [ ] Erkennung von Packungsfoto weiter verbessern (Wirkstoff, Packungsbeilage), Kamera-Scan für Barcodes live
 
+## Version 0.14.0 (fertig)
+
+- [x] Neuer Bereich Dokumente: fotografieren (mehrere Seiten), Foto aus Galerie, Datei laden (PDF, Bild, Text)
+- [x] Text wird auf dem Handy gelesen (Foto und PDF), daraus Vorschläge für Titel, Kategorie, Datum, Kontakt; Suche über den Text
+- [x] Dokumente verschlüsselt gespeichert, Öffnen und Teilen nur auf Tipp
+
 ## Version 0.13.0 (fertig)
 
 - [x] Profil je Person: Geburtsdatum (Alter), Pflegegrad 1 bis 5, "Wichtig zu wissen", nur lokal; Profilkarte auf der Heute-Seite
@@ -88,7 +94,7 @@
 
 - [ ] Anleitung und Rundgang bei neuen Funktionen mitpflegen (Datei GuideContent.kt und TourScreen.kt)
 - [ ] Designs verfeinern (Schriftarten, Übergänge, weitere Varianten, Hochkontrast für bessere Lesbarkeit)
-- [ ] Dokumente scannen und verschlüsselt ablegen
+- [ ] Dokumente: Medikamente und Termine aus dem erkannten Text vorschlagen, KI-Zusammenfassung (mit Bestätigung)
 - [ ] Datenbank verschlüsseln, App-Sperre
 - [ ] KI-Vorschläge aus Dokumenten (immer mit Bestätigung), Datenschutz-Filter vor jeder Übertragung
 - [ ] Umkreissuche für Ärzte und Pflegedienste

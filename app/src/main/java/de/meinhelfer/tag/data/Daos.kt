@@ -150,3 +150,21 @@ interface TodoDao {
     @Query("DELETE FROM Todo WHERE personId = :personId")
     suspend fun deleteForPerson(personId: Long)
 }
+
+@Dao
+interface DocumentDao {
+    @Query("SELECT * FROM Document ORDER BY COALESCE(docDate, createdMillis / 86400000) DESC, id DESC")
+    fun all(): Flow<List<Document>>
+
+    @Query("SELECT * FROM Document WHERE personId = :personId")
+    suspend fun listFor(personId: Long): List<Document>
+
+    @Insert
+    suspend fun insert(item: Document)
+
+    @Update
+    suspend fun update(item: Document)
+
+    @Delete
+    suspend fun delete(item: Document)
+}

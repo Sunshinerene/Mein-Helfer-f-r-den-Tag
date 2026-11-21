@@ -8,9 +8,11 @@ import de.meinhelfer.tag.data.Appointment
 import de.meinhelfer.tag.data.Checkin
 import de.meinhelfer.tag.data.DayNote
 import de.meinhelfer.tag.data.Doctor
+import de.meinhelfer.tag.data.Document
 import de.meinhelfer.tag.data.Medication
 import de.meinhelfer.tag.data.Person
 import de.meinhelfer.tag.data.Todo
+import de.meinhelfer.tag.media.DocumentStore
 import de.meinhelfer.tag.media.PhotoStore
 import de.meinhelfer.tag.reminder.ReminderScheduler
 import de.meinhelfer.tag.update.AppPrefs
@@ -43,6 +45,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     val medications: StateFlow<List<Medication>> =
         combine(db.medicationDao().all(), _personId) { list, id -> list.filter { it.personId == id } }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val documents: StateFlow<List<Document>> =
+        combine(db.documentDao().all(), _personId) { list, id -> list.filter { it.personId == id } }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val appointments: StateFlow<List<Appointment>> =
@@ -125,6 +131,19 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         db.medicationDao().delete(item)
         db.checkinDao().deleteFor(Checkin.MED, item.id)
         PhotoStore.delete(getApplication(), item.photoPath)
+    }
+
+    // ---------------------------------------------------------------- Dokumente
+
+    fun add(item: Document) = viewModelScope.launch {
+        db.documentDao().insert(item.copy(personId = _personId.value))
+    }
+
+    fun update(item: Document) = viewModelScope.launch { db.documentDao().update(item) }
+
+    fun delete(item: Document) = viewModelScope.launch {
+        db.documentDao().delete(item)
+        DocumentStore.delete(getApplication(), item.fileName)
     }
 
     // ---------------------------------------------------------------- Termine
@@ -236,6 +255,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         db.appointmentDao().listFor(person.id).forEach {
             db.appointmentDao().delete(it)
             db.checkinDao().deleteFor(Checkin.APPT, it.id)
+        }
+        db.documentDao().listFor(person.id).forEach {
+            db.documentDao().delete(it)
+            DocumentStore.delete(getApplication(), it.fileName)
         }
         db.dayNoteDao().deleteForPerson(person.id)
         db.todoDao().deleteForPerson(person.id)
