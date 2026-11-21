@@ -318,6 +318,7 @@ private fun IntakeCard() {
     }
 }
 
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 private fun SecurityCard() {
     val context = LocalContext.current
