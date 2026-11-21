@@ -237,7 +237,14 @@ private fun RoadmapCard(roadmap: List<RoadmapLine>?, error: Boolean) {
                 error -> Text("Konnte nicht geladen werden (keine Internetverbindung?).")
                 roadmap == null -> Text("Lade …")
                 roadmap.isEmpty() -> Text("Noch keine Einträge.")
-                else -> roadmap.forEach { line ->
+                else -> {
+                    // Offene Punkte vollstaendig, vom Verlauf nur die letzten 3 Versionen
+                    var versions = 0
+                    val shown = roadmap.takeWhile { line ->
+                        if (line.kind == RoadmapKind.HEADING && line.text.startsWith("Version")) versions++
+                        versions <= 3
+                    }
+                    shown.forEach { line ->
                     when (line.kind) {
                         RoadmapKind.HEADING -> Text(
                             line.text,
@@ -246,6 +253,10 @@ private fun RoadmapCard(roadmap: List<RoadmapLine>?, error: Boolean) {
                         )
                         RoadmapKind.OPEN -> Text("•  ${line.text}", style = MaterialTheme.typography.bodyMedium)
                         RoadmapKind.DONE -> Text("✓  ${line.text}", style = MaterialTheme.typography.bodyMedium)
+                    }
+                    }
+                    if (shown.size < roadmap.size) {
+                        Text("Ältere Versionen stehen in der Datei TODO.md im GitHub-Projekt.", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 8.dp))
                     }
                 }
             }

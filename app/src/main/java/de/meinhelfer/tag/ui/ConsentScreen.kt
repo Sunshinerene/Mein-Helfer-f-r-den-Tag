@@ -99,6 +99,7 @@ internal fun ConsentScreen(
                 ConsentStore.Status.NEW_VERSION -> "Die Nutzungsbedingungen haben sich geändert. Bitte lies sie und stimme erneut zu."
                 ConsentStore.Status.REVOKED -> "Deine Zustimmung wurde widerrufen. Ohne Zustimmung kann die App nicht genutzt werden."
                 ConsentStore.Status.CAREGIVER_CHANGED -> "Die pflegende Person (Name oder Rolle) hat sich geändert. Die Zustimmung gilt immer für eine Person, deshalb bitte erneut bestätigen."
+                ConsentStore.Status.RESET -> "Die App wurde zurückgesetzt. Bitte lies die Hinweise und stimme erneut zu."
                 else -> "Bitte lies die wichtigen Hinweise und bestätige sie. Ohne diese Bestätigung kann die App nicht genutzt werden."
             },
             style = MaterialTheme.typography.bodyMedium,

@@ -48,6 +48,17 @@ private sealed interface BackupStep {
     class Working(val text: String) : BackupStep
     class Done(val title: String, val text: String) : BackupStep
     class ConfirmRestore(val info: BackupInfo) : BackupStep
+    object ResetWarn : BackupStep
+    object ResetConfirm : BackupStep
+}
+
+private fun findActivity(context: android.content.Context): androidx.fragment.app.FragmentActivity? {
+    var c: android.content.Context? = context
+    while (c is android.content.ContextWrapper) {
+        if (c is androidx.fragment.app.FragmentActivity) return c
+        c = c.baseContext
+    }
+    return null
 }
 
 /** Sicherung erstellen und wiederherstellen. Die Datei ist mit einem eigenen Passwort verschluesselt. */
@@ -61,13 +72,17 @@ internal fun BackupCard() {
     var repeat by remember { mutableStateOf("") }
     var pendingUri by remember { mutableStateOf<Uri?>(null) }
     var lastBackup by remember { mutableStateOf(AppPrefs.lastBackup(context)) }
+    // Kommt die Sicherung aus dem Zuruecksetzen, geht es danach dort weiter
+    var resetAfterBackup by remember { mutableStateOf(false) }
+    var resetError by remember { mutableStateOf<String?>(null) }
     val restoreResult = remember { AppPrefs.restoreResult(context) }
 
     val createLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/octet-stream"),
     ) { uri ->
         if (uri == null) {
-            step = BackupStep.Idle
+            step = if (resetAfterBackup) BackupStep.ResetWarn else BackupStep.Idle
+            resetAfterBackup = false
             return@rememberLauncherForActivityResult
         }
         val pw = password.toCharArray()
@@ -85,6 +100,8 @@ internal fun BackupCard() {
                 )
             } catch (e: Exception) {
                 runCatching { context.contentResolver.delete(uri, null, null) }
+                // Ohne gelungene Sicherung nicht direkt weiter zum Zuruecksetzen
+                resetAfterBackup = false
                 step = BackupStep.Done("Sicherung nicht möglich", "Es hat nicht geklappt (${e.message ?: "Fehler"}). Bitte erneut versuchen.")
             }
             password = ""
@@ -104,7 +121,7 @@ internal fun BackupCard() {
 
     HCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Sicherung und Wiederherstellung", style = MaterialTheme.typography.titleMedium)
+            Text("Sicherung, Wiederherstellung und Zurücksetzen", style = MaterialTheme.typography.titleMedium)
             Text(
                 "Sichert alles in einer Datei: Personen, Medikamente, Termine, Kontakte, Aufgaben, Dokumente, Fotos und Einstellungen. " +
                     "Die Datei ist mit einem Passwort verschlüsselt, das nur du kennst. Damit kannst du die Daten auch auf einem neuen Handy wiederherstellen.",
@@ -136,6 +153,15 @@ internal fun BackupCard() {
                 "Nicht enthalten: der Zugangsschlüssel für die KI (bitte neu eintragen). Es wird nichts automatisch gesendet, du wählst selbst, wo die Datei gespeichert wird.",
                 style = MaterialTheme.typography.bodySmall,
             )
+            Text("App zurücksetzen", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 8.dp))
+            Text(
+                "Löscht alle Daten auf diesem Handy und startet die App wie neu. Vorher kannst du eine Sicherung erstellen. Bestätigt wird mit PIN, Muster, Fingerabdruck oder Gesicht.",
+                style = MaterialTheme.typography.bodySmall,
+            )
+            TextButton(onClick = {
+                resetError = null
+                step = BackupStep.ResetWarn
+            }) { Text("App zurücksetzen …", color = MaterialTheme.colorScheme.error) }
         }
     }
 
@@ -177,7 +203,12 @@ internal fun BackupCard() {
                         createLauncher.launch(Backup.suggestedName())
                     }) { Text("Weiter") }
                 },
-                dismissButton = { TextButton(onClick = { step = BackupStep.Idle }) { Text("Abbrechen") } },
+                dismissButton = {
+                    TextButton(onClick = {
+                        step = if (resetAfterBackup) BackupStep.ResetWarn else BackupStep.Idle
+                        resetAfterBackup = false
+                    }) { Text("Abbrechen") }
+                },
             )
         }
         BackupStep.AskRestorePassword -> AlertDialog(
@@ -229,10 +260,109 @@ internal fun BackupCard() {
             confirmButton = {},
         )
         is BackupStep.Done -> AlertDialog(
-            onDismissRequest = { step = BackupStep.Idle },
+            onDismissRequest = {
+                resetAfterBackup = false
+                step = BackupStep.Idle
+            },
             title = { Text(s.title) },
             text = { Text(s.text) },
-            confirmButton = { TextButton(onClick = { step = BackupStep.Idle }) { Text("OK") } },
+            confirmButton = {
+                if (resetAfterBackup) {
+                    TextButton(onClick = {
+                        resetAfterBackup = false
+                        step = BackupStep.ResetConfirm
+                    }) { Text("Weiter zum Zurücksetzen", color = MaterialTheme.colorScheme.error) }
+                } else {
+                    TextButton(onClick = { step = BackupStep.Idle }) { Text("OK") }
+                }
+            },
+            dismissButton = {
+                if (resetAfterBackup) {
+                    TextButton(onClick = {
+                        resetAfterBackup = false
+                        step = BackupStep.Idle
+                    }) { Text("Nicht zurücksetzen") }
+                }
+            },
+        )
+        BackupStep.ResetWarn -> AlertDialog(
+            onDismissRequest = { step = BackupStep.Idle },
+            title = { Text("App zurücksetzen?") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        "Achtung: Dabei werden alle Daten auf diesem Handy gelöscht: Personen, Medikamente, Termine, Aufgaben samt Verlauf, " +
+                            "Dokumente, Fotos, Kontakte, Bemerkungen, PDFs, Einstellungen und KI-Schlüssel. Das lässt sich nicht rückgängig machen.",
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Text(
+                        if (lastBackup > 0) "Letzte Sicherung: ${timeText(lastBackup)}." else "Es gibt noch keine Sicherung.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (lastBackup > 0) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.error,
+                    )
+                    Text(
+                        "Empfehlung: vorher eine Sicherung erstellen. Erhalten bleiben nur die Nachweise deiner Zustimmung zu den Nutzungsbedingungen (mit ihrer Aufbewahrungsfrist).",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    OutlinedButton(onClick = {
+                        password = ""
+                        repeat = ""
+                        resetAfterBackup = true
+                        step = BackupStep.AskNewPassword
+                    }, modifier = Modifier.fillMaxWidth()) { Text("Erst Sicherung erstellen") }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { step = BackupStep.ResetConfirm }) {
+                    Text("Ohne Sicherung weiter", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = { TextButton(onClick = { step = BackupStep.Idle }) { Text("Abbrechen") } },
+        )
+        BackupStep.ResetConfirm -> AlertDialog(
+            onDismissRequest = { step = BackupStep.Idle },
+            title = { Text("Zurücksetzen bestätigen") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        "Zum Schutz musst du dich mit der Bildschirmsperre deines Handys ausweisen: PIN, Muster, Fingerabdruck oder Gesicht. " +
+                            "Danach werden alle Daten gelöscht und die App startet neu.",
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    resetError?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
+                    if (!de.meinhelfer.tag.security.AppLock.available(context)) {
+                        TextButton(onClick = {
+                            runCatching {
+                                context.startActivity(
+                                    android.content.Intent(android.provider.Settings.ACTION_SECURITY_SETTINGS)
+                                        .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK),
+                                )
+                            }
+                        }) { Text("Bildschirmsperre einrichten") }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val activity = findActivity(context)
+                    if (!de.meinhelfer.tag.security.AppLock.available(context) || activity == null) {
+                        resetError = "Auf diesem Handy ist keine Bildschirmsperre eingerichtet. Ohne sie lässt sich die App nicht zurücksetzen. Richte zuerst eine ein."
+                        return@TextButton
+                    }
+                    de.meinhelfer.tag.security.AppLock.authenticate(activity, "App zurücksetzen") { ok ->
+                        if (!ok) {
+                            resetError = "Nicht bestätigt. Es wurde nichts gelöscht."
+                        } else {
+                            step = BackupStep.Working("Daten werden gelöscht, die App startet neu …")
+                            scope.launch {
+                                de.meinhelfer.tag.backup.AppReset.schedule(context)
+                                Backup.restartApp(context)
+                            }
+                        }
+                    }
+                }) { Text("Bestätigen und zurücksetzen", color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = { TextButton(onClick = { step = BackupStep.Idle }) { Text("Abbrechen") } },
         )
         is BackupStep.ConfirmRestore -> AlertDialog(
             onDismissRequest = {

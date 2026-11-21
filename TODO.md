@@ -1,9 +1,55 @@
 # TODO
 
+Stand: v0.40.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+
 ## Als Nächstes
 
-- [ ] Vorlagen erweitern (Kündigung Pflegedienst, Antrag Schwerbehindertenausweis, Widerruf), Unterschrift-Scan automatisch dem Entwurf zuordnen
-- [ ] Erkennung von Packungsfoto weiter verbessern (Wirkstoff, Packungsbeilage), Kamera-Scan für Barcodes live
+- [ ] Medikamentenplan als PDF zum Mitnehmen (alle Medikamente mit Dosierung, Zeiten, Hinweisen; angelehnt an den bundeseinheitlichen Medikationsplan)
+- [ ] Vorrat: Knopf „Neue Packung“ (+ Packungsgröße), Packungsgröße beim Medikament merken
+- [ ] Aufgaben mit Erinnerung zur Frist (Benachrichtigung) und „In Kalender eintragen“
+- [ ] Dokumenten-Betrachter: Zoom mit zwei Fingern, Text-Dokumente drucken
+- [ ] Notfallkarte als PDF (zum Ausdrucken für Kühlschrank oder Geldbörse)
+- [ ] Vorlagen erweitern (Kündigung Pflegedienst, Antrag Schwerbehindertenausweis, Widerruf), eingescannte unterschriebene Fassung automatisch dem Entwurf zuordnen
+- [ ] Erinnerung an regelmäßige Sicherung (z. B. monatlich), Hinweis wenn lange keine Sicherung
+
+## Ideen und Optimierungen
+
+- [ ] Trink- und Vitalprotokoll (Trinkmenge, Blutdruck, Gewicht, Blutzucker) mit Verlauf in Auswertung und Tagesplan
+- [ ] Pflegetagebuch für die Begutachtung (Hilfebedarf je Lebensbereich), als PDF für Pflegegrad-Antrag oder Höherstufung
+- [ ] Budget-Übersicht Entlastungsbetrag, Verhinderungs- und Kurzzeitpflege (verbraucht, übrig, Fristen)
+- [ ] Übergabe-Bericht als PDF für Vertretung, Urlaub oder Pflegedienst (Person, Medikamente, Termine, Kontakte, Besonderheiten)
+- [ ] Dokumente: Medikamente und Kontrolltermine aus dem erkannten Text vorschlagen (z. B. aus Entlassbericht), immer mit Bestätigung
+- [ ] Packungsfoto: Erkennung verbessern (Wirkstoff, Packungsbeilage), Barcode live mit der Kamera
+- [ ] Startbildschirm-Widget: nächste Einnahme und nächster Termin
+- [ ] Barrierefreiheit: Hochkontrast-Design, Vorlesen, größere Bedienflächen
+- [ ] Mehrsprachigkeit für Betreuungskräfte (z. B. Polnisch, Rumänisch)
+- [ ] Designs verfeinern (Schriftarten, Übergänge, weitere Varianten)
+
+## Bitte auf dem Handy prüfen (bisher nicht getestet)
+
+- [ ] Datenbank-Umstellungen bis Version 19 (alte Daten bleiben erhalten?), Wiederherstellen einer Sicherung
+- [ ] Wiederkehrende Termine: Anlegen, „nur diesen“ und „alle folgenden“ ändern und löschen, Erinnerungen
+- [ ] Tagesstart: erscheint einmal am Tag, Rückblick bestätigen, Tagesplan-PDF teilen und drucken
+- [ ] PDF-Layouts: Schreiben und Vollmachten, Tagesplan, Nachbestell-Liste
+- [ ] Freigaben-Knöpfe auf deinem Handy (Hersteller öffnen teils andere Seiten)
+- [ ] KI: Gesamt-Check und Dokument-Zusammenfassung werden sauber ausgewertet
+- [ ] Umkreissuche und Fahrdienst-Suche (OpenStreetMap)
+- [ ] Benachrichtigung antippen öffnet die richtige Person
+- [ ] App zurücksetzen (am besten erst mit Testdaten und vorheriger Sicherung)
+
+## Rechtliches vor einer Veröffentlichung
+
+- [ ] Nutzungsbedingungen und Haftungsregelung von einer Anwältin bzw. einem Anwalt prüfen lassen
+- [ ] Entscheiden: Aufbewahrung der Nachweise 3 Jahre oder länger (30-Jahres-Frist bei Gesundheitsschäden); zusätzlicher Nachweis beim App-Ersteller (Server) ja oder nein
+- [ ] Medizinprodukte-Recht (MDR) prüfen lassen, vor allem den KI-Gesamt-Check der Medikamente; Zweckbestimmung als Organisationshilfe klar festhalten
+- [ ] Impressum und Datenschutzerklärung für eine Veröffentlichung (z. B. Play Store), eigener Signaturschlüssel statt Test-Schlüssel
+
+## Version 0.40.0 (fertig)
+
+- [x] App zurücksetzen: Warnung mit Datum der letzten Sicherung, „Erst Sicherung erstellen“, Bestätigung mit PIN, Muster, Fingerabdruck oder Gesicht; Nachweise der Zustimmung bleiben mit Frist erhalten
+- [x] Anleitung überarbeitet: Erste Schritte, Einstellungen im Überblick, Termine-Liste, Erinnerungen, KI, häufige Fragen
+- [x] Rundgang neu: 17 Schritte mit neuen Beispielansichten (Zustimmung, Freigaben, Medikamenten-Check, Tagesstart, Aufgaben-Verlauf, Dokumente, Notruf)
+- [x] TODO neu geordnet; Vorschau in der App zeigt offene Punkte und die letzten Versionen
 
 ## Version 0.39.0 (fertig)
 
@@ -16,7 +62,6 @@
 - [x] Pflicht-Zustimmung zu Nutzungsbedingungen und Hinweisen vor der Nutzung (drei Punkte einzeln bestätigen, Name und Rolle)
 - [x] Nachweis verschlüsselt in der Datenbank (mit Prüfsummen-Kette), teilbar; Widerruf; automatische Löschung früherer Nachweise nach Ende des dritten Kalenderjahres
 - [x] Jede Fassung der Nutzungsbedingungen mit Prüfsumme im Projekt archiviert (docs/nutzungsbedingungen), Build prüft Übereinstimmung
-- [ ] Offen: Nutzungsbedingungen vor einer echten Veröffentlichung von einer Anwältin bzw. einem Anwalt prüfen lassen; Entscheidung, ob ein Nachweis zusätzlich beim App-Ersteller (Server) liegen soll
 
 ## Version 0.37.0 (fertig)
 
@@ -48,7 +93,6 @@
 ## Version 0.34.0 (fertig)
 
 - [x] Eingebauter Dokumenten-Betrachter (PDF, Fotos, Text) mit Zoom, Drucken, Teilen, „Andere App“; Einstellung intern/extern
-- [ ] Offen: Pinch-Zoom, Drucken von Text-Dokumenten
 
 ## Version 0.33.0 (fertig)
 
@@ -241,13 +285,3 @@
 
 - [x] Erinnerung zur Einnahmezeit
 - [x] Terminerinnerung 1 Stunde vorher
-
-## Weitere Ideen
-
-- [ ] Aufgabe in den Kalender oder als Erinnerung
-
-- [ ] Anleitung und Rundgang bei neuen Funktionen mitpflegen (Datei GuideContent.kt und TourScreen.kt)
-- [ ] Notfallkarte aus Beta übernehmen, ggf. als PDF und fürs Sperrbildschirm-Widget
-- [ ] Designs verfeinern (Schriftarten, Übergänge, weitere Varianten, Hochkontrast für bessere Lesbarkeit)
-- [ ] Dokumente: Medikamente und Termine aus dem erkannten Text vorschlagen
-- [ ] KI-Vorschläge aus Dokumenten (immer mit Bestätigung), Datenschutz-Filter vor jeder Übertragung

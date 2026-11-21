@@ -8,6 +8,11 @@ class HelferApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         try {
+            de.meinhelfer.tag.backup.AppReset.applyPending(this)
+        } catch (_: Throwable) {
+            // weiter mit dem normalen Start
+        }
+        try {
             Backup.applyPending(this)
         } catch (_: Throwable) {
             // Die App muss auf jeden Fall starten

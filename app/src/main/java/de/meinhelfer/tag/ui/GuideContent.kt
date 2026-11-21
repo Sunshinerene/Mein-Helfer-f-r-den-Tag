@@ -31,7 +31,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Empfohlene Reihenfolge",
-                "1. Person anlegen oder umbenennen. 2. Kontakte eintragen (z. B. Hausarzt). 3. Medikamente mit Einnahmezeiten anlegen. 4. Termine eintragen. Danach genügt meist die Heute-Seite.",
+                "1. Nutzungsbedingungen bestätigen (mit deinem Namen und deiner Rolle). 2. Unter Einstellungen → Freigaben Benachrichtigungen und pünktliche Wecker erlauben. 3. Person umbenennen und Profil ausfüllen (Pflegegrad, Adresse, Stockwerk, Wichtiges). 4. Kontakte eintragen (z. B. Hausarzt, Apotheke). 5. Medikamente mit Einnahmezeiten und Vorrat anlegen. 6. Termine eintragen. 7. Eine Sicherung anlegen. Danach genügt meist die Heute-Seite mit dem Tagesstart.",
             ),
         ),
     ),
@@ -42,7 +42,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
         items = listOf(
             GuideItem(
                 "Meine Daten",
-                "Unter Einstellungen → Meine Daten (und beim ersten Start) trägst du ein, wer du bist: pflegende/r Angehörige/r, Pflegekraft vom Pflegedienst, Betreuungs- oder Haushaltskraft, Betreuer/in oder Bevollmächtigte/r, Nachbar/in oder Ehrenamt, du selbst oder etwas anderes. Dazu kommen Name, ggf. Beziehung (z. B. Sohn) oder Pflegedienst, Telefon und E-Mail. Das bleibt nur auf deinem Handy und wird nie automatisch gesendet.",
+                "Unter Einstellungen → Meine Daten (und beim ersten Start) trägst du ein, wer du bist: pflegende/r Angehörige/r, Pflegekraft vom Pflegedienst, Betreuungs- oder Haushaltskraft, Betreuer/in oder Bevollmächtigte/r, Nachbar/in oder Ehrenamt, du selbst oder etwas anderes. Dazu kommen Name, ggf. Beziehung (z. B. Sohn) oder Pflegedienst, Telefon und E-Mail. Das bleibt nur auf deinem Handy und wird nie automatisch gesendet. Name und Rolle stammen aus deiner Zustimmung zu den Nutzungsbedingungen. Änderst du sie hier, musst du die Nutzungsbedingungen neu bestätigen.",
             ),
             GuideItem(
                 "Vorbereitete E-Mails",
@@ -167,7 +167,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Infos auf einen Blick",
-                "Eine Medikamentenkarte antippen (oder „Infos & Beschreibung“) zeigt alles in einer Übersicht: Einnahme, Vorrat, PZN, Arzt, Apotheke, Notizen, Beschreibung und KI-Hinweis. Von dort kommst du mit „Bearbeiten“ zum Ändern. Eine gekürzte Beschreibung steht schon auf der Karte.",
+                "Eine Medikamentenkarte antippen (oder „Infos“) zeigt alles in einer Übersicht: Einnahme, Vorrat, PZN, Arzt, Apotheke, Notizen, Beschreibung und KI-Hinweis. Von dort kommst du mit „Bearbeiten“ zum Ändern. Eine gekürzte Beschreibung steht schon auf der Karte.",
             ),
             GuideItem(
                 "Per Foto der Packung",
@@ -206,7 +206,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
         items = listOf(
             GuideItem(
                 "Öffnen",
-                "Im Bereich „Medikamente“ oben auf „Nachbestellung“ tippen, oder auf der Heute-Seite in der roten Karte „Bald nachbestellen“.",
+                "Im Bereich „Medikamente“ oben auf „Nachbestellen“ tippen (die Zahl zeigt, wie viele fällig sind), oder auf der Heute-Seite in der roten Karte „Bald nachbestellen“ auf „Nachbestellung öffnen“. Auf der Medikamentenkarte steht bei knappem Vorrat „Bald nachbestellen“.",
             ),
             GuideItem(
                 "Was wird bestellt?",
@@ -260,7 +260,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
         items = listOf(
             GuideItem(
                 "Öffnen",
-                "Auf der Heute-Seite in der Profilkarte „Wegweiser Leistungen“ antippen.",
+                "Auf der Heute-Seite in der Profilkarte „Wegweiser Leistungen“ antippen (ist die Karte eingeklappt, erst antippen zum Aufklappen). Auch im Reiter „Infos“ gibt es einen Weg dorthin.",
             ),
             GuideItem(
                 "Was steht drin?",
@@ -283,7 +283,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
     GuideSection(
         id = "termine",
         title = "Termine",
-        summary = "Karten, Unterlagen, Fahrdienst, Erinnerung, Kalender",
+        summary = "Liste, Serien, Unterlagen, Fahrdienst, Erinnerung, Kalender",
         items = listOf(
             GuideItem(
                 "Termin anlegen",
@@ -304,6 +304,10 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             GuideItem(
                 "Unterlagen anhängen",
                 "Auf der Terminkarte „Unterlagen“ antippen. Die App schlägt passende Dokumente vor (gleicher Arzt, passende Kategorie, z. B. Medikamentenplan oder Befund). Du hakst an, was zum Termin gehört, und kannst jedes Dokument mit „Ansehen“ öffnen. Angehängte Unterlagen stehen auf der Karte. Darunter findest du Anregungen, was man mitnehmen könnte (z. B. Versichertenkarte, Medikamentenplan). Jeden Punkt kannst du mit „+ Aufgabe“ als Aufgabe merken. Das sind allgemeine Anregungen, was gebraucht wird, sagt die Praxis.",
+            ),
+            GuideItem(
+                "Die Liste der Termine",
+                "Oben stehen die kommenden Termine ab heute, der nächste zuerst. Von einer Serie steht nur der nächste Termin da, mit dem Hinweis, wie viele noch folgen (alle siehst du in Woche und Monat). Vergangene Termine sind eingeklappt: „Vergangene Termine anzeigen“ blendet sie ein, die neuesten zuerst. Bei vergangenen Terminen bleiben nur Anrufen, Nachricht und Unterlagen.",
             ),
             GuideItem(
                 "Die Terminkarte",
@@ -370,7 +374,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Text nicht erkannt?",
-                "Word-Dateien (docx) und LibreOffice-Dateien (odt) werden jetzt gelesen. Wurde bei einem Dokument kein Text erkannt, öffne es mit „Bearbeiten“ und tippe auf „Text neu auslesen“. Den Text kannst du dort auch selbst eintragen oder korrigieren, dann findet ihn die Suche.",
+                "Word-Dateien (docx) und LibreOffice-Dateien (odt) werden gelesen. Wurde bei einem Dokument kein Text erkannt, öffne es mit „Bearbeiten“ und tippe auf „Text neu auslesen“. Den Text kannst du dort auch selbst eintragen oder korrigieren, dann findet ihn die Suche.",
             ),
             GuideItem(
                 "Öffnen und teilen",
@@ -432,7 +436,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Einschätzung zu einem Medikament",
-                "Im Medikament („Infos & Beschreibung“) kannst du per KI eine grobe Einschätzung holen: Skalen von 1 bis 5 für Wirkstärke, Nebenwirkungen und mögliche Wechselwirkungen mit den übrigen Medikamenten der Person, dazu ein paar Stichpunkte zum Nachfragen. Das ist nur eine Orientierung, kein Urteil. Dosis, Alter und Vorerkrankungen sind nicht berücksichtigt. Gesendet werden die Medikamentennamen (ohne Namen der Person) erst nach deiner Bestätigung. Das Ergebnis bleibt auf dem Handy gespeichert. Ändert sich der Plan, lass es neu einschätzen.",
+                "Im Medikament („Infos“) kannst du per KI eine grobe Einschätzung holen: Skalen von 1 bis 5 für Wirkstärke, Nebenwirkungen und mögliche Wechselwirkungen mit den übrigen Medikamenten der Person, dazu ein paar Stichpunkte zum Nachfragen. Das ist nur eine Orientierung, kein Urteil. Dosis, Alter und Vorerkrankungen sind nicht berücksichtigt. Gesendet werden die Medikamentennamen (ohne Namen der Person) erst nach deiner Bestätigung. Das Ergebnis bleibt auf dem Handy gespeichert. Ändert sich der Plan, lass es neu einschätzen.",
             ),
             GuideItem(
                 "Modell auswählen",
@@ -448,11 +452,11 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Wo erscheint sie?",
-                "In der Auswertung („KI-Hinweise holen“) und im Medikament („KI-Hinweis zu diesem Medikament“). Bei jeder Antwort kannst du einen Punkt mit „Auf meine To-do-Liste“ übernehmen und später beim Arzt ansprechen oder eben nicht.",
+                "In der Auswertung („KI-Hinweise holen“) und im Medikament („KI-Hinweis zu diesem Medikament“). Bei jeder Antwort kannst du einen Punkt mit „Auf meine To-do-Liste“ übernehmen und später beim Arzt ansprechen oder eben nicht. Außerdem bei Dokumenten (Zusammenfassung, Aufgaben vorschlagen), bei „Medikamente im Überblick“ (Gesamt-Check aller Medikamente) und in der Auswertung.",
             ),
             GuideItem(
                 "Was wird gesendet?",
-                "Nichts passiert von allein. Vor dem Senden zeigt die App den genauen Text und du bestätigst. Der Name der Person ist nie dabei. Deine Bemerkungen werden nur mitgesendet, wenn du es einschaltest. Beim Medikament geht nur der Medikamentenname raus.",
+                "Nichts passiert von allein. Vor dem Senden zeigt die App den genauen Text und du bestätigst. Der Name der Person ist nie dabei. Deine Bemerkungen werden nur mitgesendet, wenn du es einschaltest. Beim Medikament geht nur der Medikamentenname raus. Beim Gesamt-Check gehen alle Medikamente mit Dosierung und Einnahmezeiten, das Alter nur, wenn du es anhakst.",
             ),
             GuideItem(
                 "Schlüssel und Kosten",
@@ -471,7 +475,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Medikamente",
-                "Zu jeder Einnahmezeit erscheint eine Benachrichtigung. Mit „Eingenommen“ direkt in der Benachrichtigung wird die Einnahme abgehakt, ohne die App zu öffnen. Bei mehreren Personen steht der Name dabei.",
+                "Zu jeder Einnahmezeit erscheint eine Benachrichtigung. Mit „Eingenommen“ direkt in der Benachrichtigung wird die Einnahme abgehakt, ohne die App zu öffnen. Ist die Einnahme schon abgehakt (z. B. etwas früher), bleibt die Erinnerung aus. Bleibt sie nach dem Zeitfenster offen, fragt die App einmal nach („Kurz nachgefragt“). Bei mehreren Personen steht der Name dabei, und ein Tipp öffnet die App bei der richtigen Person.",
             ),
             GuideItem(
                 "Termine",
@@ -479,7 +483,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Wenn nichts erscheint",
-                "Prüfe in den Handy-Einstellungen, ob Benachrichtigungen für die App erlaubt sind und ob die Akku-Optimierung die App ausbremst. Falls ja, die Akku-Optimierung für diese App ausschalten.",
+                "Öffne Einstellungen → „Freigaben (Android)“. Dort siehst du, was fehlt, und kommst mit einem Tipp in die richtige Android-Einstellung. Auf manchen Handys hilft zusätzlich, die Akku-Optimierung für die App auszuschalten. Termin-Erinnerungen werden für die nächsten 60 Tage geplant und bei jedem Öffnen der App aufgefrischt.",
             ),
         ),
     ),
@@ -490,7 +494,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
         items = listOf(
             GuideItem(
                 "Öffnen",
-                "Auf der Heute-Seite die Karte „Auswertung“ antippen.",
+                "Auf der Heute-Seite ganz unten die Karte „Auswertung“ antippen. Die Zusammenfassung von gestern siehst du außerdem im Tagesstart („Rückblick gestern“).",
             ),
             GuideItem(
                 "Zeitraum",
@@ -498,7 +502,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Was steht drin?",
-                "Überblick (wie viele Einnahmen abgehakt wurden), Gut gelaufen, Auffällig, Empfehlungen und deine Bemerkungen. Alles wird aus deinen Eingaben auf dem Handy berechnet.",
+                "Überblick (wie viele Einnahmen abgehakt wurden, Termine), Gut gelaufen, Auffällig, Empfehlungen, erledigte Aufgaben mit Ergebnis und deine Bemerkungen. Alles wird aus deinen Eingaben auf dem Handy berechnet.",
             ),
             GuideItem(
                 "Nur Anhaltspunkte",
@@ -529,7 +533,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Mail, Druck und PDF",
-                "E-Mails, Nachbestell-Listen, Schreiben und Dokumente werden nur geteilt, gesendet oder gedruckt, wenn du es selbst auslöst. Die App schickt nie etwas von allein. PDFs bleiben im privaten App-Ordner, bis du sie speicherst oder teilst.",
+                "E-Mails, Nachbestell-Listen, Tagespläne, Schreiben, Dokumente und der Medikamenten-Überblick werden nur geteilt, gesendet oder gedruckt, wenn du es selbst auslöst. Die App schickt nie etwas von allein. PDFs bleiben im privaten App-Ordner, bis du sie speicherst oder teilst.",
             ),
             GuideItem(
                 "Texterkennung",
@@ -570,7 +574,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
     ),
     GuideSection(
         id = "sicherung",
-        title = "Sicherung und Wiederherstellung",
+        title = "Sicherung, Wiederherstellung und Zurücksetzen",
         summary = "Alle Daten in einer verschlüsselten Datei sichern, auch für ein neues Handy",
         items = listOf(
             GuideItem(
@@ -585,12 +589,43 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
                 "Passwort und Aufbewahrung",
                 "Das Passwort kennt nur du. Wenn du es vergisst, kann niemand die Sicherung öffnen, auch die App nicht. Bewahre Datei und Passwort getrennt auf, am besten außerhalb des Handys. Sichere regelmäßig, z. B. nach größeren Änderungen oder einmal im Monat. Unter der Überschrift steht, wann die letzte Sicherung war.",
             ),
+            GuideItem(
+                "App zurücksetzen",
+                "Einstellungen → „Sicherung, Wiederherstellung und Zurücksetzen“ → „App zurücksetzen …“. Zuerst warnt die App und zeigt, wann zuletzt gesichert wurde. Mit „Erst Sicherung erstellen“ legst du vorher eine Sicherung an und gehst danach weiter. Zum Schluss bestätigst du mit der Bildschirmsperre deines Handys (PIN, Muster, Fingerabdruck oder Gesicht). Ohne eingerichtete Bildschirmsperre ist kein Zurücksetzen möglich. Gelöscht werden alle Personen, Medikamente, Termine, Aufgaben samt Verlauf, Dokumente, Fotos, Kontakte, Bemerkungen, PDFs, Einstellungen und KI-Schlüssel. Danach startet die App wie neu. Erhalten bleiben nur die Nachweise deiner Zustimmung mit ihrer Aufbewahrungsfrist, das Zurücksetzen selbst wird dort vermerkt.",
+            ),
+        ),
+    ),
+    GuideSection(
+        id = "einstellungen",
+        title = "Einstellungen im Überblick",
+        summary = "Was wo eingestellt wird (Zahnrad oben rechts)",
+        items = listOf(
+            GuideItem(
+                "Ganz oben",
+                "App-Updates: installierte Version, „Nach Updates suchen“ und die automatische Suche im Hintergrund.",
+            ),
+            GuideItem(
+                "Allgemein",
+                "Meine Daten (wer du bist, für E-Mails und Zustimmung), Freigaben (Android) für zuverlässige Erinnerungen, Darstellung (hell/dunkel, Design, eigene Farben, Schriftgröße), Heute-Seite (Notfallkarte einblenden, Tagesstart automatisch), Einnahmen abhaken (Zeitfenster und Nachfrage) und Dokumente ansehen (Betrachter in der App oder andere App).",
+            ),
+            GuideItem(
+                "Daten und Sicherheit",
+                "Sicherheit (App-Sperre, Bildschirmfotos sperren), Sicherung, Wiederherstellung und Zurücksetzen sowie Nutzungsbedingungen und Zustimmung (lesen, Nachweis teilen, widerrufen).",
+            ),
+            GuideItem(
+                "Hilfen aus dem Internet (freiwillig)",
+                "Medikamenten-Beschreibung aus Wikipedia (auf Knopfdruck oder automatisch) und der KI-Assistent mit Dienst, Schlüssel und Modell.",
+            ),
+            GuideItem(
+                "Hilfe und Rückmeldung",
+                "Anleitung und Rundgang, Feedback, die Vorschau auf geplante Funktionen und Infos zur App.",
+            ),
         ),
     ),
     GuideSection(
         id = "updates",
-        title = "Updates und Feedback",
-        summary = "App aktualisieren, Wünsche und Fehler melden",
+        title = "Updates, Darstellung und Feedback",
+        summary = "App aktualisieren, Schrift und Design, Notfallkarte, Feedback",
         items = listOf(
             GuideItem(
                 "App aktualisieren",
@@ -630,6 +665,26 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             GuideItem(
                 "Eine Einnahmezeit fehlt oder ist falsch.",
                 "Medikament öffnen und die Zeiten ändern. Die Erinnerungen passen sich automatisch an.",
+            ),
+            GuideItem(
+                "Erinnerungen kommen nicht oder zu spät.",
+                "Einstellungen → „Freigaben (Android)“ öffnen und alles mit ✗ einschalten. Auf manchen Handys zusätzlich die Akku-Optimierung für die App ausschalten. Ist etwas Wichtiges aus, zeigt die Heute-Seite oben eine rote Karte.",
+            ),
+            GuideItem(
+                "Warum soll ich wieder zustimmen?",
+                "Weil sich die Nutzungsbedingungen geändert haben, die Zustimmung widerrufen wurde oder unter „Meine Daten“ Name oder Rolle geändert wurden. Die Zustimmung gilt immer für eine bestimmte Person und eine bestimmte Fassung.",
+            ),
+            GuideItem(
+                "Wie drucke ich den Plan für heute?",
+                "Auf der Heute-Seite oben „Tagesplan (PDF)“ antippen, dann „Drucken“ oder „Als PDF teilen“. Im Druckfenster kannst du auch „Als PDF speichern“ wählen.",
+            ),
+            GuideItem(
+                "Eine erledigte Aufgabe ist weg.",
+                "Erledigte Aufgaben sind eingeklappt („Erledigte anzeigen“) oder im Verlauf. „Verlauf und Suche“ in der Aufgaben-Karte zeigt alle, auch ausgeblendete. Dort kannst du sie auch wieder aufnehmen.",
+            ),
+            GuideItem(
+                "Die Kategorie eines Dokuments stimmt nicht.",
+                "Dokument antippen, „Bearbeiten“ und eine andere Kategorie wählen. Oft steht dort schon ein besserer „Vorschlag“ zum Antippen.",
             ),
             GuideItem(
                 "Kann ich meine Daten sichern?",

@@ -34,7 +34,7 @@ object ConsentStore {
     private fun device(): String = "${Build.MANUFACTURER} ${Build.MODEL} (Android ${Build.VERSION.RELEASE})".trim()
 
     /** Warum (noch) zugestimmt werden muss. */
-    enum class Status { OK, FIRST, NEW_VERSION, REVOKED, CAREGIVER_CHANGED }
+    enum class Status { OK, FIRST, NEW_VERSION, REVOKED, CAREGIVER_CHANGED, RESET }
 
     private fun norm(s: String) = s.trim().lowercase(Locale.GERMANY).replace(Regex("\\s+"), " ")
 
@@ -50,13 +50,45 @@ object ConsentStore {
         last?.takeIf { it.action == ConsentRecord.ACCEPTED && it.termsVersion == Terms.VERSION }
     }
 
+    const val RESET = "ZURÜCKGESETZT"
+
+    /** Nach dem Zuruecksetzen: aufbewahrte Nachweise zurueckholen und das Zuruecksetzen selbst festhalten. */
+    private suspend fun importKept(context: Context) {
+        val file = java.io.File(context.applicationContext.filesDir, de.meinhelfer.tag.backup.AppReset.KEEP)
+        if (!file.exists()) return
+        val dao = AppDatabase.get(context).consentDao()
+        val now = System.currentTimeMillis()
+        runCatching {
+            val arr = org.json.JSONArray(file.readText())
+            val kept = (0 until arr.length()).map { de.meinhelfer.tag.backup.AppReset.fromJson(arr.getJSONObject(it)) }
+            kept.forEach { dao.insert(it.copy(id = 0, deleteAfterMillis = it.deleteAfterMillis ?: retentionEnd(now))) }
+            val last = kept.lastOrNull()
+            val draft = ConsentRecord(
+                termsVersion = Terms.VERSION,
+                action = RESET,
+                atMillis = now,
+                name = last?.name.orEmpty(),
+                role = last?.role.orEmpty(),
+                appVersion = runCatching { UpdateChecker.installedVersion(context) }.getOrDefault("?"),
+                device = device(),
+                textHash = Terms.textHash(),
+                deleteAfterMillis = retentionEnd(now),
+                prevHash = last?.recordHash.orEmpty(),
+            )
+            dao.insert(draft.copy(recordHash = hashOf(draft)))
+        }
+        file.delete()
+    }
+
     /** Prueft Fassung, Widerruf und ob die pflegende Person noch dieselbe ist. */
     suspend fun status(context: Context): Status = withContext(Dispatchers.IO) {
+        importKept(context)
         val dao = AppDatabase.get(context).consentDao()
         dao.deleteExpired(System.currentTimeMillis())
         val last = dao.list().lastOrNull() ?: return@withContext Status.FIRST
         val cg = de.meinhelfer.tag.update.AppPrefs.caregiver(context)
         when {
+            last.action == RESET -> Status.RESET
             last.action == ConsentRecord.REVOKED -> Status.REVOKED
             last.termsVersion != Terms.VERSION -> Status.NEW_VERSION
             !matchesCaregiver(last, cg.name, cg.role) -> Status.CAREGIVER_CHANGED

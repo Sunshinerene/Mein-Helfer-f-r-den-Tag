@@ -49,83 +49,111 @@ private class TourPage(
     val mock: @Composable () -> Unit,
 )
 
-private val TOUR_PAGES: List<TourPage> = listOf(
+private val TOUR_PAGES = listOf(
     TourPage(
         title = "Willkommen",
-        text = "Ein ruhiger Überblick für den Pflegealltag: Medikamente, Termine, Kontakte und deine Notizen. Der Rundgang zeigt dir in wenigen Schritten, wie alles zusammenspielt.",
-        tips = listOf("Du kannst jederzeit zurückblättern oder abbrechen.", "Später findest du alles auch in der Anleitung (Info-Symbol oben)."),
+        text = "Dein Helfer für den Pflegealltag: Medikamente, Termine, Aufgaben, Dokumente, Kontakte und Notruf an einem Ort. Alles bleibt verschlüsselt auf deinem Handy. Der Rundgang zeigt in wenigen Schritten, wie alles zusammenspielt.",
+        tips = listOf("Du kannst jederzeit zurückblättern oder abbrechen.", "Alles Weitere steht in der Anleitung (Info-Symbol oben)."),
         mock = { MockWelcome() },
     ),
     TourPage(
+        title = "Wer du bist",
+        text = "Unter Einstellungen → Meine Daten stehen dein Name und deine Rolle (z. B. Angehörige/r, Pflegedienst, Betreuer/in). Damit unterschreibt die App vorbereitete E-Mails und zeigt passende Tipps. Deine Zustimmung zu den Nutzungsbedingungen gilt für genau diese Person.",
+        tips = listOf("Änderst du Name oder Rolle, bestätigst du die Nutzungsbedingungen neu.", "Die App ersetzt keinen Arzt und keine Apotheke. Im Notfall immer 112."),
+        mock = { MockConsent() },
+    ),
+    TourPage(
+        title = "Freigaben für Erinnerungen",
+        text = "Damit Erinnerungen pünktlich kommen, braucht die App Benachrichtigungen und pünktliche Wecker. Unter Einstellungen → Freigaben siehst du, was erlaubt ist, und kommst mit einem Tipp in die richtige Android-Einstellung.",
+        tips = listOf("Fehlt etwas Wichtiges, zeigt die Heute-Seite oben eine rote Karte.", "Akku-Optimierung ausschalten hilft auf manchen Handys."),
+        mock = { MockPermissions() },
+    ),
+    TourPage(
         title = "Für wen gilt es?",
-        text = "Oben steht, für welche Person gerade alles gilt. Du kannst mehrere Personen anlegen, z. B. beide Eltern, und mit einem Tipp wechseln.",
-        tips = listOf("Beim ersten Mal die Person umbenennen.", "Kontakte gelten für alle Personen gemeinsam."),
+        text = "Oben steht, für welche Person gerade alles gilt. Du kannst mehrere Personen anlegen, z. B. beide Eltern, und mit einem Tipp wechseln. Im Profil stehen Pflegegrad, Adresse, Stockwerk und Wichtiges.",
+        tips = listOf("Beim ersten Mal die Person umbenennen und das Profil ausfüllen.", "Kontakte gelten für alle Personen gemeinsam."),
         mock = { MockPersonBar() },
     ),
     TourPage(
-        title = "Kontakte anlegen",
-        text = "Trag Ärzte, Pflegedienst, Apotheke, Pflegekasse und weitere Ansprechpartner einmal ein. Von dort aus rufst du mit einem Tipp an oder schreibst eine E-Mail.",
-        tips = listOf("Die Art des Kontakts lässt sich auswählen oder selbst eintippen.", "Mit den Filtern oben findest du schnell z. B. nur den Pflegedienst."),
+        title = "Kontakte",
+        text = "Trag Ärzte, Pflegedienst, Apotheke, Pflegekasse und weitere Ansprechpartner einmal ein. Von dort rufst du an oder schreibst eine vorbereitete E-Mail. „In der Nähe suchen“ findet Apotheken, Pflegedienste und mehr.",
+        tips = listOf("Stockwerk und Aufzug beim Kontakt helfen bei Fahrdienst-Anfragen.", "Gesendet wird nie etwas automatisch, du prüfst und schickst selbst."),
         mock = { MockContacts() },
     ),
     TourPage(
-        title = "E-Mails vorbereiten",
-        text = "Trag unter Einstellungen → Meine Daten ein, wer du bist. Dann bereitet die App E-Mails an Ärzte, Pflegekasse, Pflegedienst oder Apotheke passend zum Thema vor, mit deinen Kontaktdaten und den wichtigen Angaben.",
-        tips = listOf("Du prüfst den Text und schickst selbst ab. Gesendet wird nichts automatisch.", "Je nach Rolle zeigt „Infos“ außerdem Tipps und Hilfen für dich."),
-        mock = { MockMail() },
-    ),
-    TourPage(
-        title = "Medikamente anlegen",
-        text = "Foto der Packung machen, die App liest Name und Packungsgröße direkt auf dem Handy aus. Dann Einnahmezeiten wählen und den Vorrat eintragen.",
-        tips = listOf("Alles vom Foto ist nur ein Vorschlag, bitte kurz prüfen.", "Der Vorrat sinkt jeden Tag automatisch, du wirst rechtzeitig zum Nachbestellen erinnert."),
+        title = "Medikamente",
+        text = "Foto der Packung machen: Die App liest Name und Packungsgröße direkt auf dem Handy aus. Dann Einnahmezeiten und Vorrat eintragen. Der Vorrat sinkt täglich, rechtzeitig vor dem Ende erinnert die App ans Nachbestellen.",
+        tips = listOf("Alles vom Foto ist nur ein Vorschlag, bitte kurz prüfen.", "„Nachbestellen“ bereitet Anruf, E-Mail oder PDF für Arzt und Apotheke vor."),
         mock = { MockMedication() },
     ),
     TourPage(
-        title = "Termine eintragen",
-        text = "Titel auswählen oder selbst eintippen, Datum im Kalender wählen, Beginn und Ende angeben und einen Kontakt verknüpfen. Die Erinnerung stellst du pro Termin ein.",
-        tips = listOf("Mit „In Kalender eintragen“ landet der Termin im Handy-Kalender.", "Bei Terminen außer Haus gibt es „Fahrdienst“: feste Fahrdienste aus deinen Kontakten stehen zuerst.", "Das Ende ist freiwillig."),
+        title = "Medikamente im Überblick",
+        text = "„Überblick & Check“ zeigt alle Medikamente mit Einschätzung. Der freiwillige KI-Gesamt-Check zeigt, welche Medikamente sich beeinflussen können (Gering, Beachten, Wichtig), gibt Hinweise zu Einnahmezeiten und sammelt Fragen für Arzt oder Apotheke.",
+        tips = listOf("Nur Anhaltspunkte: nie eigenmächtig absetzen oder ändern.", "Ab 5 Medikamenten gibt es in der Apotheke eine kostenlose Medikationsberatung."),
+        mock = { MockMedCheck() },
+    ),
+    TourPage(
+        title = "Termine",
+        text = "Titel wählen, Datum, Beginn und Ende, Kontakt verknüpfen, Erinnerung einstellen. Wiederkehrende Termine (z. B. jede Woche Physiotherapie) legst du mit „Wiederholen“ an.",
+        tips = listOf("Bei Terminen außer Haus gibt es „Fahrdienst“.", "„Unterlagen“ schlägt passende Dokumente vor.", "Kommende Termine stehen oben, vergangene sind eingeklappt."),
         mock = { MockAppointment() },
     ),
     TourPage(
+        title = "Tagesstart",
+        text = "Beim ersten Öffnen am Tag kommt zuerst der Rückblick auf gestern: Was fehlt noch, wie lief es? Du ergänzt und bestätigst. Danach folgt der Tagesplan für heute, den du als PDF teilen oder drucken kannst.",
+        tips = listOf("Oben auf der Heute-Seite jederzeit über „Rückblick gestern“ und „Tagesplan“.", "Abschaltbar unter Einstellungen → Heute-Seite."),
+        mock = { MockDailyStart() },
+    ),
+    TourPage(
         title = "Tag, Woche, Monat",
-        text = "Oben auf dem ersten Reiter wählst du Tag, Woche oder Monat. Der Tag zeigt zuerst, was wichtig ist, und die nächsten 3 Tage. Woche und Monat sind Übersichten, in denen du Termine und Aufgaben antippen, ändern und neu anlegen kannst.",
-        tips = listOf("Aufgaben mit hoher Priorität stehen immer ganz oben.", "Ein Tipp auf den Titel springt zurück zu heute."),
-        mock = { MockToday() },
+        text = "Oben auf dem ersten Reiter wählst du Tag, Woche oder Monat. Der Tag zeigt zuerst „Wichtig und demnächst“: Dringendes, die Termine von heute und die nächsten Tage. In Woche und Monat kannst du Termine, Aufgaben und Einnahmen antippen, ändern und abhaken.",
+        tips = listOf("Aufgaben mit hoher Priorität stehen immer ganz oben.", "Jede Karte lässt sich einklappen, dann bleibt nur eine Kurzinfo."),
+        mock = { MockPeriods() },
     ),
     TourPage(
         title = "Heute: abhaken",
-        text = "Auf der Heute-Seite siehst du, was jetzt ansteht. Einnahmen lassen sich rund um die Einnahmezeit abhaken. Danach fragt die App nach, ob genommen, später, vergessen oder bewusst nicht gegeben. Bei Terminen wählst du: stattgefunden, abgesagt oder verschoben.",
+        text = "Einnahmen lassen sich rund um die Einnahmezeit abhaken. Danach fragt die App nach: genommen, später, vergessen oder bewusst nicht gegeben. Bei Terminen wählst du: stattgefunden, abgesagt oder verschoben.",
         tips = listOf("Mit „Notiz“ hältst du fest, was aufgefallen ist.", "Bei abgesagten Terminen legt die App auf Wunsch die Aufgabe „Neuen Termin ausmachen“ an."),
         mock = { MockToday() },
     ),
     TourPage(
-        title = "Notizen und Aufgaben",
-        text = "Schreib kurz auf, was auffällt: „später genommen“, „Termin verschoben“, „wenig gegessen“. Die Schnellauswahl spart Tipparbeit.",
-        tips = listOf("Notizen fließen in die Auswertung ein.", "Was du später klären willst, wird als Aufgabe gemerkt, mit Arzt, Frist und Wichtigkeit."),
-        mock = { MockNotes() },
+        title = "Aufgaben mit Gedächtnis",
+        text = "Aufgaben haben Wichtigkeit, Frist und Kontakt. Beim Abhaken hältst du fest, was herausgekommen ist, mit Sternen. Erledigtes bleibt im Verlauf und ist durchsuchbar. Legst du später eine ähnliche Aufgabe an, zeigt die App, was es dazu schon gab.",
+        tips = listOf("„Verlauf und Suche“ findet auch nach Jahren, z. B. „Rollstuhl“.", "Erledigte Aufgaben stehen auch in der Auswertung."),
+        mock = { MockTasks() },
+    ),
+    TourPage(
+        title = "Dokumente und Schreiben",
+        text = "Befunde, Berichte und Bescheide fotografieren oder laden. Die App liest den Text, schlägt Kategorie, Datum und Arzt vor und legt alles verschlüsselt ab. Öffnen, drucken und teilen geht direkt in der App. Für Anträge und Vollmachten gibt es Vorlagen als PDF.",
+        tips = listOf("Die Suche findet auch Wörter im Text, z. B. ein Medikament.", "Eine Zusammenfassung schreibst du selbst oder lässt sie per KI erstellen."),
+        mock = { MockDocuments() },
+    ),
+    TourPage(
+        title = "Notruf und Notfallkarte",
+        text = "Das rote Telefon oben ist von überall erreichbar: 112, 116 117, 110, „Was sage ich?“ mit Adresse und Stockwerk, deine Kontakte und die Notfallkarte mit Medikamenten und Wichtigem für den Rettungsdienst.",
+        tips = listOf("„Wählen“ öffnet nur die Telefon-App, angerufen wird erst dort.", "Bei Lebensgefahr immer zuerst 112."),
+        mock = { MockNotruf() },
     ),
     TourPage(
         title = "Erinnerungen",
-        text = "Zur Einnahmezeit meldet sich die App. Mit „Eingenommen“ direkt in der Benachrichtigung hakst du ab, ohne die App zu öffnen.",
-        tips = listOf("Wenn nichts erscheint: Benachrichtigungen und Akku-Optimierung in den Handy-Einstellungen prüfen."),
+        text = "Zur Einnahmezeit meldet sich die App. Mit „Eingenommen“ direkt in der Benachrichtigung hakst du ab, ohne die App zu öffnen. Wurde schon abgehakt, bleibt die Erinnerung aus.",
+        tips = listOf("Bei mehreren Personen steht der Name dabei, ein Tipp öffnet die richtige Person.", "Kommt nichts an: Einstellungen → Freigaben prüfen."),
         mock = { MockNotification() },
     ),
     TourPage(
         title = "Auswertung",
-        text = "Für Tag, Woche oder Monat zeigt die Auswertung, was gut lief, was auffällt und welche nächsten Schritte sinnvoll sein könnten.",
+        text = "Für Tag, Woche oder Monat zeigt die Auswertung, was gut lief, was auffällt, welche Aufgaben erledigt wurden und welche nächsten Schritte sinnvoll sein könnten.",
         tips = listOf("Das sind Anhaltspunkte, kein ärztlicher Rat.", "Empfehlungen lassen sich mit einem Tipp als Aufgabe merken."),
         mock = { MockSummary() },
     ),
     TourPage(
-        title = "Datenschutz und Hilfe",
-        text = "Deine Daten bleiben auf deinem Handy. Fotos werden nur dort ausgelesen. Ins Internet geht die App nur für Updates.",
-        tips = listOf("Anleitung: Info-Symbol oben rechts.", "Updates, Darstellung und Feedback: Zahnrad oben rechts.", "Dies ist eine Testversion ohne Verschlüsselung und App-Sperre."),
+        title = "Sicher und privat",
+        text = "Deine Daten bleiben verschlüsselt auf deinem Handy, ohne Konto und ohne Cloud. Ins Internet geht die App nur, wenn du etwas anforderst, z. B. Updates, Meldungen, Umkreissuche oder die KI. Eine App-Sperre und eine verschlüsselte Sicherung findest du in den Einstellungen.",
+        tips = listOf("Lege regelmäßig eine Sicherung an und bewahre sie außerhalb des Handys auf.", "Anleitung: Info-Symbol oben. Einstellungen: Zahnrad oben."),
         mock = { MockPrivacy() },
     ),
 )
 
-/** Rundgang: Seiten zum Durchblättern mit kleinen Beispielansichten. */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TourScreen(onClose: () -> Unit) {
     val pagerState = rememberPagerState(pageCount = { TOUR_PAGES.size })
@@ -286,12 +314,13 @@ private fun MockWelcome() {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun MockTabs(selected: Int) {
-    val labels = listOf("Heute", "Medikamente", "Termine", "Kontakte")
+    val labels = listOf("Heute", "Medikamente", "Termine", "Dokumente", "Kontakte", "Infos")
     MockCard {
         Text("Mein Helfer für den Tag", style = MaterialTheme.typography.titleMedium)
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+        FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             labels.forEachIndexed { i, label ->
                 Text(
                     label,
@@ -383,6 +412,7 @@ private fun MockAppointment() {
         MockField("Von", "10:00 Uhr", Modifier.weight(1f))
         MockField("Bis (optional)", "10:30 Uhr", Modifier.weight(1f))
     }
+    MockField("Wiederholen", "Jede Woche", Modifier.fillMaxWidth())
     MockField("Erinnerung", "1 Stunde vorher", Modifier.fillMaxWidth())
 }
 
@@ -393,22 +423,6 @@ private fun MockToday() {
         MockCheckRow(true, "08:00 Uhr – Beispiel (1 Tablette)")
         MockCheckRow(false, "12:00 Uhr – Beispiel (½ Tablette)", warn = "noch nicht abgehakt")
         MockCheckRow(false, "18:00 Uhr – Beispiel (1 Tablette)")
-    }
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun MockNotes() {
-    MockField("Bemerkung", "Später genommen; wenig gegessen", Modifier.fillMaxWidth())
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        MockChip("Später genommen")
-        MockChip("Verschoben")
-        MockChip("Wenig getrunken")
-        MockChip("Nebenwirkung aufgefallen")
-    }
-    MockCard {
-        Text("Aufgaben (1 offen)", style = MaterialTheme.typography.titleSmall)
-        MockCheckRow(false, "Medikamentenplan beim Hausarzt besprechen")
     }
 }
 
@@ -441,11 +455,161 @@ private fun MockSummary() {
 @Composable
 private fun MockPrivacy() {
     MockCard {
-        Text("Auf deinem Handy", style = MaterialTheme.typography.titleSmall)
-        Text("Personen, Medikamente, Termine, Notizen", style = MaterialTheme.typography.bodyMedium)
+        Text("Verschlüsselt auf deinem Handy", style = MaterialTheme.typography.titleSmall)
+        Text("Personen, Medikamente, Termine, Dokumente, Notizen", style = MaterialTheme.typography.bodyMedium)
     }
     MockCard {
-        Text("Nicht in der Cloud", style = MaterialTheme.typography.titleSmall)
-        Text("Kein Konto, keine Übertragung von Fotos oder Daten", style = MaterialTheme.typography.bodyMedium)
+        Text("Kein Konto, keine Cloud", style = MaterialTheme.typography.titleSmall)
+        Text("Internet nur auf deinen Wunsch", style = MaterialTheme.typography.bodyMedium)
     }
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        MockButton("App-Sperre")
+        MockButton("Sicherung erstellen")
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun MockConsent() {
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        MockChip("Pflegende/r Angehörige/r", selected = true)
+        MockChip("Pflegedienst")
+        MockChip("Betreuer/in")
+    }
+    MockField("Dein Name", "Maria Muster", Modifier.fillMaxWidth())
+    MockCard {
+        MockConfirm("App ersetzt keinen Arzt, im Notfall 112")
+        MockConfirm("Einschätzungen sind nur Anhaltspunkte")
+        MockConfirm("Nutzungsbedingungen akzeptiert")
+    }
+}
+
+@Composable
+private fun MockConfirm(text: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Checkbox(checked = true, onCheckedChange = null, modifier = Modifier.padding(end = 8.dp))
+        Text(text, style = MaterialTheme.typography.bodyMedium)
+    }
+}
+
+@Composable
+private fun MockPermissions() {
+    MockCard {
+        Text("Freigaben (Android)", style = MaterialTheme.typography.titleSmall)
+        Text("✓ Benachrichtigungen", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+        Text("✓ Erinnerungen mit Ton", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("✗ Pünktliche Wecker", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error, modifier = Modifier.weight(1f))
+            MockButton("Erlauben")
+        }
+    }
+}
+
+@Composable
+private fun MockMedCheck() {
+    MockCard {
+        Text("Wie passen die Medikamente zusammen?", style = MaterialTheme.typography.titleSmall)
+        MockLevel("Beachten", MaterialTheme.colorScheme.tertiary, "Beispiel A + Beispiel B: Abstand von 2 Stunden einhalten")
+        MockLevel("Gering", MaterialTheme.colorScheme.primary, "Beispiel A + Beispiel C: kaum zu erwarten")
+    }
+    MockCard {
+        Text("Fragen an Arzt oder Apotheke", style = MaterialTheme.typography.titleSmall)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("• Ist Beispiel B noch nötig?", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+            Text("Merken", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+        }
+    }
+}
+
+@Composable
+private fun MockLevel(level: String, color: androidx.compose.ui.graphics.Color, text: String) {
+    Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Surface(shape = RoundedCornerShape(8.dp), color = color) {
+            Text(level, Modifier.padding(horizontal = 8.dp, vertical = 2.dp), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.surface)
+        }
+        Text(text, style = MaterialTheme.typography.bodyMedium)
+    }
+}
+
+@Composable
+private fun MockDailyStart() {
+    MockCard {
+        Text("Rückblick auf gestern", style = MaterialTheme.typography.titleSmall)
+        Text("• Medikamente: 5 von 6 genommen", style = MaterialTheme.typography.bodyMedium)
+        Text("20:00 Uhr – Beispiel: noch ohne Antwort", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+        MockButton("Bestätigen und weiter", filled = true)
+    }
+    MockCard {
+        Text("Heute zu tun", style = MaterialTheme.typography.titleSmall)
+        Text("☐ 08:00 Uhr – Beispiel (1 Tablette)", style = MaterialTheme.typography.bodyMedium)
+        Text("☐ 10:30 Uhr – Hausarzt", style = MaterialTheme.typography.bodyMedium)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            MockButton("Als PDF teilen")
+            MockButton("Drucken")
+        }
+    }
+}
+
+@Composable
+private fun MockPeriods() {
+    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        MockChip("Tag", selected = true)
+        MockChip("Woche")
+        MockChip("Monat")
+    }
+    MockCard {
+        Text("Wichtig und demnächst", style = MaterialTheme.typography.titleSmall)
+        Text("Dringend: Rezept abholen (heute fällig)", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
+        Text("Termine heute: 10:30 Uhr – Hausarzt", style = MaterialTheme.typography.bodyMedium)
+        Text("Morgen: 14:00 Uhr – Physiotherapie", style = MaterialTheme.typography.bodyMedium)
+        Text("Einklappen ▴", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+    }
+}
+
+@Composable
+private fun MockTasks() {
+    MockCard {
+        Text("Erledigt – was kam heraus?", style = MaterialTheme.typography.titleSmall)
+        MockField("Ergebnis", "Firma Muster, Tel. 0123 456, schnell und günstig", Modifier.fillMaxWidth())
+        Text("★★★★☆", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+    }
+    MockCard {
+        Text("Dazu gab es schon etwas", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+        Text("erledigt am 12.03.2025 · ★★★★☆", style = MaterialTheme.typography.labelMedium)
+        Text("Reparaturdienst für den Rollstuhl suchen", style = MaterialTheme.typography.bodyMedium)
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun MockDocuments() {
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        MockChip("Alle (12)", selected = true)
+        MockChip("Arztbericht (4)")
+        MockChip("Krankenhaus / Entlassbericht (1)")
+    }
+    MockCard {
+        Text("Entlassbericht 14.11.2026", style = MaterialTheme.typography.titleSmall)
+        Text("Krankenhaus / Entlassbericht · 14.11.2026", style = MaterialTheme.typography.bodySmall)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            MockButton("Öffnen")
+            MockButton("Drucken")
+            MockButton("Teilen")
+        }
+    }
+}
+
+@Composable
+private fun MockNotruf() {
+    Surface(shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.errorContainer, modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text("Notruf: Feuerwehr und Rettungsdienst", style = MaterialTheme.typography.titleSmall)
+            MockButton("112 wählen", filled = true)
+        }
+    }
+    MockCard {
+        Text("Was sage ich?", style = MaterialTheme.typography.titleSmall)
+        Text("Wo: Musterstraße 1, 4. Stock, ohne Aufzug", style = MaterialTheme.typography.bodyMedium)
+    }
+    MockButton("Notfallkarte zeigen")
 }
