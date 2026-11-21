@@ -300,6 +300,14 @@ fun TodayScreen(
                 }
             }
         }
+        item {
+            Text(
+                "Mein Helfer für den Tag · by $AUTHOR",
+                style = MaterialTheme.typography.labelSmall,
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            )
+        }
     }
 
     noteTarget?.let { t ->

@@ -26,6 +26,14 @@ object AppPrefs {
         prefs(context).edit().putString(KEY_THEME, mode).apply()
     }
 
+    private const val KEY_TOUR_SEEN = "rundgang_gesehen"
+
+    fun tourSeen(context: Context): Boolean = prefs(context).getBoolean(KEY_TOUR_SEEN, false)
+
+    fun setTourSeen(context: Context) {
+        prefs(context).edit().putBoolean(KEY_TOUR_SEEN, true).apply()
+    }
+
     private fun prefs(context: Context) = context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
 
     fun autoUpdateCheck(context: Context): Boolean = prefs(context).getBoolean(KEY_AUTO_UPDATE, true)

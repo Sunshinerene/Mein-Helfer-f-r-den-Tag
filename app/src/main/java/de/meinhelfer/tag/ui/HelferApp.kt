@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
@@ -62,6 +63,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import de.meinhelfer.tag.data.Appointment
 import de.meinhelfer.tag.data.Doctor
 import de.meinhelfer.tag.data.Medication
+import de.meinhelfer.tag.update.AppPrefs
 import kotlinx.coroutines.delay
 
 private enum class Tab(val label: String, val icon: ImageVector) {
@@ -77,6 +79,11 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
     var tabIndex by rememberSaveable { mutableIntStateOf(0) }
     var showSettings by rememberSaveable { mutableStateOf(false) }
     var showSummary by rememberSaveable { mutableStateOf(false) }
+    var showGuide by rememberSaveable { mutableStateOf(false) }
+    var showTour by rememberSaveable { mutableStateOf(false) }
+    val appContext = LocalContext.current
+    // Beim ersten Start einmal den Rundgang anbieten
+    var showTourOffer by rememberSaveable { mutableStateOf(!AppPrefs.tourSeen(appContext)) }
     val tab = Tab.entries[tabIndex]
 
     val meds by vm.medications.collectAsStateWithLifecycle()
@@ -100,12 +107,26 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
         }
     }
 
-    BackHandler(enabled = showSettings || showSummary) {
-        if (showSettings) showSettings = false else showSummary = false
+    BackHandler(enabled = showSettings || showSummary || showGuide || showTour) {
+        when {
+            showTour -> showTour = false
+            showGuide -> showGuide = false
+            showSettings -> showSettings = false
+            else -> showSummary = false
+        }
     }
 
-    if (showSettings) {
-        SettingsScreen(vm = vm, onBack = { showSettings = false })
+    if (showTour) {
+        TourScreen(onClose = { showTour = false })
+    } else if (showGuide) {
+        GuideScreen(onBack = { showGuide = false }, onStartTour = { showTour = true })
+    } else if (showSettings) {
+        SettingsScreen(
+            vm = vm,
+            onBack = { showSettings = false },
+            onOpenGuide = { showGuide = true },
+            onStartTour = { showTour = true },
+        )
     } else if (showSummary) {
         SummaryScreen(vm = vm, onBack = { showSummary = false })
     } else {
@@ -114,6 +135,9 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
                 TopAppBar(
                     title = { Text("Mein Helfer für den Tag") },
                     actions = {
+                        IconButton(onClick = { showGuide = true }) {
+                            Icon(Icons.Default.Info, contentDescription = "Anleitung")
+                        }
                         IconButton(onClick = { showSettings = true }) {
                             Icon(Icons.Default.Settings, contentDescription = "Einstellungen")
                         }
@@ -158,6 +182,30 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
               }
             }
         }
+    }
+
+    if (showTourOffer && !showTour) {
+        AlertDialog(
+            onDismissRequest = {
+                AppPrefs.setTourSeen(appContext)
+                showTourOffer = false
+            },
+            title = { Text("Willkommen!") },
+            text = { Text("Möchtest du einen kurzen Rundgang durch die App? Du findest ihn später auch über das Info-Symbol oben.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    AppPrefs.setTourSeen(appContext)
+                    showTourOffer = false
+                    showTour = true
+                }) { Text("Rundgang starten") }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    AppPrefs.setTourSeen(appContext)
+                    showTourOffer = false
+                }) { Text("Später") }
+            },
+        )
     }
 }
 

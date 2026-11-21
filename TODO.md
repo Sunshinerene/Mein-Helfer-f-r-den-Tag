@@ -6,6 +6,12 @@
 - [ ] KI-Hinweise in der Auswertung, z. B. "Medikamentenplan vom Hausarzt prüfen lassen": immer mit Bestätigung und Datenschutz-Filter, nur Anhaltspunkt, ersetzt nie Arzt oder Apotheke; Hinweis lässt sich auf eine eigene To-do-Liste setzen ("beim Hausarzt ansprechen")
 - [ ] Erkennung von Packungsfoto verbessern (Wirkstoff, Packungsbeilage, Barcode/PZN)
 
+## Version 0.8.0 (fertig)
+
+- [x] Anleitung zum Lesen: nach Themen aufklappbar, mit Suchfeld (Info-Symbol oben oder Einstellungen)
+- [x] Rundgang mit Beispielansichten zum Durchblättern, wird beim ersten Start einmal angeboten
+- [x] App-Logo (Sonne mit Herz) und "by Sunshine@R" in Einstellungen, Rundgang und Heute-Seite
+
 ## Version 0.7.0 (fertig)
 
 - [x] "Eingenommen"-Knopf direkt in der Erinnerung (hakt ab, schließt die Benachrichtigung). Der Vorrat sinkt schon täglich automatisch
@@ -51,6 +57,7 @@
 
 ## Weitere Ideen
 
+- [ ] Anleitung und Rundgang bei neuen Funktionen mitpflegen (Datei GuideContent.kt und TourScreen.kt)
 - [ ] Dokumente scannen und verschlüsselt ablegen
 - [ ] Datenbank verschlüsseln, App-Sperre
 - [ ] KI-Vorschläge aus Dokumenten (immer mit Bestätigung), Datenschutz-Filter vor jeder Übertragung

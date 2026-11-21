@@ -48,7 +48,7 @@ import de.meinhelfer.tag.update.UpdateWorker
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit) {
+fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit, onOpenGuide: () -> Unit, onStartTour: () -> Unit) {
     val context = LocalContext.current
     val updateState by vm.updateState.collectAsStateWithLifecycle()
     var autoCheck by remember { mutableStateOf(AppPrefs.autoUpdateCheck(context)) }
@@ -94,9 +94,11 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit) {
                     context = context,
                 )
             }
+            item { HelpCard(onOpenGuide, onStartTour) }
             item { ThemeCard(vm) }
             item { FeedbackCard(context) }
             item { RoadmapCard(roadmap, roadmapError) }
+            item { AboutCard(context) }
         }
     }
 }
@@ -234,6 +236,38 @@ private fun ThemeCard(vm: MainViewModel) {
                 listOf("system" to "Wie das Handy", "light" to "Hell", "dark" to "Dunkel").forEach { (key, label) ->
                     FilterChip(selected = mode == key, onClick = { vm.setThemeMode(key) }, label = { Text(label) })
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HelpCard(onOpenGuide: () -> Unit, onStartTour: () -> Unit) {
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Hilfe", style = MaterialTheme.typography.titleMedium)
+            Text("Die Anleitung erklärt alles nach Themen, der Rundgang zeigt es Schritt für Schritt mit Bildern.", style = MaterialTheme.typography.bodyMedium)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(onClick = onOpenGuide) { Text("Anleitung lesen") }
+                Button(onClick = onStartTour) { Text("Rundgang") }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AboutCard(context: Context) {
+    Card(Modifier.fillMaxWidth()) {
+        Row(
+            Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            AppLogo(64.dp)
+            Column {
+                Text("Mein Helfer für den Tag", style = MaterialTheme.typography.titleMedium)
+                Text("Version ${UpdateChecker.installedVersion(context)}", style = MaterialTheme.typography.bodyMedium)
+                Text("by $AUTHOR", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
             }
         }
     }
