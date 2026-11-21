@@ -184,7 +184,7 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
                             selected = i == tabIndex,
                             onClick = { tabIndex = i },
                             icon = { Icon(t.icon, contentDescription = t.label) },
-                            label = { Text(t.label, maxLines = 1, softWrap = false, fontSize = 10.sp) },
+                            label = { Text(t.label, maxLines = 1, softWrap = false, fontSize = 9.sp) },
                         )
                     }
                 }

@@ -131,6 +131,9 @@
 
 ## Weitere Ideen
 
+- [ ] Termine: ansprechendere Karten mit mehr Information (Datum groß, Wochentag, Countdown „in 3 Tagen“, Ort, Kontakt mit Anruf/Route, Unterlagen)
+- [ ] Termine außer Haus: Fahrdienst bestellen. Feste Fahrdienste aus den Kontakten (Art „Fahrdienst“) immer zuerst, danach Fahrdienste im Umkreis mit Kontaktdaten und Direktkontakt (Anruf, E-Mail, Karte), dazu Infos (z. B. Krankenfahrt, Verordnung, Kostenübernahme durch die Kasse prüfen). Datenquelle und Datenschutz (Adresse verlässt das Handy nur nach Bestätigung) vorher klären
+
 - [ ] Anleitung und Rundgang bei neuen Funktionen mitpflegen (Datei GuideContent.kt und TourScreen.kt)
 - [ ] Designs verfeinern (Schriftarten, Übergänge, weitere Varianten, Hochkontrast für bessere Lesbarkeit)
 - [ ] Dokumente: Medikamente und Termine aus dem erkannten Text vorschlagen
