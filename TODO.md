@@ -2,10 +2,15 @@
 
 ## Als Nächstes
 
-- [ ] **Medikament per Foto anlegen**: Verpackung fotografieren, Name und Wirkstoff per Texterkennung auslesen
-- [ ] **Bild zum Medikament**: eigenes Foto der Packung beim Medikament speichern und anzeigen
 - [ ] "Eingenommen" direkt in der Benachrichtigung antippen, Vorrat verringert sich automatisch
 - [ ] Erinnerungszeit pro Termin einstellbar
+- [ ] Erkennung von Packungsfoto verbessern (Wirkstoff, Packungsbeilage, Barcode/PZN)
+
+## Version 0.4.0 (fertig)
+
+- [x] Medikament per Foto der Packung anlegen, Texterkennung direkt auf dem Handy (keine Datenübertragung)
+- [x] Foto der Packung wird beim Medikament gespeichert und angezeigt (nur lokal)
+- [x] Kleinigkeiten: Datumsfeld einzeilig, GitHub-Projektlink aus den Einstellungen entfernt
 
 ## Version 0.3.0 (fertig)
 

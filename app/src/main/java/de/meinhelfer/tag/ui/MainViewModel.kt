@@ -7,6 +7,7 @@ import de.meinhelfer.tag.data.AppDatabase
 import de.meinhelfer.tag.data.Appointment
 import de.meinhelfer.tag.data.Doctor
 import de.meinhelfer.tag.data.Medication
+import de.meinhelfer.tag.media.PhotoStore
 import de.meinhelfer.tag.reminder.ReminderScheduler
 import de.meinhelfer.tag.update.AppPrefs
 import de.meinhelfer.tag.update.UpdateChecker
@@ -50,7 +51,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         ReminderScheduler.rescheduleAll(getApplication())
     }
 
-    fun delete(item: Medication) = viewModelScope.launch { db.medicationDao().delete(item) }
+    fun delete(item: Medication) = viewModelScope.launch {
+        db.medicationDao().delete(item)
+        PhotoStore.delete(getApplication(), item.photoPath)
+    }
 
     // ---------------------------------------------------------------- Termine
 

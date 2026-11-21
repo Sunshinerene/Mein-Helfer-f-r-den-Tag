@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -241,6 +243,7 @@ private fun MedicationScreen(items: List<Medication>, vm: MainViewModel) {
             ),
             onClick = { editItem = m },
             onDelete = { vm.delete(m) },
+            photoName = m.photoPath,
         )
     }
 
@@ -405,6 +408,7 @@ private fun ItemCard(
     lines: List<String>,
     onClick: () -> Unit,
     onDelete: () -> Unit,
+    photoName: String? = null,
     extra: @Composable ColumnScope.() -> Unit = {},
 ) {
     var confirmDelete by remember { mutableStateOf(false) }
@@ -414,6 +418,10 @@ private fun ItemCard(
             Modifier.padding(start = 16.dp, top = 12.dp, bottom = 8.dp, end = 4.dp),
             verticalAlignment = Alignment.Top,
         ) {
+            if (photoName != null) {
+                PhotoThumb(photoName, 64.dp)
+                Spacer(Modifier.width(12.dp))
+            }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(title, style = MaterialTheme.typography.titleMedium)
                 lines.forEach { Text(it, style = MaterialTheme.typography.bodyMedium) }

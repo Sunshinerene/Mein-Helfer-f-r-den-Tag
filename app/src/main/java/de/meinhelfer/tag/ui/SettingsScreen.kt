@@ -181,9 +181,6 @@ private fun FeedbackCard(context: Context) {
             Button(onClick = { openUrl(context, UpdateChecker.ISSUES_NEW_URL) }) {
                 Text("Idee oder Fehler melden")
             }
-            OutlinedButton(onClick = { openUrl(context, UpdateChecker.PROJECT_URL) }) {
-                Text("Projektseite auf GitHub")
-            }
             Text(
                 "Hinweis: Meldungen sind öffentlich sichtbar. Bitte keine Namen, Diagnosen oder andere persönliche Daten eintragen.",
                 style = MaterialTheme.typography.bodySmall,

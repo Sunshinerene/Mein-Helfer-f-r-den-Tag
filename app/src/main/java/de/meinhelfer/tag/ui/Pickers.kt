@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -43,7 +44,7 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-val DATE_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("EEE, dd.MM.yyyy", Locale.GERMANY)
+val DATE_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy", Locale.GERMANY)
 val TIME_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm", Locale.GERMANY)
 private val DATE_TIME_FORMAT: DateTimeFormatter =
     DateTimeFormatter.ofPattern("EEE, dd.MM.yyyy HH:mm", Locale.GERMANY)
@@ -103,7 +104,11 @@ fun DropdownField(
 private fun PickerButton(label: String, value: String, modifier: Modifier, onClick: () -> Unit) {
     Column(modifier) {
         Text(label, style = MaterialTheme.typography.labelMedium)
-        OutlinedButton(onClick = onClick, modifier = Modifier.fillMaxWidth()) { Text(value) }
+        OutlinedButton(
+            onClick = onClick,
+            modifier = Modifier.fillMaxWidth(),
+            contentPadding = PaddingValues(horizontal = 8.dp),
+        ) { Text(value, maxLines = 1) }
     }
 }
 

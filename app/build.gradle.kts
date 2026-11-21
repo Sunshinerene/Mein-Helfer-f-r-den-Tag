@@ -13,8 +13,8 @@ android {
         applicationId = "de.meinhelfer.tag"
         minSdk = 26
         targetSdk = 35
-        versionCode = 3
-        versionName = "0.3.0"
+        versionCode = 4
+        versionName = "0.4.0"
     }
 
     // Fester Test-Schluessel, damit spaetere APK-Updates ueber die alte Version installiert werden koennen.
@@ -60,6 +60,9 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
     implementation("androidx.work:work-runtime-ktx:2.9.1")
+
+    // Texterkennung direkt auf dem Handy (Modell ist in der App enthalten, keine Datenuebertragung)
+    implementation("com.google.mlkit:text-recognition:16.0.1")
 
     val room = "2.6.1"
     implementation("androidx.room:room-runtime:$room")

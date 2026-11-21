@@ -16,6 +16,8 @@ data class Medication(
     /** Verbrauch pro Tag in Einheiten */
     val dailyUse: Int = 1,
     val notes: String = "",
+    /** Dateiname des Packungsfotos im App-Ordner (nur lokal gespeichert), optional. */
+    val photoPath: String? = null,
 ) {
     fun timeList(): List<String> =
         times.split(",").map { it.trim() }.filter { it.isNotEmpty() }

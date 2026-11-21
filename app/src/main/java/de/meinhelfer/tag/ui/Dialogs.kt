@@ -1,5 +1,26 @@
 package de.meinhelfer.tag.ui
 
+import android.content.ActivityNotFoundException
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
+import de.meinhelfer.tag.media.PackageScanner
+import de.meinhelfer.tag.media.PhotoStore
+import de.meinhelfer.tag.media.ScanResult
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -56,8 +77,12 @@ private fun DialogForm(
     )
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun MedicationDialog(initial: Medication?, onDismiss: () -> Unit, onSave: (Medication) -> Unit) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
     var name by remember { mutableStateOf(initial?.name ?: "") }
     var dosage by remember { mutableStateOf(initial?.dosage ?: "") }
     var times by remember { mutableStateOf(parseTimes(initial?.times ?: "")) }
@@ -65,11 +90,67 @@ fun MedicationDialog(initial: Medication?, onDismiss: () -> Unit, onSave: (Medic
     var dailyUse by remember { mutableStateOf(initial?.dailyUse?.toString() ?: "") }
     var notes by remember { mutableStateOf(initial?.notes ?: "") }
 
+    val originalPhoto = initial?.photoPath
+    var photoName by remember { mutableStateOf(originalPhoto) }
+    var scanning by remember { mutableStateOf(false) }
+    var scan by remember { mutableStateOf<ScanResult?>(null) }
+    var pendingFile by remember { mutableStateOf<File?>(null) }
+
+    // Neues Foto: verkleinern, Text lokal erkennen, leere Felder vorbelegen (alles bleibt aenderbar).
+    fun handleNewPhoto(file: File) {
+        scope.launch {
+            scanning = true
+            val bitmap = PhotoStore.normalize(file)
+            if (bitmap == null) {
+                file.delete()
+                scanning = false
+                return@launch
+            }
+            val previous = photoName
+            if (previous != null && previous != originalPhoto) PhotoStore.delete(context, previous)
+            photoName = file.name
+
+            val result = runCatching { PackageScanner.scan(bitmap) }.getOrNull()
+            scan = result
+            if (result != null) {
+                if (name.isBlank()) result.nameCandidates.firstOrNull()?.let { name = it }
+                if (stock.isBlank()) result.packSize?.let { stock = it.toString() }
+                if (notes.isBlank()) result.strength?.let { notes = "Stärke: $it" }
+            }
+            scanning = false
+        }
+    }
+
+    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
+        val file = pendingFile
+        pendingFile = null
+        if (ok && file != null) handleNewPhoto(file) else file?.delete()
+    }
+    val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        if (uri != null) {
+            val file = PhotoStore.newFile(context)
+            scope.launch {
+                withContext(Dispatchers.IO) {
+                    context.contentResolver.openInputStream(uri)?.use { input ->
+                        file.outputStream().use { output -> input.copyTo(output) }
+                    }
+                }
+                handleNewPhoto(file)
+            }
+        }
+    }
+
+    val cancel = {
+        if (photoName != originalPhoto) PhotoStore.delete(context, photoName)
+        onDismiss()
+    }
+
     DialogForm(
         title = if (initial == null) "Medikament hinzufügen" else "Medikament bearbeiten",
-        canSave = name.isNotBlank(),
-        onDismiss = onDismiss,
+        canSave = name.isNotBlank() && !scanning,
+        onDismiss = cancel,
         onSave = {
+            if (originalPhoto != null && photoName != originalPhoto) PhotoStore.delete(context, originalPhoto)
             onSave(
                 Medication(
                     id = initial?.id ?: 0,
@@ -80,10 +161,76 @@ fun MedicationDialog(initial: Medication?, onDismiss: () -> Unit, onSave: (Medic
                     // Leer = Anzahl der Einnahmen pro Tag
                     dailyUse = dailyUse.trim().toIntOrNull() ?: maxOf(1, times.size),
                     notes = notes.trim(),
+                    photoPath = photoName,
                 ),
             )
         },
     ) {
+        // ---- Foto der Packung
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(
+                onClick = {
+                    val file = PhotoStore.newFile(context)
+                    pendingFile = file
+                    try {
+                        cameraLauncher.launch(PhotoStore.uriForCamera(context, file))
+                    } catch (_: ActivityNotFoundException) {
+                        pendingFile = null
+                    }
+                },
+                enabled = !scanning,
+                contentPadding = PaddingValues(horizontal = 8.dp),
+                modifier = Modifier.weight(1f),
+            ) { Text("Packung fotografieren", maxLines = 1) }
+            OutlinedButton(
+                onClick = {
+                    galleryLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                },
+                enabled = !scanning,
+                contentPadding = PaddingValues(horizontal = 8.dp),
+            ) { Text("Galerie", maxLines = 1) }
+        }
+        if (scanning) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+                Text("Erkenne Text …", style = MaterialTheme.typography.bodyMedium)
+            }
+        }
+        photoName?.let { photo ->
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                PhotoThumb(photo, 96.dp)
+                TextButton(
+                    onClick = {
+                        if (photoName != originalPhoto) PhotoStore.delete(context, photoName)
+                        photoName = null
+                        scan = null
+                    },
+                ) { Text("Foto entfernen") }
+            }
+        }
+        scan?.let { result ->
+            if (result.nameCandidates.isEmpty()) {
+                Text(
+                    "Auf dem Foto wurde kein Text erkannt. Bitte die Daten von Hand eintragen.",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            } else {
+                Text(
+                    "Vom Foto erkannt, bitte prüfen. Antippen übernimmt den Namen:",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    result.nameCandidates.forEach { candidate ->
+                        AssistChip(onClick = { name = candidate }, label = { Text(candidate) })
+                    }
+                }
+            }
+        }
+
+        // ---- Angaben
         OutlinedTextField(
             value = name,
             onValueChange = { name = it },
