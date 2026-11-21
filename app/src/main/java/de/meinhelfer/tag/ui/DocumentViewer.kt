@@ -246,11 +246,12 @@ private fun ImageBody(file: File, zoom: Float) {
         return
     }
     BoxWithConstraints(Modifier.fillMaxSize()) {
+        val imageWidth = maxWidth * zoom
         Box(Modifier.fillMaxSize().horizontalScroll(rememberScrollState()).verticalScroll(rememberScrollState())) {
             Image(
                 bitmap = b.asImageBitmap(),
                 contentDescription = "Dokument",
-                modifier = Modifier.width(maxWidth * zoom).aspectRatio(b.width.toFloat() / b.height),
+                modifier = Modifier.width(imageWidth).aspectRatio(b.width.toFloat() / b.height),
                 contentScale = ContentScale.FillWidth,
             )
         }
