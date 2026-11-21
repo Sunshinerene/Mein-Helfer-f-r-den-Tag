@@ -32,13 +32,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import de.meinhelfer.tag.data.Person
 
 private const val SOURCE_URL = "https://www.familienratgeber.de/rechte-leistungen/pflege/leistungen-der-pflegeversicherung"
 
 /** Wegweiser: Leistungen und Antraege je Pflegegrad, mit Uebernahme auf die To-do-Liste. */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-fun WegweiserScreen(personName: String?, careLevel: Int, onAddTodo: (String) -> Unit, onBack: () -> Unit) {
+fun WegweiserScreen(person: Person?, onAddTodo: (String) -> Unit, onBack: () -> Unit) {
+    val personName = person?.name
+    val careLevel = person?.careLevel ?: 0
     val context = LocalContext.current
     // 0 = alle Pflegegrade zeigen
     var level by remember { mutableStateOf(careLevel) }
@@ -84,6 +87,24 @@ fun WegweiserScreen(personName: String?, careLevel: Int, onAddTodo: (String) -> 
                             "Mit „+ Auf meine To-do-Liste“ übernimmst du einen Schritt in deine Liste auf der Heute-Seite.",
                             style = MaterialTheme.typography.bodySmall,
                         )
+                        val kasse = person?.insurer.orEmpty()
+                        val place = place(person)
+                        Text(
+                            if (kasse.isNotBlank()) {
+                                "Pflegekasse: $kasse" + if (place.isNotBlank()) " · $place" else ""
+                            } else {
+                                "Trage im Profil Krankenkasse und Ort ein, dann werden die Links zu Stellen und Vordrucken genauer."
+                            },
+                            style = MaterialTheme.typography.titleSmall,
+                        )
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            TextButton(onClick = {
+                                openLink(context, WegLink("", LinkKind.MAPS, "{kasse} Geschäftsstelle {ort}"), person)
+                            }) { Text("Meine Pflegekasse (Karte)") }
+                            TextButton(onClick = {
+                                openLink(context, WegLink("", LinkKind.SEARCH, "Antrag Pflegegrad Pflegeleistungen {kasse} Formular"), person)
+                            }) { Text("Antrag Pflegegrad (Formular)") }
+                        }
                     }
                 }
             }
@@ -102,6 +123,15 @@ fun WegweiserScreen(personName: String?, careLevel: Int, onAddTodo: (String) -> 
                                 Text(b.title, style = MaterialTheme.typography.titleMedium)
                                 b.amounts?.let { amounts -> AmountLines(amounts, level) }
                                 Text(b.text, style = MaterialTheme.typography.bodyMedium)
+                                WEGWEISER_LINKS[b.title]?.let { links ->
+                                    FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                        links.forEach { link ->
+                                            TextButton(onClick = { openLink(context, link, person) }) {
+                                                Text((if (link.kind == LinkKind.URL) "↗ " else "🔍 ") + link.label)
+                                            }
+                                        }
+                                    }
+                                }
                                 b.todo?.let { todo ->
                                     val isAdded = todo in added
                                     TextButton(onClick = {
@@ -125,6 +155,11 @@ fun WegweiserScreen(personName: String?, careLevel: Int, onAddTodo: (String) -> 
                         style = MaterialTheme.typography.bodySmall,
                     )
                     TextButton(onClick = { openUrl(context, SOURCE_URL) }) { Text("Quelle der Beträge öffnen (familienratgeber.de)") }
+                    Text(
+                        "Links mit Lupe öffnen deinen Browser oder deine Karten-App mit einer Suche. Dabei werden nur Krankenkasse und PLZ/Ort aus dem Profil eingesetzt, nie Name, Straße oder Versichertennummer. " +
+                            "Vordrucke gibt es meist auf der Internetseite deiner Pflegekasse. Prüfe, dass du das aktuelle Formular der richtigen Stelle nimmst.",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
                 }
             }
         }
@@ -156,5 +191,30 @@ private fun openUrl(context: Context, url: String) {
     try {
         context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
     } catch (_: Exception) {
+    }
+}
+
+private fun place(person: Person?): String =
+    listOfNotNull(person?.zip?.takeIf { it.isNotBlank() }, person?.city?.takeIf { it.isNotBlank() }).joinToString(" ")
+
+/** Setzt Krankenkasse und Ort in die Vorlage ein und oeffnet Suche, Karte oder Webseite. */
+private fun openLink(context: Context, link: WegLink, person: Person?) {
+    val kasse = person?.insurer?.takeIf { it.isNotBlank() } ?: "Pflegekasse"
+    val query = link.target.replace("{kasse}", kasse).replace("{ort}", place(person)).replace(Regex("\\s+"), " ").trim()
+    val uri = when (link.kind) {
+        LinkKind.URL -> Uri.parse(link.target)
+        LinkKind.SEARCH -> Uri.parse("https://www.google.com/search?q=" + Uri.encode(query))
+        LinkKind.MAPS -> Uri.parse("geo:0,0?q=" + Uri.encode(query))
+    }
+    try {
+        context.startActivity(Intent(Intent.ACTION_VIEW, uri))
+    } catch (_: Exception) {
+        // Karten-App fehlt: im Browser suchen
+        if (link.kind == LinkKind.MAPS) {
+            try {
+                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/maps/search/?api=1&query=" + Uri.encode(query))))
+            } catch (_: Exception) {
+            }
+        }
     }
 }

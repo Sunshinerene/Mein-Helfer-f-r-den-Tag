@@ -86,3 +86,10 @@ val REMINDER_OPTIONS = listOf(
     120 to "2 Stunden vorher",
     1440 to "1 Tag vorher",
 )
+
+/** Haeufige Krankenkassen als Auswahl (eigene Eingabe bleibt moeglich). */
+val INSURERS = listOf(
+    "AOK", "Barmer", "Techniker Krankenkasse (TK)", "DAK-Gesundheit", "IKK classic", "KKH", "hkk",
+    "Knappschaft", "BKK", "Mobil Krankenkasse", "SBK", "HEK", "Audi BKK", "Debeka (privat)",
+    "Allianz (privat)", "Signal Iduna (privat)", "Sonstige / privat versichert",
+)

@@ -375,10 +375,11 @@ private fun ProfileCard(person: Person?, todayDay: Long, onEdit: () -> Unit, onW
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(person.name, style = MaterialTheme.typography.titleMedium)
             if (head.isNotEmpty()) Text(head, style = MaterialTheme.typography.bodyMedium)
+            if (person.insurer.isNotBlank()) Text("Krankenkasse: ${person.insurer}", style = MaterialTheme.typography.bodyMedium)
             if (person.important.isNotBlank()) {
                 Text("Wichtig: ${person.important}", style = MaterialTheme.typography.bodyMedium, maxLines = 4)
             }
-            if (head.isEmpty() && person.important.isBlank()) {
+            if (head.isEmpty() && person.important.isBlank() && person.insurer.isBlank()) {
                 Text(
                     "Du kannst im Profil Geburtsdatum, Pflegegrad und Wichtiges eintragen. Das bleibt nur in der App.",
                     style = MaterialTheme.typography.bodySmall,

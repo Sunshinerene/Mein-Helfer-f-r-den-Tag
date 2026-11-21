@@ -135,6 +135,11 @@ fun PersonDialog(initial: Person?, onDismiss: () -> Unit, onSave: (Person) -> Un
     var birth by remember { mutableStateOf(initial?.birthDate?.let { LocalDate.ofEpochDay(it) }) }
     var level by remember { mutableStateOf(initial?.careLevel ?: 0) }
     var important by remember { mutableStateOf(initial?.important ?: "") }
+    var street by remember { mutableStateOf(initial?.street ?: "") }
+    var zip by remember { mutableStateOf(initial?.zip ?: "") }
+    var city by remember { mutableStateOf(initial?.city ?: "") }
+    var insurer by remember { mutableStateOf(initial?.insurer ?: "") }
+    var insuranceNumber by remember { mutableStateOf(initial?.insuranceNumber ?: "") }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(if (initial == null) "Neue Person" else "Profil bearbeiten") },
@@ -158,6 +163,44 @@ fun PersonDialog(initial: Person?, onDismiss: () -> Unit, onSave: (Person) -> Un
                         FilterChip(selected = level == l, onClick = { level = l }, label = { Text("$l") })
                     }
                 }
+                Text("Wohnort und Versicherung", style = MaterialTheme.typography.labelLarge)
+                OutlinedTextField(
+                    value = street,
+                    onValueChange = { street = it },
+                    label = { Text("Straße und Hausnummer") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = zip,
+                        onValueChange = { v -> zip = v.filter { it.isDigit() }.take(5) },
+                        label = { Text("PLZ") },
+                        singleLine = true,
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
+                        modifier = Modifier.weight(1f),
+                    )
+                    OutlinedTextField(
+                        value = city,
+                        onValueChange = { city = it },
+                        label = { Text("Ort") },
+                        singleLine = true,
+                        modifier = Modifier.weight(2f),
+                    )
+                }
+                DropdownField(
+                    label = "Krankenkasse / Pflegekasse",
+                    value = insurer,
+                    options = INSURERS,
+                    onValueChange = { insurer = it },
+                )
+                OutlinedTextField(
+                    value = insuranceNumber,
+                    onValueChange = { insuranceNumber = it },
+                    label = { Text("Versichertennummer (optional)") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
                 OutlinedTextField(
                     value = important,
                     onValueChange = { important = it },
@@ -167,7 +210,7 @@ fun PersonDialog(initial: Person?, onDismiss: () -> Unit, onSave: (Person) -> Un
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Text(
-                    "Diese Angaben bleiben nur in der App auf diesem Handy. Sie werden nie automatisch gesendet.",
+                    "Diese Angaben bleiben nur in der App auf diesem Handy. Sie werden nie automatisch gesendet. Für die Suche nach Stellen in deiner Nähe werden nur Krankenkasse und PLZ/Ort verwendet.",
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
@@ -182,6 +225,11 @@ fun PersonDialog(initial: Person?, onDismiss: () -> Unit, onSave: (Person) -> Un
                             birthDate = birth?.toEpochDay(),
                             careLevel = level,
                             important = important.trim(),
+                            street = street.trim(),
+                            zip = zip.trim(),
+                            city = city.trim(),
+                            insurer = insurer.trim(),
+                            insuranceNumber = insuranceNumber.trim(),
                         ),
                     )
                 },

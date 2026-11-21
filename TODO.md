@@ -4,6 +4,11 @@
 
 - [ ] Erkennung von Packungsfoto weiter verbessern (Wirkstoff, Packungsbeilage), Kamera-Scan für Barcodes live
 
+## Version 0.15.0 (fertig)
+
+- [x] Profil erweitert: Adresse, Krankenkasse/Pflegekasse, Versichertennummer (nur lokal)
+- [x] Wegweiser mit Links: Pflegekasse, Pflegestützpunkt, Pflegedienste, Tagespflege, Versorgungsamt in der Nähe (Karten-App), Suche nach Antragsformularen der eigenen Kasse, Pflegelotse, BAFzA, Vordrucke Vorsorgevollmacht
+
 ## Version 0.14.0 (fertig)
 
 - [x] Neuer Bereich Dokumente: fotografieren (mehrere Seiten), Foto aus Galerie, Datei laden (PDF, Bild, Text)
@@ -97,4 +102,4 @@
 - [ ] Dokumente: Medikamente und Termine aus dem erkannten Text vorschlagen, KI-Zusammenfassung (mit Bestätigung)
 - [ ] Datenbank verschlüsseln, App-Sperre
 - [ ] KI-Vorschläge aus Dokumenten (immer mit Bestätigung), Datenschutz-Filter vor jeder Übertragung
-- [ ] Umkreissuche für Ärzte und Pflegedienste
+- [ ] Umkreissuche direkt bei Kontakten (Arzt, Pflegedienst, Apotheke in der Nähe)

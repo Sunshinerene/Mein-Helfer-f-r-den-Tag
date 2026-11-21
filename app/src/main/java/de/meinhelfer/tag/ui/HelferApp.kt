@@ -145,10 +145,8 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
             onStartTour = { showTour = true },
         )
     } else if (showWegweiser) {
-        val currentPerson = persons.firstOrNull { it.id == personId }
         WegweiserScreen(
-            personName = currentPerson?.name,
-            careLevel = currentPerson?.careLevel ?: 0,
+            person = persons.firstOrNull { it.id == personId },
             onAddTodo = { vm.addTodo(it) },
             onBack = { showWegweiser = false },
         )

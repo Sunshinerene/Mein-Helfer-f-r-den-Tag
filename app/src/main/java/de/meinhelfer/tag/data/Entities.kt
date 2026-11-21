@@ -15,6 +15,13 @@ data class Person(
     val careLevel: Int = 0,
     /** Freitext "Wichtig zu wissen" (z. B. Allergien, Besonderheiten). */
     val important: String = "",
+    val street: String = "",
+    val zip: String = "",
+    val city: String = "",
+    /** Krankenkasse (die Pflegekasse gehoert immer dazu). */
+    val insurer: String = "",
+    /** Versichertennummer, nur zum Nachschauen beim Ausfuellen von Antraegen. */
+    val insuranceNumber: String = "",
 )
 
 /** Medikament mit Einnahmezeiten und Vorrat (fuer die Nachbestell-Warnung). */

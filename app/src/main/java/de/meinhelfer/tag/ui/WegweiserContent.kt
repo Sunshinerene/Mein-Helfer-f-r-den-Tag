@@ -163,3 +163,91 @@ val WEGWEISER_SECTIONS: List<BenefitSection> = listOf(
         ),
     ),
 )
+
+// ---------------------------------------------------------------- Links zu Stellen und Vordrucken
+
+enum class LinkKind { SEARCH, MAPS, URL }
+
+/**
+ * Link zu einer Stelle oder einem Vordruck. SEARCH = Internetsuche, MAPS = Karten-App (Umkreis),
+ * URL = feste Adresse. In [target] werden {kasse} und {ort} durch die Angaben im Profil ersetzt
+ * (nur Krankenkasse und PLZ/Ort, nie Name, Strasse oder Versichertennummer).
+ */
+data class WegLink(val label: String, val kind: LinkKind, val target: String)
+
+private const val PFLEGELOTSE = "https://www.pflegelotse.de"
+
+/** Links je Eintrag (Schluessel = Titel des Eintrags). */
+val WEGWEISER_LINKS: Map<String, List<WegLink>> = mapOf(
+    "Pflegegrad beantragen" to listOf(
+        WegLink("Antragsformular suchen", LinkKind.SEARCH, "Antrag Pflegegrad Pflegeleistungen {kasse} Formular"),
+        WegLink("Pflegekasse in der Nähe (Karte)", LinkKind.MAPS, "{kasse} Geschäftsstelle {ort}"),
+    ),
+    "Begutachtung vorbereiten" to listOf(
+        WegLink("Vorlage Pflegetagebuch suchen", LinkKind.SEARCH, "Pflegetagebuch Vorlage Begutachtung Pflegegrad PDF"),
+    ),
+    "Bescheid prüfen, Widerspruch" to listOf(
+        WegLink("Muster Widerspruch suchen", LinkKind.SEARCH, "Widerspruch Pflegegrad Muster Vorlage"),
+    ),
+    "Kostenlose Pflegeberatung" to listOf(
+        WegLink("Pflegestützpunkt in der Nähe (Karte)", LinkKind.MAPS, "Pflegestützpunkt {ort}"),
+        WegLink("Pflegestützpunkte per Pflegelotse suchen", LinkKind.URL, PFLEGELOTSE),
+        WegLink("Beratung für Privatversicherte (compass)", LinkKind.URL, "https://www.compass-pflegeberatung.de"),
+    ),
+    "Pflegesachleistung" to listOf(
+        WegLink("Pflegedienste in der Nähe (Karte)", LinkKind.MAPS, "ambulanter Pflegedienst {ort}"),
+        WegLink("Pflegedienste vergleichen (Pflegelotse)", LinkKind.URL, PFLEGELOTSE),
+    ),
+    "Entlastungsbetrag" to listOf(
+        WegLink("Anerkannte Anbieter in der Nähe suchen", LinkKind.SEARCH, "Angebote zur Unterstützung im Alltag Entlastungsbetrag {ort}"),
+        WegLink("Antrag Kostenerstattung suchen", LinkKind.SEARCH, "Antrag Entlastungsbetrag Kostenerstattung {kasse} Formular"),
+    ),
+    "Entlastungsbudget (Verhinderungs- und Kurzzeitpflege)" to listOf(
+        WegLink("Antrag Verhinderungspflege suchen", LinkKind.SEARCH, "Antrag Verhinderungspflege {kasse} Formular"),
+        WegLink("Kurzzeitpflege in der Nähe (Karte)", LinkKind.MAPS, "Kurzzeitpflege {ort}"),
+    ),
+    "Tages- und Nachtpflege" to listOf(
+        WegLink("Tagespflege in der Nähe (Karte)", LinkKind.MAPS, "Tagespflege {ort}"),
+    ),
+    "Pflegehilfsmittel zum Verbrauch" to listOf(
+        WegLink("Antrag Pflegehilfsmittel suchen", LinkKind.SEARCH, "Antrag Pflegehilfsmittel zum Verbrauch {kasse} Formular"),
+    ),
+    "Technische Pflegehilfsmittel und Hausnotruf" to listOf(
+        WegLink("Hausnotruf-Anbieter suchen", LinkKind.SEARCH, "Hausnotruf Anbieter {ort}"),
+        WegLink("Sanitätshaus in der Nähe (Karte)", LinkKind.MAPS, "Sanitätshaus {ort}"),
+    ),
+    "Wohnumfeld verbessern" to listOf(
+        WegLink("Antrag Wohnumfeldverbesserung suchen", LinkKind.SEARCH, "Antrag Zuschuss Wohnumfeldverbesserung {kasse} Formular"),
+        WegLink("Wohnberatung in der Nähe suchen", LinkKind.SEARCH, "Wohnberatung Wohnraumanpassung {ort}"),
+    ),
+    "Vollstationäre Pflege" to listOf(
+        WegLink("Pflegeheime in der Nähe (Karte)", LinkKind.MAPS, "Pflegeheim {ort}"),
+        WegLink("Pflegeheime vergleichen (Pflegelotse)", LinkKind.URL, PFLEGELOTSE),
+    ),
+    "Pflegekurse" to listOf(
+        WegLink("Pflegekurse in der Nähe suchen", LinkKind.SEARCH, "Pflegekurs für Angehörige {kasse} {ort}"),
+    ),
+    "Beratungsbesuch bei Pflegegeld" to listOf(
+        WegLink("Pflegedienste in der Nähe (Karte)", LinkKind.MAPS, "ambulanter Pflegedienst {ort}"),
+    ),
+    "Pflegeunterstützungsgeld" to listOf(
+        WegLink("Antrag suchen", LinkKind.SEARCH, "Antrag Pflegeunterstützungsgeld {kasse} Formular"),
+    ),
+    "Pflegezeit und Familienpflegezeit" to listOf(
+        WegLink("Zinsloses Darlehen beim BAFzA", LinkKind.URL, "https://www.bafza.de/programme-und-foerderungen/familienpflegezeit"),
+    ),
+    "Rentenversicherung für Pflegepersonen" to listOf(
+        WegLink("Formular suchen", LinkKind.SEARCH, "Antrag Rentenversicherung Pflegeperson Erhebungsbogen {kasse}"),
+    ),
+    "Schwerbehindertenausweis" to listOf(
+        WegLink("Versorgungsamt in der Nähe (Karte)", LinkKind.MAPS, "Versorgungsamt {ort}"),
+        WegLink("Antrag suchen", LinkKind.SEARCH, "Antrag Schwerbehindertenausweis Versorgungsamt {ort}"),
+    ),
+    "Zuzahlungsbefreiung" to listOf(
+        WegLink("Antrag suchen", LinkKind.SEARCH, "Antrag Befreiung Zuzahlungen {kasse} Formular"),
+    ),
+    "Vorsorgevollmacht und Patientenverfügung" to listOf(
+        WegLink("Vordrucke und Broschüre (Bayerisches Justizministerium)", LinkKind.URL, "https://www.justiz.bayern.de/Vorsorge"),
+        WegLink("Betreuungsverein in der Nähe (Karte)", LinkKind.MAPS, "Betreuungsverein {ort}"),
+    ),
+)
