@@ -4,6 +4,15 @@
 
 - [ ] Erkennung von Packungsfoto weiter verbessern (Wirkstoff, Packungsbeilage), Kamera-Scan für Barcodes live
 
+## Version 0.29.0 (fertig)
+
+- [x] Sicherung und Wiederherstellung: eine Datei mit Passwort verschlüsselt (Datenbank, Dokumente, Fotos, Einstellungen), speichern wohin man will, Wiederherstellung auch auf neuem Handy, mit Prüfung und Rückfall
+
+## Als Nächstes (Wunsch vom 21.11.)
+
+- [ ] Dokument-Vorschläge bei Terminen und Aufgaben genauer zuordnen
+- [ ] Schreiben und Vorlagen für den Postweg (Vollmacht, Schweigepflichtentbindung, Anträge, Widerspruch) als PDF zum Ausdrucken, später eingescannt wieder in die App
+
 ## Version 0.28.0 (fertig)
 
 - [x] Fahrdienst-Anfrage: Hinfahrt und/oder Rückfahrt wählbar, Stockwerk und Aufzug für Abholort und Ziel

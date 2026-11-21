@@ -119,6 +119,7 @@ fun SettingsScreen(
             item { ThemeCard(vm) }
             item { IntakeCard() }
             item { SecurityCard() }
+            item { BackupCard() }
             item { MedInfoCard() }
             item { AiCard() }
             item { BetaCard() }

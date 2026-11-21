@@ -67,6 +67,20 @@ object DocumentStore {
         name
     }
 
+    /** Namen aller gespeicherten (verschluesselten) Dokumentdateien. */
+    fun storedNames(context: Context): List<String> = dir(context).listFiles()?.map { it.name }.orEmpty()
+
+    /** Entschluesselter Datenstrom einer gespeicherten Datei (fuer die Sicherung). */
+    fun openPlain(context: Context, name: String): java.io.InputStream =
+        encrypted(context, File(dir(context), name)).openFileInput()
+
+    /** Verschluesselt [input] mit dem Schluessel dieses Geraets in [target]. Der Dateiname muss dem spaeteren Namen entsprechen. */
+    fun storeTo(context: Context, target: File, input: java.io.InputStream) {
+        target.parentFile?.mkdirs()
+        target.delete()
+        encrypted(context, target).openFileOutput().use { out -> input.copyTo(out) }
+    }
+
     /** Entschluesselte Kopie im Cache (fuer Oeffnen/Teilen). */
     suspend fun decryptToCache(context: Context, name: String, displayName: String): File = withContext(Dispatchers.IO) {
         val out = File(tmpDir(context), safeName(displayName))

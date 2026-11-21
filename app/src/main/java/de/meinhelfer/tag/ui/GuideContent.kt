@@ -525,6 +525,25 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
         ),
     ),
     GuideSection(
+        id = "sicherung",
+        title = "Sicherung und Wiederherstellung",
+        summary = "Alle Daten in einer verschlüsselten Datei sichern, auch für ein neues Handy",
+        items = listOf(
+            GuideItem(
+                "Sicherung erstellen",
+                "Einstellungen → „Sicherung und Wiederherstellung“ → „Sicherung erstellen“. Du wählst ein Passwort (mindestens 8 Zeichen) und dann, wo die Datei gespeichert wird, z. B. in Downloads, in einer Cloud oder auf einem USB-Stick. Gesichert werden Personen, Medikamente, Termine, Kontakte, Aufgaben, Dokumente, Fotos und die Einstellungen. Die Datei ist mit deinem Passwort verschlüsselt. Nicht enthalten ist der Zugangsschlüssel für die KI, den trägst du neu ein.",
+            ),
+            GuideItem(
+                "Wiederherstellen",
+                "„Wiederherstellen“ → Datei auswählen → Passwort eingeben. Die App prüft die Sicherung und zeigt Datum und Umfang. Erst nach deiner Bestätigung werden die jetzigen Daten ersetzt und die App startet neu. Geht dabei etwas schief, bleiben die bisherigen Daten erhalten. Das funktioniert auch auf einem neuen Handy: App installieren, Sicherungsdatei dorthin kopieren, wiederherstellen.",
+            ),
+            GuideItem(
+                "Passwort und Aufbewahrung",
+                "Das Passwort kennt nur du. Wenn du es vergisst, kann niemand die Sicherung öffnen, auch die App nicht. Bewahre Datei und Passwort getrennt auf, am besten außerhalb des Handys. Sichere regelmäßig, z. B. nach größeren Änderungen oder einmal im Monat. Unter der Überschrift steht, wann die letzte Sicherung war.",
+            ),
+        ),
+    ),
+    GuideSection(
         id = "updates",
         title = "Updates und Feedback",
         summary = "App aktualisieren, Wünsche und Fehler melden",

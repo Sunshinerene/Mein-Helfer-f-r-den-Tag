@@ -40,6 +40,29 @@ object DbCrypto {
         }
     }
 
+    private fun keyPrefs(context: Context) = EncryptedSharedPreferences.create(
+        context, PREFS, MasterKey.Builder(context).setKeyScheme(MasterKey.KeyScheme.AES256_GCM).build(),
+        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
+    )
+
+    /** Gespeicherter Schluessel oder null (erzeugt keinen neuen). */
+    fun storedPassphrase(context: Context): String? = try {
+        keyPrefs(context).getString(KEY, null)
+    } catch (_: Throwable) {
+        null
+    }
+
+    /** Setzt den Schluessel (bei Wiederherstellung einer Sicherung); null entfernt ihn. */
+    fun setPassphrase(context: Context, value: String?) {
+        val edit = keyPrefs(context).edit()
+        if (value == null) edit.remove(KEY) else edit.putString(KEY, value)
+        check(edit.commit()) { "Schluessel nicht gespeichert" }
+    }
+
+    /** Laedt die SQLCipher-Bibliothek, falls noetig. */
+    fun ensureLoaded(): Boolean = load()
+
     /** Schluessel (64 Hex-Zeichen). Wird beim ersten Mal erzeugt. */
     fun passphrase(context: Context): String {
         val master = MasterKey.Builder(context).setKeyScheme(MasterKey.KeyScheme.AES256_GCM).build()

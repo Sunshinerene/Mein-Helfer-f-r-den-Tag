@@ -16,6 +16,8 @@ import java.io.IOException
 object PhotoStore {
     private fun dir(context: Context): File = File(context.filesDir, "photos").apply { mkdirs() }
 
+    fun names(context: Context): List<String> = dir(context).listFiles()?.map { it.name }.orEmpty()
+
     fun newFile(context: Context): File = File(dir(context), "med_${System.currentTimeMillis()}.jpg")
 
     fun file(context: Context, name: String): File = File(dir(context), name)

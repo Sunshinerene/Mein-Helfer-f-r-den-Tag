@@ -4,7 +4,7 @@ import android.content.Context
 
 /** Kleine App-Einstellungen (lokal auf dem Geraet). */
 object AppPrefs {
-    private const val FILE = "einstellungen"
+    internal const val FILE = "einstellungen"
     private const val KEY_AUTO_UPDATE = "auto_update_check"
     private const val KEY_LAST_NOTIFIED = "last_notified_version"
 
@@ -195,6 +195,20 @@ object AppPrefs {
     }
 
     private fun prefs(context: Context) = context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
+
+    /** Zeitpunkt der letzten Sicherung (Millisekunden), 0 = noch nie. */
+    fun lastBackup(context: Context): Long = prefs(context).getLong("letzte_sicherung", 0L)
+
+    fun setLastBackup(context: Context, millis: Long) {
+        prefs(context).edit().putLong("letzte_sicherung", millis).apply()
+    }
+
+    /** Ergebnis der letzten Wiederherstellung: "ok:<millis>" oder "fehler:<millis>", leer = keine. */
+    fun restoreResult(context: Context): String = prefs(context).getString("wiederherstellung", "") ?: ""
+
+    fun setRestoreResult(context: Context, value: String) {
+        prefs(context).edit().putString("wiederherstellung", value).apply()
+    }
 
     fun autoUpdateCheck(context: Context): Boolean = prefs(context).getBoolean(KEY_AUTO_UPDATE, true)
 
