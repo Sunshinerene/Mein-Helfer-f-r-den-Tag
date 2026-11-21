@@ -98,6 +98,7 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
     var showCaregiver by rememberSaveable { mutableStateOf(false) }
     var showNotruf by rememberSaveable { mutableStateOf(false) }
     var showLetters by rememberSaveable { mutableStateOf(false) }
+    var showMedOverview by rememberSaveable { mutableStateOf(false) }
     val appContext = LocalContext.current
     var caregiver by remember { mutableStateOf(AppPrefs.caregiver(appContext)) }
     // Beim ersten Start einmal den Rundgang anbieten
@@ -139,8 +140,9 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
         }
     }
 
-    BackHandler(enabled = showSettings || showSummary || showGuide || showTour || showReorder || showWegweiser || showLetters) {
+    BackHandler(enabled = showSettings || showSummary || showGuide || showTour || showReorder || showWegweiser || showLetters || showMedOverview) {
         when {
+            showMedOverview -> showMedOverview = false
             showTour -> showTour = false
             showGuide -> showGuide = false
             showSettings -> showSettings = false
@@ -178,6 +180,14 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
             caregiver = caregiver,
             vm = vm,
             onBack = { showLetters = false },
+        )
+    } else if (showMedOverview) {
+        MedOverviewScreen(
+            meds = meds,
+            doctors = doctors,
+            person = persons.firstOrNull { it.id == personId },
+            vm = vm,
+            onBack = { showMedOverview = false },
         )
     } else if (showReorder) {
         ReorderScreen(
@@ -273,7 +283,7 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
                             }
                         }
                     }
-                    Tab.Medikamente -> MedicationScreen(meds, doctors, vm, onReorder = { showReorder = true })
+                    Tab.Medikamente -> MedicationScreen(meds, doctors, vm, onReorder = { showReorder = true }, onOverview = { showMedOverview = true })
                     Tab.Termine -> AppointmentScreen(appointments, doctors, documents, meds, persons.firstOrNull { it.id == personId }, vm, caregiver) { showCaregiver = true }
                     Tab.Dokumente -> DocumentScreen(documents, doctors, persons.firstOrNull { it.id == personId }, vm, onOpenLetters = { showLetters = true })
                     Tab.Aerzte -> DoctorScreen(
@@ -360,7 +370,13 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun MedicationScreen(items: List<Medication>, doctors: List<Doctor>, vm: MainViewModel, onReorder: () -> Unit) {
+private fun MedicationScreen(
+    items: List<Medication>,
+    doctors: List<Doctor>,
+    vm: MainViewModel,
+    onReorder: () -> Unit,
+    onOverview: () -> Unit = {},
+) {
     var showAdd by remember { mutableStateOf(false) }
     var editItem by remember { mutableStateOf<Medication?>(null) }
     var detailId by remember { mutableStateOf<Long?>(null) }
@@ -368,11 +384,16 @@ private fun MedicationScreen(items: List<Medication>, doctors: List<Doctor>, vm:
     val lowCount = lowStockMeds(items).size
     Column(Modifier.fillMaxSize()) {
         if (items.isNotEmpty()) {
-            OutlinedButton(
-                onClick = onReorder,
-                modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp),
+            Row(
+                Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Text(if (lowCount > 0) "Nachbestellung ($lowCount fällig)" else "Nachbestellung")
+                OutlinedButton(onClick = onOverview, modifier = Modifier.weight(1f)) {
+                    FitText("Überblick & Check", maxSize = 14.sp)
+                }
+                OutlinedButton(onClick = onReorder, modifier = Modifier.weight(1f)) {
+                    FitText(if (lowCount > 0) "Nachbestellen ($lowCount)" else "Nachbestellen", maxSize = 14.sp)
+                }
             }
         }
         ListScreen(

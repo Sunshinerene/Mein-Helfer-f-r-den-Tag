@@ -43,7 +43,7 @@ private val LEVEL_WORDS = listOf("nicht beurteilt", "gering", "eher gering", "mi
 
 /** Skala mit fuenf Feldern, nur als grobe Orientierung. */
 @Composable
-private fun ScaleRow(label: String, level: Int, emptyText: String? = null) {
+internal fun ScaleRow(label: String, level: Int, emptyText: String? = null) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(label, style = MaterialTheme.typography.bodyMedium)

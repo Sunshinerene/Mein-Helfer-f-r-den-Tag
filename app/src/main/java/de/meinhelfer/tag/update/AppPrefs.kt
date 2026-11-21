@@ -40,6 +40,13 @@ object AppPrefs {
         prefs(context).edit().putBoolean("viewer_intern", value).apply()
     }
 
+    /** Letzter KI-Gesamt-Check des Medikamentenplans je Person (JSON, siehe MedCheck). */
+    fun medCheck(context: Context, personId: Long): String = prefs(context).getString("medcheck_$personId", "") ?: ""
+
+    fun setMedCheck(context: Context, personId: Long, json: String) {
+        prefs(context).edit().putString("medcheck_$personId", json).apply()
+    }
+
     /** Eingeklappte Karten auf der Heute-Seite. */
     fun folded(context: Context, key: String): Boolean = prefs(context).getBoolean("eingeklappt_$key", false)
 

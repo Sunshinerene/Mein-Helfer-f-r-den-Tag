@@ -154,6 +154,10 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
         summary = "Anlegen, Foto, PZN, Beschreibung, Vorrat",
         items = listOf(
             GuideItem(
+                "Überblick und Gesamt-Check",
+                "Im Reiter „Medikamente“ oben „Überblick & Check“ antippen. Dort siehst du alle Medikamente mit ihrer Einschätzung (Wirkstärke, Nebenwirkungen, Wechselwirkungen) und das Gesamtbild: Anzahl, Einnahmen pro Tag und Hinweise zu deinen Ansprüchen (Medikationsplan vom Hausarzt ab 3 dauerhaft verordneten Medikamenten, kostenlose erweiterte Medikationsberatung in der Apotheke ab 5). Mit „Gesamt-Check per KI“ (freiwillig, KI muss eingerichtet sein) schätzt die KI alle Medikamente zusammen ein: welche Paare sich beeinflussen können (Gering, Beachten, Wichtig), Hinweise zu Einnahmezeiten, ein Gesamtbild und Fragen für Arzt oder Apotheke. Vorher siehst du genau, was gesendet wird: nur Medikamente mit Dosierung und Zeiten, ohne Namen der Person, das Alter nur auf Wunsch. Fragen lassen sich als Aufgabe merken, der Überblick lässt sich teilen, z. B. für den Arztbesuch. Ändert sich der Plan, weist die App darauf hin. Alles nur Anhaltspunkte: nie eigenmächtig absetzen oder ändern, sondern prüfen lassen.",
+            ),
+            GuideItem(
                 "Medikament anlegen",
                 "Im Bereich „Medikamente“ auf das Plus tippen. Pflicht ist nur der Name. Der Papierkorb auf der Karte löscht das Medikament (mit Rückfrage).",
             ),

@@ -5,6 +5,11 @@
 - [ ] Vorlagen erweitern (Kündigung Pflegedienst, Antrag Schwerbehindertenausweis, Widerruf), Unterschrift-Scan automatisch dem Entwurf zuordnen
 - [ ] Erkennung von Packungsfoto weiter verbessern (Wirkstoff, Packungsbeilage), Kamera-Scan für Barcodes live
 
+## Version 0.37.0 (fertig)
+
+- [x] Medikamente im Überblick: alle Medikamente mit Einschätzung, Gesamtbild, Hinweise zu Medikationsplan (ab 3) und Medikationsberatung in der Apotheke (ab 5)
+- [x] KI-Gesamt-Check: Kombinationen mit Gewichtung (Gering, Beachten, Wichtig), Einnahmezeiten, Gesamtbild, Fragen an Arzt/Apotheke als Aufgabe, Teilen; Hinweis bei geändertem Plan
+
 ## Version 0.36.0 (fertig)
 
 - [x] Aufgaben: Erledigt-Datum, Ergebnis und Sterne-Bewertung; „Erledigte entfernen“ verschiebt nur in den Verlauf
