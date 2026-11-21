@@ -92,7 +92,7 @@ internal fun emergencyText(
     append("\nStand: ").append(LocalDate.now().format(EMERGENCY_DATE)).append(". Ohne Gewähr, Angaben bitte prüfen.")
 }
 
-/** BETA: Notfallkarte mit den wichtigsten Angaben, zum Zeigen, Kopieren oder Teilen. */
+/** Notfallkarte mit den wichtigsten Angaben, zum Zeigen, Kopieren oder Teilen. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun EmergencyDialog(
@@ -107,7 +107,7 @@ fun EmergencyDialog(
     val text = emergencyText(person, meds, doctors, caregiver, withNumber)
     AlertDialog(
         onDismissRequest = onClose,
-        title = { Text("Notfallkarte (Beta)") },
+        title = { Text("Notfallkarte") },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(onClick = {
@@ -148,12 +148,12 @@ fun EmergencyDialog(
     )
 }
 
-/** Karte auf der Heute-Seite (nur wenn die Beta-Funktion eingeschaltet ist). */
+/** Karte auf der Heute-Seite (wenn in den Einstellungen eingeschaltet). */
 @Composable
 fun EmergencyEntryCard(onOpen: () -> Unit) {
     HCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text("Notfallkarte (Beta)", style = MaterialTheme.typography.titleMedium)
+            Text("Notfallkarte", style = MaterialTheme.typography.titleMedium)
             Text(
                 "Alle wichtigen Angaben auf einen Blick für Rettungsdienst oder Vertretung.",
                 style = MaterialTheme.typography.bodySmall,

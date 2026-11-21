@@ -177,8 +177,10 @@ internal fun AppointmentCard(
                         style = MaterialTheme.typography.bodySmall,
                     )
                 }
-                reminderText(a.reminderMinutes)?.let {
-                    Text(it, style = MaterialTheme.typography.bodySmall)
+                if (!past) {
+                    reminderText(a.reminderMinutes)?.let {
+                        Text(it, style = MaterialTheme.typography.bodySmall)
+                    }
                 }
                 if (outside && !past) {
                     Text(
@@ -202,12 +204,13 @@ internal fun AppointmentCard(
                     startIntent(context, Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + doctor.phone.filter { it.isDigit() || it == '+' })))
                 }) { Text("Anrufen") }
             }
-            if (target != null) {
+            // Vergangene Termine: nur noch Anrufen, Nachricht und Unterlagen
+            if (target != null && !past) {
                 TextButton(onClick = {
                     startIntent(context, Intent(Intent.ACTION_VIEW, Uri.parse(FahrdienstSearch.routeUrl(target))))
                 }) { Text("Route") }
             }
-            if (outside) {
+            if (outside && !past) {
                 TextButton(onClick = onFahrdienst) { Text("Fahrdienst") }
             }
             if (onMail != null && doctor != null) {
@@ -216,7 +219,7 @@ internal fun AppointmentCard(
             TextButton(onClick = onDocs) {
                 Text(if (attached.isEmpty()) "Unterlagen" else "Unterlagen (${attached.size})")
             }
-            TextButton(onClick = onCalendar) { Text("In Kalender eintragen") }
+            if (!past) TextButton(onClick = onCalendar) { Text("In Kalender eintragen") }
         }
     }
 

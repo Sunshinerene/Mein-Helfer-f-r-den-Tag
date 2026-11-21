@@ -386,6 +386,24 @@ data class DesignTweak(val a: Long? = null, val b: Long? = null, val c: Long? = 
 /** Ob das Design einen farbigen Hintergrund mit Farbflecken hat (Glas, Liquid). */
 fun DesignStyle.hasBackdrop(): Boolean = this == DesignStyle.Glas || this == DesignStyle.Liquid
 
+/** Hellt eine Farbe im dunklen Modus auf bzw. dunkelt sie im hellen Modus ab, bis Text in dieser Farbe gut lesbar ist. */
+private fun readableOn(color: Color, dark: Boolean): Color {
+    var c = color
+    var step = 0
+    if (dark) {
+        while (c.luminance() < 0.30f && step < 12) {
+            c = lerp(c, Color.White, 0.15f)
+            step++
+        }
+    } else {
+        while (c.luminance() > 0.25f && step < 12) {
+            c = lerp(c, Color.Black, 0.15f)
+            step++
+        }
+    }
+    return c
+}
+
 private fun onColor(color: Color): Color = if (color.luminance() > 0.5f) Color(0xFF111111) else Color.White
 
 fun tweakedSpec(style: DesignStyle, dark: Boolean, tweak: DesignTweak?): DesignSpec {
@@ -397,7 +415,8 @@ fun tweakedSpec(style: DesignStyle, dark: Boolean, tweak: DesignTweak?): DesignS
     val deep = if (dark) Color(0xFF14141A) else Color.White
 
     tweak.a?.let { raw ->
-        val pc = Color(raw)
+        // Hauptfarbe wird auch fuer Schrift (Knoepfe, Links) genutzt: so weit aufhellen bzw. abdunkeln, dass sie lesbar bleibt.
+        val pc = readableOn(Color(raw), dark)
         val container = lerp(deep, pc, if (dark) 0.40f else 0.25f)
         scheme = scheme.copy(
             primary = pc, onPrimary = onColor(pc), secondary = pc, onSecondary = onColor(pc),

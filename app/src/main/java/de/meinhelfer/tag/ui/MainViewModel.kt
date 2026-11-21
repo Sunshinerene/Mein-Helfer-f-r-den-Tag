@@ -174,6 +174,13 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun delete(item: Document) = viewModelScope.launch {
         db.documentDao().delete(item)
         DocumentStore.delete(getApplication(), item.fileName)
+        // Verknuepfungen an Terminen und Aufgaben entfernen
+        fun without(ids: String): String =
+            ids.split(",").map { it.trim() }.filter { it.isNotEmpty() && it != item.id.toString() }.joinToString(",")
+        db.appointmentDao().list().filter { a -> a.docIds.split(",").any { it.trim() == item.id.toString() } }
+            .forEach { db.appointmentDao().update(it.copy(docIds = without(it.docIds))) }
+        db.todoDao().list().filter { t -> t.docIds.split(",").any { it.trim() == item.id.toString() } }
+            .forEach { db.todoDao().update(it.copy(docIds = without(it.docIds))) }
     }
 
     // ---------------------------------------------------------------- Termine
@@ -281,7 +288,15 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun deleteTodo(item: Todo) = viewModelScope.launch { db.todoDao().delete(item) }
 
+    /** Entfernt alle erledigten Aufgaben der aktuellen Person. */
+    fun deleteDoneTodos() = viewModelScope.launch { db.todoDao().deleteDone(_personId.value) }
+
     // ---------------------------------------------------------------- Personen
+
+    /** Waehlt die Person nur, wenn es sie (noch) gibt, z. B. beim Oeffnen aus einer Benachrichtigung. */
+    fun selectPersonIfExists(id: Long) = viewModelScope.launch {
+        if (db.personDao().list().any { it.id == id }) selectPerson(id)
+    }
 
     fun selectPerson(id: Long) {
         _personId.value = id
@@ -353,7 +368,15 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun add(item: Doctor) = viewModelScope.launch { db.doctorDao().insert(item) }
     fun update(item: Doctor) = viewModelScope.launch { db.doctorDao().update(item) }
-    fun delete(item: Doctor) = viewModelScope.launch { db.doctorDao().delete(item) }
+    /** Loescht einen Kontakt und entfernt ihn ueberall, wo er verknuepft war. */
+    fun delete(item: Doctor) = viewModelScope.launch {
+        db.doctorDao().delete(item)
+        db.medicationDao().clearDoctor(item.id)
+        db.medicationDao().clearPharmacy(item.id)
+        db.appointmentDao().clearDoctor(item.id)
+        db.todoDao().clearDoctor(item.id)
+        db.documentDao().clearDoctor(item.id)
+    }
 
     // ---------------------------------------------------------------- App-Update
 

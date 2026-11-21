@@ -21,6 +21,12 @@ interface MedicationDao {
     @Query("SELECT * FROM Medication WHERE id = :id")
     suspend fun byId(id: Long): Medication?
 
+    @Query("UPDATE Medication SET doctorId = NULL WHERE doctorId = :contactId")
+    suspend fun clearDoctor(contactId: Long)
+
+    @Query("UPDATE Medication SET pharmacyId = NULL WHERE pharmacyId = :contactId")
+    suspend fun clearPharmacy(contactId: Long)
+
     @Insert
     suspend fun insert(item: Medication)
 
@@ -44,6 +50,9 @@ interface AppointmentDao {
 
     @Query("SELECT * FROM Appointment WHERE id = :id")
     suspend fun byId(id: Long): Appointment?
+
+    @Query("UPDATE Appointment SET doctorId = NULL WHERE doctorId = :contactId")
+    suspend fun clearDoctor(contactId: Long)
 
     @Insert
     suspend fun insert(item: Appointment)
@@ -149,6 +158,15 @@ interface TodoDao {
 
     @Query("DELETE FROM Todo WHERE personId = :personId")
     suspend fun deleteForPerson(personId: Long)
+
+    @Query("SELECT * FROM Todo")
+    suspend fun list(): List<Todo>
+
+    @Query("UPDATE Todo SET doctorId = NULL WHERE doctorId = :contactId")
+    suspend fun clearDoctor(contactId: Long)
+
+    @Query("DELETE FROM Todo WHERE personId = :personId AND done = 1")
+    suspend fun deleteDone(personId: Long)
 }
 
 @Dao
@@ -158,6 +176,9 @@ interface DocumentDao {
 
     @Query("SELECT * FROM Document WHERE personId = :personId")
     suspend fun listFor(personId: Long): List<Document>
+
+    @Query("UPDATE Document SET doctorId = NULL WHERE doctorId = :contactId")
+    suspend fun clearDoctor(contactId: Long)
 
     @Insert
     suspend fun insert(item: Document)

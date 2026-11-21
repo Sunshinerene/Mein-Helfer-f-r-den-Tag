@@ -112,6 +112,7 @@ internal fun DocumentFilterBar(
     onSort: (DocSort) -> Unit,
     shown: Int,
     onReset: () -> Unit,
+    onLetters: (() -> Unit)? = null,
 ) {
     var more by remember { mutableStateOf(false) }
     val filtersActive = activeCategory != null || activeYear != null || activeDoctor != null || query.isNotBlank()
@@ -121,8 +122,8 @@ internal fun DocumentFilterBar(
         OutlinedTextField(
             value = query,
             onValueChange = onQuery,
-            label = { Text("Suchen (Titel, Text, Kategorie, Arzt, Datum)") },
-            supportingText = { Text("Mehrere Wörter möglich, z. B. „Befund 2025“") },
+            label = { Text("Suchen") },
+            placeholder = { Text("Titel, Text, Arzt, Datum … z. B. „Befund 2025“") },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -136,11 +137,12 @@ internal fun DocumentFilterBar(
                 )
             }
         }
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        FlowRow(verticalArrangement = Arrangement.Center, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             TextButton(onClick = { more = !more }) {
-                Text(if (more) "Weniger Filter ▴" else "Sortierung und mehr Filter ▾")
+                Text(if (more) "Weniger Filter ▴" else "Sortieren und filtern ▾")
             }
             if (filtersActive) TextButton(onClick = onReset) { Text("Zurücksetzen") }
+            if (onLetters != null) TextButton(onClick = onLetters) { Text("Schreiben erstellen") }
         }
         if (more) {
             Text("Sortieren", style = MaterialTheme.typography.labelMedium)

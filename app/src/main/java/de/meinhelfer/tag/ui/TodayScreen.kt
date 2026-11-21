@@ -194,6 +194,35 @@ fun TodayScreen(
             }
         }
 
+        // ---- Rueckfragen
+        if (followUps.isNotEmpty()) {
+            item {
+            Foldable(key = "nachgefragt", title = "Kurz nachgefragt", summary = "${followUps.size} offen", colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
+                HCard(
+                    Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+                ) {
+                    Column(Modifier.padding(start = 16.dp, end = 8.dp, top = 16.dp, bottom = 8.dp)) {
+                        Text("Kurz nachgefragt (${followUps.size})", style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            "Hier fehlt noch eine Antwort. Genommen, später, vergessen? Das macht die Auswertung genauer.",
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(bottom = 4.dp),
+                        )
+                        followUps.forEach { f ->
+                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                Text(f.title, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                                OutlinedButton(onClick = { statusTarget = f }, contentPadding = PaddingValues(horizontal = 12.dp)) {
+                                    Text("Antworten")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        }
+
         item { DayAheadCard(todos = todos, appointments = appointments, doctors = doctors, todayDay = todayDay, vm = vm) }
 
         if (!caregiver.isSet) {
@@ -220,36 +249,13 @@ fun TodayScreen(
                                 style = MaterialTheme.typography.bodyMedium,
                             )
                         }
-                        TextButton(onClick = onOpenReorder) { Text("Nachbestellung öffnen") }
-                    }
-                }
-            }
-        }
-        }
-
-        // ---- Rueckfragen
-        if (followUps.isNotEmpty()) {
-            item {
-            Foldable(key = "nachgefragt", title = "Kurz nachgefragt", summary = "${followUps.size} offen", colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
-                HCard(
-                    Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
-                ) {
-                    Column(Modifier.padding(start = 16.dp, end = 8.dp, top = 16.dp, bottom = 8.dp)) {
-                        Text("Kurz nachgefragt (${followUps.size})", style = MaterialTheme.typography.titleMedium)
-                        Text(
-                            "Hier fehlt noch eine Antwort. Genommen, später, vergessen? Das macht die Auswertung genauer.",
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(bottom = 4.dp),
-                        )
-                        followUps.forEach { f ->
-                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                                Text(f.title, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-                                TextButton(onClick = { statusTarget = f }, contentPadding = PaddingValues(horizontal = 8.dp)) {
-                                    Text("Antworten")
-                                }
-                            }
-                        }
+                        androidx.compose.material3.Button(
+                            onClick = onOpenReorder,
+                            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.error,
+                                contentColor = MaterialTheme.colorScheme.onError,
+                            ),
+                        ) { Text("Nachbestellung öffnen") }
                     }
                 }
             }

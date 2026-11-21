@@ -117,8 +117,14 @@ internal fun NotrufDialog(
     doctors: List<Doctor>,
     onSaveContact: (Doctor) -> Unit,
     onClose: () -> Unit,
+    meds: List<de.meinhelfer.tag.data.Medication> = emptyList(),
+    caregiver: de.meinhelfer.tag.data.CaregiverProfile = de.meinhelfer.tag.data.CaregiverProfile(),
 ) {
     val context = LocalContext.current
+    var showCard by remember { mutableStateOf(false) }
+    if (showCard) {
+        EmergencyDialog(person = person, meds = meds, doctors = doctors, caregiver = caregiver, onClose = { showCard = false })
+    }
     var nearby by remember { mutableStateOf<NearbyKind?>(null) }
     var showPoison by remember { mutableStateOf(false) }
     val sayText = notrufSayText(person)
@@ -155,6 +161,9 @@ internal fun NotrufDialog(
                             Toast.makeText(context, "Text kopiert", Toast.LENGTH_SHORT).show()
                         }) { Text("Kopieren") }
                     }
+                }
+                OutlinedButton(onClick = { showCard = true }, modifier = Modifier.fillMaxWidth()) {
+                    Text("Notfallkarte zeigen (Medikamente, Kontakte, Wichtiges)")
                 }
                 if (person != null && (person.street + person.city).isBlank()) {
                     Text(

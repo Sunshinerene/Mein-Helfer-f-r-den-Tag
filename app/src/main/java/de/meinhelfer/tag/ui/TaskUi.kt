@@ -112,6 +112,8 @@ internal fun TasksCard(
     var editItem by remember { mutableStateOf<Todo?>(null) }
     var rideFor by remember { mutableStateOf<Todo?>(null) }
     var confirmDelete by remember { mutableStateOf<Todo?>(null) }
+    var showDone by remember { mutableStateOf(false) }
+    var confirmClear by remember { mutableStateOf(false) }
     val today = LocalDate.now().toEpochDay()
     val openCount = todos.count { !it.done }
 
@@ -129,7 +131,8 @@ internal fun TasksCard(
                     modifier = Modifier.padding(start = 8.dp, bottom = 4.dp),
                 )
             }
-            sortTasks(todos).forEach { t ->
+            val doneTasks = todos.filter { it.done }
+            sortTasks(todos).filter { !it.done || showDone }.forEach { t ->
                 val doctor = doctors.firstOrNull { it.id == t.doctorId }
                 val overdue = !t.done && t.dueDay != null && t.dueDay < today
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
@@ -187,8 +190,34 @@ internal fun TasksCard(
                     }
                 }
             }
+            if (doneTasks.isNotEmpty()) {
+                FlowRow {
+                    TextButton(onClick = { showDone = !showDone }) {
+                        Text(if (showDone) "Erledigte ausblenden" else "Erledigte anzeigen (${doneTasks.size})")
+                    }
+                    if (showDone) {
+                        TextButton(onClick = { confirmClear = true }) { Text("Erledigte entfernen") }
+                    }
+                }
+            }
             TextButton(onClick = { showAdd = true }) { Text("+ Aufgabe hinzufügen") }
         }
+    }
+
+    if (confirmClear) {
+        AlertDialog(
+            onDismissRequest = { confirmClear = false },
+            title = { Text("Erledigte entfernen?") },
+            text = { Text("Alle erledigten Aufgaben dieser Person werden gelöscht. Offene Aufgaben bleiben.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    vm.deleteDoneTodos()
+                    confirmClear = false
+                    showDone = false
+                }) { Text("Entfernen") }
+            },
+            dismissButton = { TextButton(onClick = { confirmClear = false }) { Text("Abbrechen") } },
+        )
     }
 
     if (showAdd || editItem != null) {

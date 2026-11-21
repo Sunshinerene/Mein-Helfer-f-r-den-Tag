@@ -15,15 +15,15 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
         items = listOf(
             GuideItem(
                 "Was kann die App?",
-                "„Mein Helfer für den Tag“ unterstützt pflegende Angehörige im Alltag: Medikamente und Einnahmen, Termine, Kontakte zu Ärzten und Diensten, eigene Notizen und eine Auswertung.",
+                "„Mein Helfer für den Tag“ unterstützt pflegende Angehörige im Alltag: Medikamente mit Einnahmen und Vorrat, Termine mit Fahrdienst und Unterlagen, Aufgaben, Dokumente (verschlüsselt, mit Betrachter und Druck), Schreiben und Vollmachten als PDF, Kontakte, Notruf-Schnellzugriff, Tages-, Wochen- und Monatsübersicht, Auswertung, Wegweiser zu Leistungen und aktuelle Infos. Alles bleibt auf dem Handy.",
             ),
             GuideItem(
-                "Die vier Bereiche unten",
-                "Heute: was jetzt ansteht und abgehakt werden kann. Medikamente: Pläne und Vorrat. Termine: Arzt- und Pflegetermine. Kontakte: Ärzte, Pflegedienst, Apotheke und mehr.",
+                "Die sechs Bereiche unten",
+                "Heute: was jetzt ansteht (Tag, Woche, Monat). Medikamente: Pläne, Vorrat und Nachbestellung. Termine: Arzt- und Pflegetermine. Dokumente: Befunde, Bescheide, Schreiben. Kontakte: Ärzte, Pflegedienst, Apotheke und mehr. Infos: Aktuelles zu Pflege und Leistungen.",
             ),
             GuideItem(
                 "Oben rechts",
-                "Das rote Telefon-Symbol öffnet den Notruf-Schnellzugriff, das Info-Symbol diese Anleitung, das Zahnrad die Einstellungen (Updates, Darstellung, Feedback).",
+                "Das rote Telefon-Symbol öffnet den Notruf-Schnellzugriff mit Notfallkarte, das Info-Symbol diese Anleitung, das Zahnrad die Einstellungen (Updates, Darstellung, Sicherung, Feedback).",
             ),
             GuideItem(
                 "Notruf und Hilfe (rotes Telefon)",
@@ -346,7 +346,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Filtern und sortieren",
-                "Die Leiste unter dem Suchfeld zeigt alle Kategorien mit Anzahl. Ein Tipp filtert, nochmal tippen hebt den Filter auf. Unter „Sortierung und mehr Filter“ gibt es Sortierung (neueste, älteste, A bis Z, nach Kategorie) sowie Filter nach Jahr und nach Arzt oder Stelle. „Zurücksetzen“ löscht alle Filter.",
+                "Die Leiste unter dem Suchfeld zeigt alle Kategorien mit Anzahl. Ein Tipp filtert, nochmal tippen hebt den Filter auf. Unter „Sortieren und filtern“ gibt es Sortierung (neueste, älteste, A bis Z, nach Kategorie) sowie Filter nach Jahr und nach Arzt oder Stelle. „Zurücksetzen“ löscht alle Filter.",
             ),
             GuideItem(
                 "Kategorien und Vorschläge",
@@ -358,7 +358,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Öffnen und teilen",
-                "Eine Karte antippen zeigt die Details. „Öffnen“ zeigt die Datei in einer App deiner Wahl, „Teilen“ gibt sie weiter, z. B. per E-Mail. Das passiert nur nach deinem Tipp.",
+                "Eine Karte antippen zeigt die Details mit „Öffnen“, „Drucken“ und „Teilen“ ganz oben. „Öffnen“ zeigt das Dokument im eingebauten Betrachter oder in einer anderen App (einstellbar). „Teilen“ gibt es weiter, z. B. per E-Mail. Das passiert nur nach deinem Tipp.",
             ),
             GuideItem(
                 "Sicher abgelegt",
@@ -501,23 +501,23 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
         items = listOf(
             GuideItem(
                 "Nur auf deinem Handy",
-                "Alle Angaben zu Personen, Medikamenten, Terminen und Notizen werden nur lokal im privaten App-Ordner gespeichert. Es gibt kein Benutzerkonto und keine Cloud.",
+                "Alle Angaben zu Personen, Medikamenten, Terminen, Dokumenten und Notizen werden nur lokal im privaten App-Ordner gespeichert, und zwar verschlüsselt. Es gibt kein Benutzerkonto und keine Cloud.",
             ),
             GuideItem(
                 "Mail, Druck und PDF",
-                "Nachbestell-Listen werden nur dann per Mail geteilt oder gedruckt, wenn du es selbst auslöst. Die PDFs bleiben im privaten App-Ordner, bis du sie speicherst oder teilst.",
+                "E-Mails, Nachbestell-Listen, Schreiben und Dokumente werden nur geteilt, gesendet oder gedruckt, wenn du es selbst auslöst. Die App schickt nie etwas von allein. PDFs bleiben im privaten App-Ordner, bis du sie speicherst oder teilst.",
             ),
             GuideItem(
                 "Texterkennung",
-                "Das Auslesen von Packungsfotos passiert auf dem Handy. Fotos werden nirgends hin gesendet.",
+                "Das Auslesen von Packungsfotos und Dokumenten passiert auf dem Handy. Fotos werden nirgends hin gesendet. Nur wenn du den KI-Assistenten eingerichtet hast und eine Zusammenfassung anforderst, geht der Text an den gewählten Dienst.",
             ),
             GuideItem(
                 "Wann geht die App ins Internet?",
-                "Um nach App-Updates zu suchen, sie über GitHub zu laden und die Vorschau auf geplante Funktionen anzuzeigen. Außerdem für die Medikamenten-Beschreibung (Wikipedia), aber nur auf Knopfdruck oder wenn du das automatische Laden einschaltest. Gesendet wird dabei nur der Medikamentenname, keine persönlichen Daten.",
+                "Für App-Updates (GitHub) und die Vorschau auf geplante Funktionen. Für die Medikamenten-Beschreibung (Wikipedia, nur der Medikamentenname). Für Meldungen im Reiter „Infos“ (nur das Suchwort). Für die Umkreissuche und den Fahrdienst (OpenStreetMap, nur Postleitzahl und Ort). Für den KI-Assistenten, nur wenn du ihn eingerichtet hast und etwas anforderst. Persönliche Daten werden dabei nicht gesendet, außer dem Text, den du der KI bewusst gibst.",
             ),
             GuideItem(
                 "Aktueller Stand",
-                "Dies ist eine Testversion. Dokumente sind verschlüsselt gespeichert, die übrigen Angaben (Medikamente, Termine, Notizen) aber noch nicht, und es gibt noch keine Datensicherung. Eine App-Sperre kannst du in den Einstellungen einschalten. Beides steht auf der Liste der geplanten Funktionen. Bitte nur mit Testdaten oder auf eigene Verantwortung nutzen.",
+                "Dies ist eine Testversion. Datenbank und Dokumente sind verschlüsselt gespeichert. Eine App-Sperre (Fingerabdruck, Gesicht, PIN) und eine verschlüsselte Sicherung gibt es in den Einstellungen. Lege regelmäßig eine Sicherung an und bewahre sie außerhalb des Handys auf. Nutzung auf eigene Verantwortung.",
             ),
         ),
     ),
@@ -577,8 +577,8 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
                 "In den Einstellungen wählst du, ob die App wie das Handy, immer hell oder immer dunkel aussehen soll. Die Schriftgröße der ganzen App stellst du von „Klein“ bis „Riesig“ ein (zusätzlich zur Schriftgröße des Handys). Außerdem gibt es sechs Designs zur Auswahl: Schlicht, Minimalistisch, Glas, Liquid, Sonnig und Natur. Die Vorschau zeigt die Farben, ausprobieren kannst du jedes mit einem Tipp. Mit „Farben anpassen“ änderst du die drei Farben des gewählten Designs selbst: Hauptfarbe, Zweitfarbe und Hintergrund (bei Glas und Liquid die beiden Hintergrundfarben). Du siehst die Änderung sofort, „Standard“ und „Alles zurücksetzen“ stellen das Original wieder her.",
             ),
             GuideItem(
-                "Beta: Notfallkarte",
-                "Unter Einstellungen → „Beta: zum Ausprobieren“ kannst du die Notfallkarte einschalten. Sie erscheint dann auf der Heute-Seite und zeigt Name, Geburtsdatum, Pflegegrad, Wichtiges, Medikamente, Kontakte und deine Ansprechdaten auf einen Blick, mit Notruf-Taste (öffnet nur die Telefon-App), zum Kopieren oder Teilen. Die Versichertennummer zeigst du nur auf Wunsch. Beta heißt: noch im Test, Rückmeldungen willkommen.",
+                "Notfallkarte",
+                "Die Notfallkarte öffnest du immer über das rote Telefon oben („Notfallkarte zeigen“). Unter Einstellungen → „Heute-Seite“ kannst du sie zusätzlich als Karte auf der Heute-Seite einblenden. Sie zeigt Name, Geburtsdatum, Pflegegrad, Wichtiges, Medikamente, Kontakte und deine Ansprechdaten auf einen Blick, mit Notruf-Taste (öffnet nur die Telefon-App), zum Kopieren oder Teilen. Die Versichertennummer zeigst du nur auf Wunsch.",
             ),
             GuideItem(
                 "Feedback",
@@ -609,7 +609,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Kann ich meine Daten sichern?",
-                "Eine eigene Datensicherung gibt es noch nicht. Sie steht auf der Liste der geplanten Funktionen.",
+                "Ja. Einstellungen → „Sicherung und Wiederherstellung“. Die App legt eine verschlüsselte Datei mit allen Daten an (mit deinem Passwort). Mit ihr kannst du alles auf diesem oder einem neuen Handy wiederherstellen.",
             ),
         ),
     ),

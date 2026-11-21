@@ -4,26 +4,62 @@ by Sunshine@R
 
 Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbezogenen Daten bleiben lokal auf dem Gerät.
 
-## Stand: v0.34.0
+## Stand: v0.35.0
 
-- Heute-Übersicht: Einnahmen nur im Zeitfenster abhaken, Rückfragen (später, vergessen, bewusst nicht gegeben), Termine abhaken bzw. abgesagt/verschoben (mit Folge-Aufgabe), Bemerkungen, Tagesnotiz, Nachbestell-Warnung
-- Auswertung für Tag, Woche, Monat (lokal berechnet, nur Anhaltspunkte, kein ärztlicher Rat)
-- Medikamente mit Einnahmezeiten und Vorrat
-- Termine mit ansprechender Karte (Datum, Countdown, Kontakt, Route, Unterlagen) und Beginn/Ende
-- Fahrdienst bei Terminen außer Haus: feste Fahrdienste zuerst, Suche im Umkreis (OpenStreetMap), vorbereitete Anfrage, Infos zur Krankenfahrt
-- Dokumente: Kategorien, Suche und Filter, mehrseitig, Text-Auslese, Zusammenfassung (selbst oder per KI), Unterlagen am Termin
-- Medikamente: schlanke Liste, Beschreibung und KI-Einschätzung (nur Anhaltspunkt)
-- Infos-Reiter mit aktuellen Pflegethemen, Meldungssuche und eigenen Themen
-- App-Sperre, KI-Assistent mit Schnellwechsel (Gemini, OpenAI-kompatibel, Anthropic)
-- Kontakte: Ärzte, Pflegedienst, Apotheke, Kassen usw. mit Direktkontakt (Anruf, E-Mail), Filter nach Art
-- Mehrere betreute Personen, Wechsel oben auf jeder Seite
-- Erinnerungen: Medikamenten-Einnahme (mit Knopf "Eingenommen") und Termine (Zeit pro Termin einstellbar)
-- Aufgaben auf der Heute-Seite (Arzt, Wichtigkeit, Frist, Fahrdienst), KI-Vorschläge aus Dokument-Zusammenfassungen, Termin in den Kalender übernehmen
-- Darstellung: hell, dunkel oder wie das Handy, dazu sechs Designs (Schlicht, Minimalistisch, Glas, Liquid, Sonnig, Natur)
-- Anleitung zum Lesen (mit Suche) und geführter Rundgang in der App
-- Alle Einträge bearbeitbar, Kalender- und Zeitauswahl, Vorauswahlen, Arzt-Auswahl beim Termin
-- Medikament per Foto der Packung anlegen: Text wird lokal auf dem Handy erkannt, das Foto bleibt im privaten App-Ordner
-- Einstellungen: App-Update direkt über GitHub-Releases, Feedback, Vorschau auf geplante Funktionen
+### Funktionsübersicht
+
+**Heute (Tag · Woche · Monat)**
+- Tagesansicht: Kurz nachgefragt (offene Antworten), Wichtig und demnächst (dringend, überfällig, nächste 3 Tage), Bald nachbestellen, Heute einnehmen (Abhaken im Zeitfenster, früher/später/vergessen/bewusst nicht gegeben), Termine der nächsten 7 Tage (stattgefunden, abgesagt, verschoben mit Folge-Aufgabe), Aufgaben, Bemerkung zum Tag, Auswertung
+- Jede Karte einklappbar mit Kurzinfo, Zustand wird gemerkt
+- Wochen- und Monatsübersicht: alles antippbar, bearbeiten, löschen, neu anlegen, Aufgaben abhaken
+- Auswertung für Tag, Woche, Monat (lokal berechnet, nur Anhaltspunkte)
+
+**Medikamente**
+- Einnahmezeiten, Dosierung, Vorrat mit automatischem Verbrauch, Warnung bei knappem Vorrat
+- Anlegen per Packungsfoto (Texterkennung auf dem Handy), PZN/Barcode
+- Beschreibung aus Wikipedia und KI-Einschätzung (nur Anhaltspunkt)
+- Nachbestellung: Liste, Anruf, E-Mail an Arzt oder Apotheke, PDF drucken
+
+**Termine**
+- Kommende zuerst, vergangene eingeklappt; Beginn und Ende, Erinnerung pro Termin
+- Kontakt, Route, Fahrdienst (feste Fahrdienste, Umkreissuche, vorbereitete Anfrage, Infos zur Krankenfahrt), Nachricht, Unterlagen mit Vorschlägen, In Kalender eintragen
+
+**Aufgaben**
+- Kontakt, Wichtigkeit, Frist, Fahrdienst, verknüpfte Unterlagen; erledigte eingeklappt und entfernbar
+- Vorschläge aus Dokument-Zusammenfassungen, Wegweiser und Auswertung
+
+**Dokumente**
+- Fotografieren (mehrseitig) oder Datei laden, verschlüsselt gespeichert, Text wird gelesen
+- Kategorien, Suche, Filter (Jahr, Arzt), Zusammenfassung (selbst oder per KI)
+- Eingebauter Betrachter (PDF, Fotos, Text) mit Zoom, Drucken, Teilen, „Andere App“ (einstellbar)
+- Schreiben und Vollmachten als PDF (Vollmacht, Schweigepflicht, Pflegegrad, Höherstufung, Widerspruch, Verhinderungspflege, Pflegehilfsmittel, Unterlagen anfordern, Folgerezept, frei)
+
+**Kontakte**
+- Ärzte, Pflegedienst, Apotheke, Kassen usw. mit Anruf und vorbereiteter E-Mail, Filter nach Art
+- Stockwerk, Aufzug, Zugang; Umkreissuche (Apotheke, Pflegedienst, Sanitätshaus …)
+
+**Notruf und Hilfe** (rotes Telefon oben)
+- 112, 116 117, 110, „Was sage ich?“ mit Adresse/Stockwerk, eigene Kontakte, Hilfe in der Nähe, Giftnotruf, Telefonseelsorge
+- Notfallkarte (Medikamente, Kontakte, Wichtiges) zum Zeigen, Kopieren, Teilen
+
+**Infos und Wegweiser**
+- Aktuelle Pflegethemen, Meldungssuche, eigene Themen, Favoriten, Tipps passend zur eigenen Rolle
+- Wegweiser Leistungen je Pflegegrad mit Links und „Als Aufgabe merken“
+
+**Personen und eigene Daten**
+- Mehrere betreute Personen mit Profil (Pflegegrad, Krankenkasse, Adresse, Stockwerk, Wichtiges)
+- Eigene Daten und Rolle für E-Mails und Schreiben
+
+**Erinnerungen**
+- Einnahme mit Knopf „Eingenommen“ (keine Erinnerung, wenn schon abgehakt), Nachfrage bei offener Einnahme, Termin-Erinnerung; Antippen öffnet die richtige Person
+
+**Einstellungen**
+- Darstellung (hell/dunkel, 6 Designs, eigene Farben, Schriftgröße), Heute-Seite, Einnahme-Zeitfenster, Dokument-Betrachter
+- App-Sperre, Bildschirmschutz, verschlüsselte Datenbank, Sicherung und Wiederherstellung
+- Medikamenten-Beschreibung, KI-Assistent (Gemini, OpenAI-kompatibel, Anthropic) – freiwillig
+- Anleitung mit Suche, Rundgang, Feedback, Vorschau, App-Update über GitHub
+
+Alle personenbezogenen Daten bleiben verschlüsselt auf dem Handy. Nichts wird automatisch gesendet.
 
 Offene Punkte und Wünsche: siehe [TODO.md](TODO.md).
 

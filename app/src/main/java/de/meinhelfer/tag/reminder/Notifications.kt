@@ -44,6 +44,7 @@ object Notifications {
         text: String,
         updates: Boolean = false,
         actions: List<Pair<String, PendingIntent>> = emptyList(),
+        personId: Long? = null,
     ) {
         if (Build.VERSION.SDK_INT >= 33 &&
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
@@ -51,10 +52,15 @@ object Notifications {
         ) return
 
         ensureChannels(context)
+        // Antippen oeffnet die App bei der richtigen Person.
+        val openIntent = Intent(context, MainActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            if (personId != null) putExtra(MainActivity.EXTRA_PERSON, personId)
+        }
         val open = PendingIntent.getActivity(
             context,
-            0,
-            Intent(context, MainActivity::class.java),
+            id,
+            openIntent,
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
         val builder = NotificationCompat.Builder(context, if (updates) CHANNEL_UPDATES else CHANNEL_REMINDERS)

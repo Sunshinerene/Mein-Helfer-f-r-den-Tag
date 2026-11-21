@@ -40,6 +40,20 @@ import de.meinhelfer.tag.update.AppPrefs
 import de.meinhelfer.tag.update.UpdateWorker
 
 class MainActivity : FragmentActivity() {
+    companion object {
+        /** Person, die beim Oeffnen aus einer Benachrichtigung ausgewaehlt werden soll. */
+        const val EXTRA_PERSON = "person"
+    }
+
+    /** Aus einer Benachrichtigung gewuenschte Person (null = nichts zu tun). */
+    private var pendingPerson by mutableStateOf<Long?>(null)
+
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        pendingPerson = intent.getLongExtra(EXTRA_PERSON, -1L).takeIf { it > 0 }
+    }
+
     /** Gesperrt, solange die Abfrage (Fingerabdruck, Gesicht, PIN) nicht bestanden ist. */
     private var locked by mutableStateOf(false)
     private var stoppedAt = 0L
@@ -61,6 +75,9 @@ class MainActivity : FragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (savedInstanceState == null) {
+            intent?.getLongExtra(EXTRA_PERSON, -1L)?.takeIf { it > 0 }?.let { pendingPerson = it }
+        }
 
         // Beim Start gesperrt, wenn die App-Sperre an ist
         locked = AppPrefs.lockEnabled(this)
@@ -96,6 +113,13 @@ class MainActivity : FragmentActivity() {
             val tweaks by vm.designTweaks.collectAsStateWithLifecycle()
             val fontFactor by vm.fontFactor.collectAsStateWithLifecycle()
             val baseDensity = LocalDensity.current
+            val wanted = pendingPerson
+            LaunchedEffect(wanted) {
+                if (wanted != null) {
+                    vm.selectPersonIfExists(wanted)
+                    pendingPerson = null
+                }
+            }
             val dark = when (mode) {
                 "dark" -> true
                 "light" -> false

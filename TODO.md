@@ -5,6 +5,18 @@
 - [ ] Vorlagen erweitern (Kündigung Pflegedienst, Antrag Schwerbehindertenausweis, Widerruf), Unterschrift-Scan automatisch dem Entwurf zuordnen
 - [ ] Erkennung von Packungsfoto weiter verbessern (Wirkstoff, Packungsbeilage), Kamera-Scan für Barcodes live
 
+## Version 0.35.0 (fertig) – Gesamt-Check
+
+- [x] Logik: keine Einnahme-Erinnerung, wenn schon abgehakt; Benachrichtigung öffnet die richtige Person
+- [x] Logik: gelöschte Dokumente/Kontakte werden überall entfernt (Termine, Aufgaben, Medikamente)
+- [x] Logik: Einnahmen in Woche/Monat nur für die gewählte Person gezählt
+- [x] Notfallkarte immer über das rote Telefon erreichbar (nicht mehr Beta)
+- [x] Termine: kommende zuerst, vergangene eingeklappt, bei vergangenen nur sinnvolle Knöpfe
+- [x] Aufgaben: erledigte eingeklappt, „Erledigte entfernen“
+- [x] Optik: untere Leiste ohne abgeschnittene Beschriftung, Knöpfe in Medikamenten-Karte umbrechen sauber, lesbare Knöpfe auf roten Karten, eigene Farben bleiben lesbar
+- [x] Dokument-Fenster: Öffnen/Drucken/Teilen oben, Kopfleiste kompakter; Kontakte mit Knöpfen statt Links
+- [x] Einstellungen in Abschnitte gegliedert; Anleitung auf aktuellen Stand gebracht
+
 ## Version 0.34.0 (fertig)
 
 - [x] Eingebauter Dokumenten-Betrachter (PDF, Fotos, Text) mit Zoom, Drucken, Teilen, „Andere App“; Einstellung intern/extern

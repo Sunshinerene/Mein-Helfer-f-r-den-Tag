@@ -213,12 +213,13 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
             },
             bottomBar = {
                 NavigationBar {
+                    val navLabelSize = remember(androidx.compose.ui.platform.LocalDensity.current.fontScale) { androidx.compose.runtime.mutableFloatStateOf(12f) }
                     Tab.entries.forEachIndexed { i, t ->
                         NavigationBarItem(
                             selected = i == tabIndex,
                             onClick = { tabIndex = i },
                             icon = { Icon(t.icon, contentDescription = t.label) },
-                            label = { Text(t.label, maxLines = 1, softWrap = false, fontSize = 9.sp) },
+                            label = { FitText(t.label, maxSize = 12.sp, shared = navLabelSize) },
                         )
                     }
                 }
@@ -313,6 +314,8 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
             doctors = doctors,
             onSaveContact = { vm.add(it) },
             onClose = { showNotruf = false },
+            meds = meds,
+            caregiver = caregiver,
         )
     }
 
@@ -355,6 +358,7 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
 
 // ---------------------------------------------------------------- Medikamente
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun MedicationScreen(items: List<Medication>, doctors: List<Doctor>, vm: MainViewModel, onReorder: () -> Unit) {
     var showAdd by remember { mutableStateOf(false) }
@@ -388,9 +392,16 @@ private fun MedicationScreen(items: List<Medication>, doctors: List<Doctor>, vm:
                 onDelete = { vm.delete(m) },
                 photoName = m.photoPath,
             ) {
-                Row {
-                    TextButton(onClick = { detailId = m.id }) { Text("Infos & Beschreibung") }
-                    TextButton(onClick = { editItem = m }) { Text("Bearbeiten") }
+                if (days != null && days <= 7) {
+                    Text(
+                        if (days <= 0) "Vorrat aufgebraucht – bitte nachbestellen" else "Bald nachbestellen",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+                FlowRow {
+                    TextButton(onClick = { detailId = m.id }, contentPadding = PaddingValues(horizontal = 8.dp)) { Text("Infos") }
+                    TextButton(onClick = { editItem = m }, contentPadding = PaddingValues(horizontal = 8.dp)) { Text("Bearbeiten") }
                 }
             }
         }
@@ -450,11 +461,13 @@ private fun AppointmentScreen(
     var docsFor by remember { mutableStateOf<Appointment?>(null) }
     var rideFor by remember { mutableStateOf<Appointment?>(null) }
 
-    ListScreen(
-        items = items,
-        emptyText = "Noch keine Termine. Mit + hinzufügen.",
-        onAdd = { showAdd = true },
-    ) { a ->
+    // Kommende Termine (ab heute) zuerst, vergangene eingeklappt und neueste zuerst
+    val todayStart = java.time.LocalDate.now().atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+    val coming = items.filter { it.whenMillis >= todayStart }.sortedBy { it.whenMillis }
+    val earlier = items.filter { it.whenMillis < todayStart }.sortedByDescending { it.whenMillis }
+    var showPast by rememberSaveable { mutableStateOf(false) }
+
+    val apptItem: @Composable (Appointment) -> Unit = { a ->
         val doctor = doctors.firstOrNull { it.id == a.doctorId }
         val attached = a.attachedIds().mapNotNull { id -> documents.firstOrNull { it.id == id } }
         AppointmentCard(
@@ -468,6 +481,46 @@ private fun AppointmentScreen(
             onFahrdienst = { rideFor = a },
             onMail = { mailFor = a },
         )
+    }
+
+    Box(Modifier.fillMaxSize()) {
+        if (items.isEmpty()) {
+            Text(
+                "Noch keine Termine. Mit + hinzufügen.",
+                modifier = Modifier.align(Alignment.Center).padding(24.dp),
+                style = MaterialTheme.typography.bodyLarge,
+            )
+        } else {
+            LazyColumn(
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 88.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                if (coming.isEmpty()) {
+                    item {
+                        Text(
+                            "Keine kommenden Termine. Mit + einen neuen anlegen.",
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.padding(horizontal = 4.dp),
+                        )
+                    }
+                }
+                lazyItems(coming, key = { it.id }) { apptItem(it) }
+                if (earlier.isNotEmpty()) {
+                    item {
+                        OutlinedButton(onClick = { showPast = !showPast }, modifier = Modifier.fillMaxWidth()) {
+                            Text(if (showPast) "Vergangene Termine ausblenden" else "Vergangene Termine anzeigen (${earlier.size})")
+                        }
+                    }
+                    if (showPast) lazyItems(earlier, key = { it.id }) { apptItem(it) }
+                }
+            }
+        }
+        FloatingActionButton(
+            onClick = { showAdd = true },
+            modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
+        ) {
+            Icon(Icons.Default.Add, contentDescription = "Termin hinzufügen")
+        }
     }
 
     mailFor?.let { a ->
@@ -557,14 +610,13 @@ private fun DoctorScreen(
     val shown = if (active == null) items else items.filter { it.specialty.trim() == active }
 
     Column(Modifier.fillMaxSize()) {
-    TextButton(
-        onClick = { showNearby = true },
-        modifier = Modifier.padding(horizontal = 8.dp),
-    ) { Text("In der Nähe suchen: Apotheke, Pflegedienst, Sanitätshaus …") }
-    TextButton(
-        onClick = onOpenLetters,
-        modifier = Modifier.padding(horizontal = 8.dp),
-    ) { Text("Schreiben / Vollmacht erstellen") }
+    FlowRow(
+        Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        OutlinedButton(onClick = { showNearby = true }) { Text("In der Nähe suchen") }
+        OutlinedButton(onClick = onOpenLetters) { Text("Schreiben / Vollmacht") }
+    }
     if (categories.size > 1) {
         FlowRow(
             Modifier.fillMaxWidth().padding(horizontal = 16.dp),
@@ -586,9 +638,13 @@ private fun DoctorScreen(
         ItemCard(
             title = doctorLabel(d),
             lines = listOfNotNull(
-                d.phone.takeIf { it.isNotBlank() },
+                d.phone.takeIf { it.isNotBlank() }?.let { "Tel. $it" },
                 d.email.takeIf { it.isNotBlank() },
                 d.address.takeIf { it.isNotBlank() },
+                listOfNotNull(
+                    d.floor.takeIf { it.isNotBlank() },
+                    when (d.elevator) { 1 -> "mit Aufzug"; 2 -> "ohne Aufzug"; else -> null },
+                ).joinToString(", ").takeIf { it.isNotEmpty() },
             ),
             onClick = { editItem = d },
             onDelete = { vm.delete(d) },

@@ -309,8 +309,11 @@ private fun DayBlock(
     val appts = appointments.filter { dayOf(it.whenMillis) == day }.sortedBy { it.whenMillis }
     val tasks = todos.filter { it.dueDay == epoch }
         .sortedWith(compareBy<Todo> { it.done }.thenByDescending { it.priority }.thenBy { it.createdMillis })
-    val planned = meds.filter { epoch >= it.createdDay }.sumOf { it.timeList().distinct().size }
-    val taken = checkins.count { it.kind == Checkin.MED && it.day == epoch && it.done }
+    val active = meds.filter { epoch >= it.createdDay }
+    val planned = active.sumOf { it.timeList().distinct().size }
+    // Nur Einnahmen der Medikamente dieser Person zaehlen
+    val medIds = active.map { it.id }.toSet()
+    val taken = checkins.count { it.kind == Checkin.MED && it.day == epoch && it.done && it.refId in medIds }.coerceAtMost(planned)
 
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         appts.forEach { a ->

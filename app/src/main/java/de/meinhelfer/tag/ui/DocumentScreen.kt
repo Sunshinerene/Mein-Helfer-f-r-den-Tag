@@ -224,10 +224,12 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?
                     yearFilter = null
                     doctorFilter = null
                 },
+                onLetters = onOpenLetters,
             )
-        }
-        TextButton(onClick = onOpenLetters, modifier = Modifier.padding(horizontal = 8.dp)) {
-            Text("Schreiben / Vollmacht erstellen und ausdrucken")
+        } else {
+            OutlinedButton(onClick = onOpenLetters, modifier = Modifier.padding(start = 16.dp, top = 8.dp)) {
+                Text("Schreiben / Vollmacht erstellen")
+            }
         }
         ListScreen(
             items = ordered,
@@ -625,10 +627,6 @@ internal fun DocumentDetailDialog(
                     doc.notes.takeIf { it.isNotBlank() }?.let { "Notizen: $it" },
                 )
                 facts.forEach { Text(it, style = MaterialTheme.typography.bodyMedium) }
-                if (doc.summary.isNotBlank()) {
-                    Text("Zusammenfassung (Anhaltspunkt)", style = MaterialTheme.typography.labelLarge)
-                    Text(doc.summary, style = MaterialTheme.typography.bodyMedium)
-                }
                 androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     OutlinedButton(onClick = {
                         if (AppPrefs.internalViewer(context) && canViewInside(doc)) {
@@ -667,6 +665,10 @@ internal fun DocumentDetailDialog(
                     "Öffnen zeigt das Dokument in der App (einstellbar). Teilen und „Andere App“ geben eine Kopie an die gewählte App, nur nach deinem Tipp.",
                     style = MaterialTheme.typography.bodySmall,
                 )
+                if (doc.summary.isNotBlank()) {
+                    Text("Zusammenfassung (Anhaltspunkt)", style = MaterialTheme.typography.labelLarge)
+                    Text(doc.summary, style = MaterialTheme.typography.bodyMedium)
+                }
                 if (doc.text.isNotBlank()) {
                     Text("Erkannter Text", style = MaterialTheme.typography.labelLarge)
                     val shown = if (showFullText || doc.text.length <= 1200) doc.text else doc.text.take(1200).trimEnd() + " …"

@@ -114,16 +114,20 @@ fun SettingsScreen(
                     context = context,
                 )
             }
-            item { HelpCard(onOpenGuide, onStartTour) }
+            item { SectionTitle("Allgemein") }
             item { CaregiverCard(caregiver, onEditCaregiver) }
             item { ThemeCard(vm) }
+            item { HomeCardsCard() }
             item { IntakeCard() }
+            item { ViewerCard() }
+            item { SectionTitle("Daten und Sicherheit") }
             item { SecurityCard() }
             item { BackupCard() }
-            item { ViewerCard() }
+            item { SectionTitle("Hilfen aus dem Internet (freiwillig)") }
             item { MedInfoCard() }
             item { AiCard() }
-            item { BetaCard() }
+            item { SectionTitle("Hilfe und Rückmeldung") }
+            item { HelpCard(onOpenGuide, onStartTour) }
             item { FeedbackCard(context) }
             item { RoadmapCard(roadmap, roadmapError) }
             item { AboutCard(context) }
@@ -327,14 +331,14 @@ private fun ThemeCard(vm: MainViewModel) {
 }
 
 @Composable
-private fun BetaCard() {
+private fun HomeCardsCard() {
     val context = LocalContext.current
     var emergency by remember { mutableStateOf(AppPrefs.betaEmergency(context)) }
     HCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Beta: zum Ausprobieren", style = MaterialTheme.typography.titleMedium)
+            Text("Heute-Seite", style = MaterialTheme.typography.titleMedium)
             Text(
-                "Neue Funktionen, die noch getestet werden. Sie können sich noch ändern. Sag gern, wie sie dir gefallen.",
+                "Karten auf der Heute-Seite lassen sich dort direkt ein- und aufklappen. Zusätzlich:",
                 style = MaterialTheme.typography.bodySmall,
             )
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -343,9 +347,9 @@ private fun BetaCard() {
                     AppPrefs.setBetaEmergency(context, it)
                 })
                 Column(Modifier.weight(1f)) {
-                    Text("Notfallkarte", style = MaterialTheme.typography.bodyLarge)
+                    Text("Notfallkarte auf der Heute-Seite", style = MaterialTheme.typography.bodyLarge)
                     Text(
-                        "Auf der Heute-Seite: Name, Geburtsdatum, Pflegegrad, Wichtiges, Medikamente, Kontakte und Ansprechperson auf einen Blick, mit Notruf-Taste, zum Kopieren oder Teilen.",
+                        "Name, Geburtsdatum, Pflegegrad, Wichtiges, Medikamente, Kontakte und Ansprechperson auf einen Blick. Über das rote Telefon oben ist sie immer erreichbar.",
                         style = MaterialTheme.typography.bodySmall,
                     )
                 }

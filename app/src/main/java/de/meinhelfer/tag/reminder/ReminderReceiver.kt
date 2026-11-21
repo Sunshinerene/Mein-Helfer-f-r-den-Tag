@@ -42,6 +42,13 @@ class ReminderReceiver : BroadcastReceiver() {
                 val med = db.medicationDao().byId(id) ?: return
                 // Eintrag oder Uhrzeit wurde inzwischen geloescht: nichts anzeigen, nicht neu planen.
                 if (med.timeList().none { ReminderScheduler.parseTime(it) == wanted }) return
+                // Schon abgehakt oder beantwortet (z. B. etwas frueher genommen): keine Erinnerung, nur neu planen.
+                val today = java.time.LocalDate.now().toEpochDay()
+                val already = db.checkinDao().find(de.meinhelfer.tag.data.Checkin.MED, id, today, time)
+                if (already != null && (already.done || already.status.isNotEmpty())) {
+                    ReminderScheduler.scheduleMedication(context, id, time)
+                    return
+                }
 
                 val text = med.name + if (med.dosage.isNotBlank()) " (${med.dosage})" else ""
                 val notifId = "med:$id:$time".hashCode()
@@ -63,6 +70,7 @@ class ReminderReceiver : BroadcastReceiver() {
                     "Medikament${forPerson(med.personId)} einnehmen ($time Uhr)",
                     text,
                     actions = listOf("Eingenommen" to takenPending),
+                    personId = med.personId,
                 )
                 ReminderScheduler.scheduleMedication(context, id, time)
             }
@@ -85,6 +93,7 @@ class ReminderReceiver : BroadcastReceiver() {
                     "fu:$id:$time".hashCode(),
                     "Kurz nachgefragt${forPerson(med.personId)}",
                     "Wurde ${med.name} um $time Uhr genommen? Tippe hier und gib kurz Bescheid. Das macht die Auswertung genauer.",
+                    personId = med.personId,
                 )
             }
 
@@ -104,6 +113,7 @@ class ReminderReceiver : BroadcastReceiver() {
                     "appt:$id".hashCode(),
                     "Termin${forPerson(appointment.personId)} in ${ReminderScheduler.leadText(appointment.reminderMinutes)}",
                     text,
+                    personId = appointment.personId,
                 )
             }
         }
