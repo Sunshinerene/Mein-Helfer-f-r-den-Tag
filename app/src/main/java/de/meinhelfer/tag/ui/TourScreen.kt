@@ -82,8 +82,8 @@ private val TOUR_PAGES: List<TourPage> = listOf(
     ),
     TourPage(
         title = "Heute: abhaken",
-        text = "Auf der Heute-Seite siehst du, was jetzt ansteht. Haken setzen, wenn eine Einnahme oder ein Termin erledigt ist. Vergessenes wird rot markiert.",
-        tips = listOf("Mit „Notiz“ hältst du fest, was aufgefallen ist.", "Dort stehen auch deine Aufgaben und die Bemerkung zum Tag."),
+        text = "Auf der Heute-Seite siehst du, was jetzt ansteht. Einnahmen lassen sich rund um die Einnahmezeit abhaken. Danach fragt die App nach, ob genommen, später, vergessen oder bewusst nicht gegeben. Bei Terminen wählst du: stattgefunden, abgesagt oder verschoben.",
+        tips = listOf("Mit „Notiz“ hältst du fest, was aufgefallen ist.", "Bei abgesagten Terminen legt die App auf Wunsch die Aufgabe „Neuen Termin ausmachen“ an."),
         mock = { MockToday() },
     ),
     TourPage(

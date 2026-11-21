@@ -109,6 +109,7 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit, onOpenGuide: () -> Uni
             }
             item { HelpCard(onOpenGuide, onStartTour) }
             item { ThemeCard(vm) }
+            item { IntakeCard() }
             item { SecurityCard() }
             item { MedInfoCard() }
             item { AiCard() }
@@ -293,6 +294,30 @@ private fun ThemeCard(vm: MainViewModel) {
 }
 
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+private fun IntakeCard() {
+    val context = LocalContext.current
+    var window by remember { mutableStateOf(AppPrefs.intakeWindow(context)) }
+    HCard(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Einnahmen abhaken", style = MaterialTheme.typography.titleMedium)
+            Text(
+                "Medikamente werden nur rund um die Einnahmezeit normal abgehakt. Davor und danach fragt die App nach, wie es lief (früher oder später genommen, vergessen, bewusst nicht gegeben). Das macht die Auswertung genauer.",
+                style = MaterialTheme.typography.bodySmall,
+            )
+            Text("Zeitfenster vor und nach der Einnahmezeit", style = MaterialTheme.typography.labelLarge)
+            androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf(30 to "30 Minuten", 60 to "1 Stunde", 120 to "2 Stunden").forEach { (minutes, label) ->
+                    FilterChip(selected = window == minutes, onClick = {
+                        window = minutes
+                        AppPrefs.setIntakeWindow(context, minutes)
+                    }, label = { Text(label) })
+                }
+            }
+        }
+    }
+}
+
 @Composable
 private fun SecurityCard() {
     val context = LocalContext.current

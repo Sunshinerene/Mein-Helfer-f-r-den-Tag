@@ -4,9 +4,9 @@ by Sunshine@R
 
 Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbezogenen Daten bleiben lokal auf dem Gerät.
 
-## Stand: v0.23.0
+## Stand: v0.24.0
 
-- Heute-Übersicht: Einnahmen und Termine abhaken, Bemerkungen, Tagesnotiz, Nachbestell-Warnung
+- Heute-Übersicht: Einnahmen nur im Zeitfenster abhaken, Rückfragen (später, vergessen, bewusst nicht gegeben), Termine abhaken bzw. abgesagt/verschoben (mit Folge-Aufgabe), Bemerkungen, Tagesnotiz, Nachbestell-Warnung
 - Auswertung für Tag, Woche, Monat (lokal berechnet, nur Anhaltspunkte, kein ärztlicher Rat)
 - Medikamente mit Einnahmezeiten und Vorrat
 - Termine mit ansprechender Karte (Datum, Countdown, Kontakt, Route, Unterlagen) und Beginn/Ende

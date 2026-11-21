@@ -117,10 +117,29 @@ data class Checkin(
     val done: Boolean = false,
     val note: String = "",
     val atMillis: Long = 0,
+    /** Wie es lief: leer = normal (puenktlich genommen bzw. Termin wahrgenommen), sonst eine der Konstanten unten. */
+    val status: String = "",
+    /** Uhrzeit "HH:mm", wann spaeter oder frueher genommen wurde (optional). */
+    val actual: String = "",
 ) {
     companion object {
         const val MED = "MED"
         const val APPT = "APPT"
+
+        /** Zur Zeit genommen, nur nicht abgehakt (done = true). */
+        const val UNTICKED = "UNTICKED"
+        /** Spaeter genommen (done = true). */
+        const val LATE = "LATE"
+        /** Frueher genommen (done = true). */
+        const val EARLY = "EARLY"
+        /** Vergessen (done = false). */
+        const val MISSED = "MISSED"
+        /** Bewusst nicht gegeben, z. B. abgelehnt oder auf Anweisung (done = false). */
+        const val SKIPPED = "SKIPPED"
+        /** Termin abgesagt oder ausgefallen (done = false). */
+        const val CANCELLED = "CANCELLED"
+        /** Termin verschoben (done = false). */
+        const val MOVED = "MOVED"
     }
 }
 

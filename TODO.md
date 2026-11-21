@@ -4,6 +4,13 @@
 
 - [ ] Erkennung von Packungsfoto weiter verbessern (Wirkstoff, Packungsbeilage), Kamera-Scan für Barcodes live
 
+## Version 0.24.0 (fertig)
+
+- [x] Einnahmen nur im Zeitfenster abhaken (30 Min., 1 Std. oder 2 Std. vor und nach der Zeit, einstellbar); davor „abhakbar ab …“, danach Nachtragen
+- [x] Rückfragen („Kurz nachgefragt“): genommen aber nicht abgehakt, später genommen (mit Uhrzeit), früher genommen, vergessen, bewusst nicht gegeben, mit Bemerkung; Strich-Kästchen für „nicht genommen, aber beantwortet“
+- [x] Termine: hat stattgefunden, abgesagt, verschoben; bei Absage oder Verschiebung Aufgabe „Neuen Termin ausmachen“ für morgen mit Arzt
+- [x] Auswertung zählt pünktlich, später (Ø Verspätung), früher, vergessen, bewusst nicht gegeben, ohne Antwort und gibt passende Hinweise (auch für die KI-Hinweise)
+
 ## Version 0.23.0 (fertig)
 
 - [x] To-do-Liste auf der Heute-Seite wird zu „Aufgaben“: zuständiger Arzt bzw. Stelle (Anrufen, E-Mail), Wichtigkeit, „Erledigt bis“ mit Überfällig-Hinweis, Außer Haus mit Fahrdienst, sortiert und abhakbar, bearbeitbar
@@ -142,6 +149,7 @@
 
 ## Weitere Ideen
 
+- [ ] Erinnerung als Benachrichtigung, wenn eine Rückfrage offen ist oder eine Einnahme nach dem Zeitfenster nicht abgehakt wurde
 - [ ] Aufgabe mit Dokument verknüpfen (Link zurück zum Bericht), Aufgabe in den Kalender oder als Erinnerung
 - [ ] Umkreissuche auch für Apotheken, Sanitätshäuser und Pflegedienste
 

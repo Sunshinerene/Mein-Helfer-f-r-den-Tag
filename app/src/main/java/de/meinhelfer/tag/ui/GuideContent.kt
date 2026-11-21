@@ -61,7 +61,15 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
         items = listOf(
             GuideItem(
                 "Einnahmen abhaken",
-                "Unter „Heute einnehmen“ steht jede Einnahme mit Uhrzeit. Haken setzen, wenn sie erledigt ist. Ist die Zeit vorbei und der Haken fehlt, erscheint „noch nicht abgehakt“ in Rot.",
+                "Unter „Heute einnehmen“ steht jede Einnahme mit Uhrzeit. Weil bei Medikamenten die Zeit zählt, lässt sich nur rund um die Einnahmezeit normal abhaken (Standard: 1 Stunde davor und danach, einstellbar unter Einstellungen → Einnahmen abhaken). Vorher steht „abhakbar ab …“. Ist das Fenster vorbei, steht die Zeile in Rot und du tippst darauf, um nachzutragen, wie es lief.",
+            ),
+            GuideItem(
+                "Kurz nachgefragt",
+                "Wurde eine Einnahme (von gestern oder heute) oder ein Termin nicht beantwortet, erscheint oben die Karte „Kurz nachgefragt“. Mit „Antworten“ wählst du: zur Zeit genommen (nur nicht abgehakt), später genommen (optional mit Uhrzeit), vergessen oder bewusst nicht gegeben (z. B. abgelehnt oder auf Anweisung). Dazu kannst du eine Bemerkung schreiben. Wer schon früher genommen hat, tippt vorher auf die Zeile und wählt „Schon früher genommen“. Eine Zeile mit Strich im Kästchen heißt: nicht genommen, aber beantwortet. Mit „Zurücksetzen“ nimmst du eine Antwort zurück. Alles fließt in die Auswertung ein: pünktlich, später (mit durchschnittlicher Verspätung), vergessen, bewusst nicht gegeben.",
+            ),
+            GuideItem(
+                "Termin abgesagt oder verschoben",
+                "Tippst du bei einem Termin auf das Kästchen, fragt die App: hat stattgefunden, abgesagt oder ausgefallen, verschoben. Bei „abgesagt“ und „verschoben“ legt sie auf Wunsch gleich die Aufgabe „Neuen Termin ausmachen“ für morgen an, mit dem Arzt zum Anrufen. So geht der eigentliche Grund nicht verloren.",
             ),
             GuideItem(
                 "Bemerkung zu einer Einnahme oder einem Termin",

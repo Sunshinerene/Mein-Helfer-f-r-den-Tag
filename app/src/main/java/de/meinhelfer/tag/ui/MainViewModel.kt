@@ -65,7 +65,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /** Abhak-Eintraege von heute bis 7 Tage voraus (Termine der naechsten Woche). */
     @OptIn(ExperimentalCoroutinesApi::class)
     val checkins: StateFlow<List<Checkin>> = _today
-        .flatMapLatest { d -> db.checkinDao().range(d, d + 7) }
+        .flatMapLatest { d -> db.checkinDao().range(d - 1, d + 7) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -171,29 +171,44 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /** Legt einen Abhak-Eintrag an oder aendert ihn; null = Wert unveraendert lassen. */
-    fun saveCheckin(kind: String, refId: Long, day: Long, slot: String, done: Boolean? = null, note: String? = null) =
-        viewModelScope.launch {
-            val normSlot = if (slot.isEmpty()) "" else SummaryBuilder.normSlot(slot)
-            val dao = db.checkinDao()
-            val now = System.currentTimeMillis()
-            val existing = dao.find(kind, refId, day, normSlot)
-            if (existing == null) {
-                dao.insert(
-                    Checkin(
-                        kind = kind, refId = refId, day = day, slot = normSlot,
-                        done = done ?: false, note = note?.trim().orEmpty(), atMillis = now,
-                    ),
-                )
-            } else {
-                dao.update(
-                    existing.copy(
-                        done = done ?: existing.done,
-                        note = note?.trim() ?: existing.note,
-                        atMillis = now,
-                    ),
-                )
-            }
+    fun saveCheckin(
+        kind: String,
+        refId: Long,
+        day: Long,
+        slot: String,
+        done: Boolean? = null,
+        note: String? = null,
+        status: String? = null,
+        actual: String? = null,
+    ) = viewModelScope.launch {
+        val normSlot = if (slot.isEmpty()) "" else SummaryBuilder.normSlot(slot)
+        val dao = db.checkinDao()
+        val now = System.currentTimeMillis()
+        val existing = dao.find(kind, refId, day, normSlot)
+        if (existing == null) {
+            dao.insert(
+                Checkin(
+                    kind = kind, refId = refId, day = day, slot = normSlot,
+                    done = done ?: false, note = note?.trim().orEmpty(), atMillis = now,
+                    status = status.orEmpty(), actual = actual.orEmpty(),
+                ),
+            )
+        } else {
+            dao.update(
+                existing.copy(
+                    done = done ?: existing.done,
+                    note = note?.trim() ?: existing.note,
+                    atMillis = now,
+                    status = status ?: existing.status,
+                    actual = actual ?: existing.actual,
+                ),
+            )
         }
+    }
+
+    /** Setzt Status und Haken zurueck (die Bemerkung bleibt). */
+    fun resetCheckin(kind: String, refId: Long, day: Long, slot: String) =
+        saveCheckin(kind, refId, day, slot, done = false, status = "", actual = "")
 
     fun saveDayNote(day: Long, text: String) = viewModelScope.launch {
         val dao = db.dayNoteDao()

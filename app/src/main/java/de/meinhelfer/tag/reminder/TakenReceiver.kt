@@ -28,7 +28,7 @@ class TakenReceiver : BroadcastReceiver() {
                     if (existing == null) {
                         dao.insert(Checkin(kind = Checkin.MED, refId = medId, day = day, slot = time, done = true, atMillis = now))
                     } else {
-                        dao.update(existing.copy(done = true, atMillis = now))
+                        dao.update(existing.copy(done = true, atMillis = now, status = "", actual = ""))
                     }
                 }
                 NotificationManagerCompat.from(app).cancel(notifId)

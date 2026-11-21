@@ -114,8 +114,21 @@ object SummaryBuilder {
         var planned = 0
         var taken = 0
         var openToday = 0
-        val perMed = LinkedHashMap<String, IntArray>() // Name -> [geplant, abgehakt]
+        var onTime = 0
+        var late = 0
+        var early = 0
+        var forgot = 0
+        var skipped = 0
+        var unanswered = 0
+        var delaySum = 0
+        var delayCount = 0
+        val perMed = LinkedHashMap<String, IntArray>() // Name -> [geplant, genommen]
+        val forgotPerMed = LinkedHashMap<String, Int>()
+        val skippedPerMed = LinkedHashMap<String, Int>()
         val missed = mutableListOf<String>()
+        val lateList = mutableListOf<String>()
+        val forgotList = mutableListOf<String>()
+        val skippedList = mutableListOf<String>()
         val perDay = mutableListOf<String>()
 
         var day = start
@@ -125,7 +138,9 @@ object SummaryBuilder {
             for (med in meds) {
                 if (day.toEpochDay() < med.createdDay) continue
                 for (slot in med.timeList().map { normSlot(it) }.distinct()) {
-                    val done = medChecks[Triple(med.id, day.toEpochDay(), slot)]?.done == true
+                    val check = medChecks[Triple(med.id, day.toEpochDay(), slot)]
+                    val done = check?.done == true
+                    val st = check?.status.orEmpty()
                     val stillAhead = day == today && ParseTime.of(slot)?.isAfter(now) == true
                     if (stillAhead && !done) {
                         openToday++
@@ -135,16 +150,47 @@ object SummaryBuilder {
                     dayPlanned++
                     val counter = perMed.getOrPut(med.name) { IntArray(2) }
                     counter[0]++
+                    val label = "${day.format(DATE_ONLY)} $slot ${med.name}"
                     if (done) {
                         taken++
                         dayTaken++
                         counter[1]++
-                    } else {
-                        missed += "${day.format(DATE_ONLY)} $slot ${med.name}"
+                        when (st) {
+                            Checkin.LATE -> {
+                                late++
+                                val a = ParseTime.of(check?.actual.orEmpty())
+                                val p = ParseTime.of(slot)
+                                val delay = if (a != null && p != null) (a.toSecondOfDay() - p.toSecondOfDay()) / 60 else null
+                                if (delay != null && delay > 0) {
+                                    delaySum += delay
+                                    delayCount++
+                                    lateList += "$label (+$delay Min.)"
+                                } else {
+                                    lateList += label
+                                }
+                            }
+                            Checkin.EARLY -> early++
+                            else -> onTime++
+                        }
+                    } else when (st) {
+                        Checkin.MISSED -> {
+                            forgot++
+                            forgotList += label
+                            forgotPerMed[med.name] = (forgotPerMed[med.name] ?: 0) + 1
+                        }
+                        Checkin.SKIPPED -> {
+                            skipped++
+                            skippedList += label
+                            skippedPerMed[med.name] = (skippedPerMed[med.name] ?: 0) + 1
+                        }
+                        else -> {
+                            unanswered++
+                            missed += label
+                        }
                     }
                 }
             }
-            if (dayPlanned > 0) perDay += "${day.format(SHORT_DAY)}: $dayTaken von $dayPlanned Einnahmen abgehakt"
+            if (dayPlanned > 0) perDay += "${day.format(SHORT_DAY)}: $dayTaken von $dayPlanned Einnahmen genommen"
             day = day.plusDays(1)
         }
         val rate = if (planned > 0) taken * 100 / planned else null
@@ -158,16 +204,21 @@ object SummaryBuilder {
         var apptDone = 0
         var apptUpcoming = 0
         val apptMissed = mutableListOf<String>()
+        val apptCancelled = mutableListOf<String>()
+        val apptMoved = mutableListOf<String>()
         for (a in apptsInRange) {
             val d = Instant.ofEpochMilli(a.whenMillis).atZone(zone).toLocalDate()
-            val done = apptChecks[a.id to d.toEpochDay()]?.done == true
+            val check = apptChecks[a.id to d.toEpochDay()]
+            val label = "${d.format(DATE_ONLY)} ${a.title}"
             when {
-                done -> apptDone++
+                check?.done == true -> apptDone++
+                check?.status == Checkin.CANCELLED -> apptCancelled += label
+                check?.status == Checkin.MOVED -> apptMoved += label
                 a.whenMillis > nowMillis -> apptUpcoming++
-                else -> apptMissed += "${d.format(DATE_ONLY)} ${a.title}"
+                else -> apptMissed += label
             }
         }
-        val apptPast = apptDone + apptMissed.size
+        val apptPast = apptDone + apptMissed.size + apptCancelled.size + apptMoved.size
 
         // ------------------------------------------------ Bemerkungen
         val notes = mutableListOf<String>()
@@ -199,10 +250,25 @@ object SummaryBuilder {
 
         // ------------------------------------------------ Zusammenstellen
         val overview = mutableListOf<String>()
-        if (rate != null) overview += "Medikamente: $taken von $planned Einnahmen abgehakt ($rate %)"
+        if (rate != null) {
+            overview += "Medikamente: $taken von $planned Einnahmen genommen ($rate %)"
+            val parts = listOfNotNull(
+                "pünktlich: $onTime",
+                if (late > 0) "später: $late" else null,
+                if (early > 0) "früher: $early" else null,
+                if (forgot > 0) "vergessen: $forgot" else null,
+                if (skipped > 0) "bewusst nicht gegeben: $skipped" else null,
+                if (unanswered > 0) "nicht beantwortet: $unanswered" else null,
+            )
+            if (parts.size > 1) overview += "Davon " + parts.joinToString(", ")
+        }
         if (openToday > 0) overview += "Heute noch offen: $openToday Einnahme(n)"
         if (apptsInRange.isNotEmpty()) {
-            overview += "Termine: $apptDone erledigt, ${apptMissed.size} nicht abgehakt, $apptUpcoming anstehend"
+            val absent = apptCancelled.size + apptMoved.size
+            overview += "Termine: $apptDone wahrgenommen" +
+                (if (absent > 0) ", $absent abgesagt oder verschoben" else "") +
+                (if (apptMissed.isNotEmpty()) ", ${apptMissed.size} ohne Antwort" else "") +
+                ", $apptUpcoming anstehend"
         }
         if (notes.isNotEmpty()) overview += "Bemerkungen: ${notes.size}"
         if (overview.isEmpty()) overview += "Für diesen Zeitraum liegen noch keine Einträge vor."
@@ -218,28 +284,57 @@ object SummaryBuilder {
                     advice += "Medikamentenplan wie bisher beibehalten."
                 }
                 rate >= 70 -> {
-                    notable += "Einige Einnahmen wurden nicht abgehakt ($rate % abgehakt)."
+                    notable += "Einige Einnahmen sind nicht als genommen eingetragen ($rate % genommen)."
                 }
                 else -> {
-                    notable += "Nur $rate % der Einnahmen wurden abgehakt."
+                    notable += "Nur $rate % der Einnahmen sind als genommen eingetragen."
                 }
             }
             if (rate < 90) {
                 advice += "Prüfen, woran es lag (Uhrzeit, Vergessen, Verweigerung) und ggf. Einnahmezeiten anpassen oder die Erinnerungen nutzen. Bei Unsicherheit Arzt oder Apotheke fragen – Dosierung nie eigenmächtig ändern."
             }
             perMed.filter { (_, v) -> v[0] >= 3 && v[1] * 100 / v[0] < 70 }.forEach { (name, v) ->
-                notable += "$name: nur ${v[1]} von ${v[0]} Einnahmen abgehakt."
+                notable += "$name: nur ${v[1]} von ${v[0]} Einnahmen genommen."
             }
-            if (missed.isNotEmpty()) {
-                val shown = missed.take(6).joinToString("; ")
-                val more = if (missed.size > 6) " (+${missed.size - 6} weitere)" else ""
-                notable += "Nicht abgehakt: $shown$more"
+            fun listed(head: String, items: List<String>) {
+                if (items.isEmpty()) return
+                val more = if (items.size > 6) " (+${items.size - 6} weitere)" else ""
+                notable += "$head: ${items.take(6).joinToString("; ")}$more"
+            }
+            if (late > 0) {
+                val avg = if (delayCount > 0) " – im Schnitt ${delaySum / delayCount} Min. später" else ""
+                listed("Später genommen$avg", lateList)
+            }
+            listed("Vergessen", forgotList)
+            listed("Bewusst nicht gegeben", skippedList)
+            listed("Ohne Antwort (weder abgehakt noch nachgetragen)", missed)
+            forgotPerMed.filter { it.value >= 2 }.forEach { (name, n) ->
+                notable += "$name wurde $n-mal vergessen."
+            }
+            skippedPerMed.filter { it.value >= 2 }.forEach { (name, n) ->
+                notable += "$name wurde $n-mal bewusst nicht gegeben."
+            }
+            if (forgot >= 2) {
+                advice += "Mehrfach vergessen: Erinnerungen der App nutzen, eine Wochen-Dosierbox oder feste Anker im Tagesablauf prüfen. Bei Unsicherheit Apotheke fragen."
+            }
+            if (late >= 3) {
+                advice += "Öfter später genommen: mit Arzt oder Apotheke besprechen, ob die Einnahmezeiten besser in den Tag passen. Zeiten nie eigenmächtig ändern, bei manchen Medikamenten sind die Abstände wichtig."
+            }
+            if (skipped >= 1) {
+                advice += "Bewusst nicht gegebene Medikamente (z. B. abgelehnt) beim nächsten Arztbesuch ansprechen und Gründe notieren, z. B. Nebenwirkungen oder Schluckprobleme."
+            }
+            if (unanswered > 0) {
+                advice += "Offene Rückfragen auf der Heute-Seite beantworten (genommen, später, vergessen), dann wird die Auswertung genauer."
             }
         }
-        if (apptPast > 0 && apptMissed.isEmpty()) good += "Alle vergangenen Termine erledigt."
+        if (apptPast > 0 && apptMissed.isEmpty() && apptCancelled.isEmpty() && apptMoved.isEmpty()) good += "Alle vergangenen Termine wahrgenommen."
+        if (apptCancelled.isNotEmpty() || apptMoved.isNotEmpty()) {
+            notable += "Termine abgesagt oder verschoben: " + (apptCancelled + apptMoved).joinToString("; ")
+            advice += "Neuen Termin ausmachen bzw. prüfen, ob der neue Termin schon eingetragen ist. Die Aufgabe dazu steht auf der Heute-Seite."
+        }
         if (apptMissed.isNotEmpty()) {
-            notable += "Termine nicht abgehakt: ${apptMissed.joinToString("; ")}"
-            advice += "Vergangene Termine abhaken oder eine Bemerkung ergänzen (z. B. verschoben oder abgesagt)."
+            notable += "Termine ohne Antwort: ${apptMissed.joinToString("; ")}"
+            advice += "Bei vergangenen Terminen angeben, ob sie stattgefunden haben, abgesagt oder verschoben wurden."
         }
         if (healthHit) {
             notable += "In den Bemerkungen sind mögliche gesundheitliche Auffälligkeiten notiert."
@@ -248,7 +343,7 @@ object SummaryBuilder {
         if (mobilityHit) {
             advice += "Wegen Schmerzen, Sturz oder Beweglichkeit: mit dem Hausarzt über Physiotherapie (Heilmittelverordnung) sprechen und ggf. einen Termin ausmachen."
         }
-        if (movedHit) {
+        if (movedHit && apptCancelled.isEmpty() && apptMoved.isEmpty()) {
             notable += "Ein Termin wurde als verschoben oder abgesagt vermerkt."
             advice += "Prüfen, ob der neue Termin schon eingetragen ist."
         }

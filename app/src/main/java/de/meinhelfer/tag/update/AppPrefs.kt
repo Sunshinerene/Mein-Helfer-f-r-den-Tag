@@ -95,6 +95,15 @@ object AppPrefs {
         prefs(context).edit().putBoolean(KEY_INFO_PERSONAL, value).apply()
     }
 
+    private const val KEY_INTAKE_WINDOW = "einnahme_zeitfenster"
+
+    /** Minuten vor und nach der Einnahmezeit, in denen normal abgehakt werden kann (Standard 60). */
+    fun intakeWindow(context: Context): Int = prefs(context).getInt(KEY_INTAKE_WINDOW, 60)
+
+    fun setIntakeWindow(context: Context, minutes: Int) {
+        prefs(context).edit().putInt(KEY_INTAKE_WINDOW, minutes).apply()
+    }
+
     private fun prefs(context: Context) = context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
 
     fun autoUpdateCheck(context: Context): Boolean = prefs(context).getBoolean(KEY_AUTO_UPDATE, true)
