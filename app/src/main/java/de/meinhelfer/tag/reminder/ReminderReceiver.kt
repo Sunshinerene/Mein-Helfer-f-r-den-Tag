@@ -67,6 +67,27 @@ class ReminderReceiver : BroadcastReceiver() {
                 ReminderScheduler.scheduleMedication(context, id, time)
             }
 
+            ReminderScheduler.TYPE_FOLLOWUP -> {
+                val time = intent.getStringExtra(ReminderScheduler.EXTRA_TIME) ?: return
+                val wanted = ReminderScheduler.parseTime(time) ?: return
+                val day = intent.getLongExtra(ReminderScheduler.EXTRA_DAY, -1L)
+                val med = db.medicationDao().byId(id) ?: return
+                if (med.timeList().none { ReminderScheduler.parseTime(it) == wanted }) return
+                // Naechste Nachfrage planen, egal ob jetzt etwas angezeigt wird.
+                ReminderScheduler.scheduleMedication(context, id, time)
+                if (day < 0 || !de.meinhelfer.tag.update.AppPrefs.followupNotify(context)) return
+                if (day < med.createdDay) return
+                val existing = db.checkinDao().find(de.meinhelfer.tag.data.Checkin.MED, id, day, time)
+                // Schon abgehakt oder beantwortet: keine Nachfrage.
+                if (existing != null && (existing.done || existing.status.isNotEmpty())) return
+                Notifications.show(
+                    context,
+                    "fu:$id:$time".hashCode(),
+                    "Kurz nachgefragt${forPerson(med.personId)}",
+                    "Wurde ${med.name} um $time Uhr genommen? Tippe hier und gib kurz Bescheid. Das macht die Auswertung genauer.",
+                )
+            }
+
             ReminderScheduler.TYPE_APPT -> {
                 val appointment = db.appointmentDao().byId(id) ?: return
                 // Termin wurde verschoben oder liegt in der Vergangenheit: alter Alarm, nichts anzeigen.

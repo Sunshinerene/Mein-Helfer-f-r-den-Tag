@@ -90,6 +90,7 @@ class MainActivity : FragmentActivity() {
             val vm: MainViewModel = viewModel()
             val mode by vm.themeMode.collectAsStateWithLifecycle()
             val style by vm.designStyle.collectAsStateWithLifecycle()
+            val tweaks by vm.designTweaks.collectAsStateWithLifecycle()
             val dark = when (mode) {
                 "dark" -> true
                 "light" -> false
@@ -103,7 +104,7 @@ class MainActivity : FragmentActivity() {
                 )
                 onDispose { }
             }
-            HelferTheme(style = style, dark = dark) {
+            HelferTheme(style = style, dark = dark, tweak = tweaks[style]) {
                 Box {
                     HelferApp(vm)
                     if (locked) {

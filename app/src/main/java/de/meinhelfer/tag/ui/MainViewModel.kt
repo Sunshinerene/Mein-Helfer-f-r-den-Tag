@@ -96,6 +96,16 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         AppPrefs.setDesignStyle(getApplication(), style.key)
     }
 
+    private val _designTweaks = MutableStateFlow(
+        DesignStyle.entries.associateWith { AppPrefs.designTweak(app, it.key) },
+    )
+    val designTweaks: StateFlow<Map<DesignStyle, DesignTweak>> = _designTweaks
+
+    fun setDesignTweak(style: DesignStyle, tweak: DesignTweak) {
+        _designTweaks.value = _designTweaks.value + (style to tweak)
+        AppPrefs.setDesignTweak(getApplication(), style.key, tweak)
+    }
+
     private val _updateState = MutableStateFlow<UpdateState>(UpdateState.Idle)
     val updateState: StateFlow<UpdateState> = _updateState
 

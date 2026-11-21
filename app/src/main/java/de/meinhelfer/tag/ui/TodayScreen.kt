@@ -95,6 +95,7 @@ fun TodayScreen(
     val today = LocalDate.ofEpochDay(todayDay)
     val nowTime = Instant.ofEpochMilli(nowMillis).atZone(zone).toLocalTime()
 
+    var showEmergency by remember { mutableStateOf(false) }
     var noteTarget by remember { mutableStateOf<NoteTarget?>(null) }
     var editDayNote by remember { mutableStateOf(false) }
 
@@ -188,6 +189,10 @@ fun TodayScreen(
 
         if (!caregiver.isSet) {
             item { CaregiverPromptCard(onEditCaregiver) }
+        }
+
+        if (AppPrefs.betaEmergency(context)) {
+            item { EmergencyEntryCard { showEmergency = true } }
         }
 
         if (lowStock.isNotEmpty()) {
@@ -414,6 +419,16 @@ fun TodayScreen(
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
             )
         }
+    }
+
+    if (showEmergency) {
+        EmergencyDialog(
+            person = person,
+            meds = meds,
+            doctors = doctors,
+            caregiver = caregiver,
+            onClose = { showEmergency = false },
+        )
     }
 
     noteTarget?.let { t ->

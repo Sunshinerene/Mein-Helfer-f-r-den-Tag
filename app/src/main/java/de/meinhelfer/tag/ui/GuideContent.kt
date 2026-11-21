@@ -92,7 +92,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Kurz nachgefragt",
-                "Wurde eine Einnahme (von gestern oder heute) oder ein Termin nicht beantwortet, erscheint oben die Karte „Kurz nachgefragt“. Mit „Antworten“ wählst du: zur Zeit genommen (nur nicht abgehakt), später genommen (optional mit Uhrzeit), vergessen oder bewusst nicht gegeben (z. B. abgelehnt oder auf Anweisung). Dazu kannst du eine Bemerkung schreiben. Wer schon früher genommen hat, tippt vorher auf die Zeile und wählt „Schon früher genommen“. Eine Zeile mit Strich im Kästchen heißt: nicht genommen, aber beantwortet. Mit „Zurücksetzen“ nimmst du eine Antwort zurück. Alles fließt in die Auswertung ein: pünktlich, später (mit durchschnittlicher Verspätung), vergessen, bewusst nicht gegeben.",
+                "Wurde eine Einnahme (von gestern oder heute) oder ein Termin nicht beantwortet, erscheint oben die Karte „Kurz nachgefragt“. Mit „Antworten“ wählst du: zur Zeit genommen (nur nicht abgehakt), später genommen (optional mit Uhrzeit), vergessen oder bewusst nicht gegeben (z. B. abgelehnt oder auf Anweisung). Dazu kannst du eine Bemerkung schreiben. Wer schon früher genommen hat, tippt vorher auf die Zeile und wählt „Schon früher genommen“. Eine Zeile mit Strich im Kästchen heißt: nicht genommen, aber beantwortet. Mit „Zurücksetzen“ nimmst du eine Antwort zurück. Alles fließt in die Auswertung ein: pünktlich, später (mit durchschnittlicher Verspätung), vergessen, bewusst nicht gegeben. Bleibt eine Einnahme nach dem Zeitfenster offen, erinnert dich die App einmal per Benachrichtigung („Kurz nachgefragt“). Das lässt sich in den Einstellungen unter „Einnahmen abhaken“ ausschalten.",
             ),
             GuideItem(
                 "Termin abgesagt oder verschoben",
@@ -206,6 +206,10 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             GuideItem(
                 "Eigene Themen",
                 "Nach einer Suche kannst du „Thema merken“ antippen. Gemerkte Themen stehen unter „Meine Themen“ und lassen sich mit einem Tipp erneut suchen. Zum Entfernen das Thema suchen und „Thema entfernen“ antippen.",
+            ),
+            GuideItem(
+                "Favoriten",
+                "Bei jeder Themenkarte und jeder gefundenen Meldung gibt es „☆ Merken“. Oben im Reiter „Infos“ schaltest du zwischen „Alle Infos“ und „★ Favoriten“ um. Dort stehen gemerkte Karten, gemerkte Meldungen (Link zur Quelle) und deine Themen. Gespeichert wird nur auf deinem Handy.",
             ),
             GuideItem(
                 "Themen für dich",
@@ -507,7 +511,11 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Darstellung",
-                "In den Einstellungen wählst du, ob die App wie das Handy, immer hell oder immer dunkel aussehen soll. Außerdem gibt es sechs Designs zur Auswahl: Schlicht, Minimalistisch, Glas, Liquid, Sonnig und Natur. Die Vorschau zeigt die Farben, ausprobieren kannst du jedes mit einem Tipp.",
+                "In den Einstellungen wählst du, ob die App wie das Handy, immer hell oder immer dunkel aussehen soll. Außerdem gibt es sechs Designs zur Auswahl: Schlicht, Minimalistisch, Glas, Liquid, Sonnig und Natur. Die Vorschau zeigt die Farben, ausprobieren kannst du jedes mit einem Tipp. Mit „Farben anpassen“ änderst du die drei Farben des gewählten Designs selbst: Hauptfarbe, Zweitfarbe und Hintergrund (bei Glas und Liquid die beiden Hintergrundfarben). Du siehst die Änderung sofort, „Standard“ und „Alles zurücksetzen“ stellen das Original wieder her.",
+            ),
+            GuideItem(
+                "Beta: Notfallkarte",
+                "Unter Einstellungen → „Beta: zum Ausprobieren“ kannst du die Notfallkarte einschalten. Sie erscheint dann auf der Heute-Seite und zeigt Name, Geburtsdatum, Pflegegrad, Wichtiges, Medikamente, Kontakte und deine Ansprechdaten auf einen Blick, mit Notruf-Taste (öffnet nur die Telefon-App), zum Kopieren oder Teilen. Die Versichertennummer zeigst du nur auf Wunsch. Beta heißt: noch im Test, Rückmeldungen willkommen.",
             ),
             GuideItem(
                 "Feedback",

@@ -43,6 +43,25 @@ object AppPrefs {
         prefs(context).edit().putString(KEY_STYLE, key).apply()
     }
 
+    /** Eigene Farben je Design: "a;b;c" als ARGB-Zahlen, leer = Standard. */
+    fun designTweak(context: Context, styleKey: String): de.meinhelfer.tag.ui.DesignTweak {
+        val parts = (prefs(context).getString("farben_$styleKey", "") ?: "").split(";")
+        fun at(i: Int): Long? = parts.getOrNull(i)?.trim()?.toLongOrNull()
+        return de.meinhelfer.tag.ui.DesignTweak(at(0), at(1), at(2))
+    }
+
+    fun setDesignTweak(context: Context, styleKey: String, tweak: de.meinhelfer.tag.ui.DesignTweak) {
+        val text = if (tweak.isEmpty) "" else listOf(tweak.a, tweak.b, tweak.c).joinToString(";") { it?.toString() ?: "" }
+        prefs(context).edit().putString("farben_$styleKey", text).apply()
+    }
+
+    /** Beta: Notfallkarte auf der Heute-Seite. */
+    fun betaEmergency(context: Context): Boolean = prefs(context).getBoolean("beta_notfallkarte", false)
+
+    fun setBetaEmergency(context: Context, value: Boolean) {
+        prefs(context).edit().putBoolean("beta_notfallkarte", value).apply()
+    }
+
     private const val KEY_INFO_AUTO = "beschreibung_automatisch"
 
     /** true = Medikamenten-Beschreibung wird automatisch geladen, false = nur auf Knopfdruck (Standard). */
@@ -78,9 +97,35 @@ object AppPrefs {
     }
 
     private const val KEY_INFO_TOPICS = "info_themen"
+    private const val KEY_INFO_FAV_CARDS = "info_favoriten_karten"
+    private const val KEY_INFO_FAV_NEWS = "info_favoriten_meldungen"
     private const val KEY_INFO_PERSONAL = "info_vorschlaege"
 
     /** Eigene Themen der Infoseite (Suchwoerter). */
+    /** Als Favorit gemerkte Info-Karten (Titel). */
+    fun infoFavoriteCards(context: Context): Set<String> =
+        (prefs(context).getString(KEY_INFO_FAV_CARDS, "") ?: "").split("\n").map { it.trim() }.filter { it.isNotEmpty() }.toSet()
+
+    fun setInfoFavoriteCards(context: Context, titles: Set<String>) {
+        prefs(context).edit().putString(KEY_INFO_FAV_CARDS, titles.joinToString("\n")).apply()
+    }
+
+    /** Gemerkte Meldungen: je Zeile Titel, Quelle, Link, Datum (Tab-getrennt). */
+    fun infoFavoriteNews(context: Context): List<de.meinhelfer.tag.info.NewsItem> =
+        (prefs(context).getString(KEY_INFO_FAV_NEWS, "") ?: "").split("\n").mapNotNull { line ->
+            val f = line.split("\t")
+            if (f.size < 4 || f[2].isBlank()) null
+            else de.meinhelfer.tag.info.NewsItem(f[0], f[1], f[2], f[3].toLongOrNull())
+        }
+
+    fun setInfoFavoriteNews(context: Context, items: List<de.meinhelfer.tag.info.NewsItem>) {
+        fun clean(t: String) = t.replace('\t', ' ').replace('\n', ' ')
+        prefs(context).edit().putString(
+            KEY_INFO_FAV_NEWS,
+            items.take(100).joinToString("\n") { "${clean(it.title)}\t${clean(it.source)}\t${clean(it.link)}\t${it.published ?: ""}" },
+        ).apply()
+    }
+
     fun infoTopics(context: Context): List<String> =
         (prefs(context).getString(KEY_INFO_TOPICS, "") ?: "").split("\n").map { it.trim() }.filter { it.isNotEmpty() }
 
@@ -99,6 +144,13 @@ object AppPrefs {
 
     /** Minuten vor und nach der Einnahmezeit, in denen normal abgehakt werden kann (Standard 60). */
     fun intakeWindow(context: Context): Int = prefs(context).getInt(KEY_INTAKE_WINDOW, 60)
+
+    /** Benachrichtigung, wenn nach dem Zeitfenster noch eine Rueckfrage zur Einnahme offen ist (Standard an). */
+    fun followupNotify(context: Context): Boolean = prefs(context).getBoolean("rueckfrage_benachrichtigung", true)
+
+    fun setFollowupNotify(context: Context, value: Boolean) {
+        prefs(context).edit().putBoolean("rueckfrage_benachrichtigung", value).apply()
+    }
 
     fun setIntakeWindow(context: Context, minutes: Int) {
         prefs(context).edit().putInt(KEY_INTAKE_WINDOW, minutes).apply()

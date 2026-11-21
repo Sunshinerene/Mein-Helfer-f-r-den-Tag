@@ -121,6 +121,7 @@ fun SettingsScreen(
             item { SecurityCard() }
             item { MedInfoCard() }
             item { AiCard() }
+            item { BetaCard() }
             item { FeedbackCard(context) }
             item { RoadmapCard(roadmap, roadmapError) }
             item { AboutCard(context) }
@@ -255,6 +256,8 @@ private fun openUrl(context: Context, url: String) {
 private fun ThemeCard(vm: MainViewModel) {
     val mode by vm.themeMode.collectAsStateWithLifecycle()
     val style by vm.designStyle.collectAsStateWithLifecycle()
+    val tweaks by vm.designTweaks.collectAsStateWithLifecycle()
+    var tweaking by remember { mutableStateOf(false) }
     val darkNow = when (mode) {
         "dark" -> true
         "light" -> false
@@ -271,7 +274,7 @@ private fun ThemeCard(vm: MainViewModel) {
             }
             Text("Design", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 8.dp))
             DesignStyle.entries.forEach { option ->
-                val colors = designSpec(option, darkNow).preview
+                val colors = tweakedSpec(option, darkNow, tweaks[option]).preview
                 Row(
                     Modifier
                         .fillMaxWidth()
@@ -297,6 +300,45 @@ private fun ThemeCard(vm: MainViewModel) {
                     }
                 }
             }
+            OutlinedButton(onClick = { tweaking = true }, modifier = Modifier.fillMaxWidth()) {
+                Text("Farben von „${style.label}“ anpassen" + if (tweaks[style]?.isEmpty == false) " (geändert)" else "")
+            }
+        }
+    }
+    if (tweaking) {
+        ColorTweakDialog(
+            style = style,
+            tweak = tweaks[style] ?: DesignTweak(),
+            onChange = { vm.setDesignTweak(style, it) },
+            onClose = { tweaking = false },
+        )
+    }
+}
+
+@Composable
+private fun BetaCard() {
+    val context = LocalContext.current
+    var emergency by remember { mutableStateOf(AppPrefs.betaEmergency(context)) }
+    HCard(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Beta: zum Ausprobieren", style = MaterialTheme.typography.titleMedium)
+            Text(
+                "Neue Funktionen, die noch getestet werden. Sie können sich noch ändern. Sag gern, wie sie dir gefallen.",
+                style = MaterialTheme.typography.bodySmall,
+            )
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Switch(checked = emergency, onCheckedChange = {
+                    emergency = it
+                    AppPrefs.setBetaEmergency(context, it)
+                })
+                Column(Modifier.weight(1f)) {
+                    Text("Notfallkarte", style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        "Auf der Heute-Seite: Name, Geburtsdatum, Pflegegrad, Wichtiges, Medikamente, Kontakte und Ansprechperson auf einen Blick, mit Notruf-Taste, zum Kopieren oder Teilen.",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+            }
         }
     }
 }
@@ -306,6 +348,8 @@ private fun ThemeCard(vm: MainViewModel) {
 private fun IntakeCard() {
     val context = LocalContext.current
     var window by remember { mutableStateOf(AppPrefs.intakeWindow(context)) }
+    var followup by remember { mutableStateOf(AppPrefs.followupNotify(context)) }
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
     HCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Einnahmen abhaken", style = MaterialTheme.typography.titleMedium)
@@ -322,6 +366,24 @@ private fun IntakeCard() {
                     }, label = { Text(label) })
                 }
             }
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Switch(checked = followup, onCheckedChange = {
+                    followup = it
+                    AppPrefs.setFollowupNotify(context, it)
+                    if (it) {
+                        scope.launch { de.meinhelfer.tag.reminder.ReminderScheduler.rescheduleAll(context) }
+                    }
+                })
+                Text(
+                    "Benachrichtigen, wenn eine Rückfrage offen bleibt",
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            Text(
+                "Wurde nach dem Zeitfenster nichts abgehakt, erinnert die App einmal und fragt nach, wie es lief.",
+                style = MaterialTheme.typography.bodySmall,
+            )
         }
     }
 }

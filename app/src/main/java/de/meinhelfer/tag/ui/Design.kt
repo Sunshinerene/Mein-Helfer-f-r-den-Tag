@@ -22,6 +22,8 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -63,8 +65,8 @@ val LocalDesign = staticCompositionLocalOf { designSpec(DesignStyle.Schlicht, fa
 
 /** Wendet Farben, Formen und Hintergrund des gewaehlten Designs auf die ganze App an. */
 @Composable
-fun HelferTheme(style: DesignStyle, dark: Boolean, content: @Composable () -> Unit) {
-    val spec = remember(style, dark) { designSpec(style, dark) }
+fun HelferTheme(style: DesignStyle, dark: Boolean, tweak: DesignTweak? = null, content: @Composable () -> Unit) {
+    val spec = remember(style, dark, tweak) { tweakedSpec(style, dark, tweak) }
     CompositionLocalProvider(LocalDesign provides spec) {
         MaterialTheme(colorScheme = spec.scheme, shapes = spec.shapes) {
             Box(Modifier.fillMaxSize().drawBackdrop(spec.backdrop)) { content() }
@@ -367,4 +369,90 @@ fun designSpec(style: DesignStyle, dark: Boolean): DesignSpec = when (style) {
             preview = listOf(p.primary, p.primaryContainer, p.background),
         )
     }
+}
+
+// ---------------------------------------------------------------- Eigene Farben
+
+/**
+ * Eigene Farben fuer ein Design (null = Standard des Designs).
+ * Bei Glas und Liquid: a = Hauptfarbe, b = Hintergrund oben/links, c = Hintergrund unten/rechts.
+ * Bei den anderen: a = Hauptfarbe, b = Zweitfarbe (Flaechen von Auswahl und Knoepfen), c = Hintergrund.
+ * Gespeichert als ARGB-Zahl.
+ */
+data class DesignTweak(val a: Long? = null, val b: Long? = null, val c: Long? = null) {
+    val isEmpty: Boolean get() = a == null && b == null && c == null
+}
+
+/** Ob das Design einen farbigen Hintergrund mit Farbflecken hat (Glas, Liquid). */
+fun DesignStyle.hasBackdrop(): Boolean = this == DesignStyle.Glas || this == DesignStyle.Liquid
+
+private fun onColor(color: Color): Color = if (color.luminance() > 0.5f) Color(0xFF111111) else Color.White
+
+fun tweakedSpec(style: DesignStyle, dark: Boolean, tweak: DesignTweak?): DesignSpec {
+    val base = designSpec(style, dark)
+    if (tweak == null || tweak.isEmpty) return base
+    var scheme = base.scheme
+    var card = base.cardColor
+    var backdrop = base.backdrop
+    val deep = if (dark) Color(0xFF14141A) else Color.White
+
+    tweak.a?.let { raw ->
+        val pc = Color(raw)
+        val container = lerp(deep, pc, if (dark) 0.40f else 0.25f)
+        scheme = scheme.copy(
+            primary = pc, onPrimary = onColor(pc), secondary = pc, onSecondary = onColor(pc),
+            primaryContainer = container, onPrimaryContainer = onColor(container), surfaceTint = pc,
+        )
+    }
+
+    if (backdrop != null) {
+        if (tweak.b != null || tweak.c != null) {
+            val old = backdrop
+            val t1 = tweak.b?.let { Color(it) } ?: old.blobs[0].color.copy(alpha = 1f)
+            val t2 = tweak.c?.let { Color(it) } ?: old.blobs[1].color.copy(alpha = 1f)
+            val k = if (dark) 0.35f else 0.30f
+            val c1 = lerp(deep, t1, k)
+            val c2 = lerp(deep, t2, k)
+            val mid = lerp(c1, c2, 0.5f)
+            backdrop = Backdrop(
+                base = if (old.gradient != null) c1 else lerp(deep, lerp(t1, t2, 0.5f), if (dark) 0.18f else 0.20f),
+                gradient = if (old.gradient != null) listOf(c1, mid, c2) else null,
+                blobs = old.blobs.mapIndexed { i, b -> Blob((if (i % 2 == 0) t1 else t2).copy(alpha = b.color.alpha), b.x, b.y, b.radius) },
+            )
+        }
+    } else {
+        tweak.b?.let { raw ->
+            val sc = Color(raw)
+            scheme = scheme.copy(secondaryContainer = sc, onSecondaryContainer = onColor(sc))
+        }
+        tweak.c?.let { raw ->
+            val bg = Color(raw)
+            val on = onColor(bg)
+            fun tone(k: Float) = lerp(bg, on, k)
+            scheme = scheme.copy(
+                background = bg, onBackground = on, surface = bg, onSurface = on,
+                surfaceContainerLowest = bg, surfaceContainerLow = tone(0.03f), surfaceContainer = tone(0.06f),
+                surfaceContainerHigh = tone(0.09f), surfaceContainerHighest = tone(0.12f),
+                surfaceVariant = tone(0.08f), onSurfaceVariant = lerp(on, bg, 0.25f),
+            )
+            if (card != null && card.alpha >= 0.99f) {
+                card = if (dark) lerp(bg, Color.White, 0.06f) else lerp(bg, Color.White, 0.55f)
+            }
+        }
+    }
+
+    val preview = if (backdrop != null && (tweak.b != null || tweak.c != null)) {
+        listOf(scheme.primary, backdrop.blobs.getOrNull(1)?.color?.copy(alpha = 1f) ?: base.preview[1], backdrop.blobs[0].color.copy(alpha = 1f))
+    } else {
+        listOf(scheme.primary, tweak.b?.let { Color(it) } ?: base.preview[1], tweak.c?.let { Color(it) } ?: base.preview[2])
+    }
+    return DesignSpec(
+        scheme = scheme,
+        shapes = base.shapes,
+        cardColor = card,
+        cardBorder = base.cardBorder,
+        cardElevation = base.cardElevation,
+        backdrop = backdrop,
+        preview = preview,
+    )
 }

@@ -23,6 +23,8 @@ object ReminderScheduler {
     const val EXTRA_TIME = "time"
     const val TYPE_MED = "med"
     const val TYPE_APPT = "appt"
+    const val TYPE_FOLLOWUP = "followup"
+    const val EXTRA_DAY = "day"
 
     /** "30 Minuten", "1 Stunde", "2 Stunden", "1 Tag" */
     fun leadText(minutes: Int): String = when {
@@ -70,6 +72,42 @@ object ReminderScheduler {
             id = medId,
             time = normalized,
         )
+        scheduleFollowUp(context, medId, normalized, hour, minute)
+    }
+
+    /**
+     * Plant die Nachfrage fuer den Fall, dass eine Einnahme nach dem Zeitfenster noch offen ist.
+     * Der Receiver prueft beim Ausloesen, ob inzwischen abgehakt oder beantwortet wurde.
+     */
+    private fun scheduleFollowUp(context: Context, medId: Long, normalized: String, hour: Int, minute: Int) {
+        if (!de.meinhelfer.tag.update.AppPrefs.followupNotify(context)) return
+        val window = de.meinhelfer.tag.update.AppPrefs.intakeWindow(context)
+        val now = System.currentTimeMillis()
+        val cal = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, hour)
+            set(Calendar.MINUTE, minute)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+            add(Calendar.MINUTE, window)
+            if (timeInMillis <= now + 1000) add(Calendar.DAY_OF_YEAR, 1)
+        }
+        // Der Einnahme-Tag ist der Tag der Einnahmezeit (nicht unbedingt der Tag der Nachfrage, z. B. 23:30 + 1 Std.).
+        val slotDay = Calendar.getInstance().apply {
+            timeInMillis = cal.timeInMillis
+            add(Calendar.MINUTE, -window)
+        }
+        val day = java.time.LocalDate.of(
+            slotDay.get(Calendar.YEAR), slotDay.get(Calendar.MONTH) + 1, slotDay.get(Calendar.DAY_OF_MONTH),
+        ).toEpochDay()
+        setAlarm(
+            context = context,
+            requestCode = "fu:$medId:$normalized".hashCode(),
+            triggerAt = cal.timeInMillis,
+            type = TYPE_FOLLOWUP,
+            id = medId,
+            time = normalized,
+            day = day,
+        )
     }
 
     fun scheduleAppointment(context: Context, appointment: Appointment) {
@@ -93,12 +131,14 @@ object ReminderScheduler {
         type: String,
         id: Long,
         time: String?,
+        day: Long? = null,
     ) {
         val alarmManager = context.getSystemService(AlarmManager::class.java)
         val intent = Intent(context, ReminderReceiver::class.java).apply {
             putExtra(EXTRA_TYPE, type)
             putExtra(EXTRA_ID, id)
             if (time != null) putExtra(EXTRA_TIME, time)
+            if (day != null) putExtra(EXTRA_DAY, day)
         }
         val pending = PendingIntent.getBroadcast(
             context,

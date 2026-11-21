@@ -31,6 +31,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -161,6 +162,17 @@ fun InfoScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val role = caregiver.roleValue
+    var showFav by rememberSaveable { mutableStateOf(false) }
+    var favCards by remember { mutableStateOf(AppPrefs.infoFavoriteCards(context)) }
+    var favNews by remember { mutableStateOf(AppPrefs.infoFavoriteNews(context)) }
+    fun toggleCard(title: String) {
+        favCards = if (title in favCards) favCards - title else favCards + title
+        AppPrefs.setInfoFavoriteCards(context, favCards)
+    }
+    fun toggleNews(n: NewsItem) {
+        favNews = if (favNews.any { it.link == n.link }) favNews.filterNot { it.link == n.link } else listOf(n) + favNews
+        AppPrefs.setInfoFavoriteNews(context, favNews)
+    }
     val roleCards = role?.let { ROLE_TIPS[it] }.orEmpty()
     val generalCards = remember(role) {
         val first = infoOrder(role)
@@ -204,6 +216,73 @@ fun InfoScreen(
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        item {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(selected = !showFav, onClick = { showFav = false }, label = { Text("Alle Infos") })
+                FilterChip(
+                    selected = showFav,
+                    onClick = { showFav = true },
+                    label = { Text("★ Favoriten (${favCards.size + favNews.size})") },
+                )
+            }
+        }
+        if (showFav) {
+            val savedCards = (ROLE_TIPS.values.flatten() + INFO_CARDS).filter { it.title in favCards }.distinctBy { it.title }
+            if (savedCards.isEmpty() && favNews.isEmpty() && topics.isEmpty()) {
+                item {
+                    HCard(Modifier.fillMaxWidth()) {
+                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text("Noch keine Favoriten", style = MaterialTheme.typography.titleMedium)
+                            Text(
+                                "Tippe bei einer Themenkarte auf „☆ Merken“ oder bei einer Meldung auf „☆“. Dann findest du sie hier jederzeit wieder.",
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
+                        }
+                    }
+                }
+            }
+            if (topics.isNotEmpty()) {
+                item {
+                    HCard(Modifier.fillMaxWidth()) {
+                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text("Meine Themen", style = MaterialTheme.typography.titleMedium)
+                            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                topics.forEach { t ->
+                                    FilterChip(selected = false, onClick = { showFav = false; search(t) }, label = { Text(t) })
+                                }
+                            }
+                            Text("Antippen sucht aktuelle Meldungen.", style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                }
+            }
+            savedCards.forEach { card ->
+                item { InfoCardView(card, onOpenWegweiser, { q -> showFav = false; search(q) }, context, true) { toggleCard(card.title) } }
+            }
+            if (favNews.isNotEmpty()) {
+                item {
+                    HCard(Modifier.fillMaxWidth()) {
+                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text("Gemerkte Meldungen", style = MaterialTheme.typography.titleMedium)
+                            favNews.forEach { n ->
+                                Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                    TextButton(onClick = { openWeb(context, n.link) }, contentPadding = PaddingValues(0.dp)) {
+                                        Text(n.title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+                                    }
+                                    Text(
+                                        listOfNotNull(n.source.takeIf { it.isNotBlank() }, n.published?.let { NEWS_DATE.format(Date(it)) }).joinToString(" · "),
+                                        style = MaterialTheme.typography.bodySmall,
+                                    )
+                                    TextButton(onClick = { toggleNews(n) }, contentPadding = PaddingValues(0.dp)) { Text("★ Entfernen") }
+                                }
+                            }
+                            Text("Meldungen öffnen die Seite der Quelle im Browser.", style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                }
+            }
+            return@LazyColumn
+        }
         if (role == null) {
             item {
                 HCard(Modifier.fillMaxWidth()) {
@@ -225,7 +304,7 @@ fun InfoScreen(
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
-            roleCards.forEach { card -> item { InfoCardView(card, onOpenWegweiser, ::search, context) } }
+            roleCards.forEach { card -> item { InfoCardView(card, onOpenWegweiser, ::search, context, card.title in favCards) { toggleCard(card.title) } } }
         }
 
         item {
@@ -278,6 +357,10 @@ fun InfoScreen(
                                     listOfNotNull(n.source.takeIf { it.isNotBlank() }, n.published?.let { NEWS_DATE.format(Date(it)) }).joinToString(" · "),
                                     style = MaterialTheme.typography.bodySmall,
                                 )
+                                val saved = favNews.any { it.link == n.link }
+                                TextButton(onClick = { toggleNews(n) }, contentPadding = PaddingValues(0.dp)) {
+                                    Text(if (saved) "★ Gemerkt" else "☆ Merken")
+                                }
                             }
                         }
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -350,13 +433,20 @@ fun InfoScreen(
                 style = MaterialTheme.typography.bodySmall,
             )
         }
-        generalCards.forEach { card -> item { InfoCardView(card, onOpenWegweiser, ::search, context) } }
+        generalCards.forEach { card -> item { InfoCardView(card, onOpenWegweiser, ::search, context, card.title in favCards) { toggleCard(card.title) } } }
     }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun InfoCardView(card: InfoCard, onOpenWegweiser: () -> Unit, onSearch: (String) -> Unit, context: Context) {
+private fun InfoCardView(
+    card: InfoCard,
+    onOpenWegweiser: () -> Unit,
+    onSearch: (String) -> Unit,
+    context: Context,
+    favorite: Boolean,
+    onToggleFavorite: () -> Unit,
+) {
     HCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(card.title, style = MaterialTheme.typography.titleMedium)
@@ -364,6 +454,7 @@ private fun InfoCardView(card: InfoCard, onOpenWegweiser: () -> Unit, onSearch: 
             FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 if (card.wegweiser) OutlinedButton(onClick = onOpenWegweiser) { Text("Wegweiser öffnen") }
                 card.query?.let { q -> OutlinedButton(onClick = { onSearch(q) }) { Text("Aktuelle Meldungen") } }
+                TextButton(onClick = onToggleFavorite) { Text(if (favorite) "★ Gemerkt" else "☆ Merken") }
             }
             card.links.forEach { (label, url) ->
                 TextButton(onClick = { openWeb(context, url) }, contentPadding = PaddingValues(0.dp)) { Text(label) }

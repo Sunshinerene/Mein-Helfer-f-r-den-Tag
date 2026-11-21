@@ -4,6 +4,13 @@
 
 - [ ] Erkennung von Packungsfoto weiter verbessern (Wirkstoff, Packungsbeilage), Kamera-Scan für Barcodes live
 
+## Version 0.26.0 (fertig)
+
+- [x] Infos: Favoriten – Themenkarten und Meldungen mit „☆ Merken“, eigene Favoritenansicht
+- [x] Benachrichtigung „Kurz nachgefragt“, wenn eine Einnahme nach dem Zeitfenster offen bleibt (abschaltbar)
+- [x] Darstellung: die drei Farben jedes Designs selbst ändern (Hauptfarbe, Zweitfarbe, Hintergrund; bei Glas/Liquid zwei Hintergrundfarben), live, zurücksetzbar
+- [x] Beta: Notfallkarte (Einstellungen → Beta), mit Notruf-Taste, Kopieren, Teilen
+
 ## Version 0.25.0 (fertig)
 
 - [x] „Meine Daten“: Rolle (pflegende/r Angehörige/r, Pflegedienst, Betreuungskraft, Betreuer/in, Ehrenamt, selbst, sonstiges), Name, Beziehung bzw. Pflegedienst, Telefon, E-Mail; einmalige Nachfrage beim Start, Hinweiskarte auf Heute, Karte in den Einstellungen
@@ -156,12 +163,11 @@
 
 ## Weitere Ideen
 
-- [ ] Erinnerung als Benachrichtigung, wenn eine Rückfrage offen ist oder eine Einnahme nach dem Zeitfenster nicht abgehakt wurde
 - [ ] Aufgabe mit Dokument verknüpfen (Link zurück zum Bericht), Aufgabe in den Kalender oder als Erinnerung
 - [ ] Umkreissuche auch für Apotheken, Sanitätshäuser und Pflegedienste
 
 - [ ] Anleitung und Rundgang bei neuen Funktionen mitpflegen (Datei GuideContent.kt und TourScreen.kt)
-- [ ] Designs anpassen: die drei Farbtupfer jedes Designs (z. B. Glas) in den Einstellungen selbst ändern können, Effekt und Farben bleiben erhalten (Wunsch vom 21.11.2026)
+- [ ] Notfallkarte aus Beta übernehmen, ggf. als PDF und fürs Sperrbildschirm-Widget
 - [ ] Designs verfeinern (Schriftarten, Übergänge, weitere Varianten, Hochkontrast für bessere Lesbarkeit)
 - [ ] Dokumente: Medikamente und Termine aus dem erkannten Text vorschlagen
 - [ ] Datenbank verschlüsseln (SQLCipher, mit Sicherung vor der Umstellung)
