@@ -7,7 +7,6 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-// TODO (vor echten Nutzern): Datenbank verschluesseln (z. B. SQLCipher) und App-Sperre ergaenzen.
 @Database(
     entities = [Medication::class, Appointment::class, Doctor::class, Checkin::class, DayNote::class, Person::class, Todo::class, Document::class],
     version = 16,
@@ -188,14 +187,40 @@ abstract class AppDatabase : RoomDatabase() {
 
         fun get(context: Context): AppDatabase =
             instance ?: synchronized(this) {
-                instance ?: Room.databaseBuilder(
-                    context.applicationContext,
-                    AppDatabase::class.java,
-                    "mein_helfer.db",
-                )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16)
-                    .build()
-                    .also { instance = it }
+                instance ?: open(context.applicationContext).also { instance = it }
             }
+
+        private fun build(context: Context, encrypted: Boolean): AppDatabase {
+            val builder = Room.databaseBuilder(context, AppDatabase::class.java, DbCrypto.DB_NAME)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16)
+            if (encrypted) {
+                builder.openHelperFactory(
+                    net.zetetic.database.sqlcipher.SupportOpenHelperFactory(DbCrypto.passphrase(context).toByteArray(Charsets.UTF_8)),
+                )
+            }
+            return builder.build()
+        }
+
+        /** Oeffnet die Datenbank verschluesselt; eine alte unverschluesselte wird dabei umgewandelt (mit Rueckfall). */
+        private fun open(context: Context): AppDatabase {
+            val file = context.getDatabasePath(DbCrypto.DB_NAME)
+            val prepared = DbCrypto.prepare(context)
+            val db = build(context, prepared.encrypted)
+            if (prepared.pendingBackup) {
+                try {
+                    db.openHelper.writableDatabase
+                } catch (_: Throwable) {
+                    try {
+                        db.close()
+                    } catch (_: Throwable) {
+                    }
+                    DbCrypto.rollback(file)
+                    DbCrypto.noteFailure(context)
+                    return build(context, false)
+                }
+                DbCrypto.discardBackup(file)
+            }
+            return db
+        }
     }
 }

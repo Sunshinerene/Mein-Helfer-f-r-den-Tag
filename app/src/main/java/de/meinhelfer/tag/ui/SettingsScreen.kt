@@ -401,6 +401,12 @@ private fun SecurityCard() {
     HCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Sicherheit", style = MaterialTheme.typography.titleMedium)
+            val dbEncrypted = remember { de.meinhelfer.tag.data.DbCrypto.isEncrypted(context) }
+            Text(
+                if (dbEncrypted) "Datenbank: verschlüsselt (SQLCipher). Der Schlüssel liegt im Schlüsselspeicher des Handys."
+                else "Datenbank: nicht verschlüsselt (die Umstellung war auf diesem Gerät nicht möglich).",
+                style = MaterialTheme.typography.bodySmall,
+            )
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Switch(checked = lockOn, onCheckedChange = { wanted ->
                     message = null
