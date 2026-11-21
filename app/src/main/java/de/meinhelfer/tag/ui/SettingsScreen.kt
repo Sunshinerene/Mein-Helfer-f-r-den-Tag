@@ -120,6 +120,7 @@ fun SettingsScreen(
             item { IntakeCard() }
             item { SecurityCard() }
             item { BackupCard() }
+            item { ViewerCard() }
             item { MedInfoCard() }
             item { AiCard() }
             item { BetaCard() }
@@ -660,6 +661,38 @@ private fun AboutCard(context: Context) {
                 Text("Version ${UpdateChecker.installedVersion(context)}", style = MaterialTheme.typography.bodyMedium)
                 Text("by $AUTHOR", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
             }
+        }
+    }
+}
+
+
+@Composable
+private fun ViewerCard() {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var internal by remember { mutableStateOf(AppPrefs.internalViewer(context)) }
+    HCard(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text("Dokumente ansehen", style = MaterialTheme.typography.titleMedium)
+            listOf(
+                true to "In der App (Betrachter mit Zoom und Drucken)",
+                false to "Mit einer anderen App auf dem Handy",
+            ).forEach { (value, label) ->
+                Row(
+                    Modifier.fillMaxWidth().clickable {
+                        internal = value
+                        AppPrefs.setInternalViewer(context, value)
+                    }.padding(vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    RadioButton(selected = internal == value, onClick = null)
+                    Text(label, style = MaterialTheme.typography.bodyLarge)
+                }
+            }
+            Text(
+                "Der eingebaute Betrachter zeigt PDF, Fotos und Text. Andere Formate (z. B. Word) öffnen immer mit einer anderen App.",
+                style = MaterialTheme.typography.bodySmall,
+            )
         }
     }
 }

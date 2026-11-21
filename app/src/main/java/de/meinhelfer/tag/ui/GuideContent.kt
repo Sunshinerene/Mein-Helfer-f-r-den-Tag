@@ -317,6 +317,10 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
         summary = "Berichte, Befunde, Bescheide fotografieren oder laden",
         items = listOf(
             GuideItem(
+                "Ansehen und Drucken",
+                "Tippe ein Dokument an und dann auf „Öffnen“. Es erscheint im eingebauten Betrachter: PDF und Fotos mit Zoom (− und +), Text zum Lesen. Unten stehen „Drucken“, „Teilen“ und „Andere App“. Drucken geht für PDF und Fotos über den Druckdienst des Handys (auch als PDF speichern). In den Einstellungen unter „Dokumente ansehen“ wählst du, ob „Öffnen“ den eingebauten Betrachter oder eine andere App nutzt. Word und andere Formate öffnen immer mit einer anderen App. Das Dokument bleibt verschlüsselt, nur für die Anzeige entsteht kurz eine Kopie im Zwischenspeicher.",
+            ),
+            GuideItem(
                 "Mehrere Seiten, ein Dokument",
                 "Besteht ein Dokument aus mehreren Blättern, bleiben alle zusammen. Wähle mehrere Fotos oder PDFs auf einmal aus (sie werden in der gewählten Reihenfolge zu einem Dokument), oder tippe nach dem Einlesen auf „Weitere Seiten hinzufügen“ (fotografieren, Galerie oder PDF/Bild laden). Der Text aller Seiten wird gelesen und zusammengefügt, gespeichert wird eine PDF. „Letzte Seite entfernen“ nimmt eine versehentliche Seite wieder weg. Word- und Textdateien werden nicht zusammengefügt, die lädst du einzeln.",
             ),

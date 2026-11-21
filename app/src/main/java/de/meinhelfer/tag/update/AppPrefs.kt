@@ -33,6 +33,13 @@ object AppPrefs {
         prefs(context).edit().putFloat("schrift_faktor", factor).apply()
     }
 
+    /** Dokumente im eingebauten Betrachter oeffnen (Standard) oder mit einer anderen App. */
+    fun internalViewer(context: Context): Boolean = prefs(context).getBoolean("viewer_intern", true)
+
+    fun setInternalViewer(context: Context, value: Boolean) {
+        prefs(context).edit().putBoolean("viewer_intern", value).apply()
+    }
+
     /** Eingeklappte Karten auf der Heute-Seite. */
     fun folded(context: Context, key: String): Boolean = prefs(context).getBoolean("eingeklappt_$key", false)
 

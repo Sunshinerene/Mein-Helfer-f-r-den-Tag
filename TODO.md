@@ -5,6 +5,11 @@
 - [ ] Vorlagen erweitern (Kündigung Pflegedienst, Antrag Schwerbehindertenausweis, Widerruf), Unterschrift-Scan automatisch dem Entwurf zuordnen
 - [ ] Erkennung von Packungsfoto weiter verbessern (Wirkstoff, Packungsbeilage), Kamera-Scan für Barcodes live
 
+## Version 0.34.0 (fertig)
+
+- [x] Eingebauter Dokumenten-Betrachter (PDF, Fotos, Text) mit Zoom, Drucken, Teilen, „Andere App“; Einstellung intern/extern
+- [ ] Offen: Pinch-Zoom, Drucken von Text-Dokumenten
+
 ## Version 0.33.0 (fertig)
 
 - [x] Karten auf der Tagesansicht einklappbar, mit Kurzinfo (Anzahl offen usw.), Zustand wird gemerkt

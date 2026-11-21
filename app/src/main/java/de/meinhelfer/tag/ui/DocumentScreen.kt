@@ -50,6 +50,7 @@ import de.meinhelfer.tag.media.DocumentAnalyzer
 import de.meinhelfer.tag.media.DocumentReader
 import de.meinhelfer.tag.media.DocumentStore
 import de.meinhelfer.tag.media.PendingDoc
+import de.meinhelfer.tag.update.AppPrefs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -570,6 +571,7 @@ private fun DocumentDialog(
     )
 }
 
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 internal fun DocumentDetailDialog(
     doc: Document,
@@ -580,6 +582,20 @@ internal fun DocumentDetailDialog(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var showFullText by remember { mutableStateOf(false) }
+
+    var showViewer by remember { mutableStateOf(false) }
+    if (showViewer) DocumentViewer(doc) { showViewer = false }
+
+    fun withDecryptedSuspend(action: suspend (File) -> Unit) {
+        scope.launch {
+            try {
+                val ext = DocumentStore.extensionFor(doc.mimeType)
+                action(DocumentStore.decryptToCache(context, doc.fileName, DocumentStore.safeName(doc.title) + "." + ext))
+            } catch (_: Exception) {
+                Toast.makeText(context, "Die Datei konnte nicht geöffnet werden.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     fun withDecrypted(action: (File) -> Unit) {
         scope.launch {
@@ -613,16 +629,29 @@ internal fun DocumentDetailDialog(
                     Text("Zusammenfassung (Anhaltspunkt)", style = MaterialTheme.typography.labelLarge)
                     Text(doc.summary, style = MaterialTheme.typography.bodyMedium)
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     OutlinedButton(onClick = {
-                        withDecrypted { file ->
-                            val view = Intent(Intent.ACTION_VIEW).apply {
-                                setDataAndType(DocumentStore.uriFor(context, file), doc.mimeType)
-                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        if (AppPrefs.internalViewer(context) && canViewInside(doc)) {
+                            showViewer = true
+                        } else {
+                            withDecrypted { file ->
+                                val view = Intent(Intent.ACTION_VIEW).apply {
+                                    setDataAndType(DocumentStore.uriFor(context, file), doc.mimeType)
+                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                }
+                                context.startActivity(view)
                             }
-                            context.startActivity(view)
                         }
                     }) { Text("Öffnen") }
+                    if (canPrint(doc)) {
+                        OutlinedButton(onClick = {
+                            withDecryptedSuspend { file ->
+                                if (!printDocument(context, doc, file)) {
+                                    Toast.makeText(context, "Drucken ist nicht möglich.", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        }) { Text("Drucken") }
+                    }
                     OutlinedButton(onClick = {
                         withDecrypted { file ->
                             val send = Intent(Intent.ACTION_SEND).apply {
@@ -635,7 +664,7 @@ internal fun DocumentDetailDialog(
                     }) { Text("Teilen") }
                 }
                 Text(
-                    "Öffnen und Teilen geben eine Kopie an die gewählte App. Das passiert nur nach deinem Tipp.",
+                    "Öffnen zeigt das Dokument in der App (einstellbar). Teilen und „Andere App“ geben eine Kopie an die gewählte App, nur nach deinem Tipp.",
                     style = MaterialTheme.typography.bodySmall,
                 )
                 if (doc.text.isNotBlank()) {

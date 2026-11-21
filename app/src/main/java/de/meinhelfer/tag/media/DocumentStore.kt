@@ -128,7 +128,7 @@ object DocumentStore {
         pending.files.forEach { it.delete() }
     }
 
-    private fun imagesToPdf(images: List<File>, target: File) {
+    fun imagesToPdf(images: List<File>, target: File) {
         val doc = PdfDocument()
         val paint = Paint(Paint.FILTER_BITMAP_FLAG)
         images.forEachIndexed { index, file ->
