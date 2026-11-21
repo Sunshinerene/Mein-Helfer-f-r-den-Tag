@@ -154,6 +154,7 @@ private val TOUR_PAGES = listOf(
     ),
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TourScreen(onClose: () -> Unit) {
     val pagerState = rememberPagerState(pageCount = { TOUR_PAGES.size })
