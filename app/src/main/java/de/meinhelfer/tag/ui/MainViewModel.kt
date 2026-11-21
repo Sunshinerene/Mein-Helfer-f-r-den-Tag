@@ -100,6 +100,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         AppPrefs.setThemeMode(getApplication(), mode)
     }
 
+    private val _fontFactor = MutableStateFlow(AppPrefs.fontFactor(app))
+    val fontFactor: StateFlow<Float> = _fontFactor
+
+    fun setFontFactor(factor: Float) {
+        _fontFactor.value = factor
+        AppPrefs.setFontFactor(getApplication(), factor)
+    }
+
     private val _designStyle = MutableStateFlow(DesignStyle.fromKey(AppPrefs.designStyle(app)))
     val designStyle: StateFlow<DesignStyle> = _designStyle
 

@@ -9,7 +9,10 @@ import androidx.fragment.app.FragmentActivity
 import android.view.WindowManager
 import android.os.SystemClock
 import androidx.compose.foundation.layout.Box
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -91,6 +94,8 @@ class MainActivity : FragmentActivity() {
             val mode by vm.themeMode.collectAsStateWithLifecycle()
             val style by vm.designStyle.collectAsStateWithLifecycle()
             val tweaks by vm.designTweaks.collectAsStateWithLifecycle()
+            val fontFactor by vm.fontFactor.collectAsStateWithLifecycle()
+            val baseDensity = LocalDensity.current
             val dark = when (mode) {
                 "dark" -> true
                 "light" -> false
@@ -104,12 +109,15 @@ class MainActivity : FragmentActivity() {
                 )
                 onDispose { }
             }
-            HelferTheme(style = style, dark = dark, tweak = tweaks[style]) {
-                Box {
-                    HelferApp(vm)
-                    if (locked) {
-                        LockScreen(dark = dark, onUnlock = { askUnlock() })
-                        LaunchedEffect(Unit) { askUnlock() }
+            val scaled = Density(baseDensity.density, baseDensity.fontScale * fontFactor)
+            CompositionLocalProvider(LocalDensity provides scaled) {
+                HelferTheme(style = style, dark = dark, tweak = tweaks[style]) {
+                    Box {
+                        HelferApp(vm)
+                        if (locked) {
+                            LockScreen(dark = dark, onUnlock = { askUnlock() })
+                            LaunchedEffect(Unit) { askUnlock() }
+                        }
                     }
                 }
             }

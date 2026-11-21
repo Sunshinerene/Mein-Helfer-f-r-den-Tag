@@ -5,6 +5,10 @@
 - [ ] Vorlagen erweitern (Kündigung Pflegedienst, Antrag Schwerbehindertenausweis, Widerruf), Unterschrift-Scan automatisch dem Entwurf zuordnen
 - [ ] Erkennung von Packungsfoto weiter verbessern (Wirkstoff, Packungsbeilage), Kamera-Scan für Barcodes live
 
+## Version 0.32.0 (fertig)
+
+- [x] Schriftgröße der App einstellbar (Klein, Normal, Groß, Sehr groß, Riesig)
+
 ## Version 0.31.0 (fertig)
 
 - [x] Heute-Reiter mit Umschalter Tag · Woche · Monat

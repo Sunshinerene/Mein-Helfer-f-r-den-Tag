@@ -566,7 +566,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Darstellung",
-                "In den Einstellungen wählst du, ob die App wie das Handy, immer hell oder immer dunkel aussehen soll. Außerdem gibt es sechs Designs zur Auswahl: Schlicht, Minimalistisch, Glas, Liquid, Sonnig und Natur. Die Vorschau zeigt die Farben, ausprobieren kannst du jedes mit einem Tipp. Mit „Farben anpassen“ änderst du die drei Farben des gewählten Designs selbst: Hauptfarbe, Zweitfarbe und Hintergrund (bei Glas und Liquid die beiden Hintergrundfarben). Du siehst die Änderung sofort, „Standard“ und „Alles zurücksetzen“ stellen das Original wieder her.",
+                "In den Einstellungen wählst du, ob die App wie das Handy, immer hell oder immer dunkel aussehen soll. Die Schriftgröße der ganzen App stellst du von „Klein“ bis „Riesig“ ein (zusätzlich zur Schriftgröße des Handys). Außerdem gibt es sechs Designs zur Auswahl: Schlicht, Minimalistisch, Glas, Liquid, Sonnig und Natur. Die Vorschau zeigt die Farben, ausprobieren kannst du jedes mit einem Tipp. Mit „Farben anpassen“ änderst du die drei Farben des gewählten Designs selbst: Hauptfarbe, Zweitfarbe und Hintergrund (bei Glas und Liquid die beiden Hintergrundfarben). Du siehst die Änderung sofort, „Standard“ und „Alles zurücksetzen“ stellen das Original wieder her.",
             ),
             GuideItem(
                 "Beta: Notfallkarte",

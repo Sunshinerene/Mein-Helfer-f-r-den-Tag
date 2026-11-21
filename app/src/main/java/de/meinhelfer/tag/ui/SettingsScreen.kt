@@ -253,6 +253,7 @@ private fun openUrl(context: Context, url: String) {
     }
 }
 
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 private fun ThemeCard(vm: MainViewModel) {
     val mode by vm.themeMode.collectAsStateWithLifecycle()
@@ -273,6 +274,14 @@ private fun ThemeCard(vm: MainViewModel) {
                     FilterChip(selected = mode == key, onClick = { vm.setThemeMode(key) }, label = { Text(label) })
                 }
             }
+            Text("Schriftgröße", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 8.dp))
+            val fontFactor by vm.fontFactor.collectAsStateWithLifecycle()
+            androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf(0.85f to "Klein", 1f to "Normal", 1.15f to "Groß", 1.3f to "Sehr groß", 1.5f to "Riesig").forEach { (f, label) ->
+                    FilterChip(selected = kotlin.math.abs(fontFactor - f) < 0.01f, onClick = { vm.setFontFactor(f) }, label = { Text(label) })
+                }
+            }
+            Text("So groß wird die Schrift in der ganzen App. Sie gilt zusätzlich zur Schriftgröße des Handys.", style = MaterialTheme.typography.bodySmall)
             Text("Design", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 8.dp))
             DesignStyle.entries.forEach { option ->
                 val colors = tweakedSpec(option, darkNow, tweaks[option]).preview

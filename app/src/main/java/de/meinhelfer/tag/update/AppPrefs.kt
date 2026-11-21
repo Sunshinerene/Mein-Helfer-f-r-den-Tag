@@ -26,6 +26,13 @@ object AppPrefs {
         prefs(context).edit().putString(KEY_THEME, mode).apply()
     }
 
+    /** Schriftgroesse der App als Faktor (1.0 = wie vom Handy eingestellt). */
+    fun fontFactor(context: Context): Float = prefs(context).getFloat("schrift_faktor", 1f).coerceIn(0.8f, 1.8f)
+
+    fun setFontFactor(context: Context, factor: Float) {
+        prefs(context).edit().putFloat("schrift_faktor", factor).apply()
+    }
+
     private const val KEY_TOUR_SEEN = "rundgang_gesehen"
 
     fun tourSeen(context: Context): Boolean = prefs(context).getBoolean(KEY_TOUR_SEEN, false)
