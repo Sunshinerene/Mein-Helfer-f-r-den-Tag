@@ -4,6 +4,10 @@
 
 - [ ] Erkennung von Packungsfoto weiter verbessern (Wirkstoff, Packungsbeilage), Kamera-Scan für Barcodes live
 
+## Version 0.27.0 (fertig)
+
+- [x] Datenbank verschlüsselt (SQLCipher, Schlüssel im Android-Schlüsselspeicher), automatische Umwandlung der vorhandenen Daten mit Rückfall auf die alte Datenbank bei Fehlern; Anzeige unter Einstellungen → Sicherheit
+
 ## Version 0.26.0 (fertig)
 
 - [x] Infos: Favoriten – Themenkarten und Meldungen mit „☆ Merken“, eigene Favoritenansicht
@@ -170,6 +174,5 @@
 - [ ] Notfallkarte aus Beta übernehmen, ggf. als PDF und fürs Sperrbildschirm-Widget
 - [ ] Designs verfeinern (Schriftarten, Übergänge, weitere Varianten, Hochkontrast für bessere Lesbarkeit)
 - [ ] Dokumente: Medikamente und Termine aus dem erkannten Text vorschlagen
-- [ ] Datenbank verschlüsseln (SQLCipher, mit Sicherung vor der Umstellung)
 - [ ] KI-Vorschläge aus Dokumenten (immer mit Bestätigung), Datenschutz-Filter vor jeder Übertragung
 - [ ] Umkreissuche direkt bei Kontakten (Arzt, Pflegedienst, Apotheke in der Nähe)

@@ -487,6 +487,10 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
         summary = "Mit Fingerabdruck, Gesicht oder PIN schützen",
         items = listOf(
             GuideItem(
+                "Verschlüsselte Datenbank",
+                "Ab Version 0.27.0 ist die Datenbank mit Medikamenten, Terminen, Kontakten, Notizen, Aufgaben und Dokumenttexten verschlüsselt (SQLCipher). Beim ersten Start nach dem Update wandelt die App die vorhandenen Daten selbst um, das dauert nur einen Moment. Die alte Datei wird erst gelöscht (und überschrieben), wenn die neue sicher funktioniert. Bei einem Fehler bleibt alles wie bisher. Den Schlüssel erzeugt die App selbst und legt ihn im Schlüsselspeicher des Handys ab. Hinweis: Setzt du das Handy zurück oder löschst die App-Daten, sind die Daten weg. Sie lassen sich ohne den Schlüssel nicht wiederherstellen.",
+            ),
+            GuideItem(
                 "Einschalten",
                 "Einstellungen → Sicherheit → „App-Sperre“. Voraussetzung ist eine Bildschirmsperre auf dem Handy (PIN, Muster, Fingerabdruck oder Gesicht). Zur Sicherheit musst du das Ein- und Ausschalten selbst bestätigen.",
             ),
