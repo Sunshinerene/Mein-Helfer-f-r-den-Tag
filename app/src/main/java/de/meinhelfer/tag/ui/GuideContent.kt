@@ -92,8 +92,16 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
     GuideSection(
         id = "heute",
         title = "Heute",
-        summary = "Abhaken, Notizen, Aufgaben und Nachbestell-Warnung",
+        summary = "Tag, Woche, Monat, Abhaken, Aufgaben und Nachbestell-Warnung",
         items = listOf(
+            GuideItem(
+                "Tag, Woche, Monat",
+                "Oben auf dem ersten Reiter („Heute“) wählst du zwischen Tag, Woche und Monat. „Tag“ ist immer der aktuelle Tag. „Woche“ zeigt sieben Tage untereinander mit Terminen, Aufgaben und Einnahmen. „Monat“ zeigt einen Kalender mit Punkten (blau = Termin, grün = Aufgabe, rot = dringend oder überfällig); ein Tipp auf einen Tag zeigt ihn darunter. Mit ‹ und › blätterst du, ein Tipp auf den Titel springt zu heute. Alles ist antippbar: Termin oder Aufgabe antippen zum Bearbeiten oder Löschen, Aufgaben direkt abhaken, mit „+ Termin“ und „+ Aufgabe“ legst du etwas für genau diesen Tag an.",
+            ),
+            GuideItem(
+                "Wichtig und demnächst",
+                "Auf der Tagesansicht steht oben die Karte „Wichtig und demnächst“. Zuerst kommt, was dringend (hohe Priorität), überfällig oder heute fällig ist, rot hervorgehoben und nach Priorität sortiert. Darunter siehst du Termine und Aufgaben der nächsten 3 Tage. Dringende Aufgaben legst du mit Priorität „hoch“ an.",
+            ),
             GuideItem(
                 "Einnahmen abhaken",
                 "Unter „Heute einnehmen“ steht jede Einnahme mit Uhrzeit. Weil bei Medikamenten die Zeit zählt, lässt sich nur rund um die Einnahmezeit normal abhaken (Standard: 1 Stunde davor und danach, einstellbar unter Einstellungen → Einnahmen abhaken). Vorher steht „abhakbar ab …“. Ist das Fenster vorbei, steht die Zeile in Rot und du tippst darauf, um nachzutragen, wie es lief.",

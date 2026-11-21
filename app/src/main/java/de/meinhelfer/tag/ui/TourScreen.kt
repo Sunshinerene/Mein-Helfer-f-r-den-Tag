@@ -87,6 +87,12 @@ private val TOUR_PAGES: List<TourPage> = listOf(
         mock = { MockAppointment() },
     ),
     TourPage(
+        title = "Tag, Woche, Monat",
+        text = "Oben auf dem ersten Reiter wählst du Tag, Woche oder Monat. Der Tag zeigt zuerst, was wichtig ist, und die nächsten 3 Tage. Woche und Monat sind Übersichten, in denen du Termine und Aufgaben antippen, ändern und neu anlegen kannst.",
+        tips = listOf("Aufgaben mit hoher Priorität stehen immer ganz oben.", "Ein Tipp auf den Titel springt zurück zu heute."),
+        mock = { MockToday() },
+    ),
+    TourPage(
         title = "Heute: abhaken",
         text = "Auf der Heute-Seite siehst du, was jetzt ansteht. Einnahmen lassen sich rund um die Einnahmezeit abhaken. Danach fragt die App nach, ob genommen, später, vergessen oder bewusst nicht gegeben. Bei Terminen wählst du: stattgefunden, abgesagt oder verschoben.",
         tips = listOf("Mit „Notiz“ hältst du fest, was aufgefallen ist.", "Bei abgesagten Terminen legt die App auf Wunsch die Aufgabe „Neuen Termin ausmachen“ an."),

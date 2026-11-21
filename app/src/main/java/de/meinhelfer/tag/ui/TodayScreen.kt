@@ -188,6 +188,8 @@ fun TodayScreen(
             ProfileCard(person, todayDay, onEditProfile, onOpenWegweiser)
         }
 
+        item { DayAheadCard(todos = todos, appointments = appointments, doctors = doctors, todayDay = todayDay, vm = vm) }
+
         if (!caregiver.isSet) {
             item { CaregiverPromptCard(onEditCaregiver) }
         }

@@ -5,6 +5,13 @@
 - [ ] Vorlagen erweitern (Kündigung Pflegedienst, Antrag Schwerbehindertenausweis, Widerruf), Unterschrift-Scan automatisch dem Entwurf zuordnen
 - [ ] Erkennung von Packungsfoto weiter verbessern (Wirkstoff, Packungsbeilage), Kamera-Scan für Barcodes live
 
+## Version 0.31.0 (fertig)
+
+- [x] Heute-Reiter mit Umschalter Tag · Woche · Monat
+- [x] Tagesansicht: Karte „Wichtig und demnächst“ (dringend/überfällig zuerst, dann nächste 3 Tage)
+- [x] Wochen- und Monatsübersicht, antippbar und änderbar (Termine/Aufgaben bearbeiten, löschen, neu anlegen, Aufgaben abhaken)
+- [ ] Offen: Einnahmen in der Übersicht abhaken, Wiederholungstermine
+
 ## Version 0.30.0 (fertig)
 
 - [x] Dokument-Vorschläge bei Terminen und Aufgaben genauer: Punktesystem (Arzt, Kategorie, Stichwörter in Titel und Text, Aktualität), Grund wird angezeigt, nur neuester Plan/Bescheid, zu alte oder spätere Dokumente aussortiert

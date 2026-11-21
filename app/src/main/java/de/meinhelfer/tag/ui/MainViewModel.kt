@@ -68,6 +68,18 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         .flatMapLatest { d -> db.checkinDao().range(d - 1, d + 7) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    private val _overviewRange = MutableStateFlow(LocalDate.now().toEpochDay() to LocalDate.now().toEpochDay())
+
+    /** Abhak-Eintraege fuer die gerade gezeigte Woche bzw. den Monat. */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val overviewCheckins: StateFlow<List<Checkin>> = _overviewRange
+        .flatMapLatest { (from, to) -> db.checkinDao().range(from, to) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun setOverviewRange(from: Long, to: Long) {
+        _overviewRange.value = from to to
+    }
+
     @OptIn(ExperimentalCoroutinesApi::class)
     val dayNote: StateFlow<DayNote?> = combine(_today, _personId) { d, p -> d to p }
         .flatMapLatest { (d, p) -> db.dayNoteDao().range(p, d, d) }

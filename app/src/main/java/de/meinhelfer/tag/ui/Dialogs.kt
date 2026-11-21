@@ -463,7 +463,7 @@ fun AppointmentDialog(
     val selectedDoctor = doctors.firstOrNull { it.id == doctorId }
 
     DialogForm(
-        title = if (initial == null) "Termin hinzufügen" else "Termin bearbeiten",
+        title = if (initial == null || initial.id == 0L) "Termin hinzufügen" else "Termin bearbeiten",
         canSave = title.isNotBlank() && date != null && time != null &&
             (endTime == null || time?.let { endTime!! > it } == true),
         onDismiss = onDismiss,

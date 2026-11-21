@@ -87,6 +87,7 @@ private enum class Tab(val label: String, val icon: ImageVector) {
 @Composable
 fun HelferApp(vm: MainViewModel = viewModel()) {
     var tabIndex by rememberSaveable { mutableIntStateOf(0) }
+    var periodIndex by rememberSaveable { mutableIntStateOf(0) }
     var showSettings by rememberSaveable { mutableStateOf(false) }
     var showSummary by rememberSaveable { mutableStateOf(false) }
     var showGuide by rememberSaveable { mutableStateOf(false) }
@@ -227,27 +228,50 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
               PersonBar(persons = persons, currentId = personId, vm = vm)
               Box(Modifier.weight(1f).fillMaxWidth()) {
                 when (tab) {
-                    Tab.Heute -> TodayScreen(
-                        vm = vm,
-                        meds = meds,
-                        appointments = appointments,
-                        doctors = doctors,
-                        checkins = checkins,
-                        dayNote = dayNote,
-                        todos = todos,
-                        todayDay = todayDay,
-                        nowMillis = nowMillis,
-                        updateState = updateState,
-                        onOpenSettings = { showSettings = true },
-                        onOpenSummary = { showSummary = true },
-                        onOpenReorder = { showReorder = true },
-                        person = persons.firstOrNull { it.id == personId },
-                        onEditProfile = { showProfile = true },
-                        onOpenWegweiser = { showWegweiser = true },
-                        caregiver = caregiver,
-                        documents = documents,
-                        onEditCaregiver = { showCaregiver = true },
-                    )
+                    Tab.Heute -> Column(Modifier.fillMaxSize()) {
+                        PeriodSwitch(selected = ViewPeriod.entries[periodIndex]) { periodIndex = it.ordinal }
+                        Box(Modifier.weight(1f).fillMaxWidth()) {
+                            when (ViewPeriod.entries[periodIndex]) {
+                                ViewPeriod.Tag -> TodayScreen(
+                                    vm = vm,
+                                    meds = meds,
+                                    appointments = appointments,
+                                    doctors = doctors,
+                                    checkins = checkins,
+                                    dayNote = dayNote,
+                                    todos = todos,
+                                    todayDay = todayDay,
+                                    nowMillis = nowMillis,
+                                    updateState = updateState,
+                                    onOpenSettings = { showSettings = true },
+                                    onOpenSummary = { showSummary = true },
+                                    onOpenReorder = { showReorder = true },
+                                    person = persons.firstOrNull { it.id == personId },
+                                    onEditProfile = { showProfile = true },
+                                    onOpenWegweiser = { showWegweiser = true },
+                                    caregiver = caregiver,
+                                    documents = documents,
+                                    onEditCaregiver = { showCaregiver = true },
+                                )
+                                ViewPeriod.Woche -> WeekOverview(
+                                    vm = vm,
+                                    appointments = appointments,
+                                    todos = todos,
+                                    meds = meds,
+                                    doctors = doctors,
+                                    todayDay = todayDay,
+                                )
+                                ViewPeriod.Monat -> MonthOverview(
+                                    vm = vm,
+                                    appointments = appointments,
+                                    todos = todos,
+                                    meds = meds,
+                                    doctors = doctors,
+                                    todayDay = todayDay,
+                                )
+                            }
+                        }
+                    }
                     Tab.Medikamente -> MedicationScreen(meds, doctors, vm, onReorder = { showReorder = true })
                     Tab.Termine -> AppointmentScreen(appointments, doctors, documents, meds, persons.firstOrNull { it.id == personId }, vm, caregiver) { showCaregiver = true }
                     Tab.Dokumente -> DocumentScreen(documents, doctors, persons.firstOrNull { it.id == personId }, vm, onOpenLetters = { showLetters = true })

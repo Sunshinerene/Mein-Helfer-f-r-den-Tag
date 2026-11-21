@@ -286,7 +286,7 @@ internal fun TaskDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (initial == null) "Neue Aufgabe" else "Aufgabe bearbeiten") },
+        title = { Text(if (initial == null || initial.id == 0L) "Neue Aufgabe" else "Aufgabe bearbeiten") },
         text = {
             Column(
                 Modifier.heightIn(max = 480.dp).verticalScroll(rememberScrollState()),
