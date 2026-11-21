@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -19,6 +20,9 @@ interface MedicationDao {
 
     @Insert
     suspend fun insert(item: Medication)
+
+    @Update
+    suspend fun update(item: Medication)
 
     @Delete
     suspend fun delete(item: Medication)
@@ -38,6 +42,9 @@ interface AppointmentDao {
     @Insert
     suspend fun insert(item: Appointment)
 
+    @Update
+    suspend fun update(item: Appointment)
+
     @Delete
     suspend fun delete(item: Appointment)
 }
@@ -49,6 +56,9 @@ interface DoctorDao {
 
     @Insert
     suspend fun insert(item: Doctor)
+
+    @Update
+    suspend fun update(item: Doctor)
 
     @Delete
     suspend fun delete(item: Doctor)

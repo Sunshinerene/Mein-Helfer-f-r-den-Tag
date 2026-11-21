@@ -13,6 +13,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.MaterialTheme
 import androidx.core.content.ContextCompat
 import de.meinhelfer.tag.ui.HelferApp
+import de.meinhelfer.tag.update.AppPrefs
+import de.meinhelfer.tag.update.UpdateWorker
 
 class MainActivity : ComponentActivity() {
     private val notificationPermission =
@@ -32,6 +34,9 @@ class MainActivity : ComponentActivity() {
         ) {
             notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
+
+        // Hintergrund-Pruefung auf neue Versionen (kann in den Einstellungen abgeschaltet werden)
+        if (AppPrefs.autoUpdateCheck(this)) UpdateWorker.schedule(this) else UpdateWorker.cancel(this)
 
         setContent {
             MaterialTheme {

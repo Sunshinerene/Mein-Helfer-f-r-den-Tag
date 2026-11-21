@@ -4,6 +4,7 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,8 +16,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items as lazyItems
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
@@ -24,6 +23,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -34,7 +34,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -42,7 +41,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -57,8 +55,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import de.meinhelfer.tag.data.Appointment
 import de.meinhelfer.tag.data.Doctor
 import de.meinhelfer.tag.data.Medication
-import java.text.SimpleDateFormat
-import java.util.Locale
+import de.meinhelfer.tag.update.UpdateState
 
 private enum class Tab(val label: String, val icon: ImageVector) {
     Heute("Heute", Icons.Default.Home),
@@ -67,40 +64,59 @@ private enum class Tab(val label: String, val icon: ImageVector) {
     Aerzte("Ärzte", Icons.Default.Person),
 }
 
-private fun newDateFormat() =
-    SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.GERMANY).apply { isLenient = false }
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HelferApp(vm: MainViewModel = viewModel()) {
     var tabIndex by rememberSaveable { mutableIntStateOf(0) }
+    var showSettings by rememberSaveable { mutableStateOf(false) }
     val tab = Tab.entries[tabIndex]
 
     val meds by vm.medications.collectAsStateWithLifecycle()
     val appointments by vm.appointments.collectAsStateWithLifecycle()
     val doctors by vm.doctors.collectAsStateWithLifecycle()
+    val updateState by vm.updateState.collectAsStateWithLifecycle()
 
-    Scaffold(
-        topBar = { TopAppBar(title = { Text("Mein Helfer für den Tag") }) },
-        bottomBar = {
-            NavigationBar {
-                Tab.entries.forEachIndexed { i, t ->
-                    NavigationBarItem(
-                        selected = i == tabIndex,
-                        onClick = { tabIndex = i },
-                        icon = { Icon(t.icon, contentDescription = t.label) },
-                        label = { Text(t.label, maxLines = 1) },
-                    )
+    BackHandler(enabled = showSettings) { showSettings = false }
+
+    if (showSettings) {
+        SettingsScreen(vm = vm, onBack = { showSettings = false })
+    } else {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Mein Helfer für den Tag") },
+                    actions = {
+                        IconButton(onClick = { showSettings = true }) {
+                            Icon(Icons.Default.Settings, contentDescription = "Einstellungen")
+                        }
+                    },
+                )
+            },
+            bottomBar = {
+                NavigationBar {
+                    Tab.entries.forEachIndexed { i, t ->
+                        NavigationBarItem(
+                            selected = i == tabIndex,
+                            onClick = { tabIndex = i },
+                            icon = { Icon(t.icon, contentDescription = t.label) },
+                            label = { Text(t.label, maxLines = 1) },
+                        )
+                    }
                 }
-            }
-        },
-    ) { inner ->
-        Box(Modifier.padding(inner).fillMaxSize()) {
-            when (tab) {
-                Tab.Heute -> TodayScreen(meds, appointments)
-                Tab.Medikamente -> MedicationScreen(meds, vm)
-                Tab.Termine -> AppointmentScreen(appointments, vm)
-                Tab.Aerzte -> DoctorScreen(doctors, vm)
+            },
+        ) { inner ->
+            Box(Modifier.padding(inner).fillMaxSize()) {
+                when (tab) {
+                    Tab.Heute -> TodayScreen(
+                        meds = meds,
+                        appointments = appointments,
+                        updateState = updateState,
+                        onOpenSettings = { showSettings = true },
+                    )
+                    Tab.Medikamente -> MedicationScreen(meds, vm)
+                    Tab.Termine -> AppointmentScreen(appointments, doctors, vm)
+                    Tab.Aerzte -> DoctorScreen(doctors, vm)
+                }
             }
         }
     }
@@ -109,7 +125,12 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
 // ---------------------------------------------------------------- Heute
 
 @Composable
-private fun TodayScreen(meds: List<Medication>, appointments: List<Appointment>) {
+private fun TodayScreen(
+    meds: List<Medication>,
+    appointments: List<Appointment>,
+    updateState: UpdateState,
+    onOpenSettings: () -> Unit,
+) {
     val now = System.currentTimeMillis()
     val weekAhead = now + 7L * 24 * 60 * 60 * 1000
     val upcoming = appointments.filter { it.whenMillis in now..weekAhead }
@@ -117,12 +138,32 @@ private fun TodayScreen(meds: List<Medication>, appointments: List<Appointment>)
     val intakes = meds
         .flatMap { m -> m.timeList().map { time -> time to m } }
         .sortedBy { it.first }
-    val fmt = newDateFormat()
+
+    val newVersion = when (updateState) {
+        is UpdateState.Available -> updateState.info.version
+        is UpdateState.Downloading -> updateState.info.version
+        is UpdateState.Ready -> updateState.info.version
+        else -> null
+    }
 
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        if (newVersion != null) {
+            item {
+                Card(
+                    onClick = onOpenSettings,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                ) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text("Neue Version $newVersion verfügbar", style = MaterialTheme.typography.titleMedium)
+                        Text("Tippen, um zu den Einstellungen zu gelangen und das Update zu laden.")
+                    }
+                }
+            }
+        }
         if (lowStock.isNotEmpty()) {
             item {
                 SectionCard(
@@ -145,7 +186,7 @@ private fun TodayScreen(meds: List<Medication>, appointments: List<Appointment>)
         item {
             SectionCard(
                 title = "Termine in den nächsten 7 Tagen",
-                lines = upcoming.map { fmt.format(it.whenMillis) + " – " + it.title },
+                lines = upcoming.map { formatDateTime(it.whenMillis) + " – " + it.title },
                 emptyText = "Keine anstehenden Termine.",
             )
         }
@@ -182,91 +223,83 @@ private fun SectionCard(
 
 @Composable
 private fun MedicationScreen(items: List<Medication>, vm: MainViewModel) {
-    var showDialog by remember { mutableStateOf(false) }
+    var showAdd by remember { mutableStateOf(false) }
+    var editItem by remember { mutableStateOf<Medication?>(null) }
 
     ListScreen(
         items = items,
         emptyText = "Noch keine Medikamente. Mit + hinzufügen.",
-        onAdd = { showDialog = true },
+        onAdd = { showAdd = true },
     ) { m ->
         val days = m.daysLeft()
         ItemCard(
             title = m.name + if (m.dosage.isNotBlank()) " – ${m.dosage}" else "",
             lines = listOfNotNull(
-                m.times.takeIf { it.isNotBlank() }?.let { "Einnahme: $it Uhr" },
+                m.times.takeIf { it.isNotBlank() }?.let { "Einnahme: ${it.replace(",", ", ")} Uhr" },
                 "Vorrat: ${m.stock} Stück" + (days?.let { " (ca. $it Tage)" } ?: ""),
                 m.notes.takeIf { it.isNotBlank() },
             ),
+            onClick = { editItem = m },
             onDelete = { vm.delete(m) },
         )
     }
 
-    if (showDialog) {
-        FormDialog(
-            title = "Medikament hinzufügen",
-            labels = listOf(
-                "Name",
-                "Dosierung (z. B. 1 Tablette)",
-                "Einnahmezeiten (z. B. 08:00,20:00)",
-                "Vorrat (Stück)",
-                "Verbrauch pro Tag (Stück)",
-            ),
-            onDismiss = { showDialog = false },
-        ) { v ->
-            vm.add(
-                Medication(
-                    name = v[0].trim(),
-                    dosage = v[1].trim(),
-                    times = v[2].trim(),
-                    stock = v[3].trim().toIntOrNull() ?: 0,
-                    dailyUse = v[4].trim().toIntOrNull() ?: 1,
-                ),
-            )
-            showDialog = false
-            true
-        }
+    if (showAdd || editItem != null) {
+        MedicationDialog(
+            initial = editItem,
+            onDismiss = {
+                showAdd = false
+                editItem = null
+            },
+            onSave = { saved ->
+                if (editItem == null) vm.add(saved) else vm.update(saved)
+                showAdd = false
+                editItem = null
+            },
+        )
     }
 }
 
 // ---------------------------------------------------------------- Termine
 
 @Composable
-private fun AppointmentScreen(items: List<Appointment>, vm: MainViewModel) {
-    var showDialog by remember { mutableStateOf(false) }
-    val fmt = newDateFormat()
+private fun AppointmentScreen(items: List<Appointment>, doctors: List<Doctor>, vm: MainViewModel) {
+    var showAdd by remember { mutableStateOf(false) }
+    var editItem by remember { mutableStateOf<Appointment?>(null) }
 
     ListScreen(
         items = items,
         emptyText = "Noch keine Termine. Mit + hinzufügen.",
-        onAdd = { showDialog = true },
+        onAdd = { showAdd = true },
     ) { a ->
+        val doctor = doctors.firstOrNull { it.id == a.doctorId }
         ItemCard(
             title = a.title,
             lines = listOfNotNull(
-                fmt.format(a.whenMillis) + " Uhr",
+                formatDateTime(a.whenMillis) + " Uhr",
+                doctor?.let { doctorLabel(it) },
                 a.place.takeIf { it.isNotBlank() },
                 a.notes.takeIf { it.isNotBlank() },
             ),
+            onClick = { editItem = a },
             onDelete = { vm.delete(a) },
         )
     }
 
-    if (showDialog) {
-        FormDialog(
-            title = "Termin hinzufügen",
-            labels = listOf("Titel", "Datum (TT.MM.JJJJ)", "Uhrzeit (HH:MM)", "Ort", "Notizen"),
-            onDismiss = { showDialog = false },
-        ) { v ->
-            val millis = runCatching { newDateFormat().parse("${v[1].trim()} ${v[2].trim()}")?.time }
-                .getOrNull()
-            if (millis == null) {
-                false
-            } else {
-                vm.add(Appointment(title = v[0].trim(), whenMillis = millis, place = v[3].trim(), notes = v[4].trim()))
-                showDialog = false
-                true
-            }
-        }
+    if (showAdd || editItem != null) {
+        AppointmentDialog(
+            initial = editItem,
+            doctors = doctors,
+            onDismiss = {
+                showAdd = false
+                editItem = null
+            },
+            onSave = { saved ->
+                if (editItem == null) vm.add(saved) else vm.update(saved)
+                showAdd = false
+                editItem = null
+            },
+        )
     }
 }
 
@@ -274,21 +307,23 @@ private fun AppointmentScreen(items: List<Appointment>, vm: MainViewModel) {
 
 @Composable
 private fun DoctorScreen(items: List<Doctor>, vm: MainViewModel) {
-    var showDialog by remember { mutableStateOf(false) }
+    var showAdd by remember { mutableStateOf(false) }
+    var editItem by remember { mutableStateOf<Doctor?>(null) }
     val context = LocalContext.current
 
     ListScreen(
         items = items,
-        emptyText = "Noch keine Ärzte. Mit + hinzufügen.",
-        onAdd = { showDialog = true },
+        emptyText = "Noch keine Ärzte oder Institutionen. Mit + hinzufügen.",
+        onAdd = { showAdd = true },
     ) { d ->
         ItemCard(
-            title = d.name + if (d.specialty.isNotBlank()) " – ${d.specialty}" else "",
+            title = doctorLabel(d),
             lines = listOfNotNull(
                 d.phone.takeIf { it.isNotBlank() },
                 d.email.takeIf { it.isNotBlank() },
                 d.address.takeIf { it.isNotBlank() },
             ),
+            onClick = { editItem = d },
             onDelete = { vm.delete(d) },
         ) {
             Row {
@@ -306,24 +341,19 @@ private fun DoctorScreen(items: List<Doctor>, vm: MainViewModel) {
         }
     }
 
-    if (showDialog) {
-        FormDialog(
-            title = "Arzt hinzufügen",
-            labels = listOf("Name", "Fachrichtung / wofür", "Telefon", "E-Mail", "Adresse"),
-            onDismiss = { showDialog = false },
-        ) { v ->
-            vm.add(
-                Doctor(
-                    name = v[0].trim(),
-                    specialty = v[1].trim(),
-                    phone = v[2].trim(),
-                    email = v[3].trim(),
-                    address = v[4].trim(),
-                ),
-            )
-            showDialog = false
-            true
-        }
+    if (showAdd || editItem != null) {
+        DoctorDialog(
+            initial = editItem,
+            onDismiss = {
+                showAdd = false
+                editItem = null
+            },
+            onSave = { saved ->
+                if (editItem == null) vm.add(saved) else vm.update(saved)
+                showAdd = false
+                editItem = null
+            },
+        )
     }
 }
 
@@ -368,14 +398,18 @@ private fun <T> ListScreen(
     }
 }
 
+/** Karte: Antippen = bearbeiten, Papierkorb = loeschen (mit Rueckfrage). */
 @Composable
 private fun ItemCard(
     title: String,
     lines: List<String>,
+    onClick: () -> Unit,
     onDelete: () -> Unit,
     extra: @Composable ColumnScope.() -> Unit = {},
 ) {
-    Card(Modifier.fillMaxWidth()) {
+    var confirmDelete by remember { mutableStateOf(false) }
+
+    Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
         Row(
             Modifier.padding(start = 16.dp, top = 12.dp, bottom = 8.dp, end = 4.dp),
             verticalAlignment = Alignment.Top,
@@ -385,56 +419,24 @@ private fun ItemCard(
                 lines.forEach { Text(it, style = MaterialTheme.typography.bodyMedium) }
                 extra()
             }
-            IconButton(onClick = onDelete) {
+            IconButton(onClick = { confirmDelete = true }) {
                 Icon(Icons.Default.Delete, contentDescription = "Löschen")
             }
         }
     }
-}
 
-/** Einfacher Eingabedialog. [onSave] liefert true, wenn der Dialog geschlossen werden darf. */
-@Composable
-private fun FormDialog(
-    title: String,
-    labels: List<String>,
-    onDismiss: () -> Unit,
-    onSave: (List<String>) -> Boolean,
-) {
-    val values = remember { mutableStateListOf<String>().apply { repeat(labels.size) { add("") } } }
-    var error by remember { mutableStateOf(false) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(title) },
-        text = {
-            Column(
-                Modifier.verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                labels.forEachIndexed { i, label ->
-                    OutlinedTextField(
-                        value = values[i],
-                        onValueChange = { values[i] = it },
-                        label = { Text(label) },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
-                if (error) {
-                    Text(
-                        "Bitte Eingaben prüfen (z. B. Datum und Uhrzeit).",
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                enabled = values[0].isNotBlank(),
-                onClick = { error = !onSave(values.toList()) },
-            ) { Text("Speichern") }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Abbrechen") } },
-    )
+    if (confirmDelete) {
+        AlertDialog(
+            onDismissRequest = { confirmDelete = false },
+            title = { Text("Löschen?") },
+            text = { Text("„$title“ wirklich löschen?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmDelete = false
+                    onDelete()
+                }) { Text("Löschen") }
+            },
+            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Abbrechen") } },
+        )
+    }
 }

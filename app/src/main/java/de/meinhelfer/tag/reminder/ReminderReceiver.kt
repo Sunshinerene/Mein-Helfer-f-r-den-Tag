@@ -49,6 +49,9 @@ class ReminderReceiver : BroadcastReceiver() {
 
             ReminderScheduler.TYPE_APPT -> {
                 val appointment = db.appointmentDao().byId(id) ?: return
+                // Termin wurde verschoben oder liegt in der Vergangenheit: alter Alarm, nichts anzeigen.
+                val remaining = appointment.whenMillis - System.currentTimeMillis()
+                if (remaining < 0 || remaining > ReminderScheduler.APPOINTMENT_LEAD_MS + 5 * 60 * 1000L) return
                 val whenText = SimpleDateFormat("HH:mm", Locale.GERMANY).format(appointment.whenMillis)
                 val text = appointment.title +
                     " um $whenText Uhr" +

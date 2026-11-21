@@ -31,6 +31,8 @@ data class Appointment(
     val whenMillis: Long,
     val place: String = "",
     val notes: String = "",
+    /** Verknuepfter Arzt bzw. Institution (optional). */
+    val doctorId: Long? = null,
 )
 
 @Entity

@@ -3,7 +3,6 @@ name: APK bauen
 on:
   push:
     branches: [main]
-    tags: ["v*"]
   workflow_dispatch:
 
 permissions:
@@ -27,18 +26,30 @@ jobs:
       - name: Debug-APK bauen
         run: gradle assembleDebug --stacktrace
 
-      - name: APK umbenennen
-        run: cp app/build/outputs/apk/debug/app-debug.apk MeinHelfer-${{ github.ref_name }}.apk
+      - name: APK benennen
+        run: |
+          VERSION=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          cp app/build/outputs/apk/debug/app-debug.apk "MeinHelfer-v$VERSION.apk"
 
       - uses: actions/upload-artifact@v4
         with:
           name: MeinHelfer-APK
-          path: MeinHelfer-*.apk
+          path: MeinHelfer-v*.apk
 
-      # Bei Tags wie v0.1.0 wird die APK als GitHub-Release veroeffentlicht (Grundlage fuer die Update-Funktion).
-      - name: Release erstellen
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
-        with:
-          files: MeinHelfer-*.apk
-          generate_release_notes: true
+      # Neue Version (versionName in app/build.gradle.kts erhoeht) wird automatisch als GitHub-Release
+      # veroeffentlicht. Die App-interne Update-Funktion liest dieses Release.
+      - name: Release veröffentlichen (nur bei neuer Version)
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+        run: |
+          if gh release view "v$VERSION" >/dev/null 2>&1; then
+            echo "Release v$VERSION existiert bereits, übersprungen."
+          else
+            NOTES=$(printf '%s' "$COMMIT_MSG" | grep -v -E '^(Co-Authored-By|Claude-Session):' || true)
+            gh release create "v$VERSION" "MeinHelfer-v$VERSION.apk" \
+              --title "v$VERSION" --notes "$NOTES" --target "$GITHUB_SHA"
+          fi

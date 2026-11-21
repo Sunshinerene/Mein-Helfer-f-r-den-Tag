@@ -1,22 +1,28 @@
 # TODO
 
-## Wünsche aus dem ersten Test (21.11.2026)
+## Als Nächstes
 
-- [ ] **Datumsauswahl** als Kalenderansicht (Termine), Uhrzeit per Zeitauswahl statt Tippen
-- [ ] **Vorauswahlen**: Fachrichtungen bei Ärzten (Hausarzt, Facharzt, Zahnarzt, Augenarzt …), gängige Uhrzeiten (morgens, mittags, abends, nachts) bei Medikamenten, Dosierung, Terminarten
-- [ ] **Medikament per Foto anlegen**: Verpackung fotografieren, Name und Wirkstoff per Texterkennung auslesen, Bild beim Medikament speichern
-- [ ] Passendes Bild zum Medikament anzeigen (eigenes Foto der Packung)
+- [ ] **Medikament per Foto anlegen**: Verpackung fotografieren, Name und Wirkstoff per Texterkennung auslesen
+- [ ] **Bild zum Medikament**: eigenes Foto der Packung beim Medikament speichern und anzeigen
+- [ ] "Eingenommen" direkt in der Benachrichtigung antippen, Vorrat verringert sich automatisch
+- [ ] Erinnerungszeit pro Termin einstellbar
 
-## Erinnerungen (v0.2.0, in Test)
+## Version 0.3.0 (fertig)
+
+- [x] Einstellungen mit App-Update über GitHub, Hintergrund-Hinweis bei neuen Versionen
+- [x] Feedback-Funktion und Vorschau auf geplante Funktionen
+- [x] Alle Einträge nachträglich bearbeitbar, Löschen mit Rückfrage
+- [x] Datum per Kalenderansicht, Uhrzeit per Zeitauswahl
+- [x] Vorauswahlen für Fachrichtung, Dosierung, Tageszeiten und Terminarten
+- [x] Beim Termin Arzt oder Institution aus der eigenen Liste wählen
+
+## Version 0.2.0 (fertig)
 
 - [x] Erinnerung zur Einnahmezeit
 - [x] Terminerinnerung 1 Stunde vorher
-- [ ] Antippen "Eingenommen" in der Benachrichtigung, Vorrat automatisch verringern
-- [ ] Erinnerungszeit pro Termin einstellbar
 
 ## Weitere Ideen
 
-- [ ] Bearbeiten statt nur Löschen, Löschen mit Rückfrage
 - [ ] Mehrere betreute Personen
 - [ ] Dokumente scannen und verschlüsselt ablegen
 - [ ] Datenbank verschlüsseln, App-Sperre
@@ -24,5 +30,4 @@
 - [ ] KI-Vorschläge aus Dokumenten (immer mit Bestätigung), Datenschutz-Filter vor jeder Übertragung
 - [ ] Wegweiser: Leistungen und Anträge je Pflegegrad
 - [ ] Umkreissuche für Ärzte und Pflegedienste
-- [ ] Update-Funktion über GitHub-Releases, Feedback-Funktion
 - [ ] Dunkelmodus

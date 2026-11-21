@@ -15,42 +15,47 @@ import androidx.core.content.ContextCompat
 import de.meinhelfer.tag.MainActivity
 
 object Notifications {
-    private const val CHANNEL_ID = "erinnerungen"
+    private const val CHANNEL_REMINDERS = "erinnerungen"
+    private const val CHANNEL_UPDATES = "updates"
 
-    private fun ensureChannel(context: Context) {
+    private fun ensureChannels(context: Context) {
         if (Build.VERSION.SDK_INT >= 26) {
             val nm = context.getSystemService(NotificationManager::class.java)
-            if (nm.getNotificationChannel(CHANNEL_ID) == null) {
-                val channel = NotificationChannel(
-                    CHANNEL_ID,
-                    "Erinnerungen",
-                    NotificationManager.IMPORTANCE_HIGH,
-                ).apply { description = "Medikamente und Termine" }
-                nm.createNotificationChannel(channel)
+            if (nm.getNotificationChannel(CHANNEL_REMINDERS) == null) {
+                nm.createNotificationChannel(
+                    NotificationChannel(CHANNEL_REMINDERS, "Erinnerungen", NotificationManager.IMPORTANCE_HIGH)
+                        .apply { description = "Medikamente und Termine" },
+                )
+            }
+            if (nm.getNotificationChannel(CHANNEL_UPDATES) == null) {
+                nm.createNotificationChannel(
+                    NotificationChannel(CHANNEL_UPDATES, "App-Updates", NotificationManager.IMPORTANCE_DEFAULT)
+                        .apply { description = "Hinweis auf neue Versionen" },
+                )
             }
         }
     }
 
     @SuppressLint("MissingPermission")
-    fun show(context: Context, id: Int, title: String, text: String) {
+    fun show(context: Context, id: Int, title: String, text: String, updates: Boolean = false) {
         if (Build.VERSION.SDK_INT >= 33 &&
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
             PackageManager.PERMISSION_GRANTED
         ) return
 
-        ensureChannel(context)
+        ensureChannels(context)
         val open = PendingIntent.getActivity(
             context,
             0,
             Intent(context, MainActivity::class.java),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
-        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+        val notification = NotificationCompat.Builder(context, if (updates) CHANNEL_UPDATES else CHANNEL_REMINDERS)
             .setSmallIcon(android.R.drawable.ic_popup_reminder)
             .setContentTitle(title)
             .setContentText(text)
             .setStyle(NotificationCompat.BigTextStyle().bigText(text))
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setPriority(if (updates) NotificationCompat.PRIORITY_DEFAULT else NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .setContentIntent(open)
             .build()

@@ -1,0 +1,24 @@
+package de.meinhelfer.tag.update
+
+import android.content.Context
+
+/** Kleine App-Einstellungen (lokal auf dem Geraet). */
+object AppPrefs {
+    private const val FILE = "einstellungen"
+    private const val KEY_AUTO_UPDATE = "auto_update_check"
+    private const val KEY_LAST_NOTIFIED = "last_notified_version"
+
+    private fun prefs(context: Context) = context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
+
+    fun autoUpdateCheck(context: Context): Boolean = prefs(context).getBoolean(KEY_AUTO_UPDATE, true)
+
+    fun setAutoUpdateCheck(context: Context, value: Boolean) {
+        prefs(context).edit().putBoolean(KEY_AUTO_UPDATE, value).apply()
+    }
+
+    fun lastNotifiedVersion(context: Context): String? = prefs(context).getString(KEY_LAST_NOTIFIED, null)
+
+    fun setLastNotifiedVersion(context: Context, version: String) {
+        prefs(context).edit().putString(KEY_LAST_NOTIFIED, version).apply()
+    }
+}
