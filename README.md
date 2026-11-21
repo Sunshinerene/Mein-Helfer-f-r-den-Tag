@@ -4,12 +4,13 @@ by Sunshine@R
 
 Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbezogenen Daten bleiben lokal auf dem Gerät.
 
-## Stand: v0.38.0
+## Stand: v0.39.0
 
 ### Funktionsübersicht
 
 **Heute (Tag · Woche · Monat)**
 - Tagesansicht: Kurz nachgefragt (offene Antworten), Wichtig und demnächst (dringend, überfällig, Termine heute zum Abhaken, nächste 3 Tage, Termine bis 7 Tage), Bald nachbestellen, Heute einnehmen (Abhaken im Zeitfenster, früher/später/vergessen/bewusst nicht gegeben), Aufgaben, Bemerkung zum Tag, Auswertung
+- Tagesstart: Rückblick auf gestern zum Ergänzen und Bestätigen, danach Tagesplan für heute (PDF teilen, drucken)
 - Jede Karte einklappbar mit Kurzinfo, Zustand wird gemerkt
 - Wochen- und Monatsübersicht: alles antippbar, bearbeiten, löschen, neu anlegen, Aufgaben und Einnahmen abhaken, Termin-Status eintragen, erledigte Aufgaben am Erledigungstag
 - Auswertung für Tag, Woche, Monat mit erledigten Aufgaben (lokal berechnet, nur Anhaltspunkte)
@@ -57,11 +58,12 @@ Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbe
 - Einnahme mit Knopf „Eingenommen“ (keine Erinnerung, wenn schon abgehakt), Nachfrage bei offener Einnahme, Termin-Erinnerung; Antippen öffnet die richtige Person
 
 **Nutzungsbedingungen**
-- Pflicht-Zustimmung vor der Nutzung (kein Ersatz für Arzt, Apotheke, Krankenhaus; Einschätzungen nur Anhaltspunkte; Haftung), Nachweis verschlüsselt auf dem Handy, teilbar, widerrufbar, frühere Nachweise werden nach Frist automatisch gelöscht
+- Pflicht-Zustimmung vor der Nutzung (kein Ersatz für Arzt, Apotheke, Krankenhaus; Einschätzungen nur Anhaltspunkte; Haftung), Nachweis verschlüsselt auf dem Handy, je pflegender Person (bei Wechsel neu bestätigen), teilbar, widerrufbar, frühere Nachweise werden nach Frist automatisch gelöscht
 - Jede Fassung im genauen Wortlaut mit Prüfsumme archiviert: [docs/nutzungsbedingungen](docs/nutzungsbedingungen/README.md)
 
 **Einstellungen**
 - Darstellung (hell/dunkel, 6 Designs, eigene Farben, Schriftgröße), Heute-Seite, Einnahme-Zeitfenster, Dokument-Betrachter
+- Freigaben (Android): Benachrichtigungen, Ton, pünktliche Wecker, Akku, Updates – mit Status und Sprung in die Android-Einstellungen
 - App-Sperre, Bildschirmschutz, verschlüsselte Datenbank, Sicherung und Wiederherstellung
 - Medikamenten-Beschreibung, KI-Assistent (Gemini, OpenAI-kompatibel, Anthropic) – freiwillig
 - Anleitung mit Suche, Rundgang, Feedback, Vorschau, App-Update über GitHub

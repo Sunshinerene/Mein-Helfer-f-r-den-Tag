@@ -5,6 +5,12 @@
 - [ ] Vorlagen erweitern (Kündigung Pflegedienst, Antrag Schwerbehindertenausweis, Widerruf), Unterschrift-Scan automatisch dem Entwurf zuordnen
 - [ ] Erkennung von Packungsfoto weiter verbessern (Wirkstoff, Packungsbeilage), Kamera-Scan für Barcodes live
 
+## Version 0.39.0 (fertig)
+
+- [x] Freigaben (Android) mit Status und direktem Weg in die Einstellungen; rote Hinweis-Karte auf Heute, wenn Erinnerungen nicht zuverlässig sind
+- [x] Tagesstart: Rückblick auf gestern (ergänzen, bestätigen), danach Tagesplan für heute als PDF (teilen, drucken)
+- [x] Zustimmung gilt je pflegender Person: bei geändertem Namen oder Rolle neu bestätigen, neuer Nachweis
+
 ## Version 0.38.0 (fertig)
 
 - [x] Pflicht-Zustimmung zu Nutzungsbedingungen und Hinweisen vor der Nutzung (drei Punkte einzeln bestätigen, Name und Rolle)

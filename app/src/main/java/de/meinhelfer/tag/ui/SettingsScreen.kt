@@ -117,6 +117,7 @@ fun SettingsScreen(
             }
             item { SectionTitle("Allgemein") }
             item { CaregiverCard(caregiver, onEditCaregiver) }
+            item { PermissionsCard() }
             item { ThemeCard(vm) }
             item { HomeCardsCard() }
             item { IntakeCard() }
@@ -352,6 +353,20 @@ private fun HomeCardsCard() {
                     Text("Notfallkarte auf der Heute-Seite", style = MaterialTheme.typography.bodyLarge)
                     Text(
                         "Name, Geburtsdatum, Pflegegrad, Wichtiges, Medikamente, Kontakte und Ansprechperson auf einen Blick. Über das rote Telefon oben ist sie immer erreichbar.",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+            }
+            var dailyStart by remember { mutableStateOf(AppPrefs.dailyStartEnabled(context)) }
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Switch(checked = dailyStart, onCheckedChange = {
+                    dailyStart = it
+                    AppPrefs.setDailyStartEnabled(context, it)
+                })
+                Column(Modifier.weight(1f)) {
+                    Text("Tagesstart automatisch", style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        "Beim ersten Öffnen am Tag: Rückblick auf gestern zum Ergänzen und Bestätigen, danach der Tagesplan für heute (als PDF teilbar). Auf der Heute-Seite jederzeit über „Rückblick gestern“ und „Tagesplan“.",
                         style = MaterialTheme.typography.bodySmall,
                     )
                 }

@@ -34,6 +34,7 @@ import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import de.meinhelfer.tag.data.Appointment
 import de.meinhelfer.tag.data.Checkin
 import de.meinhelfer.tag.data.DayNote
@@ -91,6 +92,7 @@ fun TodayScreen(
     caregiver: de.meinhelfer.tag.data.CaregiverProfile = de.meinhelfer.tag.data.CaregiverProfile(),
     onEditCaregiver: () -> Unit = {},
     documents: List<de.meinhelfer.tag.data.Document> = emptyList(),
+    onOpenDailyStart: (planOnly: Boolean) -> Unit = {},
 ) {
     val zone = ZoneId.systemDefault()
     val today = LocalDate.ofEpochDay(todayDay)
@@ -160,6 +162,14 @@ fun TodayScreen(
         else -> null
     }
 
+    // Freigaben fuer Erinnerungen nach jeder Rueckkehr in die App neu pruefen
+    var permTick by remember { mutableStateOf(0) }
+    androidx.lifecycle.compose.LifecycleResumeEffect(Unit) {
+        permTick++
+        onPauseOrDispose { }
+    }
+    val remindersOk = remember(permTick) { AppPermissions.remindersReliable(context) }
+
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -175,6 +185,21 @@ fun TodayScreen(
                         Text("Neue Version $newVersion verfügbar", style = MaterialTheme.typography.titleMedium)
                         Text("Tippen, um zu den Einstellungen zu gelangen und das Update zu laden.")
                     }
+                }
+            }
+        }
+
+        if (!remindersOk) {
+            item { ReminderWarningCard() }
+        }
+
+        item {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(onClick = { onOpenDailyStart(false) }, modifier = Modifier.weight(1f)) {
+                    FitText("Rückblick gestern", maxSize = 14.sp)
+                }
+                OutlinedButton(onClick = { onOpenDailyStart(true) }, modifier = Modifier.weight(1f)) {
+                    FitText("Tagesplan (PDF)", maxSize = 14.sp)
                 }
             }
         }

@@ -95,6 +95,10 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
         summary = "Tag, Woche, Monat, Abhaken, Aufgaben und Nachbestell-Warnung",
         items = listOf(
             GuideItem(
+                "Tagesstart: Rückblick und Tagesplan",
+                "Beim ersten Öffnen am Tag zeigt die App den Rückblick auf gestern: Zusammenfassung, Einnahmen und Termine (was noch fehlt, ist rot und lässt sich direkt nachtragen), erledigte Aufgaben und die Bemerkung zum Tag. Mit „Bestätigen“ hältst du fest, dass der Tag geprüft ist. Danach kommt der Tagesplan für heute: Wichtiges, Einnahmen, Termine, Aufgaben (überfällig, heute, dringend, nächste 3 Tage), Nachbestellen und Termine morgen. Er lässt sich als PDF teilen oder drucken (mit Kästchen zum Abhaken auf Papier). Oben auf der Heute-Seite erreichst du beides jederzeit („Rückblick gestern“, „Tagesplan (PDF)“). Bei mehreren Personen gibt es den Tagesstart je Person. Abschalten: Einstellungen → Heute-Seite.",
+            ),
+            GuideItem(
                 "Tag, Woche, Monat",
                 "Oben auf dem ersten Reiter („Heute“) wählst du zwischen Tag, Woche und Monat. „Tag“ ist immer der aktuelle Tag. „Woche“ zeigt sieben Tage untereinander mit Terminen, Aufgaben, erledigten Aufgaben und Einnahmen. Einnahmen klappst du je Tag mit „Einnahmen: … ▾“ auf und hakst sie dort ab (vergangene werden wie auf der Heute-Seite nachgefragt). Bei Terminen trägst du mit „Wie lief es?“ ein, ob sie stattgefunden haben. „Monat“ zeigt einen Kalender mit Punkten (blau = Termin, grün = Aufgabe, rot = dringend oder überfällig); ein Tipp auf einen Tag zeigt ihn darunter. Mit ‹ und › blätterst du, ein Tipp auf den Titel springt zu heute. Alles ist antippbar: Termin oder Aufgabe antippen zum Bearbeiten oder Löschen, Aufgaben direkt abhaken, mit „+ Termin“ und „+ Aufgabe“ legst du etwas für genau diesen Tag an.",
             ),
@@ -462,6 +466,10 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
         summary = "Benachrichtigungen und der Knopf „Eingenommen“",
         items = listOf(
             GuideItem(
+                "Freigaben in Android",
+                "Unter Einstellungen → „Freigaben (Android)“ siehst du, was erlaubt ist (✓) und was fehlt: Benachrichtigungen, Erinnerungen mit Ton, pünktliche Wecker, Akku-Optimierung aus (empfohlen) und Updates installieren. Die Knöpfe öffnen direkt die passende Stelle in den Android-Einstellungen. Fehlt etwas Wichtiges für Erinnerungen, erscheint oben auf der Heute-Seite eine rote Karte mit den Knöpfen zum Einschalten.",
+            ),
+            GuideItem(
                 "Medikamente",
                 "Zu jeder Einnahmezeit erscheint eine Benachrichtigung. Mit „Eingenommen“ direkt in der Benachrichtigung wird die Einnahme abgehakt, ohne die App zu öffnen. Bei mehreren Personen steht der Name dabei.",
             ),
@@ -513,7 +521,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
         items = listOf(
             GuideItem(
                 "Nutzungsbedingungen und Zustimmung",
-                "Vor der ersten Nutzung (und nach jeder neuen Fassung) bestätigst du einzeln: Die App ersetzt keinen Arzt, keine Apotheke, keine Pflegefachkraft und kein Krankenhaus, im Notfall gilt 112. Einschätzungen und Empfehlungen sind nur Anhaltspunkte, die du prüfst bzw. prüfen lässt. Und du akzeptierst die Nutzungsbedingungen mit der Haftungsregelung. Dazu gibst du Name und Rolle an. Ohne Zustimmung lässt sich die App nicht nutzen. Die Zustimmung wird als Nachweis verschlüsselt auf dem Handy gespeichert (Name, Rolle, Zeitpunkt, App-Version, Gerät, Fassung und Prüfsumme des Textes, verkettet gegen nachträgliche Änderungen). Unter Einstellungen → „Nutzungsbedingungen und Zustimmung“ kannst du den Text lesen, den Nachweis teilen und die Zustimmung widerrufen. Frühere Nachweise werden bis zum Ende des dritten Kalenderjahres aufbewahrt und dann automatisch gelöscht.",
+                "Vor der ersten Nutzung (und nach jeder neuen Fassung) bestätigst du einzeln: Die App ersetzt keinen Arzt, keine Apotheke, keine Pflegefachkraft und kein Krankenhaus, im Notfall gilt 112. Einschätzungen und Empfehlungen sind nur Anhaltspunkte, die du prüfst bzw. prüfen lässt. Und du akzeptierst die Nutzungsbedingungen mit der Haftungsregelung. Dazu gibst du Name und Rolle an. Ohne Zustimmung lässt sich die App nicht nutzen. Die Zustimmung wird als Nachweis verschlüsselt auf dem Handy gespeichert (Name, Rolle, Zeitpunkt, App-Version, Gerät, Fassung und Prüfsumme des Textes, verkettet gegen nachträgliche Änderungen). Unter Einstellungen → „Nutzungsbedingungen und Zustimmung“ kannst du den Text lesen, den Nachweis teilen und die Zustimmung widerrufen. Frühere Nachweise werden bis zum Ende des dritten Kalenderjahres aufbewahrt und dann automatisch gelöscht. Ändern sich Name oder Rolle unter „Meine Daten“, muss erneut zugestimmt werden: Die Zustimmung gilt immer für eine bestimmte pflegende Person. Der neue Nachweis wird abgelegt, der alte bleibt mit Frist erhalten.",
             ),
             GuideItem(
                 "Nur auf deinem Handy",

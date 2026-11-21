@@ -47,6 +47,27 @@ object AppPrefs {
         prefs(context).edit().putString("medcheck_$personId", json).apply()
     }
 
+    /** Tagesstart (Rueckblick und Tagesplan) einmal am Tag automatisch zeigen. */
+    fun dailyStartEnabled(context: Context): Boolean = prefs(context).getBoolean("tagesstart_auto", true)
+
+    fun setDailyStartEnabled(context: Context, value: Boolean) {
+        prefs(context).edit().putBoolean("tagesstart_auto", value).apply()
+    }
+
+    /** Epoch-Tag, an dem der Tagesstart fuer die Person zuletzt gezeigt wurde. */
+    fun lastDailyStart(context: Context, personId: Long): Long = prefs(context).getLong("tagesstart_$personId", 0L)
+
+    fun setLastDailyStart(context: Context, personId: Long, day: Long) {
+        prefs(context).edit().putLong("tagesstart_$personId", day).apply()
+    }
+
+    /** Wann der Rueckblick auf [day] bestaetigt wurde (0 = noch nicht). */
+    fun reviewConfirmed(context: Context, personId: Long, day: Long): Long = prefs(context).getLong("rueckblick_${personId}_$day", 0L)
+
+    fun setReviewConfirmed(context: Context, personId: Long, day: Long, millis: Long) {
+        prefs(context).edit().putLong("rueckblick_${personId}_$day", millis).apply()
+    }
+
     /** Eingeklappte Karten auf der Heute-Seite. */
     fun folded(context: Context, key: String): Boolean = prefs(context).getBoolean("eingeklappt_$key", false)
 

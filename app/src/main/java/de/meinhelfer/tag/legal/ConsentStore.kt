@@ -33,12 +33,35 @@ object ConsentStore {
 
     private fun device(): String = "${Build.MANUFACTURER} ${Build.MODEL} (Android ${Build.VERSION.RELEASE})".trim()
 
+    /** Warum (noch) zugestimmt werden muss. */
+    enum class Status { OK, FIRST, NEW_VERSION, REVOKED, CAREGIVER_CHANGED }
+
+    private fun norm(s: String) = s.trim().lowercase(Locale.GERMANY).replace(Regex("\\s+"), " ")
+
+    /** Gilt die Zustimmung fuer die eingetragene pflegende Person (Name und Rolle aus "Meine Daten")? */
+    fun matchesCaregiver(r: ConsentRecord, name: String, role: String): Boolean =
+        (name.isBlank() || norm(name) == norm(r.name)) && (role.isBlank() || role == r.role)
+
     /** Loescht abgelaufene Nachweise und gibt den aktuell gueltigen zurueck (oder null). */
     suspend fun current(context: Context): ConsentRecord? = withContext(Dispatchers.IO) {
         val dao = AppDatabase.get(context).consentDao()
         dao.deleteExpired(System.currentTimeMillis())
         val last = dao.list().lastOrNull()
         last?.takeIf { it.action == ConsentRecord.ACCEPTED && it.termsVersion == Terms.VERSION }
+    }
+
+    /** Prueft Fassung, Widerruf und ob die pflegende Person noch dieselbe ist. */
+    suspend fun status(context: Context): Status = withContext(Dispatchers.IO) {
+        val dao = AppDatabase.get(context).consentDao()
+        dao.deleteExpired(System.currentTimeMillis())
+        val last = dao.list().lastOrNull() ?: return@withContext Status.FIRST
+        val cg = de.meinhelfer.tag.update.AppPrefs.caregiver(context)
+        when {
+            last.action == ConsentRecord.REVOKED -> Status.REVOKED
+            last.termsVersion != Terms.VERSION -> Status.NEW_VERSION
+            !matchesCaregiver(last, cg.name, cg.role) -> Status.CAREGIVER_CHANGED
+            else -> Status.OK
+        }
     }
 
     suspend fun history(context: Context): List<ConsentRecord> = withContext(Dispatchers.IO) {

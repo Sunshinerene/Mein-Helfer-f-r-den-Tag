@@ -75,7 +75,11 @@ private fun TermsBody() {
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-internal fun ConsentScreen(onAccepted: () -> Unit, onDecline: () -> Unit) {
+internal fun ConsentScreen(
+    onAccepted: () -> Unit,
+    onDecline: () -> Unit,
+    reason: ConsentStore.Status = ConsentStore.Status.FIRST,
+) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val cg = remember { AppPrefs.caregiver(context) }
@@ -83,8 +87,6 @@ internal fun ConsentScreen(onAccepted: () -> Unit, onDecline: () -> Unit) {
     var role by remember { mutableStateOf(cg.role) }
     val checked = remember { mutableStateListOf(*Array(Terms.CONFIRMATIONS.size) { false }) }
     var saving by remember { mutableStateOf(false) }
-    var renewal by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) { renewal = ConsentStore.history(context).isNotEmpty() }
     val ready = name.trim().length >= 2 && role.isNotBlank() && checked.all { it } && !saving
 
     Column(
@@ -93,9 +95,15 @@ internal fun ConsentScreen(onAccepted: () -> Unit, onDecline: () -> Unit) {
     ) {
         Text("Bevor es losgeht", style = MaterialTheme.typography.headlineSmall)
         Text(
-            if (renewal) "Die Nutzungsbedingungen haben sich geändert oder deine Zustimmung wurde widerrufen. Bitte lies sie und stimme erneut zu."
-            else "Bitte lies die wichtigen Hinweise und bestätige sie. Ohne diese Bestätigung kann die App nicht genutzt werden.",
+            when (reason) {
+                ConsentStore.Status.NEW_VERSION -> "Die Nutzungsbedingungen haben sich geändert. Bitte lies sie und stimme erneut zu."
+                ConsentStore.Status.REVOKED -> "Deine Zustimmung wurde widerrufen. Ohne Zustimmung kann die App nicht genutzt werden."
+                ConsentStore.Status.CAREGIVER_CHANGED -> "Die pflegende Person (Name oder Rolle) hat sich geändert. Die Zustimmung gilt immer für eine Person, deshalb bitte erneut bestätigen."
+                else -> "Bitte lies die wichtigen Hinweise und bestätige sie. Ohne diese Bestätigung kann die App nicht genutzt werden."
+            },
             style = MaterialTheme.typography.bodyMedium,
+            color = if (reason == ConsentStore.Status.CAREGIVER_CHANGED || reason == ConsentStore.Status.NEW_VERSION) MaterialTheme.colorScheme.error
+            else MaterialTheme.colorScheme.onSurface,
         )
         HCard(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp)) { TermsBody() }
@@ -134,11 +142,9 @@ internal fun ConsentScreen(onAccepted: () -> Unit, onDecline: () -> Unit) {
                 saving = true
                 scope.launch {
                     ConsentStore.accept(context, name, role)
-                    // Name und Rolle auch fuer "Meine Daten" uebernehmen, wenn dort noch nichts steht
+                    // Name und Rolle gelten auch fuer "Meine Daten" (die Zustimmung gehoert zu genau dieser Person)
                     val current = AppPrefs.caregiver(context)
-                    if (current.name.isBlank() || current.role.isBlank()) {
-                        AppPrefs.setCaregiver(context, current.copy(name = current.name.ifBlank { name.trim() }, role = current.role.ifBlank { role }))
-                    }
+                    AppPrefs.setCaregiver(context, current.copy(name = name.trim(), role = role))
                     saving = false
                     onAccepted()
                 }

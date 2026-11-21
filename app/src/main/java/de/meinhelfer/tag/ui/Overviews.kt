@@ -354,7 +354,7 @@ internal fun TaskLine(t: Todo, today: Long, vm: MainViewModel, edit: OverviewEdi
 
 /** Einnahmen eines Tages zum Abhaken; vergangene und vorgezogene werden wie auf der Heute-Seite nachgefragt. */
 @Composable
-private fun IntakeRows(
+internal fun IntakeRows(
     epoch: Long,
     todayDay: Long,
     meds: List<Medication>,

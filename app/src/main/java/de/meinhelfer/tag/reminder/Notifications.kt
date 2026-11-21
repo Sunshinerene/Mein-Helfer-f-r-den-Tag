@@ -15,10 +15,10 @@ import androidx.core.content.ContextCompat
 import de.meinhelfer.tag.MainActivity
 
 object Notifications {
-    private const val CHANNEL_REMINDERS = "erinnerungen"
+    const val CHANNEL_REMINDERS = "erinnerungen"
     private const val CHANNEL_UPDATES = "updates"
 
-    private fun ensureChannels(context: Context) {
+    fun ensureChannels(context: Context) {
         if (Build.VERSION.SDK_INT >= 26) {
             val nm = context.getSystemService(NotificationManager::class.java)
             if (nm.getNotificationChannel(CHANNEL_REMINDERS) == null) {

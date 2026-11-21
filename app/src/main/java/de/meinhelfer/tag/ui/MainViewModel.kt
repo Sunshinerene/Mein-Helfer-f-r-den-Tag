@@ -332,6 +332,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun resetCheckin(kind: String, refId: Long, day: Long, slot: String) =
         saveCheckin(kind, refId, day, slot, done = false, status = "", actual = "")
 
+    /** Bemerkung zu einem Tag der aktuellen Person (leer, wenn keine). */
+    suspend fun dayNoteText(day: Long): String = db.dayNoteDao().find(_personId.value, day)?.text.orEmpty()
+
     fun saveDayNote(day: Long, text: String) = viewModelScope.launch {
         val dao = db.dayNoteDao()
         val person = _personId.value

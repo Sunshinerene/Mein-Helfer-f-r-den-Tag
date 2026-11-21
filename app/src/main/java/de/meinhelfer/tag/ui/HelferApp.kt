@@ -88,21 +88,23 @@ private enum class Tab(val label: String, val icon: ImageVector) {
 fun HelferApp(vm: MainViewModel = viewModel()) {
     // Ohne Zustimmung zu den Nutzungsbedingungen keine Nutzung
     val gateContext = LocalContext.current
-    var consentOk by remember { mutableStateOf<Boolean?>(null) }
-    LaunchedEffect(Unit) { consentOk = de.meinhelfer.tag.legal.ConsentStore.current(gateContext) != null }
-    when (consentOk) {
+    var consentStatus by remember { mutableStateOf<de.meinhelfer.tag.legal.ConsentStore.Status?>(null) }
+    var consentCheck by remember { mutableIntStateOf(0) }
+    LaunchedEffect(consentCheck) { consentStatus = de.meinhelfer.tag.legal.ConsentStore.status(gateContext) }
+    when (val st = consentStatus) {
         null -> {
             Box(Modifier.fillMaxSize())
             return
         }
-        false -> {
+        de.meinhelfer.tag.legal.ConsentStore.Status.OK -> Unit
+        else -> {
             ConsentScreen(
-                onAccepted = { consentOk = true },
+                reason = st,
+                onAccepted = { consentStatus = de.meinhelfer.tag.legal.ConsentStore.Status.OK },
                 onDecline = { (gateContext as? android.app.Activity)?.finish() },
             )
             return
         }
-        else -> Unit
     }
     var tabIndex by rememberSaveable { mutableIntStateOf(0) }
     var periodIndex by rememberSaveable { mutableIntStateOf(0) }
@@ -117,6 +119,8 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
     var showNotruf by rememberSaveable { mutableStateOf(false) }
     var showLetters by rememberSaveable { mutableStateOf(false) }
     var showMedOverview by rememberSaveable { mutableStateOf(false) }
+    var showDailyStart by rememberSaveable { mutableStateOf(false) }
+    var dailyPlanOnly by rememberSaveable { mutableStateOf(false) }
     val appContext = LocalContext.current
     var caregiver by remember { mutableStateOf(AppPrefs.caregiver(appContext)) }
     // Beim ersten Start einmal den Rundgang anbieten
@@ -143,6 +147,18 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
     val persons by vm.persons.collectAsStateWithLifecycle()
     val personId by vm.personId.collectAsStateWithLifecycle()
 
+    // Tagesstart: einmal am Tag je Person automatisch (Rueckblick auf gestern, dann Tagesplan)
+    val hasData = meds.isNotEmpty() || appointments.isNotEmpty() || todos.isNotEmpty()
+    LaunchedEffect(personId, todayDay, hasData, showTourOffer) {
+        if (hasData && !showTourOffer && personId > 0 && AppPrefs.dailyStartEnabled(appContext) &&
+            AppPrefs.lastDailyStart(appContext, personId) < todayDay
+        ) {
+            AppPrefs.setLastDailyStart(appContext, personId, todayDay)
+            dailyPlanOnly = false
+            showDailyStart = true
+        }
+    }
+
     // Entschluesselte Dokument-Kopien vom letzten Mal aufraeumen
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) { DocumentStore.clearTemp(appContext) }
@@ -158,8 +174,9 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
         }
     }
 
-    BackHandler(enabled = showSettings || showSummary || showGuide || showTour || showReorder || showWegweiser || showLetters || showMedOverview) {
+    BackHandler(enabled = showSettings || showSummary || showGuide || showTour || showReorder || showWegweiser || showLetters || showMedOverview || showDailyStart) {
         when {
+            showDailyStart -> showDailyStart = false
             showMedOverview -> showMedOverview = false
             showTour -> showTour = false
             showGuide -> showGuide = false
@@ -173,6 +190,19 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
 
     if (showTour) {
         TourScreen(onClose = { showTour = false })
+    } else if (showDailyStart) {
+        DailyStartScreen(
+            vm = vm,
+            person = persons.firstOrNull { it.id == personId },
+            meds = meds,
+            appointments = appointments,
+            todos = todos,
+            doctors = doctors,
+            checkins = checkins,
+            todayDay = todayDay,
+            startWithPlan = dailyPlanOnly,
+            onDone = { showDailyStart = false },
+        )
     } else if (showGuide) {
         GuideScreen(onBack = { showGuide = false }, onStartTour = { showTour = true })
     } else if (showSettings) {
@@ -180,7 +210,7 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
             vm = vm,
             onConsentRevoked = {
                 showSettings = false
-                consentOk = false
+                consentCheck++
             },
             onBack = { showSettings = false },
             onOpenGuide = { showGuide = true },
@@ -285,6 +315,10 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
                                     caregiver = caregiver,
                                     documents = documents,
                                     onEditCaregiver = { showCaregiver = true },
+                                    onOpenDailyStart = { planOnly ->
+                                        dailyPlanOnly = planOnly
+                                        showDailyStart = true
+                                    },
                                 )
                                 ViewPeriod.Woche -> WeekOverview(
                                     vm = vm,
@@ -359,6 +393,8 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
                 AppPrefs.setCaregiver(appContext, it)
                 caregiver = it
                 showCaregiver = false
+                // Andere pflegende Person (Name oder Rolle): Zustimmung muss neu bestaetigt werden
+                consentCheck++
             },
         )
     }
