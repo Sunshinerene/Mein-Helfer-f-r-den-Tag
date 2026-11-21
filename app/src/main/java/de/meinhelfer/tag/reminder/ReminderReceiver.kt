@@ -29,6 +29,11 @@ class ReminderReceiver : BroadcastReceiver() {
         val id = intent.getLongExtra(ReminderScheduler.EXTRA_ID, -1L)
         if (id < 0) return
 
+        // Bei mehreren Personen steht der Name in der Benachrichtigung.
+        val persons = db.personDao().list()
+        fun forPerson(personId: Long): String =
+            if (persons.size > 1) persons.firstOrNull { it.id == personId }?.let { " für ${it.name}" } ?: "" else ""
+
         when (intent.getStringExtra(ReminderScheduler.EXTRA_TYPE)) {
             ReminderScheduler.TYPE_MED -> {
                 val time = intent.getStringExtra(ReminderScheduler.EXTRA_TIME) ?: return
@@ -41,7 +46,7 @@ class ReminderReceiver : BroadcastReceiver() {
                 Notifications.show(
                     context,
                     "med:$id:$time".hashCode(),
-                    "Medikament einnehmen ($time Uhr)",
+                    "Medikament${forPerson(med.personId)} einnehmen ($time Uhr)",
                     text,
                 )
                 ReminderScheduler.scheduleMedication(context, id, time)
@@ -59,7 +64,7 @@ class ReminderReceiver : BroadcastReceiver() {
                 Notifications.show(
                     context,
                     "appt:$id".hashCode(),
-                    "Termin in 1 Stunde",
+                    "Termin${forPerson(appointment.personId)} in 1 Stunde",
                     text,
                 )
             }

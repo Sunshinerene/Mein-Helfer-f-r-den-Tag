@@ -4,6 +4,13 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import java.time.LocalDate
 
+/** Betreute Person, fuer die Medikamente, Termine und Bemerkungen gelten. */
+@Entity
+data class Person(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val name: String,
+)
+
 /** Medikament mit Einnahmezeiten und Vorrat (fuer die Nachbestell-Warnung). */
 @Entity
 data class Medication(
@@ -23,6 +30,8 @@ data class Medication(
     val createdDay: Long = LocalDate.now().toEpochDay(),
     /** Tag (Epoch-Tag), auf den sich [stock] bezieht; der Vorrat sinkt danach taeglich um [dailyUse]. */
     val stockDay: Long = LocalDate.now().toEpochDay(),
+    /** Zu welcher betreuten Person das Medikament gehoert. */
+    val personId: Long = 1,
 ) {
     fun timeList(): List<String> =
         times.split(",").map { it.trim() }.filter { it.isNotEmpty() }
@@ -49,6 +58,8 @@ data class Appointment(
     val notes: String = "",
     /** Verknuepfter Arzt bzw. Institution (optional). */
     val doctorId: Long? = null,
+    /** Zu welcher betreuten Person der Termin gehoert. */
+    val personId: Long = 1,
 )
 
 @Entity
@@ -87,6 +98,8 @@ data class Checkin(
 /** Freie Bemerkung zum ganzen Tag. */
 @Entity
 data class DayNote(
-    @PrimaryKey val day: Long,
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val day: Long,
+    val personId: Long = 1,
     val text: String = "",
 )

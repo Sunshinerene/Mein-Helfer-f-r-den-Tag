@@ -2,13 +2,14 @@
 
 Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbezogenen Daten bleiben lokal auf dem Gerät.
 
-## Stand: v0.5.0
+## Stand: v0.6.0
 
 - Heute-Übersicht: Einnahmen und Termine abhaken, Bemerkungen, Tagesnotiz, Nachbestell-Warnung
 - Auswertung für Tag, Woche, Monat (lokal berechnet, nur Anhaltspunkte, kein ärztlicher Rat)
 - Medikamente mit Einnahmezeiten und Vorrat
 - Termine mit Beginn und Ende
-- Ärzte mit Direktkontakt (Anruf, E-Mail)
+- Kontakte: Ärzte, Pflegedienst, Apotheke, Kassen usw. mit Direktkontakt (Anruf, E-Mail), Filter nach Art
+- Mehrere betreute Personen, Wechsel oben auf jeder Seite
 - Erinnerungen: Medikamenten-Einnahme und Termine (1 Stunde vorher)
 - Alle Einträge bearbeitbar, Kalender- und Zeitauswahl, Vorauswahlen, Arzt-Auswahl beim Termin
 - Medikament per Foto der Packung anlegen: Text wird lokal auf dem Handy erkannt, das Foto bleibt im privaten App-Ordner

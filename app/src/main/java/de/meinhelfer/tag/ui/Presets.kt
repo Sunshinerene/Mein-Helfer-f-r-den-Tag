@@ -18,6 +18,7 @@ val DOSAGE_PRESETS = listOf(
 )
 
 val SPECIALTIES = listOf(
+    // Ärzte
     "Hausarzt",
     "Internist",
     "Kardiologe",
@@ -31,14 +32,36 @@ val SPECIALTIES = listOf(
     "Zahnarzt",
     "Psychiater / Psychotherapeut",
     "Geriater",
+    "Notdienst / Bereitschaftsdienst",
+    // Therapie
     "Physiotherapie",
     "Ergotherapie",
+    "Logopädie",
+    "Fußpflege / Podologie",
+    // Pflege und Hilfe im Alltag
     "Pflegedienst",
     "Tagespflege",
+    "Kurzzeitpflege",
+    "Pflegeheim",
+    "Haushaltshilfe / Alltagshilfe",
+    "Betreuungsdienst",
+    "Essen auf Rädern",
+    "Hausnotruf",
+    "Fahrdienst",
+    "Palliativ / Hospiz",
+    "Pflegeberatung / Pflegestützpunkt",
+    "Selbsthilfegruppe",
+    "Seelsorge",
+    // Versorgung
     "Apotheke",
     "Sanitätshaus",
+    "Hörakustiker / Optiker",
     "Krankenhaus",
+    // Ämter, Kassen, Recht
     "Pflegekasse / Krankenkasse",
+    "Medizinischer Dienst",
+    "Sozialamt",
+    "Rechtlicher Betreuer",
     "Sonstiges",
 )
 

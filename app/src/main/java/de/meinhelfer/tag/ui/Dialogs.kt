@@ -165,6 +165,7 @@ fun MedicationDialog(initial: Medication?, onDismiss: () -> Unit, onSave: (Medic
                     stock = if (stockChanged) stock.trim().toIntOrNull() ?: 0 else initial!!.stock,
                     stockDay = if (stockChanged) today else initial!!.stockDay,
                     createdDay = initial?.createdDay ?: today,
+                    personId = initial?.personId ?: 1,
                     // Leer = Anzahl der Einnahmen pro Tag
                     dailyUse = dailyUse.trim().toIntOrNull() ?: maxOf(1, times.size),
                     notes = notes.trim(),
@@ -330,6 +331,7 @@ fun AppointmentDialog(
                         place = place.trim(),
                         notes = notes.trim(),
                         doctorId = doctorId?.takeIf { id -> doctors.any { it.id == id } },
+                        personId = initial?.personId ?: 1,
                     ),
                 )
             }
@@ -344,12 +346,12 @@ fun AppointmentDialog(
 
         if (doctors.isEmpty()) {
             Text(
-                "Noch keine Ärzte oder Institutionen angelegt. Du kannst sie im Tab „Ärzte“ hinzufügen.",
+                "Noch keine Kontakte angelegt. Du kannst sie im Tab „Kontakte“ hinzufügen. Der Titel lässt sich auch frei eintippen.",
                 style = MaterialTheme.typography.bodySmall,
             )
         } else {
             DropdownField(
-                label = "Arzt / Institution",
+                label = "Kontakt (Arzt, Dienst …)",
                 value = selectedDoctor?.let { doctorLabel(it) } ?: "",
                 options = listOf(NO_DOCTOR) + doctors.map { doctorLabel(it) },
                 editable = false,
@@ -419,7 +421,7 @@ fun DoctorDialog(initial: Doctor?, onDismiss: () -> Unit, onSave: (Doctor) -> Un
     var address by remember { mutableStateOf(initial?.address ?: "") }
 
     DialogForm(
-        title = if (initial == null) "Arzt / Institution hinzufügen" else "Arzt / Institution bearbeiten",
+        title = if (initial == null) "Kontakt hinzufügen" else "Kontakt bearbeiten",
         canSave = name.isNotBlank(),
         onDismiss = onDismiss,
         onSave = {
@@ -443,7 +445,7 @@ fun DoctorDialog(initial: Doctor?, onDismiss: () -> Unit, onSave: (Doctor) -> Un
             modifier = Modifier.fillMaxWidth(),
         )
         DropdownField(
-            label = "Fachrichtung / wofür",
+            label = "Art des Kontakts",
             value = specialty,
             options = SPECIALTIES,
             onValueChange = { specialty = it },

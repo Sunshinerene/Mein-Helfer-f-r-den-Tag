@@ -9,8 +9,8 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 // TODO (vor echten Nutzern): Datenbank verschluesseln (z. B. SQLCipher) und App-Sperre ergaenzen.
 @Database(
-    entities = [Medication::class, Appointment::class, Doctor::class, Checkin::class, DayNote::class],
-    version = 4,
+    entities = [Medication::class, Appointment::class, Doctor::class, Checkin::class, DayNote::class, Person::class],
+    version = 5,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -19,6 +19,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun doctorDao(): DoctorDao
     abstract fun checkinDao(): CheckinDao
     abstract fun dayNoteDao(): DayNoteDao
+    abstract fun personDao(): PersonDao
 
     companion object {
         @Volatile private var instance: AppDatabase? = null
@@ -61,6 +62,31 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * Version 5: Betreute Personen. Bestehende Eintraege gehoeren zur Person mit der ID 1
+         * (wird hier angelegt, "Betreute Person", spaeter umbenennbar).
+         */
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `Person` (" +
+                        "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL)",
+                )
+                db.execSQL("INSERT INTO `Person` (`id`, `name`) VALUES (1, 'Betreute Person')")
+                db.execSQL("ALTER TABLE Medication ADD COLUMN personId INTEGER NOT NULL DEFAULT 1")
+                db.execSQL("ALTER TABLE Appointment ADD COLUMN personId INTEGER NOT NULL DEFAULT 1")
+                // DayNote bekommt eine eigene ID + Person: Tabelle neu anlegen und Daten uebernehmen.
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `DayNote_new` (" +
+                        "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `day` INTEGER NOT NULL, " +
+                        "`personId` INTEGER NOT NULL, `text` TEXT NOT NULL)",
+                )
+                db.execSQL("INSERT INTO `DayNote_new` (`day`, `personId`, `text`) SELECT `day`, 1, `text` FROM `DayNote`")
+                db.execSQL("DROP TABLE `DayNote`")
+                db.execSQL("ALTER TABLE `DayNote_new` RENAME TO `DayNote`")
+            }
+        }
+
         fun get(context: Context): AppDatabase =
             instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(
@@ -68,7 +94,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "mein_helfer.db",
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                     .build()
                     .also { instance = it }
             }

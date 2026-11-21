@@ -3,7 +3,6 @@ package de.meinhelfer.tag.data
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
@@ -15,6 +14,9 @@ interface MedicationDao {
 
     @Query("SELECT * FROM Medication")
     suspend fun list(): List<Medication>
+
+    @Query("SELECT * FROM Medication WHERE personId = :personId")
+    suspend fun listFor(personId: Long): List<Medication>
 
     @Query("SELECT * FROM Medication WHERE id = :id")
     suspend fun byId(id: Long): Medication?
@@ -36,6 +38,9 @@ interface AppointmentDao {
 
     @Query("SELECT * FROM Appointment")
     suspend fun list(): List<Appointment>
+
+    @Query("SELECT * FROM Appointment WHERE personId = :personId")
+    suspend fun listFor(personId: Long): List<Appointment>
 
     @Query("SELECT * FROM Appointment WHERE id = :id")
     suspend fun byId(id: Long): Appointment?
@@ -88,18 +93,42 @@ interface CheckinDao {
 
 @Dao
 interface DayNoteDao {
-    @Query("SELECT * FROM DayNote WHERE day BETWEEN :from AND :to")
-    fun range(from: Long, to: Long): Flow<List<DayNote>>
+    @Query("SELECT * FROM DayNote WHERE personId = :personId AND day BETWEEN :from AND :to")
+    fun range(personId: Long, from: Long, to: Long): Flow<List<DayNote>>
 
-    @Query("SELECT * FROM DayNote WHERE day BETWEEN :from AND :to")
-    suspend fun rangeList(from: Long, to: Long): List<DayNote>
+    @Query("SELECT * FROM DayNote WHERE personId = :personId AND day BETWEEN :from AND :to")
+    suspend fun rangeList(personId: Long, from: Long, to: Long): List<DayNote>
 
-    @Query("SELECT * FROM DayNote WHERE day = :day")
-    suspend fun byDay(day: Long): DayNote?
+    @Query("SELECT * FROM DayNote WHERE personId = :personId AND day = :day LIMIT 1")
+    suspend fun find(personId: Long, day: Long): DayNote?
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun upsert(item: DayNote)
+    @Insert
+    suspend fun insert(item: DayNote)
 
-    @Query("DELETE FROM DayNote WHERE day = :day")
-    suspend fun delete(day: Long)
+    @Update
+    suspend fun update(item: DayNote)
+
+    @Delete
+    suspend fun delete(item: DayNote)
+
+    @Query("DELETE FROM DayNote WHERE personId = :personId")
+    suspend fun deleteForPerson(personId: Long)
+}
+
+@Dao
+interface PersonDao {
+    @Query("SELECT * FROM Person ORDER BY id")
+    fun all(): Flow<List<Person>>
+
+    @Query("SELECT * FROM Person ORDER BY id")
+    suspend fun list(): List<Person>
+
+    @Insert
+    suspend fun insert(item: Person): Long
+
+    @Update
+    suspend fun update(item: Person)
+
+    @Delete
+    suspend fun delete(item: Person)
 }

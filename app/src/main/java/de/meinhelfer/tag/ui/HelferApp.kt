@@ -8,6 +8,8 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -30,6 +32,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -65,7 +68,7 @@ private enum class Tab(val label: String, val icon: ImageVector) {
     Heute("Heute", Icons.Default.Home),
     Medikamente("Medikamente", Icons.Default.Favorite),
     Termine("Termine", Icons.Default.DateRange),
-    Aerzte("Ärzte", Icons.Default.Person),
+    Aerzte("Kontakte", Icons.Default.Person),
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -83,6 +86,8 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
     val checkins by vm.checkins.collectAsStateWithLifecycle()
     val dayNote by vm.dayNote.collectAsStateWithLifecycle()
     val todayDay by vm.today.collectAsStateWithLifecycle()
+    val persons by vm.persons.collectAsStateWithLifecycle()
+    val personId by vm.personId.collectAsStateWithLifecycle()
 
     // Jede Minute: Uhrzeit und Datum aktualisieren (ueberfaellige Einnahmen, Tageswechsel)
     var nowMillis by remember { mutableLongStateOf(System.currentTimeMillis()) }
@@ -127,7 +132,9 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
                 }
             },
         ) { inner ->
-            Box(Modifier.padding(inner).fillMaxSize()) {
+            Column(Modifier.padding(inner).fillMaxSize()) {
+              PersonBar(persons = persons, currentId = personId, vm = vm)
+              Box(Modifier.weight(1f).fillMaxWidth()) {
                 when (tab) {
                     Tab.Heute -> TodayScreen(
                         vm = vm,
@@ -146,6 +153,7 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
                     Tab.Termine -> AppointmentScreen(appointments, doctors, vm)
                     Tab.Aerzte -> DoctorScreen(doctors, vm)
                 }
+              }
             }
         }
     }
@@ -238,16 +246,37 @@ private fun AppointmentScreen(items: List<Appointment>, doctors: List<Doctor>, v
 
 // ---------------------------------------------------------------- Ärzte
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun DoctorScreen(items: List<Doctor>, vm: MainViewModel) {
     var showAdd by remember { mutableStateOf(false) }
     var editItem by remember { mutableStateOf<Doctor?>(null) }
     val context = LocalContext.current
 
+    // Filter nach Art des Kontakts (nur sichtbar, wenn es mehrere Arten gibt)
+    var filterValue by remember { mutableStateOf<String?>(null) }
+    val categories = items.map { it.specialty.trim() }.filter { it.isNotEmpty() }.distinct().sorted()
+    val active = filterValue?.takeIf { it in categories }
+    val shown = if (active == null) items else items.filter { it.specialty.trim() == active }
+
+    Column(Modifier.fillMaxSize()) {
+    if (categories.size > 1) {
+        FlowRow(
+            Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            FilterChip(selected = active == null, onClick = { filterValue = null }, label = { Text("Alle") })
+            categories.forEach { c ->
+                FilterChip(selected = active == c, onClick = { filterValue = c }, label = { Text(c) })
+            }
+        }
+    }
+
     ListScreen(
-        items = items,
-        emptyText = "Noch keine Ärzte oder Institutionen. Mit + hinzufügen.",
+        items = shown,
+        emptyText = "Noch keine Kontakte (Ärzte, Pflegedienst, Apotheke, Pflegekasse …). Mit + hinzufügen.",
         onAdd = { showAdd = true },
+        modifier = Modifier.weight(1f),
     ) { d ->
         ItemCard(
             title = doctorLabel(d),
@@ -272,6 +301,7 @@ private fun DoctorScreen(items: List<Doctor>, vm: MainViewModel) {
                 }
             }
         }
+    }
     }
 
     if (showAdd || editItem != null) {
@@ -305,9 +335,10 @@ private fun <T> ListScreen(
     items: List<T>,
     emptyText: String,
     onAdd: () -> Unit,
+    modifier: Modifier = Modifier,
     row: @Composable (T) -> Unit,
 ) {
-    Box(Modifier.fillMaxSize()) {
+    Box(modifier.fillMaxSize()) {
         if (items.isEmpty()) {
             Text(
                 emptyText,

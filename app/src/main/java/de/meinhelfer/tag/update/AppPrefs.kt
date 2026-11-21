@@ -8,6 +8,15 @@ object AppPrefs {
     private const val KEY_AUTO_UPDATE = "auto_update_check"
     private const val KEY_LAST_NOTIFIED = "last_notified_version"
 
+    private const val KEY_PERSON = "aktuelle_person"
+
+    /** ID der gerade ausgewaehlten betreuten Person (0 = noch keine Auswahl). */
+    fun currentPerson(context: Context): Long = prefs(context).getLong(KEY_PERSON, 0L)
+
+    fun setCurrentPerson(context: Context, id: Long) {
+        prefs(context).edit().putLong(KEY_PERSON, id).apply()
+    }
+
     private fun prefs(context: Context) = context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
 
     fun autoUpdateCheck(context: Context): Boolean = prefs(context).getBoolean(KEY_AUTO_UPDATE, true)

@@ -8,6 +8,13 @@
 - [ ] KI-Hinweise in der Auswertung, z. B. "Medikamentenplan vom Hausarzt prüfen lassen": immer mit Bestätigung und Datenschutz-Filter, nur Anhaltspunkt, ersetzt nie Arzt oder Apotheke; Hinweis lässt sich auf eine eigene To-do-Liste setzen ("beim Hausarzt ansprechen")
 - [ ] Erkennung von Packungsfoto verbessern (Wirkstoff, Packungsbeilage, Barcode/PZN)
 
+## Version 0.6.0 (fertig)
+
+- [x] Mehrere betreute Personen: Auswahl oben auf jeder Seite, anlegen, umbenennen, löschen. Medikamente, Termine, Abhaken und Bemerkungen gelten je Person, Kontakte sind für alle gemeinsam
+- [x] Tab "Kontakte" statt "Ärzte": auch Pflegedienst, Hausnotruf, Pflegekasse, Apotheke, Sozialamt usw. mit vielen Vorauswahlen und Filter nach Art
+- [x] Vorauswahl-Felder zeigen jetzt "Auswahl antippen oder selbst eintippen"
+- [x] Erinnerungen nennen bei mehreren Personen den Namen
+
 ## Version 0.5.0 (fertig)
 
 - [x] Heute-Seite: Einnahmen und Termine abhaken, Bemerkung dazu (z. B. später genommen, Termin verschoben), Bemerkung zum Tag
@@ -38,7 +45,6 @@
 
 ## Weitere Ideen
 
-- [ ] Mehrere betreute Personen
 - [ ] Dokumente scannen und verschlüsselt ablegen
 - [ ] Datenbank verschlüsseln, App-Sperre
 - [ ] Kalender-Eintrag aus Terminen

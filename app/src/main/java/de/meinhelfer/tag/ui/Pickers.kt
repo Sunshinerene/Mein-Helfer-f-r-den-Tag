@@ -89,6 +89,7 @@ fun DropdownField(
             readOnly = !editable,
             label = { Text(label) },
             singleLine = true,
+            supportingText = if (editable) ({ Text("Auswahl antippen oder selbst eintippen") }) else null,
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             modifier = Modifier.menuAnchor().fillMaxWidth(),
         )
