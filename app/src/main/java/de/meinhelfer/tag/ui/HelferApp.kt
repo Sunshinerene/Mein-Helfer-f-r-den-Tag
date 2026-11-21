@@ -37,6 +37,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -80,6 +81,7 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
     var showSettings by rememberSaveable { mutableStateOf(false) }
     var showSummary by rememberSaveable { mutableStateOf(false) }
     var showGuide by rememberSaveable { mutableStateOf(false) }
+    var showReorder by rememberSaveable { mutableStateOf(false) }
     var showTour by rememberSaveable { mutableStateOf(false) }
     val appContext = LocalContext.current
     // Beim ersten Start einmal den Rundgang anbieten
@@ -107,11 +109,12 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
         }
     }
 
-    BackHandler(enabled = showSettings || showSummary || showGuide || showTour) {
+    BackHandler(enabled = showSettings || showSummary || showGuide || showTour || showReorder) {
         when {
             showTour -> showTour = false
             showGuide -> showGuide = false
             showSettings -> showSettings = false
+            showReorder -> showReorder = false
             else -> showSummary = false
         }
     }
@@ -126,6 +129,13 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
             onBack = { showSettings = false },
             onOpenGuide = { showGuide = true },
             onStartTour = { showTour = true },
+        )
+    } else if (showReorder) {
+        ReorderScreen(
+            meds = meds,
+            doctors = doctors,
+            personName = persons.firstOrNull { it.id == personId }?.name,
+            onBack = { showReorder = false },
         )
     } else if (showSummary) {
         SummaryScreen(vm = vm, onBack = { showSummary = false })
@@ -174,8 +184,9 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
                         updateState = updateState,
                         onOpenSettings = { showSettings = true },
                         onOpenSummary = { showSummary = true },
+                        onOpenReorder = { showReorder = true },
                     )
-                    Tab.Medikamente -> MedicationScreen(meds, vm)
+                    Tab.Medikamente -> MedicationScreen(meds, doctors, vm, onReorder = { showReorder = true })
                     Tab.Termine -> AppointmentScreen(appointments, doctors, vm)
                     Tab.Aerzte -> DoctorScreen(doctors, vm)
                 }
@@ -212,32 +223,47 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
 // ---------------------------------------------------------------- Medikamente
 
 @Composable
-private fun MedicationScreen(items: List<Medication>, vm: MainViewModel) {
+private fun MedicationScreen(items: List<Medication>, doctors: List<Doctor>, vm: MainViewModel, onReorder: () -> Unit) {
     var showAdd by remember { mutableStateOf(false) }
     var editItem by remember { mutableStateOf<Medication?>(null) }
 
-    ListScreen(
-        items = items,
-        emptyText = "Noch keine Medikamente. Mit + hinzufügen.",
-        onAdd = { showAdd = true },
-    ) { m ->
-        val days = m.daysLeft()
-        ItemCard(
-            title = m.name + if (m.dosage.isNotBlank()) " – ${m.dosage}" else "",
-            lines = listOfNotNull(
-                m.times.takeIf { it.isNotBlank() }?.let { "Einnahme: ${it.replace(",", ", ")} Uhr" },
-                "Vorrat: ${m.currentStock()} Stück" + (days?.let { " (ca. $it Tage)" } ?: ""),
-                m.notes.takeIf { it.isNotBlank() },
-            ),
-            onClick = { editItem = m },
-            onDelete = { vm.delete(m) },
-            photoName = m.photoPath,
-        )
+    val lowCount = lowStockMeds(items).size
+    Column(Modifier.fillMaxSize()) {
+        if (items.isNotEmpty()) {
+            OutlinedButton(
+                onClick = onReorder,
+                modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp),
+            ) {
+                Text(if (lowCount > 0) "Nachbestellung ($lowCount fällig)" else "Nachbestellung")
+            }
+        }
+        ListScreen(
+            items = items,
+            emptyText = "Noch keine Medikamente. Mit + hinzufügen.",
+            onAdd = { showAdd = true },
+            modifier = Modifier.weight(1f),
+        ) { m ->
+            val days = m.daysLeft()
+            ItemCard(
+                title = m.name + if (m.dosage.isNotBlank()) " – ${m.dosage}" else "",
+                lines = listOfNotNull(
+                    m.times.takeIf { it.isNotBlank() }?.let { "Einnahme: ${it.replace(",", ", ")} Uhr" },
+                    "Vorrat: ${m.currentStock()} Stück" + (days?.let { " (ca. $it Tage)" } ?: ""),
+                    doctors.firstOrNull { it.id == m.doctorId }?.let { "Arzt: ${it.name}" },
+                    doctors.firstOrNull { it.id == m.pharmacyId }?.let { "Apotheke: ${it.name}" },
+                    m.notes.takeIf { it.isNotBlank() },
+                ),
+                onClick = { editItem = m },
+                onDelete = { vm.delete(m) },
+                photoName = m.photoPath,
+            )
+        }
     }
 
     if (showAdd || editItem != null) {
         MedicationDialog(
             initial = editItem,
+            doctors = doctors,
             onDismiss = {
                 showAdd = false
                 editItem = null

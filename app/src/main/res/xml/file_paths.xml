@@ -3,4 +3,6 @@
     <cache-path name="updates" path="updates/" />
     <!-- Fotos von Medikamentenpackungen (nur fuer die Kamera-App als Ziel freigegeben) -->
     <files-path name="photos" path="photos/" />
+    <!-- Nachbestell-Listen als PDF (zum Teilen/Senden freigegeben) -->
+    <files-path name="exports" path="exports/" />
 </paths>

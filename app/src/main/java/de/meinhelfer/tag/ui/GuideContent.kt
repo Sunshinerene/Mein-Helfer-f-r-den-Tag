@@ -106,6 +106,37 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
                 "Dosierung und Notizen",
                 "Die Dosierung (z. B. „1 Tablette“) wählst du aus oder tippst sie selbst. In die Notizen gehört alles, was wichtig ist, z. B. „zum Essen“.",
             ),
+            GuideItem(
+                "Arzt und Apotheke zuordnen",
+                "Beim Medikament kannst du den zuständigen Arzt (für das Rezept) und die Apotheke aus deinen Kontakten wählen. Beides ist freiwillig. Die Zuordnung nutzt die Nachbestellung.",
+            ),
+        ),
+    ),
+    GuideSection(
+        id = "nachbestellung",
+        title = "Nachbestellung",
+        summary = "Was fehlt, anrufen, mailen, PDF drucken",
+        items = listOf(
+            GuideItem(
+                "Öffnen",
+                "Im Bereich „Medikamente“ oben auf „Nachbestellung“ tippen, oder auf der Heute-Seite in der roten Karte „Bald nachbestellen“.",
+            ),
+            GuideItem(
+                "Was wird bestellt?",
+                "Vorausgewählt ist alles, was nur noch für etwa 7 Tage reicht. Mit den Haken wählst du Medikamente zusätzlich oder ab.",
+            ),
+            GuideItem(
+                "Arzt oder Apotheke",
+                "Oben wählst du, ob du nach Arzt (Rezept) oder nach Apotheke gruppieren willst. Zu jedem Kontakt siehst du, was dort fehlt. „Anrufen“ öffnet die Telefon-App, „E-Mail mit Liste“ dein Mailprogramm mit fertigem Text.",
+            ),
+            GuideItem(
+                "Nichts passiert automatisch",
+                "Anrufe und Mails starten erst nach deinem Tipp. Du siehst alles in der Telefon- bzw. Mail-App und sendest selbst ab. Der Name der Person lässt sich in Nachricht und PDF ausschalten.",
+            ),
+            GuideItem(
+                "Liste als PDF",
+                "„PDF der Auswahl erstellen“ legt die Liste im privaten App-Ordner ab. Von dort kannst du sie öffnen, unter „Speichern unter“ auf dein Handy herunterladen, drucken oder teilen. Gespeicherte Listen kannst du dort auch löschen.",
+            ),
         ),
     ),
     GuideSection(
@@ -216,6 +247,10 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             GuideItem(
                 "Nur auf deinem Handy",
                 "Alle Angaben zu Personen, Medikamenten, Terminen und Notizen werden nur lokal im privaten App-Ordner gespeichert. Es gibt kein Benutzerkonto und keine Cloud.",
+            ),
+            GuideItem(
+                "Mail, Druck und PDF",
+                "Nachbestell-Listen werden nur dann per Mail geteilt oder gedruckt, wenn du es selbst auslöst. Die PDFs bleiben im privaten App-Ordner, bis du sie speicherst oder teilst.",
             ),
             GuideItem(
                 "Texterkennung",

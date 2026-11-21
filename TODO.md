@@ -6,6 +6,14 @@
 - [ ] KI-Hinweise in der Auswertung, z. B. "Medikamentenplan vom Hausarzt prüfen lassen": immer mit Bestätigung und Datenschutz-Filter, nur Anhaltspunkt, ersetzt nie Arzt oder Apotheke; Hinweis lässt sich auf eine eigene To-do-Liste setzen ("beim Hausarzt ansprechen")
 - [ ] Erkennung von Packungsfoto verbessern (Wirkstoff, Packungsbeilage, Barcode/PZN)
 
+## Version 0.10.0 (fertig)
+
+- [x] Pro Medikament zuständigen Arzt (Rezept) und Apotheke aus den Kontakten wählbar
+- [x] Nachbestell-Übersicht: was fehlt, gruppiert nach Arzt oder Apotheke, direkt anrufen
+- [x] Liste per E-Mail an den hinterlegten Kontakt, nur auf Tipp (nie automatisch), optional mit PDF
+- [x] Liste als PDF im eigenen App-Ordner, speichern unter, drucken, teilen, löschen
+- [x] Anleitung um Nachbestellung ergänzt
+
 ## Version 0.9.0 (fertig)
 
 - [x] Sechs Designs zur Auswahl (Einstellungen → Darstellung): Schlicht, Minimalistisch, Glas, Liquid, Sonnig, Natur, jeweils hell und dunkel, mit Farbvorschau

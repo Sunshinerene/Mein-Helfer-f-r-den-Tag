@@ -79,6 +79,7 @@ fun TodayScreen(
     updateState: UpdateState,
     onOpenSettings: () -> Unit,
     onOpenSummary: () -> Unit,
+    onOpenReorder: () -> Unit = {},
 ) {
     val zone = ZoneId.systemDefault()
     val today = LocalDate.ofEpochDay(todayDay)
@@ -147,6 +148,7 @@ fun TodayScreen(
                                 style = MaterialTheme.typography.bodyMedium,
                             )
                         }
+                        TextButton(onClick = onOpenReorder) { Text("Nachbestellung öffnen") }
                     }
                 }
             }

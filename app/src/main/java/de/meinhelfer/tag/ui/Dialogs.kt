@@ -80,7 +80,12 @@ private fun DialogForm(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun MedicationDialog(initial: Medication?, onDismiss: () -> Unit, onSave: (Medication) -> Unit) {
+fun MedicationDialog(
+    initial: Medication?,
+    doctors: List<Doctor>,
+    onDismiss: () -> Unit,
+    onSave: (Medication) -> Unit,
+) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -92,6 +97,8 @@ fun MedicationDialog(initial: Medication?, onDismiss: () -> Unit, onSave: (Medic
     var stock by remember { mutableStateOf(initialStockText) }
     var dailyUse by remember { mutableStateOf(initial?.dailyUse?.toString() ?: "") }
     var notes by remember { mutableStateOf(initial?.notes ?: "") }
+    var doctorId by remember { mutableStateOf<Long?>(initial?.doctorId) }
+    var pharmacyId by remember { mutableStateOf<Long?>(initial?.pharmacyId) }
 
     val originalPhoto = initial?.photoPath
     var photoName by remember { mutableStateOf(originalPhoto) }
@@ -167,6 +174,8 @@ fun MedicationDialog(initial: Medication?, onDismiss: () -> Unit, onSave: (Medic
                     stockDay = if (stockChanged) today else initial!!.stockDay,
                     createdDay = initial?.createdDay ?: today,
                     personId = initial?.personId ?: 1,
+                    doctorId = doctorId?.takeIf { id -> doctors.any { it.id == id } },
+                    pharmacyId = pharmacyId?.takeIf { id -> doctors.any { it.id == id } },
                     // Leer = Anzahl der Einnahmen pro Tag
                     dailyUse = dailyUse.trim().toIntOrNull() ?: maxOf(1, times.size),
                     notes = notes.trim(),
@@ -276,6 +285,30 @@ fun MedicationDialog(initial: Medication?, onDismiss: () -> Unit, onSave: (Medic
             "Vorrat in Stück, „Pro Tag“ = Verbrauch pro Tag (leer = Anzahl der Einnahmen). Der Vorrat sinkt danach automatisch jeden Tag.",
             style = MaterialTheme.typography.bodySmall,
         )
+        // Zustaendige Stellen fuer die Nachbestellung (aus den Kontakten)
+        val pharmacies = doctors.sortedBy { if (it.specialty.contains("Apotheke", ignoreCase = true)) 0 else 1 }
+        val prescribers = doctors.sortedBy { if (it.specialty.contains("Apotheke", ignoreCase = true)) 1 else 0 }
+        if (doctors.isEmpty()) {
+            Text(
+                "Tipp: Lege im Tab „Kontakte“ Arzt und Apotheke an, dann kannst du sie hier für die Nachbestellung zuordnen.",
+                style = MaterialTheme.typography.bodySmall,
+            )
+        } else {
+            DropdownField(
+                label = "Zuständiger Arzt (Rezept)",
+                value = doctors.firstOrNull { it.id == doctorId }?.let { doctorLabel(it) } ?: "",
+                options = listOf(NO_DOCTOR) + prescribers.map { doctorLabel(it) },
+                editable = false,
+                onValueChange = { chosen -> doctorId = doctors.firstOrNull { doctorLabel(it) == chosen }?.id },
+            )
+            DropdownField(
+                label = "Apotheke",
+                value = doctors.firstOrNull { it.id == pharmacyId }?.let { doctorLabel(it) } ?: "",
+                options = listOf(NO_DOCTOR) + pharmacies.map { doctorLabel(it) },
+                editable = false,
+                onValueChange = { chosen -> pharmacyId = doctors.firstOrNull { doctorLabel(it) == chosen }?.id },
+            )
+        }
         OutlinedTextField(
             value = notes,
             onValueChange = { notes = it },

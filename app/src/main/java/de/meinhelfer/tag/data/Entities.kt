@@ -32,6 +32,10 @@ data class Medication(
     val stockDay: Long = LocalDate.now().toEpochDay(),
     /** Zu welcher betreuten Person das Medikament gehoert. */
     val personId: Long = 1,
+    /** Zustaendiger Arzt (Kontakt) fuer Folgerezepte, optional. */
+    val doctorId: Long? = null,
+    /** Zustaendige Apotheke (Kontakt) fuer die Nachbestellung, optional. */
+    val pharmacyId: Long? = null,
 ) {
     fun timeList(): List<String> =
         times.split(",").map { it.trim() }.filter { it.isNotEmpty() }
