@@ -58,6 +58,7 @@ Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbe
 
 **Nutzungsbedingungen**
 - Pflicht-Zustimmung vor der Nutzung (kein Ersatz für Arzt, Apotheke, Krankenhaus; Einschätzungen nur Anhaltspunkte; Haftung), Nachweis verschlüsselt auf dem Handy, teilbar, widerrufbar, frühere Nachweise werden nach Frist automatisch gelöscht
+- Jede Fassung im genauen Wortlaut mit Prüfsumme archiviert: [docs/nutzungsbedingungen](docs/nutzungsbedingungen/README.md)
 
 **Einstellungen**
 - Darstellung (hell/dunkel, 6 Designs, eigene Farben, Schriftgröße), Heute-Seite, Einnahme-Zeitfenster, Dokument-Betrachter

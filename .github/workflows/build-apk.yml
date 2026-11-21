@@ -23,6 +23,9 @@ jobs:
         with:
           gradle-version: 8.9
 
+      - name: Nutzungsbedingungen mit Archiv abgleichen
+        run: gradle testDebugUnitTest --tests "de.meinhelfer.tag.legal.TermsArchiveTest" --stacktrace
+
       - name: Debug-APK bauen
         run: gradle assembleDebug --stacktrace
 

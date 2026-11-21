@@ -9,6 +9,7 @@
 
 - [x] Pflicht-Zustimmung zu Nutzungsbedingungen und Hinweisen vor der Nutzung (drei Punkte einzeln bestätigen, Name und Rolle)
 - [x] Nachweis verschlüsselt in der Datenbank (mit Prüfsummen-Kette), teilbar; Widerruf; automatische Löschung früherer Nachweise nach Ende des dritten Kalenderjahres
+- [x] Jede Fassung der Nutzungsbedingungen mit Prüfsumme im Projekt archiviert (docs/nutzungsbedingungen), Build prüft Übereinstimmung
 - [ ] Offen: Nutzungsbedingungen vor einer echten Veröffentlichung von einer Anwältin bzw. einem Anwalt prüfen lassen; Entscheidung, ob ein Nachweis zusätzlich beim App-Ersteller (Server) liegen soll
 
 ## Version 0.37.0 (fertig)
