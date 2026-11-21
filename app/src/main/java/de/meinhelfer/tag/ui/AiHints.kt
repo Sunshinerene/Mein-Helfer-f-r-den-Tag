@@ -25,9 +25,35 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.material3.FilterChip
+import de.meinhelfer.tag.ai.AiLimitException
+import de.meinhelfer.tag.ai.AiProvider
 import de.meinhelfer.tag.ai.AiClient
 import de.meinhelfer.tag.ai.AiConfig
 import kotlinx.coroutines.launch
+
+/** Schnellwahl: zwischen allen eingerichteten KI-Diensten (mit Schluessel) wechseln. Erst ab zwei Diensten sichtbar. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun AiProviderSwitch(selected: AiProvider, onSelect: (AiProvider) -> Unit) {
+    val context = LocalContext.current
+    val usable = AiProvider.entries.filter { AiConfig.apiKey(context, it).isNotBlank() }
+    if (usable.isEmpty() || (usable.size < 2 && selected in usable)) return
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text("KI-Dienst wechseln", style = MaterialTheme.typography.labelMedium)
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            usable.forEach { p ->
+                FilterChip(
+                    selected = p == selected,
+                    onClick = { onSelect(p) },
+                    label = { Text(p.label.substringBefore(" (")) },
+                )
+            }
+        }
+    }
+}
 
 /**
  * KI-Hinweis als Anhaltspunkt. Gesendet wird erst nach Bestaetigung, und der Nutzer sieht vorher
@@ -45,10 +71,12 @@ fun AiHintBox(
     var loading by remember { mutableStateOf(false) }
     var result by remember { mutableStateOf<List<String>?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
+    var limitHit by remember { mutableStateOf(false) }
+    var provider by remember { mutableStateOf(AiConfig.provider(context)) }
     val added = remember { mutableStateListOf<String>() }
 
     val configured = AiConfig.isConfigured(context)
-    val provider = AiConfig.provider(context)
+    val otherReady = AiProvider.entries.any { it != provider && AiConfig.apiKey(context, it).isNotBlank() }
 
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         if (!configured) {
@@ -56,15 +84,31 @@ fun AiHintBox(
                 "KI nicht eingerichtet. Du kannst sie unter Einstellungen → KI-Assistent einrichten (z. B. kostenlos mit Google Gemini).",
                 style = MaterialTheme.typography.bodySmall,
             )
-        } else if (loading) {
+        }
+        if ((configured || otherReady) && !loading) {
+            AiProviderSwitch(selected = provider) {
+                provider = it
+                AiConfig.setProvider(context, it)
+                error = null
+                limitHit = false
+            }
+        }
+        if (loading) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
                 Text("${provider.label} denkt nach …", style = MaterialTheme.typography.bodyMedium)
             }
-        } else {
+        } else if (configured) {
             OutlinedButton(onClick = { confirm = true }) { Text(buttonLabel) }
         }
         error?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
+        if (limitHit) {
+            Text(
+                if (otherReady) "Wähle oben einen anderen KI-Dienst und sende erneut."
+                else "Du kannst unter Einstellungen → KI-Assistent einen weiteren Dienst einrichten (z. B. Groq oder Mistral, kostenlos) und dann hier umschalten.",
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
         result?.let { bullets ->
             bullets.forEach { line ->
                 Text("• $line", style = MaterialTheme.typography.bodyMedium)
@@ -101,11 +145,15 @@ fun AiHintBox(
                     confirm = false
                     loading = true
                     error = null
+                    limitHit = false
                     result = null
                     scope.launch {
                         AiClient.ask(context, AiClient.SYSTEM_PROMPT, promptText)
                             .onSuccess { result = AiClient.bullets(it) }
-                            .onFailure { error = it.message ?: "Das hat nicht geklappt." }
+                            .onFailure {
+                                error = it.message ?: "Das hat nicht geklappt."
+                                limitHit = it is AiLimitException
+                            }
                         loading = false
                     }
                 }) { Text("Senden") }

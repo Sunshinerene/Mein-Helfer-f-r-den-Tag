@@ -395,6 +395,9 @@ private fun AiCard() {
     var model by remember { mutableStateOf(AiConfig.model(context, provider)) }
     var testing by remember { mutableStateOf(false) }
     var testResult by remember { mutableStateOf<String?>(null) }
+    var models by remember { mutableStateOf<List<String>>(emptyList()) }
+    var loadingModels by remember { mutableStateOf(false) }
+    var modelsMessage by remember { mutableStateOf<String?>(null) }
     val storageOk = remember { AiConfig.storageAvailable(context) }
 
     fun choose(p: AiProvider) {
@@ -403,6 +406,8 @@ private fun AiCard() {
         key = AiConfig.apiKey(context, p)
         model = AiConfig.model(context, p)
         testResult = null
+        models = emptyList()
+        modelsMessage = null
     }
 
     HCard(Modifier.fillMaxWidth()) {
@@ -424,15 +429,16 @@ private fun AiCard() {
             Text("Kostenlos nutzbar", style = MaterialTheme.typography.labelLarge)
             androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 AiProvider.entries.filter { it.free }.forEach { p ->
-                    FilterChip(selected = provider == p, onClick = { choose(p) }, label = { Text(p.label) })
+                    FilterChip(selected = provider == p, onClick = { choose(p) }, label = { Text(p.label + if (AiConfig.apiKey(context, p).isNotBlank()) " ✓" else "") })
                 }
             }
             Text("Kostenpflichtig", style = MaterialTheme.typography.labelLarge)
             androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 AiProvider.entries.filter { !it.free }.forEach { p ->
-                    FilterChip(selected = provider == p, onClick = { choose(p) }, label = { Text(p.label) })
+                    FilterChip(selected = provider == p, onClick = { choose(p) }, label = { Text(p.label + if (AiConfig.apiKey(context, p).isNotBlank()) " ✓" else "") })
                 }
             }
+            Text("Ein Haken ✓ zeigt, dass für diesen Dienst ein Schlüssel hinterlegt ist. Bei mehreren eingerichteten Diensten kannst du direkt in der App (bei den KI-Hinweisen) schnell wechseln.", style = MaterialTheme.typography.bodySmall)
             Text(provider.note, style = MaterialTheme.typography.bodySmall)
             OutlinedTextField(
                 value = key,
@@ -447,18 +453,48 @@ private fun AiCard() {
                 enabled = storageOk,
                 modifier = Modifier.fillMaxWidth(),
             )
-            OutlinedTextField(
-                value = model,
-                onValueChange = {
-                    model = it
-                    AiConfig.setModel(context, provider, it)
-                    testResult = null
+            if (models.isNotEmpty()) {
+                DropdownField(
+                    label = "Modell",
+                    value = model,
+                    options = models,
+                    onValueChange = {
+                        model = it
+                        AiConfig.setModel(context, provider, it)
+                        testResult = null
+                    },
+                )
+            } else {
+                OutlinedTextField(
+                    value = model,
+                    onValueChange = {
+                        model = it
+                        AiConfig.setModel(context, provider, it)
+                        testResult = null
+                    },
+                    label = { Text("Modell") },
+                    singleLine = true,
+                    enabled = storageOk,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+            OutlinedButton(
+                enabled = key.isNotBlank() && !loadingModels,
+                onClick = {
+                    loadingModels = true
+                    modelsMessage = null
+                    scope.launch {
+                        AiClient.listModels(provider, key)
+                            .onSuccess {
+                                models = it
+                                modelsMessage = if (it.isEmpty()) "Keine Modelle gefunden." else "${it.size} Modelle gefunden. Tippe auf das Feld „Modell“, um eines auszuwählen."
+                            }
+                            .onFailure { modelsMessage = it.message ?: "Die Liste konnte nicht geladen werden." }
+                        loadingModels = false
+                    }
                 },
-                label = { Text("Modell") },
-                singleLine = true,
-                enabled = storageOk,
-                modifier = Modifier.fillMaxWidth(),
-            )
+            ) { Text(if (loadingModels) "Lade …" else "Verfügbare Modelle laden") }
+            modelsMessage?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
             Text(
                 "Der Modellname ist vorausgefüllt. Falls der Anbieter ihn ändert, trage hier den neuen Namen ein. Der Schlüssel wird verschlüsselt nur auf diesem Handy gespeichert.",
                 style = MaterialTheme.typography.bodySmall,

@@ -8,6 +8,9 @@ import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
 
+/** Limit des Dienstes erreicht oder Dienst ueberlastet. Der Nutzer kann dann einen anderen Dienst waehlen. */
+class AiLimitException(message: String) : IllegalStateException(message)
+
 /** Schickt eine Anfrage an den gewaehlten KI-Dienst. Nur auf ausdruecklichen Tipp des Nutzers. */
 object AiClient {
     const val DISCLAIMER =
@@ -38,6 +41,57 @@ object AiClient {
             Result.success(call(provider, key, model, system, user))
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    private val NO_CHAT = listOf(
+        "embed", "whisper", "tts", "dall-e", "moderation", "davinci", "babbage", "audio", "realtime",
+        "image", "transcribe", "imagen", "veo", "aqa", "guard", "rerank", "search", "vision-preview",
+    )
+
+    /** Fragt beim Dienst die verfuegbaren Chat-Modelle ab (nur mit dem eigenen Schluessel, ohne Personendaten). */
+    suspend fun listModels(provider: AiProvider, key: String): Result<List<String>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val url = when (provider.kind) {
+                AiKind.GEMINI -> provider.baseUrl + "/models?pageSize=200"
+                AiKind.ANTHROPIC -> provider.baseUrl + "/models?limit=100"
+                AiKind.OPENAI_COMPAT -> provider.baseUrl + "/models"
+            }
+            val connection = URL(url).openConnection() as HttpURLConnection
+            connection.requestMethod = "GET"
+            connection.connectTimeout = 15000
+            connection.readTimeout = 30000
+            connection.setRequestProperty("User-Agent", "MeinHelfer-App")
+            when (provider.kind) {
+                AiKind.GEMINI -> connection.setRequestProperty("x-goog-api-key", key)
+                AiKind.ANTHROPIC -> {
+                    connection.setRequestProperty("x-api-key", key)
+                    connection.setRequestProperty("anthropic-version", "2023-06-01")
+                }
+                AiKind.OPENAI_COMPAT -> connection.setRequestProperty("Authorization", "Bearer $key")
+            }
+            val code = connection.responseCode
+            val text = (if (code in 200..299) connection.inputStream else connection.errorStream)
+                ?.bufferedReader()?.use { it.readText() }.orEmpty()
+            if (code !in 200..299) throw IllegalStateException(errorMessage(code, text))
+            val json = JSONObject(text)
+            val names = mutableListOf<String>()
+            if (provider.kind == AiKind.GEMINI) {
+                val arr = json.optJSONArray("models") ?: JSONArray()
+                for (i in 0 until arr.length()) {
+                    val item = arr.getJSONObject(i)
+                    val methods = item.optJSONArray("supportedGenerationMethods")
+                    var chat = false
+                    if (methods != null) for (j in 0 until methods.length()) if (methods.getString(j) == "generateContent") chat = true
+                    if (chat) names.add(item.optString("name").removePrefix("models/"))
+                }
+            } else {
+                val arr = json.optJSONArray("data") ?: JSONArray()
+                for (i in 0 until arr.length()) names.add(arr.getJSONObject(i).optString("id"))
+            }
+            val result = names.filter { n -> n.isNotBlank() && NO_CHAT.none { n.lowercase().contains(it) } }.distinct().sorted()
+            // Bei OpenRouter zuerst die kostenlosen Modelle
+            if (provider == AiProvider.OPENROUTER) result.sortedBy { if (it.endsWith(":free")) 0 else 1 } else result
         }
     }
 
@@ -92,7 +146,11 @@ object AiClient {
         val code = connection.responseCode
         val text = (if (code in 200..299) connection.inputStream else connection.errorStream)
             ?.bufferedReader()?.use { it.readText() }.orEmpty()
-        if (code !in 200..299) throw IllegalStateException(errorMessage(code, text))
+        if (code !in 200..299) {
+            val message = errorMessage(code, text)
+            if (code == 429 || code == 402 || code == 503) throw AiLimitException(message)
+            throw IllegalStateException(message)
+        }
 
         val json = JSONObject(text)
         val answer = when (provider.kind) {
@@ -118,7 +176,9 @@ object AiClient {
         val hint = when (code) {
             401, 403 -> "Schlüssel ungültig oder ohne Berechtigung."
             404 -> "Modell nicht gefunden. Prüfe den Modellnamen."
-            429 -> "Zu viele Anfragen oder Kontingent aufgebraucht."
+            429 -> "Das Limit dieses Dienstes ist erreicht (Kontingent aufgebraucht oder zu viele Anfragen)."
+            402 -> "Das Guthaben bei diesem Dienst ist aufgebraucht."
+            503 -> "Der Dienst ist gerade überlastet."
             else -> ""
         }
         return listOf("Fehler $code", hint, detail).filter { it.isNotBlank() }.joinToString(". ")

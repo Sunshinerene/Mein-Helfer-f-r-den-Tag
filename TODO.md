@@ -4,6 +4,13 @@
 
 - [ ] Erkennung von Packungsfoto weiter verbessern (Wirkstoff, Packungsbeilage), Kamera-Scan für Barcodes live
 
+## Version 0.17.0 (fertig)
+
+- [x] KI-Dienst direkt bei den KI-Hinweisen wechseln (Schnellwahl bei mehreren eingerichteten Diensten)
+- [x] Hinweis bei erreichtem Limit / überlastetem Dienst mit Aufforderung, einen anderen Dienst zu wählen
+- [x] Modellliste des Dienstes laden und auswählen
+- [x] Haken ✓ bei eingerichteten Diensten in den Einstellungen
+
 ## Version 0.16.0 (fertig)
 
 - [x] App-Sperre mit Fingerabdruck, Gesicht oder Handy-PIN (Sperre nach Zeit im Hintergrund wählbar)

@@ -273,6 +273,18 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
                 "Einstellungen → KI-Assistent. Dienst wählen: kostenlos nutzbar sind Google Gemini, Groq, Mistral und OpenRouter (Modelle mit „:free“). Kostenpflichtig sind OpenAI, Anthropic (Claude) und DeepSeek. Dann den eigenen API-Schlüssel eintragen („Schlüssel besorgen“ öffnet die Seite des Anbieters) und „Testen“ antippen. Ein Abo bei ChatGPT oder Claude reicht nicht, es braucht den API-Schlüssel.",
             ),
             GuideItem(
+                "Modell auswählen",
+                "Nach dem Eintragen des Schlüssels kannst du „Verfügbare Modelle laden“ antippen. Dann zeigt das Feld „Modell“ eine Auswahlliste dieses Dienstes. Der Modellname ist sonst vorausgefüllt und lässt sich auch selbst eintippen.",
+            ),
+            GuideItem(
+                "Dienst schnell wechseln",
+                "Hast du für mehrere Dienste einen Schlüssel eingetragen (Haken ✓ in den Einstellungen), erscheint bei jedem KI-Hinweis eine Schnellwahl. Dort tippst du den Dienst an, der verwendet werden soll. Der gewählte Dienst bleibt gespeichert. Ein automatischer Wechsel passiert nie.",
+            ),
+            GuideItem(
+                "Limit erreicht?",
+                "Ist das Kontingent eines Dienstes aufgebraucht oder der Dienst überlastet, zeigt die App einen Hinweis. Wähle dann in der Schnellwahl einen anderen eingerichteten Dienst und sende erneut. Ist keiner eingerichtet, richte unter Einstellungen einen weiteren ein (z. B. Groq oder Mistral, kostenlos).",
+            ),
+            GuideItem(
                 "Wo erscheint sie?",
                 "In der Auswertung („KI-Hinweise holen“) und im Medikament („KI-Hinweis zu diesem Medikament“). Bei jeder Antwort kannst du einen Punkt mit „Auf meine To-do-Liste“ übernehmen und später beim Arzt ansprechen oder eben nicht.",
             ),
