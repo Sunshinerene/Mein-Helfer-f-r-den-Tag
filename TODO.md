@@ -4,7 +4,17 @@
 
 - [ ] "Eingenommen" direkt in der Benachrichtigung antippen, Vorrat verringert sich automatisch
 - [ ] Erinnerungszeit pro Termin einstellbar
+- [ ] Beschreibung zum Medikament aus dem Internet (nur auf Knopfdruck, nur Wirkstoff/Name, als Anhaltspunkt, kein ärztlicher Rat)
+- [ ] KI-Hinweise in der Auswertung, z. B. "Medikamentenplan vom Hausarzt prüfen lassen": immer mit Bestätigung und Datenschutz-Filter, nur Anhaltspunkt, ersetzt nie Arzt oder Apotheke; Hinweis lässt sich auf eine eigene To-do-Liste setzen ("beim Hausarzt ansprechen")
 - [ ] Erkennung von Packungsfoto verbessern (Wirkstoff, Packungsbeilage, Barcode/PZN)
+
+## Version 0.5.0 (fertig)
+
+- [x] Heute-Seite: Einnahmen und Termine abhaken, Bemerkung dazu (z. B. später genommen, Termin verschoben), Bemerkung zum Tag
+- [x] Auswertung für Tag, Woche und Monat: was gut lief, was auffällt, Empfehlungen als Anhaltspunkte, teilen möglich (alles lokal berechnet)
+- [x] Termin mit Beginn und Ende (von – bis)
+- [x] Vorrat rechnet sich jeden Tag automatisch herunter, Nachbestell-Warnung stimmt dadurch wirklich
+- [x] Kürzere Feldnamen bei Vorrat und Verbrauch
 
 ## Version 0.4.0 (fertig)
 

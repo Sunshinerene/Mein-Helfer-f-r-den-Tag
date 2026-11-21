@@ -3,6 +3,7 @@ package de.meinhelfer.tag.data
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
@@ -62,4 +63,43 @@ interface DoctorDao {
 
     @Delete
     suspend fun delete(item: Doctor)
+}
+
+@Dao
+interface CheckinDao {
+    @Query("SELECT * FROM Checkin WHERE day BETWEEN :from AND :to")
+    fun range(from: Long, to: Long): Flow<List<Checkin>>
+
+    @Query("SELECT * FROM Checkin WHERE day BETWEEN :from AND :to")
+    suspend fun rangeList(from: Long, to: Long): List<Checkin>
+
+    @Query("SELECT * FROM Checkin WHERE kind = :kind AND refId = :refId AND day = :day AND slot = :slot LIMIT 1")
+    suspend fun find(kind: String, refId: Long, day: Long, slot: String): Checkin?
+
+    @Insert
+    suspend fun insert(item: Checkin)
+
+    @Update
+    suspend fun update(item: Checkin)
+
+    @Query("DELETE FROM Checkin WHERE kind = :kind AND refId = :refId")
+    suspend fun deleteFor(kind: String, refId: Long)
+}
+
+@Dao
+interface DayNoteDao {
+    @Query("SELECT * FROM DayNote WHERE day BETWEEN :from AND :to")
+    fun range(from: Long, to: Long): Flow<List<DayNote>>
+
+    @Query("SELECT * FROM DayNote WHERE day BETWEEN :from AND :to")
+    suspend fun rangeList(from: Long, to: Long): List<DayNote>
+
+    @Query("SELECT * FROM DayNote WHERE day = :day")
+    suspend fun byDay(day: Long): DayNote?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(item: DayNote)
+
+    @Query("DELETE FROM DayNote WHERE day = :day")
+    suspend fun delete(day: Long)
 }

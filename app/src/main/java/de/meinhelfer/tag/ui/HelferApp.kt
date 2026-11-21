@@ -42,7 +42,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -57,7 +59,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import de.meinhelfer.tag.data.Appointment
 import de.meinhelfer.tag.data.Doctor
 import de.meinhelfer.tag.data.Medication
-import de.meinhelfer.tag.update.UpdateState
+import kotlinx.coroutines.delay
 
 private enum class Tab(val label: String, val icon: ImageVector) {
     Heute("Heute", Icons.Default.Home),
@@ -71,17 +73,35 @@ private enum class Tab(val label: String, val icon: ImageVector) {
 fun HelferApp(vm: MainViewModel = viewModel()) {
     var tabIndex by rememberSaveable { mutableIntStateOf(0) }
     var showSettings by rememberSaveable { mutableStateOf(false) }
+    var showSummary by rememberSaveable { mutableStateOf(false) }
     val tab = Tab.entries[tabIndex]
 
     val meds by vm.medications.collectAsStateWithLifecycle()
     val appointments by vm.appointments.collectAsStateWithLifecycle()
     val doctors by vm.doctors.collectAsStateWithLifecycle()
     val updateState by vm.updateState.collectAsStateWithLifecycle()
+    val checkins by vm.checkins.collectAsStateWithLifecycle()
+    val dayNote by vm.dayNote.collectAsStateWithLifecycle()
+    val todayDay by vm.today.collectAsStateWithLifecycle()
 
-    BackHandler(enabled = showSettings) { showSettings = false }
+    // Jede Minute: Uhrzeit und Datum aktualisieren (ueberfaellige Einnahmen, Tageswechsel)
+    var nowMillis by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(60_000)
+            nowMillis = System.currentTimeMillis()
+            vm.refreshToday()
+        }
+    }
+
+    BackHandler(enabled = showSettings || showSummary) {
+        if (showSettings) showSettings = false else showSummary = false
+    }
 
     if (showSettings) {
         SettingsScreen(vm = vm, onBack = { showSettings = false })
+    } else if (showSummary) {
+        SummaryScreen(vm = vm, onBack = { showSummary = false })
     } else {
         Scaffold(
             topBar = {
@@ -110,112 +130,22 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
             Box(Modifier.padding(inner).fillMaxSize()) {
                 when (tab) {
                     Tab.Heute -> TodayScreen(
+                        vm = vm,
                         meds = meds,
                         appointments = appointments,
+                        doctors = doctors,
+                        checkins = checkins,
+                        dayNote = dayNote,
+                        todayDay = todayDay,
+                        nowMillis = nowMillis,
                         updateState = updateState,
                         onOpenSettings = { showSettings = true },
+                        onOpenSummary = { showSummary = true },
                     )
                     Tab.Medikamente -> MedicationScreen(meds, vm)
                     Tab.Termine -> AppointmentScreen(appointments, doctors, vm)
                     Tab.Aerzte -> DoctorScreen(doctors, vm)
                 }
-            }
-        }
-    }
-}
-
-// ---------------------------------------------------------------- Heute
-
-@Composable
-private fun TodayScreen(
-    meds: List<Medication>,
-    appointments: List<Appointment>,
-    updateState: UpdateState,
-    onOpenSettings: () -> Unit,
-) {
-    val now = System.currentTimeMillis()
-    val weekAhead = now + 7L * 24 * 60 * 60 * 1000
-    val upcoming = appointments.filter { it.whenMillis in now..weekAhead }
-    val lowStock = meds.filter { (it.daysLeft() ?: Int.MAX_VALUE) <= 7 }
-    val intakes = meds
-        .flatMap { m -> m.timeList().map { time -> time to m } }
-        .sortedBy { it.first }
-
-    val newVersion = when (updateState) {
-        is UpdateState.Available -> updateState.info.version
-        is UpdateState.Downloading -> updateState.info.version
-        is UpdateState.Ready -> updateState.info.version
-        else -> null
-    }
-
-    LazyColumn(
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        if (newVersion != null) {
-            item {
-                Card(
-                    onClick = onOpenSettings,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                ) {
-                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text("Neue Version $newVersion verfügbar", style = MaterialTheme.typography.titleMedium)
-                        Text("Tippen, um zu den Einstellungen zu gelangen und das Update zu laden.")
-                    }
-                }
-            }
-        }
-        if (lowStock.isNotEmpty()) {
-            item {
-                SectionCard(
-                    title = "Bald nachbestellen",
-                    lines = lowStock.map { "${it.name}: reicht noch ca. ${it.daysLeft()} Tage" },
-                    emptyText = "",
-                    warning = true,
-                )
-            }
-        }
-        item {
-            SectionCard(
-                title = "Heute einnehmen",
-                lines = intakes.map { (time, m) ->
-                    "$time Uhr – ${m.name}" + if (m.dosage.isNotBlank()) " (${m.dosage})" else ""
-                },
-                emptyText = "Noch keine Einnahmezeiten eingetragen.",
-            )
-        }
-        item {
-            SectionCard(
-                title = "Termine in den nächsten 7 Tagen",
-                lines = upcoming.map { formatDateTime(it.whenMillis) + " – " + it.title },
-                emptyText = "Keine anstehenden Termine.",
-            )
-        }
-    }
-}
-
-@Composable
-private fun SectionCard(
-    title: String,
-    lines: List<String>,
-    emptyText: String,
-    warning: Boolean = false,
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = if (warning) {
-            CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
-        } else {
-            CardDefaults.cardColors()
-        },
-    ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(title, style = MaterialTheme.typography.titleMedium)
-            if (lines.isEmpty()) {
-                Text(emptyText, style = MaterialTheme.typography.bodyMedium)
-            } else {
-                lines.forEach { Text(it, style = MaterialTheme.typography.bodyMedium) }
             }
         }
     }
@@ -238,7 +168,7 @@ private fun MedicationScreen(items: List<Medication>, vm: MainViewModel) {
             title = m.name + if (m.dosage.isNotBlank()) " – ${m.dosage}" else "",
             lines = listOfNotNull(
                 m.times.takeIf { it.isNotBlank() }?.let { "Einnahme: ${it.replace(",", ", ")} Uhr" },
-                "Vorrat: ${m.stock} Stück" + (days?.let { " (ca. $it Tage)" } ?: ""),
+                "Vorrat: ${m.currentStock()} Stück" + (days?.let { " (ca. $it Tage)" } ?: ""),
                 m.notes.takeIf { it.isNotBlank() },
             ),
             onClick = { editItem = m },
@@ -279,7 +209,7 @@ private fun AppointmentScreen(items: List<Appointment>, doctors: List<Doctor>, v
         ItemCard(
             title = a.title,
             lines = listOfNotNull(
-                formatDateTime(a.whenMillis) + " Uhr",
+                formatAppointmentTime(a.whenMillis, a.endMillis),
                 doctor?.let { doctorLabel(it) },
                 a.place.takeIf { it.isNotBlank() },
                 a.notes.takeIf { it.isNotBlank() },

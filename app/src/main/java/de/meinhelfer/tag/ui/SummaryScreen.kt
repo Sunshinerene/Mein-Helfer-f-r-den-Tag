@@ -1,0 +1,150 @@
+package de.meinhelfer.tag.ui
+
+import android.content.Intent
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import de.meinhelfer.tag.summary.Period
+import de.meinhelfer.tag.summary.Summary
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SummaryScreen(vm: MainViewModel, onBack: () -> Unit) {
+    val context = LocalContext.current
+    var period by remember { mutableStateOf(Period.Day) }
+    var offset by remember { mutableIntStateOf(0) }
+    var summary by remember { mutableStateOf<Summary?>(null) }
+
+    // Bei jedem Wechsel von Zeitraum oder Seite neu berechnen (alles lokal auf dem Geraet).
+    LaunchedEffect(period, offset) {
+        summary = vm.buildSummary(period, offset)
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Auswertung") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Zurück")
+                    }
+                },
+            )
+        },
+    ) { inner ->
+        LazyColumn(
+            modifier = Modifier.padding(inner),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            item {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Period.entries.forEach { p ->
+                        FilterChip(
+                            selected = p == period,
+                            onClick = {
+                                period = p
+                                offset = 0
+                            },
+                            label = { Text(p.label) },
+                        )
+                    }
+                }
+            }
+            item {
+                Row(
+                    Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    OutlinedButton(onClick = { offset-- }) { Text("‹ Zurück") }
+                    OutlinedButton(onClick = { offset++ }, enabled = offset < 0) { Text("Weiter ›") }
+                }
+            }
+
+            val s = summary
+            if (s == null) {
+                item { Text("Berechne …") }
+            } else {
+                item {
+                    Text(s.title, style = MaterialTheme.typography.titleLarge)
+                }
+                block("Überblick", s.overview, null)?.let { item { it() } }
+                block("Gut gelaufen", s.good, null)?.let { item { it() } }
+                block("Auffällig", s.notable, warning = true)?.let { item { it() } }
+                block("Empfehlungen (nur Anhaltspunkte)", s.advice, null)?.let { item { it() } }
+                block("Bemerkungen", s.notes, null)?.let { item { it() } }
+                block("Verlauf", s.perDay, null)?.let { item { it() } }
+                item {
+                    Text(Summary.DISCLAIMER, style = MaterialTheme.typography.bodySmall)
+                }
+                item {
+                    Button(
+                        onClick = {
+                            val send = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_SUBJECT, "Auswertung: ${s.title}")
+                                putExtra(Intent.EXTRA_TEXT, s.toText())
+                            }
+                            try {
+                                context.startActivity(Intent.createChooser(send, "Auswertung teilen"))
+                            } catch (_: Exception) {
+                                // keine passende App
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { Text("Teilen / Kopieren") }
+                }
+            }
+        }
+    }
+}
+
+/** Karte mit Titel und Stichpunkten; null, wenn es nichts anzuzeigen gibt. */
+private fun block(title: String, lines: List<String>, warning: Boolean?): (@Composable () -> Unit)? {
+    if (lines.isEmpty()) return null
+    return {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = if (warning == true) {
+                CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+            } else {
+                CardDefaults.cardColors()
+            },
+        ) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(title, style = MaterialTheme.typography.titleMedium)
+                lines.forEach { Text("• $it", style = MaterialTheme.typography.bodyMedium) }
+            }
+        }
+    }
+}

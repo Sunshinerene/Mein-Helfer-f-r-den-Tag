@@ -86,7 +86,9 @@ fun MedicationDialog(initial: Medication?, onDismiss: () -> Unit, onSave: (Medic
     var name by remember { mutableStateOf(initial?.name ?: "") }
     var dosage by remember { mutableStateOf(initial?.dosage ?: "") }
     var times by remember { mutableStateOf(parseTimes(initial?.times ?: "")) }
-    var stock by remember { mutableStateOf(initial?.stock?.toString() ?: "") }
+    // Angezeigt wird der aktuell errechnete Vorrat (gezaehlter Vorrat minus Verbrauch seit dem Zaehltag).
+    val initialStockText = initial?.currentStock()?.toString() ?: ""
+    var stock by remember { mutableStateOf(initialStockText) }
     var dailyUse by remember { mutableStateOf(initial?.dailyUse?.toString() ?: "") }
     var notes by remember { mutableStateOf(initial?.notes ?: "") }
 
@@ -151,13 +153,18 @@ fun MedicationDialog(initial: Medication?, onDismiss: () -> Unit, onSave: (Medic
         onDismiss = cancel,
         onSave = {
             if (originalPhoto != null && photoName != originalPhoto) PhotoStore.delete(context, originalPhoto)
+            val today = LocalDate.now().toEpochDay()
+            val stockChanged = initial == null || stock.trim() != initialStockText
             onSave(
                 Medication(
                     id = initial?.id ?: 0,
                     name = name.trim(),
                     dosage = dosage.trim(),
                     times = times.joinToString(",") { it.format(TIME_FORMAT) },
-                    stock = stock.trim().toIntOrNull() ?: 0,
+                    // Nur bei geaendertem Vorrat neu zaehlen (Stichtag heute), sonst alte Zaehlung behalten.
+                    stock = if (stockChanged) stock.trim().toIntOrNull() ?: 0 else initial!!.stock,
+                    stockDay = if (stockChanged) today else initial!!.stockDay,
+                    createdDay = initial?.createdDay ?: today,
                     // Leer = Anzahl der Einnahmen pro Tag
                     dailyUse = dailyUse.trim().toIntOrNull() ?: maxOf(1, times.size),
                     notes = notes.trim(),
@@ -249,7 +256,7 @@ fun MedicationDialog(initial: Medication?, onDismiss: () -> Unit, onSave: (Medic
             OutlinedTextField(
                 value = stock,
                 onValueChange = { stock = it },
-                label = { Text("Vorrat (Stück)") },
+                label = { Text("Vorrat", maxLines = 1) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.weight(1f),
@@ -257,12 +264,16 @@ fun MedicationDialog(initial: Medication?, onDismiss: () -> Unit, onSave: (Medic
             OutlinedTextField(
                 value = dailyUse,
                 onValueChange = { dailyUse = it },
-                label = { Text("Verbrauch/Tag") },
+                label = { Text("Pro Tag", maxLines = 1) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.weight(1f),
             )
         }
+        Text(
+            "Vorrat in Stück, „Pro Tag“ = Verbrauch pro Tag (leer = Anzahl der Einnahmen). Der Vorrat sinkt danach automatisch jeden Tag.",
+            style = MaterialTheme.typography.bodySmall,
+        )
         OutlinedTextField(
             value = notes,
             onValueChange = { notes = it },
@@ -291,6 +302,11 @@ fun AppointmentDialog(
                 ?: LocalTime.now().plusHours(1).withMinute(0).withSecond(0).withNano(0),
         )
     }
+    var endTime by remember {
+        mutableStateOf<LocalTime?>(
+            initial?.endMillis?.let { Instant.ofEpochMilli(it).atZone(zone).toLocalTime().withSecond(0).withNano(0) },
+        )
+    }
     var place by remember { mutableStateOf(initial?.place ?: "") }
     var notes by remember { mutableStateOf(initial?.notes ?: "") }
 
@@ -298,7 +314,8 @@ fun AppointmentDialog(
 
     DialogForm(
         title = if (initial == null) "Termin hinzufügen" else "Termin bearbeiten",
-        canSave = title.isNotBlank() && date != null && time != null,
+        canSave = title.isNotBlank() && date != null && time != null &&
+            (endTime == null || time?.let { endTime!! > it } == true),
         onDismiss = onDismiss,
         onSave = {
             val d = date
@@ -309,6 +326,7 @@ fun AppointmentDialog(
                         id = initial?.id ?: 0,
                         title = title.trim(),
                         whenMillis = LocalDateTime.of(d, t).atZone(zone).toInstant().toEpochMilli(),
+                        endMillis = endTime?.let { LocalDateTime.of(d, it).atZone(zone).toInstant().toEpochMilli() },
                         place = place.trim(),
                         notes = notes.trim(),
                         doctorId = doctorId?.takeIf { id -> doctors.any { it.id == id } },
@@ -343,19 +361,37 @@ fun AppointmentDialog(
             )
         }
 
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            DatePickerField(
-                label = "Datum",
-                date = date,
-                onChange = { date = it },
-                modifier = Modifier.weight(1f),
-            )
+        DatePickerField(
+            label = "Datum",
+            date = date,
+            onChange = { date = it },
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Bottom) {
             TimePickerField(
-                label = "Uhrzeit",
+                label = "Von",
                 time = time,
                 onChange = { time = it },
                 modifier = Modifier.weight(1f),
             )
+            TimePickerField(
+                label = "Bis (optional)",
+                time = endTime,
+                onChange = { endTime = it },
+                modifier = Modifier.weight(1f),
+                placeholder = "– wählen –",
+                defaultTime = time?.plusHours(1) ?: LocalTime.of(10, 0),
+            )
+        }
+        if (endTime != null) {
+            TextButton(onClick = { endTime = null }) { Text("Ende entfernen") }
+            if (time?.let { endTime!! <= it } == true) {
+                Text(
+                    "Das Ende muss nach dem Beginn liegen.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
         }
 
         OutlinedTextField(

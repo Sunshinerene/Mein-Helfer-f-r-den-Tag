@@ -2,6 +2,7 @@ package de.meinhelfer.tag.data
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import java.time.LocalDate
 
 /** Medikament mit Einnahmezeiten und Vorrat (fuer die Nachbestell-Warnung). */
 @Entity
@@ -18,12 +19,23 @@ data class Medication(
     val notes: String = "",
     /** Dateiname des Packungsfotos im App-Ordner (nur lokal gespeichert), optional. */
     val photoPath: String? = null,
+    /** Tag (Epoch-Tag), an dem das Medikament angelegt wurde – davor gibt es keine "verpassten" Einnahmen. */
+    val createdDay: Long = LocalDate.now().toEpochDay(),
+    /** Tag (Epoch-Tag), auf den sich [stock] bezieht; der Vorrat sinkt danach taeglich um [dailyUse]. */
+    val stockDay: Long = LocalDate.now().toEpochDay(),
 ) {
     fun timeList(): List<String> =
         times.split(",").map { it.trim() }.filter { it.isNotEmpty() }
 
+    /** Aktueller Vorrat: gezaehlter Vorrat minus Verbrauch seit dem Zaehltag (nie unter 0). */
+    fun currentStock(today: Long = LocalDate.now().toEpochDay()): Int {
+        val used = (today - stockDay).coerceAtLeast(0) * dailyUse.coerceAtLeast(0)
+        return (stock - used).coerceIn(0L, Int.MAX_VALUE.toLong()).toInt()
+    }
+
     /** Verbleibende Tage oder null, wenn nicht berechenbar. */
-    fun daysLeft(): Int? = if (dailyUse > 0) stock / dailyUse else null
+    fun daysLeft(today: Long = LocalDate.now().toEpochDay()): Int? =
+        if (dailyUse > 0) currentStock(today) / dailyUse else null
 }
 
 @Entity
@@ -31,6 +43,8 @@ data class Appointment(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val title: String,
     val whenMillis: Long,
+    /** Ende des Termins (optional, "von – bis"). */
+    val endMillis: Long? = null,
     val place: String = "",
     val notes: String = "",
     /** Verknuepfter Arzt bzw. Institution (optional). */
@@ -45,4 +59,34 @@ data class Doctor(
     val phone: String = "",
     val email: String = "",
     val address: String = "",
+)
+
+/**
+ * Abhaken: eine Medikamenten-Einnahme (kind = "MED", slot = Uhrzeit) oder ein Termin (kind = "APPT")
+ * an einem Tag, optional mit Bemerkung.
+ */
+@Entity
+data class Checkin(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val kind: String,
+    val refId: Long,
+    /** Epoch-Tag */
+    val day: Long,
+    /** Einnahmezeit "08:00" bei Medikamenten, sonst leer */
+    val slot: String = "",
+    val done: Boolean = false,
+    val note: String = "",
+    val atMillis: Long = 0,
+) {
+    companion object {
+        const val MED = "MED"
+        const val APPT = "APPT"
+    }
+}
+
+/** Freie Bemerkung zum ganzen Tag. */
+@Entity
+data class DayNote(
+    @PrimaryKey val day: Long,
+    val text: String = "",
 )

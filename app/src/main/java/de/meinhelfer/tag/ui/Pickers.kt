@@ -52,6 +52,12 @@ private val DATE_TIME_FORMAT: DateTimeFormatter =
 fun formatDateTime(millis: Long): String =
     Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).format(DATE_TIME_FORMAT)
 
+/** "Mo., 24.11.2026 10:00–11:00 Uhr" (Ende optional). */
+fun formatAppointmentTime(start: Long, end: Long?): String {
+    val endText = end?.let { Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).format(TIME_FORMAT) }
+    return formatDateTime(start) + (endText?.let { "–$it" } ?: "") + " Uhr"
+}
+
 /** "08:00,20:00" -> Liste von Uhrzeiten (ungueltige Eintraege werden ignoriert). */
 fun parseTimes(text: String): List<LocalTime> =
     text.split(",")
@@ -154,13 +160,15 @@ fun TimePickerField(
     time: LocalTime?,
     onChange: (LocalTime) -> Unit,
     modifier: Modifier = Modifier,
+    placeholder: String = "Uhrzeit wählen",
+    defaultTime: LocalTime = LocalTime.of(9, 0),
 ) {
     var show by remember { mutableStateOf(false) }
-    PickerButton(label, time?.format(TIME_FORMAT)?.plus(" Uhr") ?: "Uhrzeit wählen", modifier) { show = true }
+    PickerButton(label, time?.format(TIME_FORMAT)?.plus(" Uhr") ?: placeholder, modifier) { show = true }
 
     if (show) {
         TimePickerDialog(
-            initial = time ?: LocalTime.of(9, 0),
+            initial = time ?: defaultTime,
             onConfirm = {
                 onChange(it)
                 show = false
