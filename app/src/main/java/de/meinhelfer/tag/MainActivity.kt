@@ -5,7 +5,18 @@ import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
-import androidx.activity.ComponentActivity
+import androidx.fragment.app.FragmentActivity
+import android.view.WindowManager
+import android.os.SystemClock
+import androidx.compose.foundation.layout.Box
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import de.meinhelfer.tag.security.AppLock
+import de.meinhelfer.tag.ui.LockScreen
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -25,12 +36,45 @@ import de.meinhelfer.tag.ui.HelferApp
 import de.meinhelfer.tag.update.AppPrefs
 import de.meinhelfer.tag.update.UpdateWorker
 
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
+    /** Gesperrt, solange die Abfrage (Fingerabdruck, Gesicht, PIN) nicht bestanden ist. */
+    private var locked by mutableStateOf(false)
+    private var stoppedAt = 0L
+
+    private fun applyScreenProtection() {
+        if (AppPrefs.screenProtected(this)) {
+            window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+        } else {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        }
+    }
+
+    private fun askUnlock() {
+        AppLock.authenticate(this, "App entsperren") { ok -> if (ok) locked = false }
+    }
+
     private val notificationPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Beim Start gesperrt, wenn die App-Sperre an ist
+        locked = AppPrefs.lockEnabled(this)
+        applyScreenProtection()
+        lifecycle.addObserver(object : DefaultLifecycleObserver {
+            override fun onStop(owner: LifecycleOwner) {
+                stoppedAt = SystemClock.elapsedRealtime()
+            }
+
+            override fun onStart(owner: LifecycleOwner) {
+                applyScreenProtection()
+                if (AppPrefs.lockEnabled(this@MainActivity) && stoppedAt > 0 && !locked) {
+                    val away = SystemClock.elapsedRealtime() - stoppedAt
+                    if (away >= AppPrefs.lockGraceSeconds(this@MainActivity) * 1000L) locked = true
+                }
+            }
+        })
 
         if (Build.VERSION.SDK_INT >= 33 &&
             ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
@@ -60,7 +104,13 @@ class MainActivity : ComponentActivity() {
                 onDispose { }
             }
             HelferTheme(style = style, dark = dark) {
-                HelferApp(vm)
+                Box {
+                    HelferApp(vm)
+                    if (locked) {
+                        LockScreen(dark = dark, onUnlock = { askUnlock() })
+                        LaunchedEffect(Unit) { askUnlock() }
+                    }
+                }
             }
         }
     }

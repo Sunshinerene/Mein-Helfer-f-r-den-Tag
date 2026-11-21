@@ -52,6 +52,31 @@ object AppPrefs {
         prefs(context).edit().putBoolean(KEY_INFO_AUTO, value).apply()
     }
 
+    private const val KEY_LOCK = "app_sperre"
+    private const val KEY_LOCK_GRACE = "app_sperre_sekunden"
+    private const val KEY_SECURE = "bildschirm_geschuetzt"
+
+    /** App-Sperre (Fingerabdruck, Gesicht oder Handy-PIN) eingeschaltet? */
+    fun lockEnabled(context: Context): Boolean = prefs(context).getBoolean(KEY_LOCK, false)
+
+    fun setLockEnabled(context: Context, value: Boolean) {
+        prefs(context).edit().putBoolean(KEY_LOCK, value).apply()
+    }
+
+    /** Nach wie vielen Sekunden im Hintergrund die App wieder gesperrt wird (0 = sofort). */
+    fun lockGraceSeconds(context: Context): Int = prefs(context).getInt(KEY_LOCK_GRACE, 60)
+
+    fun setLockGraceSeconds(context: Context, seconds: Int) {
+        prefs(context).edit().putInt(KEY_LOCK_GRACE, seconds).apply()
+    }
+
+    /** Bildschirmfotos und App-Vorschau (zuletzt benutzte Apps) sperren. */
+    fun screenProtected(context: Context): Boolean = prefs(context).getBoolean(KEY_SECURE, false)
+
+    fun setScreenProtected(context: Context, value: Boolean) {
+        prefs(context).edit().putBoolean(KEY_SECURE, value).apply()
+    }
+
     private fun prefs(context: Context) = context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
 
     fun autoUpdateCheck(context: Context): Boolean = prefs(context).getBoolean(KEY_AUTO_UPDATE, true)

@@ -359,7 +359,26 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Aktueller Stand",
-                "Dies ist eine Testversion. Dokumente sind verschlüsselt gespeichert, die übrigen Angaben (Medikamente, Termine, Notizen) aber noch nicht, und es gibt noch keine App-Sperre und keine Datensicherung. Beides steht auf der Liste der geplanten Funktionen. Bitte nur mit Testdaten oder auf eigene Verantwortung nutzen.",
+                "Dies ist eine Testversion. Dokumente sind verschlüsselt gespeichert, die übrigen Angaben (Medikamente, Termine, Notizen) aber noch nicht, und es gibt noch keine Datensicherung. Eine App-Sperre kannst du in den Einstellungen einschalten. Beides steht auf der Liste der geplanten Funktionen. Bitte nur mit Testdaten oder auf eigene Verantwortung nutzen.",
+            ),
+        ),
+    ),
+    GuideSection(
+        id = "sicherheit",
+        title = "App-Sperre",
+        summary = "Mit Fingerabdruck, Gesicht oder PIN schützen",
+        items = listOf(
+            GuideItem(
+                "Einschalten",
+                "Einstellungen → Sicherheit → „App-Sperre“. Voraussetzung ist eine Bildschirmsperre auf dem Handy (PIN, Muster, Fingerabdruck oder Gesicht). Zur Sicherheit musst du das Ein- und Ausschalten selbst bestätigen.",
+            ),
+            GuideItem(
+                "Wann sperrt die App?",
+                "Beim Start und wenn sie länger als eingestellt im Hintergrund war (sofort, 1 oder 5 Minuten). Die App speichert selbst keine PIN, es gilt die Sperre deines Handys.",
+            ),
+            GuideItem(
+                "Bildschirmfotos und Vorschau sperren",
+                "Optional. Dann zeigt die Liste der zuletzt benutzten Apps keinen Inhalt und Bildschirmfotos sind nicht möglich. Für Feedback mit Bildschirmfotos besser ausgeschaltet lassen.",
             ),
         ),
     ),

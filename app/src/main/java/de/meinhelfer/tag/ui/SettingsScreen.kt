@@ -46,6 +46,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.meinhelfer.tag.security.AppLock
 import de.meinhelfer.tag.ai.AiClient
 import de.meinhelfer.tag.ai.AiConfig
 import de.meinhelfer.tag.ai.AiProvider
@@ -108,6 +109,7 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit, onOpenGuide: () -> Uni
             }
             item { HelpCard(onOpenGuide, onStartTour) }
             item { ThemeCard(vm) }
+            item { SecurityCard() }
             item { MedInfoCard() }
             item { AiCard() }
             item { FeedbackCard(context) }
@@ -286,6 +288,73 @@ private fun ThemeCard(vm: MainViewModel) {
                     }
                 }
             }
+        }
+    }
+}
+
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+private fun SecurityCard() {
+    val context = LocalContext.current
+    val activity = context as? androidx.fragment.app.FragmentActivity
+    var lockOn by remember { mutableStateOf(AppPrefs.lockEnabled(context)) }
+    var grace by remember { mutableStateOf(AppPrefs.lockGraceSeconds(context)) }
+    var protectScreen by remember { mutableStateOf(AppPrefs.screenProtected(context)) }
+    var message by remember { mutableStateOf<String?>(null) }
+
+    HCard(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Sicherheit", style = MaterialTheme.typography.titleMedium)
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Switch(checked = lockOn, onCheckedChange = { wanted ->
+                    message = null
+                    if (activity == null) return@Switch
+                    if (wanted && !AppLock.available(context)) {
+                        message = "Lege zuerst in den Handy-Einstellungen eine Bildschirmsperre fest (PIN, Muster, Fingerabdruck oder Gesicht)."
+                        return@Switch
+                    }
+                    // Zur Sicherheit erst bestätigen lassen, bevor die Sperre geändert wird
+                    AppLock.authenticate(activity, if (wanted) "App-Sperre einschalten" else "App-Sperre ausschalten") { ok ->
+                        if (ok) {
+                            lockOn = wanted
+                            AppPrefs.setLockEnabled(context, wanted)
+                        }
+                    }
+                })
+                Text(if (lockOn) "App-Sperre ist an" else "App-Sperre ist aus", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+            }
+            Text(
+                "Beim Öffnen der App fragt das Handy nach Fingerabdruck, Gesicht oder PIN. Die App speichert selbst keine PIN, es gilt die Sperre deines Handys.",
+                style = MaterialTheme.typography.bodySmall,
+            )
+            if (lockOn) {
+                Text("Wieder sperren nach", style = MaterialTheme.typography.labelLarge)
+                androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf(0 to "Sofort", 60 to "1 Minute", 300 to "5 Minuten").forEach { (seconds, label) ->
+                        FilterChip(selected = grace == seconds, onClick = {
+                            grace = seconds
+                            AppPrefs.setLockGraceSeconds(context, seconds)
+                        }, label = { Text(label) })
+                    }
+                }
+                Text("Zeit, die die App im Hintergrund sein darf, bevor sie wieder gesperrt ist.", style = MaterialTheme.typography.bodySmall)
+            }
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Switch(checked = protectScreen, onCheckedChange = {
+                    protectScreen = it
+                    AppPrefs.setScreenProtected(context, it)
+                    activity?.window?.let { w ->
+                        if (it) w.setFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE, android.view.WindowManager.LayoutParams.FLAG_SECURE)
+                        else w.clearFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE)
+                    }
+                })
+                Text("Bildschirmfotos und App-Vorschau sperren", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+            }
+            Text(
+                "Dann zeigt die Liste der zuletzt benutzten Apps keinen Inhalt, und Bildschirmfotos sind nicht möglich. Schalte es aus, wenn du Bildschirmfotos zum Feedback senden willst.",
+                style = MaterialTheme.typography.bodySmall,
+            )
+            message?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error) }
         }
     }
 }
