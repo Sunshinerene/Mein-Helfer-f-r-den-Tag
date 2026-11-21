@@ -133,7 +133,7 @@
 
 - [ ] Anleitung und Rundgang bei neuen Funktionen mitpflegen (Datei GuideContent.kt und TourScreen.kt)
 - [ ] Designs verfeinern (Schriftarten, Übergänge, weitere Varianten, Hochkontrast für bessere Lesbarkeit)
-- [ ] Dokumente: Medikamente und Termine aus dem erkannten Text vorschlagen, KI-Zusammenfassung (mit Bestätigung)
+- [ ] Dokumente: Medikamente und Termine aus dem erkannten Text vorschlagen
 - [ ] Datenbank verschlüsseln (SQLCipher, mit Sicherung vor der Umstellung)
 - [ ] KI-Vorschläge aus Dokumenten (immer mit Bestätigung), Datenschutz-Filter vor jeder Übertragung
 - [ ] Umkreissuche direkt bei Kontakten (Arzt, Pflegedienst, Apotheke in der Nähe)
