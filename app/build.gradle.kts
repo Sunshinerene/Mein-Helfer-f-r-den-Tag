@@ -83,7 +83,7 @@ dependencies {
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
     implementation("androidx.biometric:biometric:1.1.0")
     // Health Connect (Beta): Werte von Uhr, Band, Waage, Blutdruckgerät lesen (1.1.0 stabil braucht compileSdk 36 und AGP 8.9)
-    implementation("androidx.health.connect:connect-client:1.1.0-rc01")
+    implementation("androidx.health.connect:connect-client:1.1.0-alpha11")
     implementation("androidx.fragment:fragment-ktx:1.8.5")
 
     implementation("net.zetetic:sqlcipher-android:4.6.1@aar")
