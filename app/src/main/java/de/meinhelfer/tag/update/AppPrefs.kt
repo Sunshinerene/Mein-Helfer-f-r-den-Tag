@@ -402,6 +402,40 @@ object AppPrefs {
         prefs(context).edit().putInt("tagebuch_erinnerung", minuteOfDay).apply()
     }
 
+    /** Anspruch auf Leistungen der Pflegekasse seit (Jahr und Monat, z. B. "2025-03"), leer = schon laenger. */
+    fun budgetSince(context: Context, personId: Long): java.time.YearMonth? =
+        prefs(context).getString("budget_seit_$personId", null)?.let { runCatching { java.time.YearMonth.parse(it) }.getOrNull() }
+
+    fun setBudgetSince(context: Context, personId: Long, since: java.time.YearMonth?) {
+        val e = prefs(context).edit()
+        if (since == null) e.remove("budget_seit_$personId") else e.putString("budget_seit_$personId", since.toString())
+        e.apply()
+    }
+
+    /** Monatlicher Entlastungsbetrag im Jahr (aenderbar, falls sich das Recht aendert). */
+    fun budgetMonthly(context: Context, year: Int): Double =
+        prefs(context).getFloat("budget_monat_$year", de.meinhelfer.tag.summary.Budgets.DEFAULT_MONTHLY.toFloat()).toDouble()
+
+    fun setBudgetMonthly(context: Context, year: Int, value: Double) {
+        prefs(context).edit().putFloat("budget_monat_$year", value.toFloat()).apply()
+    }
+
+    /** Gemeinsamer Jahresbetrag fuer Verhinderungs- und Kurzzeitpflege im Jahr. */
+    fun budgetYearly(context: Context, year: Int): Double =
+        prefs(context).getFloat("budget_jahr_$year", de.meinhelfer.tag.summary.Budgets.DEFAULT_YEARLY.toFloat()).toDouble()
+
+    fun setBudgetYearly(context: Context, year: Int, value: Double) {
+        prefs(context).edit().putFloat("budget_jahr_$year", value.toFloat()).apply()
+    }
+
+    /** Freitexte des Uebergabe-Berichts je Person (Tagesablauf, Hinweise ...). */
+    fun handoverText(context: Context, personId: Long, key: String): String =
+        prefs(context).getString("uebergabe_${personId}_$key", "") ?: ""
+
+    fun setHandoverText(context: Context, personId: Long, key: String, text: String) {
+        prefs(context).edit().putString("uebergabe_${personId}_$key", text).apply()
+    }
+
     /** Einheit fuer Blutzucker: "mg/dl" oder "mmol/l" */
     fun sugarUnit(context: Context): String = prefs(context).getString("bz_einheit", "mg/dl") ?: "mg/dl"
 

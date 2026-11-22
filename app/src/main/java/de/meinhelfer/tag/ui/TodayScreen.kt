@@ -99,6 +99,8 @@ fun TodayScreen(
     onOpenBackup: () -> Unit = {},
     onOpenVitals: () -> Unit = {},
     onOpenDiary: () -> Unit = {},
+    onOpenBudget: () -> Unit = {},
+    onOpenHandover: () -> Unit = {},
 ) {
     val motivatorOn by vm.motivatorOnToday.collectAsStateWithLifecycle()
     val zone = ZoneId.systemDefault()
@@ -217,7 +219,7 @@ fun TodayScreen(
                     key = "profil",
                     title = person.name,
                     summary = person.careLevel.takeIf { it in 1..5 }?.let { "Pflegegrad $it" } ?: "Profil",
-                ) { ProfileCard(person, todayDay, onEditProfile, onOpenWegweiser) }
+                ) { ProfileCard(person, todayDay, onEditProfile, onOpenWegweiser, onOpenBudget, onOpenHandover) }
             }
         }
 
@@ -539,8 +541,9 @@ private fun parseSlot(slot: String): LocalTime? =
     de.meinhelfer.tag.reminder.ReminderScheduler.parseTime(slot)?.let { (h, m) -> LocalTime.of(h, m) }
 
 /** Zeile mit Haken, Text und Bemerkungs-Knopf. */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ProfileCard(person: Person?, todayDay: Long, onEdit: () -> Unit, onWegweiser: () -> Unit) {
+private fun ProfileCard(person: Person?, todayDay: Long, onEdit: () -> Unit, onWegweiser: () -> Unit, onBudget: () -> Unit = {}, onHandover: () -> Unit = {}) {
     if (person == null) return
     val age = person.birthDate?.let { java.time.Period.between(LocalDate.ofEpochDay(it), LocalDate.ofEpochDay(todayDay)).years }
         ?.takeIf { it >= 0 }
@@ -574,9 +577,11 @@ private fun ProfileCard(person: Person?, todayDay: Long, onEdit: () -> Unit, onW
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 TextButton(onClick = onEdit, contentPadding = PaddingValues(horizontal = 8.dp)) { Text("Profil bearbeiten") }
                 TextButton(onClick = onWegweiser, contentPadding = PaddingValues(horizontal = 8.dp)) { Text("Wegweiser Leistungen") }
+                TextButton(onClick = onBudget, contentPadding = PaddingValues(horizontal = 8.dp)) { Text("Budgets") }
+                TextButton(onClick = onHandover, contentPadding = PaddingValues(horizontal = 8.dp)) { Text("Übergabe") }
             }
         }
     }

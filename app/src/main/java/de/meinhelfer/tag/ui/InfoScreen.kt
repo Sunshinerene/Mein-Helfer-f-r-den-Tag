@@ -158,6 +158,8 @@ fun InfoScreen(
     onOpenWegweiser: () -> Unit,
     caregiver: CaregiverProfile = CaregiverProfile(),
     onEditCaregiver: () -> Unit = {},
+    onOpenBudget: () -> Unit = {},
+    onOpenHandover: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -216,6 +218,12 @@ fun InfoScreen(
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        item {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                androidx.compose.material3.OutlinedButton(shape = buttonShape(), onClick = onOpenBudget) { Text("💶 Budgets der Pflegekasse") }
+                androidx.compose.material3.OutlinedButton(shape = buttonShape(), onClick = onOpenHandover) { Text("📋 Übergabe-Bericht") }
+            }
+        }
         item {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(selected = !showFav, onClick = { showFav = false }, label = { Text("Alle Infos") })

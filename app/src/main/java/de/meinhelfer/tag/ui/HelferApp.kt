@@ -129,6 +129,8 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
     var motivatorTab by rememberSaveable { mutableIntStateOf(0) }
     var showVitals by rememberSaveable { mutableStateOf(false) }
     var showDiary by rememberSaveable { mutableStateOf(false) }
+    var showBudget by rememberSaveable { mutableStateOf(false) }
+    var showHandover by rememberSaveable { mutableStateOf(false) }
     val openScreen by vm.openScreen.collectAsStateWithLifecycle()
     LaunchedEffect(openScreen) {
         when (openScreen) {
@@ -212,8 +214,10 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
         }
     }
 
-    BackHandler(enabled = showSettings || showSummary || showGuide || showTour || showReorder || showWegweiser || showLetters || showMedOverview || showDailyStart || showMoodCheck || showMotivator || showVitals || showDiary) {
+    BackHandler(enabled = showSettings || showSummary || showGuide || showTour || showReorder || showWegweiser || showLetters || showMedOverview || showDailyStart || showMoodCheck || showMotivator || showVitals || showDiary || showBudget || showHandover) {
         when {
+            showBudget -> showBudget = false
+            showHandover -> showHandover = false
             showVitals -> showVitals = false
             showDiary -> showDiary = false
             showMoodCheck -> showMoodCheck = false
@@ -256,6 +260,19 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
         VitalScreen(vm = vm, person = persons.firstOrNull { it.id == personId }, onBack = { showVitals = false })
     } else if (showDiary) {
         CareDiaryScreen(vm = vm, person = persons.firstOrNull { it.id == personId }, onBack = { showDiary = false })
+    } else if (showBudget) {
+        BudgetScreen(vm = vm, person = persons.firstOrNull { it.id == personId }, onBack = { showBudget = false })
+    } else if (showHandover) {
+        HandoverScreen(
+            vm = vm,
+            person = persons.firstOrNull { it.id == personId },
+            meds = meds,
+            appointments = appointments,
+            todos = todos,
+            doctors = doctors,
+            caregiver = caregiver,
+            onBack = { showHandover = false },
+        )
     } else if (showMotivator) {
         MotivatorScreen(
             vm = vm,
@@ -401,6 +418,8 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
                                       },
                                       onOpenVitals = { showVitals = true },
                                       onOpenDiary = { showDiary = true },
+                                      onOpenBudget = { showBudget = true },
+                                      onOpenHandover = { showHandover = true },
                                   )
                                   ViewPeriod.Woche -> WeekOverview(
                                       vm = vm,
@@ -434,6 +453,8 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
                           meds = meds,
                           documents = documents,
                           onOpenWegweiser = { showWegweiser = true },
+                          onOpenBudget = { showBudget = true },
+                          onOpenHandover = { showHandover = true },
                           caregiver = caregiver,
                           onEditCaregiver = { showCaregiver = true },
                       )

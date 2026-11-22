@@ -452,4 +452,204 @@ object CarePdfs {
         )
         return pdf.save(file)
     }
+
+    // ------------------------------------------------------------------ Uebergabe-Bericht
+
+    /** Was in den Uebergabe-Bericht soll. */
+    data class HandoverOptions(
+        val fromDay: Long,
+        val toDay: Long,
+        val substitute: String,
+        val notes: List<Pair<String, String>>,
+        val meds: Boolean = true,
+        val appointments: Boolean = true,
+        val contacts: Boolean = true,
+        val tasks: Boolean = true,
+        val values: Boolean = true,
+        val diary: Boolean = true,
+        val insuranceNumber: Boolean = false,
+    )
+
+    fun handover(
+        context: Context,
+        person: Person?,
+        meds: List<Medication>,
+        doctors: List<Doctor>,
+        duties: List<de.meinhelfer.tag.data.Responsibility>,
+        appointments: List<de.meinhelfer.tag.data.Appointment>,
+        todos: List<de.meinhelfer.tag.data.Todo>,
+        vitals: List<de.meinhelfer.tag.data.VitalEntry>,
+        careLog: List<de.meinhelfer.tag.data.CareLogEntry>,
+        caregiver: CaregiverProfile,
+        drinkGoal: Int,
+        o: HandoverOptions,
+    ): File {
+        val zone = java.time.ZoneId.systemDefault()
+        val file = File(PdfPages.dir(context, "uebergabe"), "Uebergabe_${safe(person?.name ?: "")}_${LocalDate.now()}.pdf")
+        val pdf = PdfPages(595, 842, margin = 44f, footer = "Übergabe · Mein Helfer für den Tag")
+        val pid = person?.id ?: 1L
+        pdf.newPage()
+        fun section(title: String) {
+            pdf.gap(12f)
+            pdf.ensure(50f)
+            pdf.text(title, 13f, bold = true)
+            pdf.gap(2f)
+            pdf.rule()
+            pdf.gap(4f)
+        }
+        pdf.text("Übergabe", 22f, bold = true)
+        pdf.text(
+            listOfNotNull(
+                "für " + (person?.name ?: "–"),
+                "vom " + LocalDate.ofEpochDay(o.fromDay).format(DATE) + " bis " + LocalDate.ofEpochDay(o.toDay).format(DATE),
+                o.substitute.trim().ifBlank { null }?.let { "Vertretung: $it" },
+            ).joinToString(" · "),
+            11.5f,
+        )
+        if (caregiver.isSet && (caregiver.name.isNotBlank() || caregiver.phone.isNotBlank())) {
+            pdf.text("Übergeben von: " + listOfNotNull(caregiver.name.ifBlank { null }, caregiver.relation.ifBlank { null }, caregiver.phone.ifBlank { null }?.let { "Tel. $it" }).joinToString(", "), 10.5f)
+        }
+        pdf.text("Im Notfall: 112 · Ärztlicher Bereitschaftsdienst 116 117", 10.5f, bold = true, color = RED)
+
+        // Person
+        person?.let { p ->
+            section("Person")
+            listOfNotNull(
+                p.birthDate?.let { "Geboren am " + LocalDate.ofEpochDay(it).format(DATE) },
+                p.careLevel.takeIf { it in 1..5 }?.let { "Pflegegrad $it" },
+                address(p).takeIf { it.isNotBlank() }?.let { "Adresse: $it" },
+                p.phone.takeIf { it.isNotBlank() }?.let { "Telefon: $it" },
+                de.meinhelfer.tag.ui.accessSummary(p.floor, p.elevator, p.access).takeIf { it.isNotBlank() }?.let { "Zugang: $it" },
+                p.insurer.takeIf { it.isNotBlank() }?.let { "Krankenkasse: $it" + if (o.insuranceNumber && p.insuranceNumber.isNotBlank()) ", Versichertennummer ${p.insuranceNumber}" else "" },
+            ).forEach { pdf.text(it, 10.5f) }
+            if (p.important.isNotBlank()) {
+                pdf.gap(4f)
+                pdf.text("Wichtig zu wissen: " + p.important.trim(), 10.5f, bold = true, color = RED)
+            }
+        }
+
+        // Eigene Hinweise
+        o.notes.filter { it.second.isNotBlank() }.forEach { (title, text) ->
+            section(title)
+            text.trim().lines().forEach { pdf.text(it, 10.5f) }
+        }
+
+        // Medikamente
+        if (o.meds) {
+            val own = meds.filter { it.personId == pid }.sortedBy { it.timeList().firstOrNull() ?: "99" }
+            section("Medikamente")
+            if (own.isEmpty()) pdf.text("Keine Medikamente eingetragen.", 10.5f)
+            own.forEach { m ->
+                val times = m.timeList().joinToString(", ")
+                pdf.text(
+                    "• " + m.name + (if (m.dosage.isNotBlank()) " – ${m.dosage}" else "") + (if (times.isNotBlank()) " · $times Uhr" else "") +
+                        (if (m.notes.isNotBlank()) " · " + m.notes.trim().replace('\n', ' ') else ""),
+                    10.5f,
+                )
+            }
+            val low = own.filter { (it.daysLeft() ?: Int.MAX_VALUE) <= (o.toDay - LocalDate.now().toEpochDay()).toInt() + 3 }
+            if (low.isNotEmpty()) {
+                pdf.gap(4f)
+                pdf.text("Vorrat reicht nicht bis zum Ende der Vertretung: " + low.joinToString(", ") { it.name + " (ca. ${it.daysLeft()} Tage)" } + ". Bitte rechtzeitig nachbestellen.", 10f, bold = true)
+            }
+        }
+
+        // Kontakte
+        if (o.contacts) {
+            section("Ärzte und Kontakte")
+            val rx = de.meinhelfer.tag.data.Duties.resolve(duties, null, pid, de.meinhelfer.tag.data.Duties.REZEPT, o.fromDay)
+            val ph = de.meinhelfer.tag.data.Duties.resolve(duties, null, pid, de.meinhelfer.tag.data.Duties.APOTHEKE, o.fromDay)
+            doctors.firstOrNull { it.id == rx.id }?.let { d -> pdf.text("Rezepte und Medikamente: ${d.name}" + (if (d.phone.isNotBlank()) ", ${d.phone}" else "") + " " + de.meinhelfer.tag.data.Duties.note(rx, doctors), 10.5f, bold = true) }
+            doctors.firstOrNull { it.id == ph.id }?.let { d -> pdf.text("Apotheke: ${d.name}" + (if (d.phone.isNotBlank()) ", ${d.phone}" else "") + " " + de.meinhelfer.tag.data.Duties.note(ph, doctors), 10.5f, bold = true) }
+            // Vertretungen, die in den Zeitraum fallen
+            duties.filter { it.role == de.meinhelfer.tag.data.Duties.VERTRETUNG && (it.fromDay ?: Long.MIN_VALUE) <= o.toDay && (it.untilDay ?: Long.MAX_VALUE) >= o.fromDay }.forEach { s ->
+                val a = doctors.firstOrNull { it.id == s.replacesId }?.name ?: "–"
+                val b = doctors.firstOrNull { it.id == s.contactId }
+                pdf.text("Abwesend: $a ${de.meinhelfer.tag.data.Duties.period(s)}, Vertretung: ${b?.name ?: "–"}" + (b?.phone?.takeIf { it.isNotBlank() }?.let { ", $it" } ?: ""), 10f)
+            }
+            doctors.filter { it.phone.isNotBlank() || it.address.isNotBlank() }.forEach { d ->
+                pdf.text("• " + d.name + (if (d.specialty.isNotBlank()) " (${d.specialty})" else "") + (if (d.phone.isNotBlank()) ": ${d.phone}" else "") + (if (d.address.isNotBlank()) " · ${d.address}" else ""), 10f)
+            }
+        }
+
+        // Termine im Zeitraum
+        if (o.appointments) {
+            val from = LocalDate.ofEpochDay(o.fromDay).atStartOfDay(zone).toInstant().toEpochMilli()
+            val to = LocalDate.ofEpochDay(o.toDay + 1).atStartOfDay(zone).toInstant().toEpochMilli()
+            val list = appointments.filter { it.personId == pid && it.whenMillis in from until to }.sortedBy { it.whenMillis }
+            section("Termine im Zeitraum")
+            if (list.isEmpty()) pdf.text("Keine Termine eingetragen.", 10.5f)
+            val f = DateTimeFormatter.ofPattern("EE dd.MM., HH:mm", Locale.GERMANY)
+            list.forEach { a ->
+                val d = doctors.firstOrNull { it.id == a.doctorId }
+                pdf.text(
+                    "• " + java.time.Instant.ofEpochMilli(a.whenMillis).atZone(zone).format(f) + " Uhr – " + a.title +
+                        (d?.let { " (${it.name})" } ?: "") + (if (a.place.isNotBlank()) " · ${a.place}" else "") + (if (a.notes.isNotBlank()) " · ${a.notes}" else ""),
+                    10.5f,
+                )
+            }
+        }
+
+        // Aufgaben
+        if (o.tasks) {
+            val open = todos.filter { it.personId == pid && !it.done && !it.archived && (it.dueDay == null || it.dueDay <= o.toDay + 7) }
+                .sortedWith(compareBy({ it.dueDay ?: Long.MAX_VALUE }, { -it.priority }))
+            if (open.isNotEmpty()) {
+                section("Offene Aufgaben")
+                open.take(25).forEach { t ->
+                    pdf.text("☐ " + t.text + (t.dueDay?.let { " (bis " + LocalDate.ofEpochDay(it).format(DATE) + ")" } ?: "") + if (t.priority == 2) " – dringend" else "", 10.5f)
+                }
+            }
+        }
+
+        // Werte
+        if (o.values) {
+            val latest = VitalKind.MEASURES.mapNotNull { k -> vitals.filter { it.personId == pid && it.kind == k.key }.maxByOrNull { it.atMillis } }
+            if (drinkGoal > 0 || latest.isNotEmpty()) {
+                section("Trinken und Werte")
+                if (drinkGoal > 0) pdf.text("Trinkziel: $drinkGoal ml am Tag", 10.5f)
+                latest.forEach { e ->
+                    val k = VitalKind.of(e.kind)
+                    val range = AppPrefsBridge.range(context, pid, e.kind)
+                    pdf.text(
+                        "${k?.label}: zuletzt ${Vitals.valueText(e)} am " + LocalDate.ofEpochDay(e.day).format(DATE) +
+                            (range?.let { r -> " · Bereich laut Absprache: " + (r.first?.let { Vitals.number(it, k?.decimals ?: 0) } ?: "…") + " bis " + (r.second?.let { Vitals.number(it, k?.decimals ?: 0) } ?: "…") } ?: ""),
+                        10.5f,
+                    )
+                }
+            }
+        }
+
+        // Hilfebedarf aus dem Pflegetagebuch
+        if (o.diary) {
+            val recent = careLog.filter { it.personId == pid && it.day > LocalDate.now().toEpochDay() - 28 }
+            if (recent.isNotEmpty()) {
+                section("Wobei Hilfe nötig ist (aus dem Pflegetagebuch)")
+                val stats = de.meinhelfer.tag.summary.CareAreas.stats(recent)
+                de.meinhelfer.tag.summary.CareAreas.ALL.forEach { area ->
+                    val list = stats.filter { it.module == area.module }
+                    if (list.isEmpty()) return@forEach
+                    pdf.text(area.title, 10.5f, bold = true)
+                    list.take(8).forEach { st ->
+                        pdf.text(
+                            "• " + st.activity + ": " + st.helps.joinToString(", ") +
+                                (if (st.nights > 0) ", auch nachts" else "") + (if (st.notes.isNotEmpty()) " – " + st.notes.joinToString("; ") else ""),
+                            10f,
+                            x = pdf.left + 8f,
+                            w = pdf.width - 8,
+                        )
+                    }
+                }
+            }
+        }
+
+        pdf.gap(14f)
+        pdf.text("Aus den Angaben in der App erstellt. Bei Unklarheiten bitte anrufen. Maßgeblich für Medikamente sind Arztpraxis und Apotheke.", 8.5f, gray = true)
+        return pdf.save(file)
+    }
+
+    /** Kleiner Zugriff auf die Einstellungen (eigener Bereich eines Messwerts). */
+    private object AppPrefsBridge {
+        fun range(context: Context, personId: Long, kind: String) = de.meinhelfer.tag.update.AppPrefs.vitalRange(context, personId, kind)
+    }
 }

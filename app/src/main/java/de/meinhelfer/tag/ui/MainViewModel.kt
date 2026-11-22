@@ -96,6 +96,17 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun deleteVital(item: de.meinhelfer.tag.data.VitalEntry) = viewModelScope.launch { db.vitalDao().delete(item) }
 
+    /** Ausgaben aus den Budgets der Pflegekasse fuer die aktuelle Person. */
+    val budget: StateFlow<List<de.meinhelfer.tag.data.BudgetEntry>> =
+        combine(db.budgetDao().all(), _personId) { list, id -> list.filter { it.personId == id } }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun saveBudget(item: de.meinhelfer.tag.data.BudgetEntry) = viewModelScope.launch {
+        if (item.id == 0L) db.budgetDao().insert(item.copy(personId = _personId.value)) else db.budgetDao().update(item)
+    }
+
+    fun deleteBudget(item: de.meinhelfer.tag.data.BudgetEntry) = viewModelScope.launch { db.budgetDao().delete(item) }
+
     fun saveCareLog(item: de.meinhelfer.tag.data.CareLogEntry) = viewModelScope.launch {
         if (item.id == 0L) db.careLogDao().insert(item.copy(personId = _personId.value)) else db.careLogDao().update(item)
     }
@@ -739,6 +750,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         db.responsibilityDao().deleteForPerson(person.id)
         db.vitalDao().deleteForPerson(person.id)
         db.careLogDao().deleteForPerson(person.id)
+        db.budgetDao().deleteForPerson(person.id)
         db.goalDao().deleteStepsForPerson(person.id)
         db.goalDao().deleteForPerson(person.id)
         db.personDao().delete(person)
