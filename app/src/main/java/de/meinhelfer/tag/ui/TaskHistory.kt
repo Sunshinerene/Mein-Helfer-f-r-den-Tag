@@ -148,6 +148,7 @@ internal fun TaskResultDialog(task: Todo, onSave: (String, Int) -> Unit, onDismi
     var result by remember { mutableStateOf(task.result) }
     var rating by remember { mutableIntStateOf(task.rating) }
     AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onDismiss,
         title = { Text(if (task.result.isBlank()) "Erledigt – was kam heraus?" else "Ergebnis") },
         text = {
@@ -254,6 +255,7 @@ internal fun TaskHistoryDialog(
 
     chosen?.let { t ->
         AlertDialog(
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
             onDismissRequest = { chosen = null },
             title = { Text(t.text.take(80)) },
             text = {
@@ -289,6 +291,7 @@ internal fun TaskHistoryDialog(
     }
     confirmDelete?.let { t ->
         AlertDialog(
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
             onDismissRequest = { confirmDelete = null },
             title = { Text("Endgültig löschen?") },
             text = { Text("„${t.text.take(80)}“ wird auch aus dem Verlauf und der Auswertung entfernt.") },

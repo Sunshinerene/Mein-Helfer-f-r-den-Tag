@@ -92,6 +92,7 @@ fun MeasureSettingsDialog(vm: MainViewModel, personId: Long, personName: String?
     var pickFor by remember { mutableStateOf<VitalKind?>(null) }
 
     AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onDone,
         title = { Text("Messwerte" + (personName?.let { " für $it" } ?: "")) },
         text = {

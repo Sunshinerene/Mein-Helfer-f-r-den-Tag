@@ -91,6 +91,7 @@ fun MailDraftDialog(
     var body by remember(key) { mutableStateOf(MailTemplates.body(topic, recipient, ctx)) }
 
     AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onClose,
         title = { Text("E-Mail an ${recipient.name}") },
         text = {

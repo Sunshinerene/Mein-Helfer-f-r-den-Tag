@@ -4,7 +4,7 @@ by Sunshine@R
 
 Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbezogenen Daten bleiben lokal auf dem Gerät.
 
-## Stand: v0.67.0
+## Stand: v0.68.0
 
 ### Funktionsübersicht
 
@@ -82,7 +82,7 @@ Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbe
 
 **Dokumente**
 - Fotografieren (mehrseitig) oder Datei laden, verschlüsselt gespeichert, Text wird gelesen
-- Sammel-Import: mehrere Dateien, mehrere Fotos oder ein ganzer Ordner auf einmal (bis 30); die App schlägt vor, welche Seiten zusammengehören (Dateiname, Seitenzahlen im Text, Aufnahmezeit), du entscheidest, dann jedes Dokument nacheinander wie gewohnt
+- Sammel-Import: mehrere Dateien, mehrere Fotos, ein ganzer Ordner mit Unterordnern oder Dateien, die aus einer anderen App geteilt werden (Dateien, Drive, Dropbox, E-Mail-Anhang), bis 30 auf einmal; die App schlägt vor, welche Seiten zusammengehören (Dateiname, Seitenzahlen im Text, Aufnahmezeit), du entscheidest, dann jedes Dokument nacheinander wie gewohnt
 - Kategorien (u. a. Krankenhaus / Entlassbericht) mit gewichteter Erkennung, Suche, Filter (Jahr, Arzt), Zusammenfassung (selbst oder per KI)
 - Eingebauter Betrachter (PDF, Fotos, Text) mit Zoom (zwei Finger), Drucken (auch Text), Teilen, „Andere App“ (einstellbar)
 - Code des Medikationsplans wird beim Hochladen gelesen

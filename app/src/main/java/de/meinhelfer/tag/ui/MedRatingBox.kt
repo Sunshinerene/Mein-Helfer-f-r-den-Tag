@@ -163,6 +163,7 @@ fun MedRatingBox(med: Medication, otherNames: List<String>, onUpdate: (Medicatio
 
     if (confirm) {
         AlertDialog(
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
             onDismissRequest = { confirm = false },
             title = { Text("An ${provider.label} senden?") },
             text = {

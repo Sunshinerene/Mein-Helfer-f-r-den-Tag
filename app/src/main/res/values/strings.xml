@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Mein Helfer für den Tag</string>
+    <string name="share_label">Als Dokument ablegen</string>
     <string name="widget_description">Nächste Einnahme und nächster Termin</string>
 </resources>

@@ -109,6 +109,7 @@ internal class OverviewEdit {
 private fun TaskChoiceDialog(t: Todo, edit: OverviewEdit, vm: MainViewModel) {
     var confirm by remember { mutableStateOf(false) }
     AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = { edit.choiceTask = null },
         title = { Text(t.text.take(60)) },
         text = {
@@ -143,6 +144,7 @@ internal fun OverviewEditors(edit: OverviewEdit, doctors: List<Doctor>, vm: Main
     val history by vm.taskHistory.collectAsStateWithLifecycle()
     edit.choiceAppt?.let { a ->
         AlertDialog(
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
             onDismissRequest = { edit.choiceAppt = null },
             title = { Text(a.title.take(60)) },
             text = {

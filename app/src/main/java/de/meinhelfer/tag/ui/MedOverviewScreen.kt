@@ -374,6 +374,7 @@ fun MedOverviewScreen(
     if (confirm) {
         val promptText = MedCheck.prompt(meds, if (withAge) age else null)
         AlertDialog(
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
             onDismissRequest = { confirm = false },
             title = { Text("An ${provider.label} senden?") },
             text = {

@@ -111,6 +111,7 @@ fun PersonBar(persons: List<Person>, currentId: Long, vm: MainViewModel) {
     }
     if (showDelete && current != null) {
         AlertDialog(
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
             onDismissRequest = { showDelete = false },
             title = { Text("Person löschen?") },
             text = {
@@ -145,6 +146,7 @@ fun PersonDialog(initial: Person?, onDismiss: () -> Unit, onSave: (Person) -> Un
     var access by remember { mutableStateOf(initial?.access ?: "") }
     var phone by remember { mutableStateOf(initial?.phone ?: "") }
     AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onDismiss,
         title = { Text(if (initial == null) "Neue Person" else "Profil bearbeiten") },
         text = {
@@ -285,6 +287,7 @@ fun NameDialog(
 ) {
     var text by remember { mutableStateOf(initial) }
     AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = {

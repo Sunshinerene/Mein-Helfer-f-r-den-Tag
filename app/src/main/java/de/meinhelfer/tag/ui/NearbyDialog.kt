@@ -73,6 +73,7 @@ internal fun NearbyDialog(
     val canSearch = (zip + city).isNotBlank()
 
     AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onClose,
         title = { Text("In der Nähe suchen") },
         text = {
@@ -196,6 +197,7 @@ internal fun NearbyDialog(
 
     if (confirm) {
         AlertDialog(
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
             onDismissRequest = { confirm = false },
             title = { Text("In der Nähe suchen?") },
             text = {

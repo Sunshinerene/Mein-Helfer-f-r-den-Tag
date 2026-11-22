@@ -156,6 +156,7 @@ internal fun FahrdienstDialog(
     val destination = listOf(place, doctor?.address.orEmpty()).firstOrNull { it.isNotBlank() }
 
     AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onClose,
         title = { Text("Fahrdienst") },
         text = {
@@ -320,6 +321,7 @@ internal fun FahrdienstDialog(
 
     if (confirmSearch) {
         AlertDialog(
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
             onDismissRequest = { confirmSearch = false },
             title = { Text("In der Nähe suchen?") },
             text = {

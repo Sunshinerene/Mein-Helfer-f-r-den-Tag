@@ -66,6 +66,7 @@ internal fun AppointmentEditor(initial: Appointment?, doctors: List<Doctor>, vm:
 internal fun AppointmentDeleteDialog(a: Appointment, vm: MainViewModel, onDone: () -> Unit) {
     if (a.seriesId == 0L) {
         AlertDialog(
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
             onDismissRequest = onDone,
             title = { Text("Löschen?") },
             text = { Text("„${a.title}“ wirklich löschen?") },
@@ -110,6 +111,7 @@ internal fun SeriesScopeDialog(
 ) {
     val color = if (destructive) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
     AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = {

@@ -229,6 +229,7 @@ fun HealthNewValuesHint(vm: MainViewModel, person: Person?, vitals: List<VitalEn
 @Composable
 private fun HealthWhyDialog(onClose: () -> Unit) {
     AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onClose,
         title = { Text("Health Connect") },
         text = {
@@ -262,6 +263,7 @@ internal fun HealthImportDialog(
     val zone = ZoneId.systemDefault()
 
     AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onDismiss,
         title = { Text("Werte übernehmen") },
         text = {

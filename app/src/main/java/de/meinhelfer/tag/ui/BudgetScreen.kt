@@ -270,6 +270,7 @@ fun BudgetScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit) {
         var monthly by remember { mutableStateOf(Vitals.number(AppPrefs.budgetMonthly(context, year), 2)) }
         var yearlyText by remember { mutableStateOf(Vitals.number(AppPrefs.budgetYearly(context, year), 2)) }
         AlertDialog(
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
             onDismissRequest = { showSettings = false },
             title = { Text("Beträge und Beginn") },
             text = {
@@ -329,6 +330,7 @@ private fun BudgetDialog(initial: BudgetEntry?, kind: BudgetKind, onDismiss: () 
     var note by remember { mutableStateOf(initial?.note ?: "") }
     val value = Vitals.parse(amount)
     AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onDismiss,
         title = { Text(if (initial == null) "Ausgabe eintragen" else "Ausgabe ändern") },
         text = {

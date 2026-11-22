@@ -132,6 +132,7 @@ internal fun StatusDialog(
     var createTask by remember { mutableStateOf(true) }
 
     AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = {

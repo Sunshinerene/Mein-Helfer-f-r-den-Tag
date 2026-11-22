@@ -100,6 +100,7 @@ fun AiActionButton(
 
     confirmText?.let { text ->
         AlertDialog(
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
             onDismissRequest = { confirmText = null },
             title = { Text("An ${provider.label.substringBefore(" (")} senden?") },
             text = {
@@ -165,6 +166,7 @@ fun AiShareButton(system: String, label: String = "An KI-App teilen (z. B. Gemin
     TextButton(onClick = { preview = text() }) { Text(label) }
     preview?.let { t ->
         AlertDialog(
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
             onDismissRequest = { preview = null },
             title = { Text("An KI-App teilen?") },
             text = {

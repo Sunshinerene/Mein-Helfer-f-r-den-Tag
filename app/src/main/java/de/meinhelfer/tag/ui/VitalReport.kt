@@ -101,6 +101,7 @@ fun VitalReportDialog(vm: MainViewModel, person: Person?, onClose: () -> Unit, i
     }
 
     AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onClose,
         title = { Text("Bericht: Messwerte" + (person?.let { " · ${it.name}" } ?: "")) },
         text = {

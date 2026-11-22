@@ -44,13 +44,17 @@ object BatchSource {
         }
     }
 
+    /** Höchstens so tief in Unterordner und so viele Dateien sammeln (danach nimmt der Import die ersten 30). */
+    private const val MAX_DEPTH = 3
+    private const val MAX_LISTED = 300
+
     /**
-     * Dateien eines Ordners (ohne Unterordner), die die App lesen kann. Gibt die Dateien in natürlicher Reihenfolge
-     * und die Zahl der übersprungenen Dateien zurück.
+     * Dateien eines Ordners samt Unterordnern (bis 3 Ebenen), die die App lesen kann. Dateien in Unterordnern heißen
+     * „Unterordner/Datei.pdf“. Gibt die Dateien in natürlicher Reihenfolge und die Zahl der übersprungenen Dateien zurück.
+     * Wirft eine Ausnahme, wenn der Speicherort (z. B. manche Cloud-Dienste) keine Ordner-Liste liefert.
      */
     suspend fun listFolder(context: Context, tree: Uri): Pair<List<PickedFile>, Int> = withContext(Dispatchers.IO) {
         val resolver = context.contentResolver
-        val children = DocumentsContract.buildChildDocumentsUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree))
         val out = mutableListOf<PickedFile>()
         var skipped = 0
         val cols = arrayOf(
@@ -58,19 +62,32 @@ object BatchSource {
             DocumentsContract.Document.COLUMN_DISPLAY_NAME,
             DocumentsContract.Document.COLUMN_MIME_TYPE,
         )
-        resolver.query(children, cols, null, null, null)?.use { c ->
-            while (c.moveToNext()) {
-                val id = c.getString(0) ?: continue
-                val name = c.getString(1) ?: continue
-                val mime = c.getString(2).orEmpty()
-                if (mime == DocumentsContract.Document.MIME_TYPE_DIR || name.startsWith(".")) continue
-                if (!readable(name, mime)) {
-                    skipped++
-                    continue
+        fun walk(docId: String, prefix: String, depth: Int) {
+            val subdirs = mutableListOf<Pair<String, String>>()
+            val cursor = resolver.query(DocumentsContract.buildChildDocumentsUriUsingTree(tree, docId), cols, null, null, null)
+                ?: if (depth == 0) throw IllegalStateException("Keine Ordner-Liste") else return
+            cursor.use { c ->
+                while (c.moveToNext() && out.size < MAX_LISTED) {
+                    val id = c.getString(0) ?: continue
+                    val name = c.getString(1) ?: continue
+                    val mime = c.getString(2).orEmpty()
+                    if (name.startsWith(".")) continue
+                    if (mime == DocumentsContract.Document.MIME_TYPE_DIR) {
+                        if (depth < MAX_DEPTH) subdirs += id to name
+                        continue
+                    }
+                    if (!readable(name, mime)) {
+                        skipped++
+                        continue
+                    }
+                    out.add(PickedFile(DocumentsContract.buildDocumentUriUsingTree(tree, id), prefix + name, mime, null))
                 }
-                out.add(PickedFile(DocumentsContract.buildDocumentUriUsingTree(tree, id), name, mime, null))
+            }
+            subdirs.sortedWith { a, b -> DocGrouping.naturalOrder.compare(a.second, b.second) }.forEach { (id, name) ->
+                if (out.size < MAX_LISTED) walk(id, "$prefix$name/", depth + 1)
             }
         }
+        walk(DocumentsContract.getTreeDocumentId(tree), "", 0)
         out.sortedWith { a, b -> DocGrouping.naturalOrder.compare(a.name, b.name) } to skipped
     }
 }

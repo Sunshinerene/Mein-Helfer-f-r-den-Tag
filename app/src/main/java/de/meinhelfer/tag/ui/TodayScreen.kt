@@ -687,6 +687,7 @@ private fun NoteDialog(
 ) {
     var text by remember { mutableStateOf(initial) }
     AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = {

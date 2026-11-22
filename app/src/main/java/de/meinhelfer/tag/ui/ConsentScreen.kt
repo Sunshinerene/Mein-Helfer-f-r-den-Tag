@@ -198,6 +198,7 @@ internal fun ConsentCard(onRevoked: () -> Unit) {
 
     if (showTerms) {
         AlertDialog(
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
             onDismissRequest = { showTerms = false },
             title = { Text("Nutzungsbedingungen") },
             text = { Column(Modifier.heightIn(max = 480.dp).verticalScroll(rememberScrollState())) { TermsBody() } },
@@ -206,6 +207,7 @@ internal fun ConsentCard(onRevoked: () -> Unit) {
     }
     if (confirmRevoke) {
         AlertDialog(
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
             onDismissRequest = { confirmRevoke = false },
             title = { Text("Zustimmung widerrufen?") },
             text = {

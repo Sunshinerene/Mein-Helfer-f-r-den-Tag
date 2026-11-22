@@ -72,6 +72,7 @@ fun MedicationDetailDialog(
     val days = med.daysLeft(today)
 
     AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onClose,
         title = { Text(med.name + if (med.dosage.isNotBlank()) " – ${med.dosage}" else "") },
         text = {

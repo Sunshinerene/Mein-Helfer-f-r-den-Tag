@@ -137,6 +137,7 @@ fun DatePickerField(
         )
         DatePickerDialog(
             onDismissRequest = { show = false },
+            properties = DialogProperties(dismissOnClickOutside = false),
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -183,7 +184,7 @@ fun TimePickerField(
 @Composable
 fun TimePickerDialog(initial: LocalTime, onConfirm: (LocalTime) -> Unit, onDismiss: () -> Unit) {
     val state = rememberTimePickerState(initialHour = initial.hour, initialMinute = initial.minute, is24Hour = true)
-    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false)) {
         Surface(
             shape = MaterialTheme.shapes.extraLarge,
             tonalElevation = 6.dp,

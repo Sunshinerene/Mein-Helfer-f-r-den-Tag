@@ -42,6 +42,7 @@ internal fun BatchImportDialog(
     plan: BatchPlan,
     assistantName: String?,
     skipped: Int,
+    personName: String? = null,
     onConfirm: (List<List<Int>>) -> Unit,
     onCancel: () -> Unit,
 ) {
@@ -81,6 +82,7 @@ internal fun BatchImportDialog(
     }
 
     AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = {},
         title = { Text("$n Dateien übernehmen") },
         text = {
@@ -100,9 +102,12 @@ internal fun BatchImportDialog(
                 }
                 if (skipped > 0) {
                     Text(
-                        "$skipped Datei(en) im Ordner übersprungen (kein PDF, Foto, Text oder Word).",
+                        "$skipped Datei(en) übersprungen (kein PDF, Foto, Text oder Word).",
                         style = MaterialTheme.typography.bodySmall,
                     )
+                }
+                if (!personName.isNullOrBlank()) {
+                    Text("Die Dokumente kommen zu: $personName", style = MaterialTheme.typography.bodySmall)
                 }
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilterChip(

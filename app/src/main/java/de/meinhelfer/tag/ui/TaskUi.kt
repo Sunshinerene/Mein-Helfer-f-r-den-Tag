@@ -322,6 +322,7 @@ internal fun TasksCard(
     }
     pastFor?.let { t ->
         AlertDialog(
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
             onDismissRequest = { pastFor = null },
             title = { Text("Früher schon einmal") },
             text = {
@@ -338,6 +339,7 @@ internal fun TasksCard(
 
     if (confirmClear) {
         AlertDialog(
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
             onDismissRequest = { confirmClear = false },
             title = { Text("Erledigte in den Verlauf?") },
             text = { Text("Die erledigten Aufgaben verschwinden aus dieser Liste. Sie bleiben im Verlauf, in der Auswertung und in der Suche und werden bei ähnlichen Aufgaben wieder angezeigt.") },
@@ -434,6 +436,7 @@ internal fun TasksCard(
 
     confirmDelete?.let { t ->
         AlertDialog(
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
             onDismissRequest = { confirmDelete = null },
             title = { Text("Löschen?") },
             text = { Text("„${t.text}“ wirklich löschen?") },
@@ -478,6 +481,7 @@ internal fun TaskDialog(
     }
 
     AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onDismiss,
         title = { Text(if (initial == null || initial.id == 0L) "Neue Aufgabe" else "Aufgabe bearbeiten") },
         text = {
@@ -641,6 +645,7 @@ internal fun TaskSuggestDialog(
     var checked by remember { mutableStateOf(drafts.indices.toSet()) }
 
     AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onDismiss,
         title = { Text("Aufgaben vorgeschlagen") },
         text = {
@@ -734,6 +739,7 @@ internal fun TaskDocsDialog(
     }
 
     AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onClose,
         title = { Text("Unterlagen: ${task.text.take(40)}") },
         text = {

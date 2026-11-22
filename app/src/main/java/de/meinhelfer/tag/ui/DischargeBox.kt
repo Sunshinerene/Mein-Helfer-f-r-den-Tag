@@ -198,6 +198,7 @@ private fun FollowUpDialog(
     val rows = remember(items) { items.map { FollowRow(it, doctors) } }
     val today = LocalDate.now()
     AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onDismiss,
         title = { Text("Kontrollen übernehmen") },
         text = {

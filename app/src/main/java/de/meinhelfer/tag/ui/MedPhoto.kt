@@ -151,6 +151,7 @@ fun MedPhotoDialog(
     }
 
     AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onDone,
         title = { Text("Foto für " + med.name) },
         text = {
@@ -229,6 +230,7 @@ private fun FreeImageDialog(term: String, onPick: (FreeImage) -> Unit, onClose: 
         value = runCatching { FreeImages.search(searched) }.getOrDefault(emptyList())
     }
     AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onClose,
         title = { Text("Freie Bilder") },
         text = {

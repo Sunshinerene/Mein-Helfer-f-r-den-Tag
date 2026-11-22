@@ -466,6 +466,7 @@ fun GoalDetailScreen(vm: MainViewModel, goal: Goal, caregiver: CaregiverProfile,
     }
     if (confirmDelete) {
         AlertDialog(
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
             onDismissRequest = { confirmDelete = false },
             title = { Text("Ziel löschen?") },
             text = { Text("„${goal.title}“ mit allen Schritten wird gelöscht.") },
@@ -481,6 +482,7 @@ fun GoalDetailScreen(vm: MainViewModel, goal: Goal, caregiver: CaregiverProfile,
     }
     if (celebrate) {
         AlertDialog(
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
             onDismissRequest = { celebrate = false },
             title = { Text("🎉 Geschafft!") },
             text = {
@@ -506,6 +508,7 @@ private fun StepDialog(
     var due by remember { mutableStateOf(initial?.dueDay) }
     var note by remember { mutableStateOf(initial?.note ?: "") }
     AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onDismiss,
         title = { Text(if (initial == null) "Neuer Schritt" else "Schritt bearbeiten") },
         text = {

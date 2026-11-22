@@ -172,6 +172,7 @@ internal fun TaskMailDialog(
         .sortedByDescending { it.docDate ?: 0L }
 
     AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onClose,
         title = { Text("E-Mail zur Aufgabe") },
         text = {
@@ -282,6 +283,7 @@ internal fun TaskPrintDialog(task: Todo, documents: List<Document>, onView: (Doc
     val scope = rememberCoroutineScope()
     val linked = documents.filter { it.id in task.attachedIds() }
     AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onClose,
         title = { Text("Unterlagen drucken") },
         text = {

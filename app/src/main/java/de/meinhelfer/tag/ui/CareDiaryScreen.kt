@@ -117,6 +117,7 @@ fun CareLogDialog(initial: CareLogEntry?, day: Long, onDismiss: () -> Unit, onSa
     val area = CareAreas.of(module)
 
     AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onDismiss,
         title = { Text(if (initial == null) "Eintrag im Pflegetagebuch" else "Eintrag ändern") },
         text = {

@@ -70,6 +70,18 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val _openScreen = MutableStateFlow<String?>(null)
     val openScreen: StateFlow<String?> = _openScreen
 
+    // Von einer anderen App geteilte Dateien: Dokumente übernimmt sie (einzeln oder als Sammel-Import)
+    private val _sharedUris = MutableStateFlow<List<android.net.Uri>?>(null)
+    val sharedUris: StateFlow<List<android.net.Uri>?> = _sharedUris
+
+    fun receiveShared(uris: List<android.net.Uri>) {
+        _sharedUris.value = uris
+    }
+
+    fun consumeShared() {
+        _sharedUris.value = null
+    }
+
     fun requestScreen(screen: String?) {
         _openScreen.value = screen
     }

@@ -182,6 +182,15 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
         showHandover = false
     }
 
+    // Geteilte Dateien (aus einer anderen App): zu Dokumente wechseln, dort beginnt der Import
+    val shared by vm.sharedUris.collectAsStateWithLifecycle()
+    LaunchedEffect(shared) {
+        if (shared != null) {
+            closeOverlays()
+            tabIndex = Tab.Dokumente.ordinal
+        }
+    }
+
     // Nach dem Willkommens-Dialog einmal nach den eigenen Daten fragen
     LaunchedEffect(showTourOffer, showTour) {
         if (!showTourOffer && !showTour && !caregiver.isSet && !AppPrefs.caregiverAsked(appContext)) {
@@ -621,6 +630,7 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
 
     if (showTourOffer && !showTour) {
         AlertDialog(
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
             onDismissRequest = {
                 AppPrefs.setTourSeen(appContext)
                 showTourOffer = false
@@ -1407,6 +1417,7 @@ internal fun ItemCard(
 
     if (confirmDelete) {
         AlertDialog(
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
             onDismissRequest = { confirmDelete = false },
             title = { Text("Löschen?") },
             text = { Text("„$title“ wirklich löschen?") },

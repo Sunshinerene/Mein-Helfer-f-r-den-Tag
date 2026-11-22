@@ -455,6 +455,7 @@ private fun MoodTab(vm: MainViewModel, onMood: () -> Unit) {
     }
     toDelete?.let { e ->
         androidx.compose.material3.AlertDialog(
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
             onDismissRequest = { toDelete = null },
             title = { Text("Eintrag löschen?") },
             text = { Text("${Motivator.emoji(e.mood)} ${Motivator.label(e.mood)} vom ${Instant.ofEpochMilli(e.atMillis).atZone(zone).format(TIME)}") },

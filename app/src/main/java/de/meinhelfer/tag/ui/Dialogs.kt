@@ -76,6 +76,7 @@ private fun DialogForm(
     content: @Composable () -> Unit,
 ) {
     AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = {

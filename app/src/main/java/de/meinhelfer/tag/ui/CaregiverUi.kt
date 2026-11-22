@@ -52,6 +52,7 @@ fun CaregiverDialog(initial: CaregiverProfile, onDismiss: () -> Unit, onSave: (C
     val current = CaregiverRole.fromKey(role)
 
     AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onDismiss,
         title = { Text("Meine Daten") },
         text = {

@@ -61,6 +61,7 @@ fun ColorTweakDialog(style: DesignStyle, tweak: DesignTweak, onChange: (DesignTw
     )
 
     AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onClose,
         title = { Text("Farben: ${style.label}") },
         text = {

@@ -53,6 +53,7 @@ fun StockDialog(
     val value = Amounts.parse(stock)
     fun clean(text: String) = text.filter { c -> c.isDigit() || c in ",." }.take(8)
     AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onDone,
         title = { Text("Vorrat: " + med.name) },
         text = {

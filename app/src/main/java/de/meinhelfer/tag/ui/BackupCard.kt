@@ -185,6 +185,7 @@ internal fun BackupCard() {
             val tooShort = password.length < 8
             val mismatch = password != repeat
             AlertDialog(
+                properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
                 onDismissRequest = { step = BackupStep.Idle },
                 title = { Text("Passwort für die Sicherung") },
                 text = {
@@ -226,6 +227,7 @@ internal fun BackupCard() {
             )
         }
         BackupStep.AskRestorePassword -> AlertDialog(
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
             onDismissRequest = { step = BackupStep.Idle },
             title = { Text("Passwort der Sicherung") },
             text = {
@@ -262,6 +264,7 @@ internal fun BackupCard() {
             dismissButton = { TextButton(onClick = { step = BackupStep.Idle }) { Text("Abbrechen") } },
         )
         is BackupStep.Working -> AlertDialog(
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
             onDismissRequest = {},
             title = { Text("Bitte warten") },
             text = {
@@ -274,6 +277,7 @@ internal fun BackupCard() {
             confirmButton = {},
         )
         is BackupStep.Done -> AlertDialog(
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
             onDismissRequest = {
                 resetAfterBackup = false
                 step = BackupStep.Idle
@@ -300,6 +304,7 @@ internal fun BackupCard() {
             },
         )
         BackupStep.ResetWarn -> AlertDialog(
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
             onDismissRequest = { step = BackupStep.Idle },
             title = { Text("App zurücksetzen?") },
             text = {
@@ -334,6 +339,7 @@ internal fun BackupCard() {
             dismissButton = { TextButton(onClick = { step = BackupStep.Idle }) { Text("Abbrechen") } },
         )
         BackupStep.ResetConfirm -> AlertDialog(
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
             onDismissRequest = { step = BackupStep.Idle },
             title = { Text("Zurücksetzen bestätigen") },
             text = {
@@ -379,6 +385,7 @@ internal fun BackupCard() {
             dismissButton = { TextButton(onClick = { step = BackupStep.Idle }) { Text("Abbrechen") } },
         )
         is BackupStep.ConfirmRestore -> AlertDialog(
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
             onDismissRequest = {
                 Backup.discardStaged(context)
                 step = BackupStep.Idle

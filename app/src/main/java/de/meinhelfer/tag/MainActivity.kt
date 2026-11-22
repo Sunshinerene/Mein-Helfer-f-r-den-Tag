@@ -55,11 +55,28 @@ class MainActivity : FragmentActivity() {
     /** Aus einer Benachrichtigung gewuenschte Person (null = nichts zu tun). */
     private var pendingPerson by mutableStateOf<Long?>(null)
 
+    /** Von einer anderen App geteilte Dateien (z. B. aus „Dateien“, Drive oder Dropbox) fuer den Import unter Dokumente. */
+    private var pendingShare by mutableStateOf<List<android.net.Uri>?>(null)
+
+    private fun sharedUris(intent: android.content.Intent?): List<android.net.Uri>? {
+        if (intent == null) return null
+        val streams = when (intent.action) {
+            android.content.Intent.ACTION_SEND ->
+                listOfNotNull(androidx.core.content.IntentCompat.getParcelableExtra(intent, android.content.Intent.EXTRA_STREAM, android.net.Uri::class.java))
+            android.content.Intent.ACTION_SEND_MULTIPLE ->
+                androidx.core.content.IntentCompat.getParcelableArrayListExtra(intent, android.content.Intent.EXTRA_STREAM, android.net.Uri::class.java).orEmpty()
+            else -> return null
+        }
+        val clip = intent.clipData?.let { c -> (0 until c.itemCount).mapNotNull { c.getItemAt(it).uri } }.orEmpty()
+        return (streams + clip).distinct().takeIf { it.isNotEmpty() }
+    }
+
     override fun onNewIntent(intent: android.content.Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
         pendingPerson = intent.getLongExtra(EXTRA_PERSON, -1L).takeIf { it > 0 }
         pendingScreen = intent.getStringExtra(EXTRA_SCREEN)
+        sharedUris(intent)?.let { pendingShare = it }
     }
 
     /** Aus einer Benachrichtigung gewuenschte Seite (null = nichts zu tun). */
@@ -92,8 +109,9 @@ class MainActivity : FragmentActivity() {
         if (savedInstanceState == null) {
             intent?.getLongExtra(EXTRA_PERSON, -1L)?.takeIf { it > 0 }?.let { pendingPerson = it }
             pendingScreen = intent?.getStringExtra(EXTRA_SCREEN)
-            // Nur beim normalen Öffnen, nicht aus einer Erinnerung oder vom Widget heraus
-            showIntro = AppPrefs.introEnabled(this) && pendingPerson == null && pendingScreen == null &&
+            pendingShare = sharedUris(intent)
+            // Nur beim normalen Öffnen, nicht aus einer Erinnerung, vom Widget oder beim Teilen von Dateien
+            showIntro = AppPrefs.introEnabled(this) && pendingPerson == null && pendingScreen == null && pendingShare == null &&
                 intent?.getBooleanExtra(EXTRA_FROM_WIDGET, false) != true
         }
 
@@ -147,6 +165,14 @@ class MainActivity : FragmentActivity() {
                 if (wantedScreen != null) {
                     vm.requestScreen(wantedScreen)
                     pendingScreen = null
+                }
+            }
+            // Geteilte Dateien erst nach dem Entsperren übernehmen (sonst stünde der Dialog über der Sperre)
+            val share = pendingShare
+            LaunchedEffect(share, locked, showIntro) {
+                if (share != null && !locked && !showIntro) {
+                    vm.receiveShared(share)
+                    pendingShare = null
                 }
             }
             val dark = when (mode) {

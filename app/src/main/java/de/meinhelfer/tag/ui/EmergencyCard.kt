@@ -109,6 +109,7 @@ fun EmergencyDialog(
     var withNumber by remember { mutableStateOf(false) }
     val text = emergencyText(person, meds, doctors, caregiver, withNumber)
     AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onClose,
         title = { Text("Notfallkarte") },
         text = {

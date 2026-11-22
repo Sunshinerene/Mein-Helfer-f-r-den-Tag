@@ -155,6 +155,7 @@ fun CardScanButtons(
 
     infoFor?.let { kind ->
         AlertDialog(
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
             onDismissRequest = { infoFor = null },
             title = { Text(if (kind == CardKind.Ausweis) "Ausweis fotografieren" else "Krankenkarte fotografieren") },
             text = {
@@ -194,6 +195,7 @@ fun CardScanButtons(
             fields.clear()
         }
         AlertDialog(
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
             onDismissRequest = close,
             title = { Text("Erkannte Angaben prüfen") },
             text = {

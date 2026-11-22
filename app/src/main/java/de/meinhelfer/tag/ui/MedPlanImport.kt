@@ -103,6 +103,7 @@ fun MedPlanReviewDialog(
     val today = LocalDate.now().toEpochDay()
 
     AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onDone,
         title = { Text("Medikamentenplan übernehmen") },
         text = {
@@ -440,6 +441,7 @@ fun MedPlanSuggestion(documents: List<Document>, meds: List<Medication>, person:
 
     if (chooser) {
         AlertDialog(
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
             onDismissRequest = { chooser = false },
             title = { Text("Medikamentenplan einlesen") },
             text = {
@@ -480,6 +482,7 @@ fun MedPlanSuggestion(documents: List<Document>, meds: List<Medication>, person:
 @Composable
 private fun PlanDialog(doc: Document, person: Person?, meds: List<Medication>, vm: MainViewModel, onClose: () -> Unit) {
     AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onClose,
         title = { Text(doc.title) },
         text = { Column(Modifier.verticalScroll(rememberScrollState())) { MedPlanImportBox(doc, person, meds, vm) } },

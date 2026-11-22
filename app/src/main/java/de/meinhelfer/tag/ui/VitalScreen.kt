@@ -182,6 +182,7 @@ fun VitalEntryDialog(initialKind: VitalKind?, vm: MainViewModel, onDone: () -> U
     val canSave = okA && okB && okP
 
     AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onDone,
         title = { Text(if (initialKind == VitalKind.Trinken) "Getrunken" else "Wert eintragen") },
         text = {
@@ -543,6 +544,7 @@ fun VitalScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit, startKin
     if (editGoal) {
         var text by remember { mutableStateOf(if (goal > 0) goal.toString() else "") }
         AlertDialog(
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
             onDismissRequest = { editGoal = false },
             title = { Text("Trinkziel") },
             text = {
@@ -577,6 +579,7 @@ fun VitalScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit, startKin
         var min by remember(k) { mutableStateOf(current?.first?.let { Vitals.number(it, k.decimals) }.orEmpty()) }
         var max by remember(k) { mutableStateOf(current?.second?.let { Vitals.number(it, k.decimals) }.orEmpty()) }
         AlertDialog(
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
             onDismissRequest = { rangeFor = null },
             title = { Text("Eigener Bereich: ${k.label}") },
             text = {

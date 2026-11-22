@@ -133,6 +133,7 @@ internal fun NotrufDialog(
     val ownFirst = own.sortedBy { d -> if (ownKeys.any { it in d.specialty.lowercase() }) 0 else 1 }
 
     AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onClose,
         title = { Text("Notruf und Hilfe") },
         text = {

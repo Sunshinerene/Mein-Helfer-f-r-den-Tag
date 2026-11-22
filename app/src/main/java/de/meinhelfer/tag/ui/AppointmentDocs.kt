@@ -135,6 +135,7 @@ internal fun AppointmentDocsDialog(
         .sortedByDescending { docEpochDay(it) }
 
     AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onClose,
         title = { Text("Unterlagen: ${appointment.title}") },
         text = {

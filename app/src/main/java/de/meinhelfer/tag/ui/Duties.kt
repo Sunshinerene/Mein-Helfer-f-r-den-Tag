@@ -96,6 +96,7 @@ fun DutyDialog(
         .sortedBy { it.fromDay ?: 0L }
 
     AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onClose,
         title = { Text(if (contact != null) "Zuständigkeit: ${contact.name}" else "Zuständig$who") },
         text = {

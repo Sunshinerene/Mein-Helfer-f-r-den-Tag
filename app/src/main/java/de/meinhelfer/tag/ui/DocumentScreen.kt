@@ -248,6 +248,27 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?
         }
     }
 
+    // Von einer anderen App geteilte Dateien (Dateien-App, Drive, Dropbox, E-Mail-Anhang): wie ein Sammel-Import
+    val shared by vm.sharedUris.collectAsStateWithLifecycle()
+    LaunchedEffect(shared) {
+        val uris = shared ?: return@LaunchedEffect
+        vm.consumeShared()
+        if (draft != null || batchPlan != null || batchTotal > 0 || working) {
+            Toast.makeText(context, "Bitte erst das offene Dokument speichern oder abbrechen, dann noch einmal teilen.", Toast.LENGTH_LONG).show()
+            return@LaunchedEffect
+        }
+        // Eigene Coroutine: Das Leeren oben ändert den Schlüssel und würde diesen Effekt abbrechen
+        scope.launch {
+            val picked = BatchSource.describe(context, uris)
+            val ok = picked.filter { BatchSource.readable(it.name, it.mime) }
+            if (ok.isEmpty()) {
+                Toast.makeText(context, "Diese Dateien kann die App nicht als Dokument lesen (PDF, Foto, Text oder Word).", Toast.LENGTH_LONG).show()
+            } else {
+                startBatch(ok, picked.size - ok.size)
+            }
+        }
+    }
+
     fun startFolder(tree: Uri) {
         scope.launch {
             working = true
@@ -256,7 +277,12 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?
             working = false
             progress = null
             when {
-                listed == null -> Toast.makeText(context, "Der Ordner konnte nicht gelesen werden.", Toast.LENGTH_LONG).show()
+                listed == null -> Toast.makeText(
+                    context,
+                    "Dieser Speicherort gibt keine Ordner frei (z. B. Google Drive). Dort die Dateien markieren und „Teilen“ → „Mein Helfer“ wählen, " +
+                        "oder hier „Datei(en) laden“ und mehrere auswählen.",
+                    Toast.LENGTH_LONG,
+                ).show()
                 listed.first.isEmpty() -> Toast.makeText(
                     context,
                     "Im Ordner sind keine passenden Dateien (PDF, Foto, Text, Word).",
@@ -428,6 +454,7 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?
 
     if (showSource) {
         AlertDialog(
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
             onDismissRequest = { showSource = false },
             title = { Text("Dokument hinzufügen") },
             text = {
@@ -451,11 +478,21 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?
                         } catch (_: ActivityNotFoundException) {
                             Toast.makeText(context, "Auf diesem Handy lässt sich kein Ordner auswählen.", Toast.LENGTH_SHORT).show()
                         }
-                    }, modifier = Modifier.fillMaxWidth()) { Text("Ganzen Ordner laden") }
+                    }, modifier = Modifier.fillMaxWidth()) { Text("Ganzen Ordner laden (mit Unterordnern)") }
                     Text(
                         "Mehrere Dateien oder ein Ordner: Die App liest alle, schlägt vor, welche zusammengehören (z. B. Seite 1 und 2), " +
-                            "und du entscheidest: einzeln oder zusammen. Seiten lassen sich auch nach dem Einlesen hinzufügen. " +
-                            "Der Text wird direkt auf dem Handy gelesen. Dokumente werden verschlüsselt in der App gespeichert und nirgends hin gesendet.",
+                            "und du entscheidest: einzeln oder zusammen. Seiten lassen sich auch nach dem Einlesen hinzufügen.",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    Text(
+                        "Ordner: Android gibt das ganze Handy und den Ordner „Download“ selbst nicht frei, wohl aber Ordner darin " +
+                            "(z. B. „Download/Befunde“ oder „Documents“). Google Drive gibt keine Ordner frei. " +
+                            "Aus Drive, Dropbox oder dem ganzen Handy geht es so: in der App „Dateien“ oder in Drive die Dateien markieren " +
+                            "(lange antippen, dann „Alle auswählen“) → „Teilen“ → „Mein Helfer“.",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    Text(
+                        "Der Text wird direkt auf dem Handy gelesen. Dokumente werden verschlüsselt in der App gespeichert und nirgends hin gesendet.",
                         style = MaterialTheme.typography.bodySmall,
                     )
                 }
@@ -467,6 +504,7 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?
 
     if (showAddPage) {
         AlertDialog(
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
             onDismissRequest = { showAddPage = false },
             title = { Text("Weitere Seiten hinzufügen") },
             text = {
@@ -495,6 +533,7 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?
 
     if (working) {
         AlertDialog(
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
             onDismissRequest = {},
             title = { Text(if (progress != null) "Bitte einen Moment" else "Dokument wird gelesen") },
             text = {
@@ -513,6 +552,7 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?
             plan = plan,
             assistantName = if (assistantOn) assistantName else null,
             skipped = batchSkipped,
+            personName = person?.name,
             onConfirm = { groups ->
                 val docs = batchDocs
                 queue = groups.map { g -> g.map { docs[it] } }
@@ -677,6 +717,7 @@ private fun DocumentDialog(
     }
 
     AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         // Beim Sammel-Import nicht versehentlich durch Tippen daneben überspringen
         onDismissRequest = { if (batchInfo == null) onDismiss() },
         title = { Text(if (initial == null) "Dokument speichern" else "Dokument bearbeiten") },
@@ -904,6 +945,7 @@ internal fun DocumentDetailDialog(
     }
 
     AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onClose,
         title = { Text(doc.title) },
         text = {
