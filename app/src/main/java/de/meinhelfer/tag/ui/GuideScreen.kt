@@ -110,6 +110,9 @@ fun GuideScreen(onBack: () -> Unit, onStartTour: () -> Unit) {
                             Text(if (expanded) "▲" else "▼")
                         }
                         if (expanded) {
+                            SpeakButton(owner = "anleitung_" + section.id) {
+                                section.title + ". " + entries.joinToString(" ") { it.title + ". " + it.text }
+                            }
                             entries.forEach { item ->
                                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                     Text(item.title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)

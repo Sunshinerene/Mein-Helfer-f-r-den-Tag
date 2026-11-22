@@ -383,6 +383,16 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         AppPrefs.setThemeMode(getApplication(), mode)
     }
 
+    private val _uiScale = MutableStateFlow(AppPrefs.uiScale(app))
+
+    /** Größe der Oberfläche (Barrierefreiheit): Knöpfe, Abstände und Schrift zusammen. */
+    val uiScale: StateFlow<Float> = _uiScale
+
+    fun setUiScale(factor: Float) {
+        _uiScale.value = factor
+        AppPrefs.setUiScale(getApplication(), factor)
+    }
+
     private val _fontFactor = MutableStateFlow(AppPrefs.fontFactor(app))
     val fontFactor: StateFlow<Float> = _fontFactor
 

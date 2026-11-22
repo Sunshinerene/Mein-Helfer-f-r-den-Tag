@@ -96,9 +96,19 @@ object DayPlanPdf {
                 val indent = if (line.check) 20f else 0f
                 val main = layout(line.text, paint(11f), width - indent.toInt())
                 val sub = line.sub?.let { layout(it, paint(9.5f, gray = true), width - indent.toInt()) }
-                ensure(main.height + (sub?.height ?: 0) + 8f)
+                val boxRow = if (line.boxes > 0) 24f else 0f
+                ensure(main.height + (sub?.height ?: 0) + boxRow + 8f)
                 if (line.check) canvas.drawRect(LEFT, y + 2f, LEFT + 10f, y + 12f, box)
                 draw(main, LEFT + indent)
+                if (line.boxes > 0) {
+                    // Reihe von Kaestchen zum Abhaken auf Papier (z. B. je ein Glas)
+                    y += 5f
+                    for (i in 0 until line.boxes) {
+                        val x = LEFT + indent + i * 26f
+                        canvas.drawRect(x, y, x + 16f, y + 16f, box)
+                    }
+                    y += 19f
+                }
                 if (sub != null) draw(sub, LEFT + indent)
                 y += 6f
             }

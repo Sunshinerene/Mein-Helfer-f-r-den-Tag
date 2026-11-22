@@ -5,14 +5,18 @@ import de.meinhelfer.tag.data.Doctor
 import de.meinhelfer.tag.data.Medication
 import de.meinhelfer.tag.data.Person
 import de.meinhelfer.tag.data.Todo
+import de.meinhelfer.tag.data.VitalEntry
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-/** Eine Zeile im Tagesplan, optional mit Kaestchen zum Abhaken auf Papier. */
-data class PlanLine(val text: String, val sub: String? = null, val check: Boolean = true)
+/**
+ * Eine Zeile im Tagesplan, optional mit Kaestchen zum Abhaken auf Papier.
+ * [boxes] = Reihe kleiner Kaestchen unter der Zeile (z. B. je ein Glas Wasser), 0 = keine.
+ */
+data class PlanLine(val text: String, val sub: String? = null, val check: Boolean = true, val boxes: Int = 0)
 
 data class PlanSection(val title: String, val lines: List<PlanLine>)
 
@@ -58,6 +62,8 @@ object DayPlan {
         doctors: List<Doctor>,
         today: LocalDate = LocalDate.now(),
         zone: ZoneId = ZoneId.systemDefault(),
+        vitals: List<VitalEntry> = emptyList(),
+        drinkGoal: Int = 0,
     ): List<PlanSection> {
         val day = today.toEpochDay()
         val out = mutableListOf<PlanSection>()
@@ -90,6 +96,8 @@ object DayPlan {
         val soon = open.filter { it !in now && it.dueDay != null && it.dueDay in (day + 1)..(day + 3) }.sortedBy { it.dueDay }
         if (soon.isNotEmpty()) out += PlanSection("Aufgaben: in den nächsten 3 Tagen", soon.map { taskLine(it, day, doctors) })
 
+        drinkAndValues(vitals, drinkGoal, day, zone)?.let { out += it }
+
         val low = meds.filter { (it.daysLeft(day) ?: Int.MAX_VALUE) <= 7 }.map { m ->
             val d = m.daysLeft(day) ?: 0
             PlanLine("${m.name} nachbestellen", if (d <= 0) "Vorrat aufgebraucht" else "reicht noch ca. $d Tage")
@@ -101,5 +109,42 @@ object DayPlan {
             .map { PlanLine("${timeText(it, zone)} – ${it.title}", contact(doctors, it.doctorId), check = false) }
         if (next.isNotEmpty()) out += PlanSection("Morgen", next)
         return out
+    }
+
+    /** Glas = 200 ml; hoechstens 12 Kaestchen auf dem Papier. */
+    const val GLASS_ML = 200
+
+    private val SHORT = DateTimeFormatter.ofPattern("dd.MM.", Locale.GERMANY)
+
+    /**
+     * Trinken und Werte: Trinkziel (ausser bei Ziel 0) mit Kaestchen zum Abhaken (je Glas), gestern getrunken, und fuer jeden Wert,
+     * der in den letzten 14 Tagen gemessen wurde, eine Zeile zum Eintragen mit dem letzten Wert als Hinweis.
+     */
+    internal fun drinkAndValues(vitals: List<VitalEntry>, drinkGoal: Int, day: Long, zone: ZoneId): PlanSection? {
+        val lines = mutableListOf<PlanLine>()
+        val drinks = vitals.filter { it.kind == VitalKind.Trinken.key }
+        // Trinkziel 0 (in „Trinken und Werte“ einstellbar) blendet die Zeile aus
+        if (drinkGoal > 0) {
+            val yesterday = drinks.filter { it.day == day - 1 }.sumOf { it.value }.toInt()
+            val glasses = ((drinkGoal + GLASS_ML - 1) / GLASS_ML).coerceIn(1, 12)
+            lines += PlanLine(
+                "Trinkziel heute: ${String.format(Locale.GERMANY, "%,d", drinkGoal)} ml – je Kästchen ein Glas (${GLASS_ML} ml)",
+                if (yesterday > 0) "Gestern getrunken: ${String.format(Locale.GERMANY, "%,d", yesterday)} ml" else null,
+                check = false,
+                boxes = glasses,
+            )
+        }
+        VitalKind.MEASURES.forEach { k ->
+            val last = vitals.filter { it.kind == k.key && it.day in (day - 14)..day }.maxByOrNull { it.atMillis } ?: return@forEach
+            val unit = last.unit.ifBlank { k.unit }
+            val at = Instant.ofEpochMilli(last.atMillis).atZone(zone)
+            val blank = if (k == VitalKind.Blutdruck) "______ / ______" else "__________"
+            lines += PlanLine(
+                "${k.label}: $blank $unit   um ______ Uhr",
+                "Zuletzt: " + Vitals.valueText(last) + " am " + at.format(SHORT) + " um " + at.format(TIME) + " Uhr",
+                check = false,
+            )
+        }
+        return if (lines.isEmpty()) null else PlanSection("Trinken und Werte", lines)
     }
 }

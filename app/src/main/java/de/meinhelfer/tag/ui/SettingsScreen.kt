@@ -154,6 +154,7 @@ fun SettingsScreen(
                 }
                 SettingsCategory.Darstellung -> {
                     item { ThemeCard(vm) }
+                    item { AccessibilityCard(vm) }
                     item { EffectsCard(vm) }
                     item { IntroCard() }
                 }
@@ -215,7 +216,7 @@ fun SettingsScreen(
 /** Kategorien der Einstellungen; [keywords] fuer die Suche. */
 private enum class SettingsCategory(val emoji: String, val title: String, val keywords: String) {
     Profil("👤", "Meine Daten und Zustimmung", "name adresse telefon rolle ausweis angehörige pflegedienst zustimmung nutzungsbedingungen widerruf nachweis"),
-    Darstellung("🎨", "Darstellung", "hell dunkel design farben schrift schriftgröße größe ecken effekte glas aurora liquid animation glanz transparenz einspieler video intro start logo ton"),
+    Darstellung("🎨", "Darstellung", "hell dunkel design farben schrift schriftgröße größe ecken effekte glas aurora liquid animation glanz transparenz einspieler video intro start logo ton barrierefreiheit kontrast vorlesen sprachausgabe bedienflächen größer zoom sehen"),
     Startseite("🏠", "Heute-Seite, Motivator und Widget", "heute karten notfallkarte tagesstart motivator stimmung smiley ziele widget startbildschirm"),
     Erinnerungen("🔔", "Erinnerungen und Freigaben", "benachrichtigung freigabe freigaben wecker alarm akku einnahme zeitfenster ton erinnerung trinken tagebuch pflegetagebuch"),
     Dokumente("📄", "Dokumente", "betrachter viewer pdf drucken öffnen dokument"),
@@ -931,6 +932,65 @@ private fun ViewerCard() {
             }
             Text(
                 "Der eingebaute Betrachter zeigt PDF, Fotos und Text. Andere Formate (z. B. Word) öffnen immer mit einer anderen App.",
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
+    }
+}
+
+/** Barrierefreiheit: hoher Kontrast, Größe der Oberfläche, Vorlesen. */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+private fun AccessibilityCard(vm: MainViewModel) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val style by vm.designStyle.collectAsStateWithLifecycle()
+    val scale by vm.uiScale.collectAsStateWithLifecycle()
+    var rate by remember { mutableStateOf(AppPrefs.speechRate(context)) }
+    HCard(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Barrierefreiheit", style = MaterialTheme.typography.titleMedium)
+
+            Text("Hoher Kontrast", style = MaterialTheme.typography.labelLarge)
+            Text(
+                "Schwarz und Weiß mit kräftigen Farben und deutlichen Rändern, ohne graue Schrift. Im dunklen Modus Gelb auf Schwarz.",
+                style = MaterialTheme.typography.bodySmall,
+            )
+            if (style == DesignStyle.Kontrast) {
+                OutlinedButton(shape = buttonShape(), onClick = { vm.setDesignStyle(DesignStyle.Schlicht) }) { Text("Ist an · zurück zu „Schlicht“") }
+            } else {
+                Button(shape = buttonShape(), onClick = { vm.setDesignStyle(DesignStyle.Kontrast) }) { Text("Hohen Kontrast einschalten") }
+            }
+
+            Text("Größe von Knöpfen und Feldern", style = MaterialTheme.typography.labelLarge)
+            androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf(1f to "Normal", 1.12f to "Größer", 1.25f to "Sehr groß").forEach { (f, label) ->
+                    FilterChip(selected = kotlin.math.abs(scale - f) < 0.01f, onClick = { vm.setUiScale(f) }, label = { Text(label) })
+                }
+            }
+            Text(
+                "Vergrößert die ganze App: Knöpfe, Kästchen, Abstände und Schrift. Leichter zu treffen, dafür passt weniger auf den Bildschirm. " +
+                    "Die Schriftgröße oben gilt zusätzlich.",
+                style = MaterialTheme.typography.bodySmall,
+            )
+
+            Text("Vorlesen", style = MaterialTheme.typography.labelLarge)
+            Text(
+                "„🔊 Vorlesen“ gibt es im Tagesplan, bei Dokumenten und in der Anleitung. Gesprochen wird mit der Sprachausgabe des Handys.",
+                style = MaterialTheme.typography.bodySmall,
+            )
+            androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf(0.75f to "Langsam", 0.95f to "Normal", 1.2f to "Schneller").forEach { (r, label) ->
+                    FilterChip(selected = kotlin.math.abs(rate - r) < 0.01f, onClick = {
+                        rate = r
+                        AppPrefs.setSpeechRate(context, r)
+                    }, label = { Text(label) })
+                }
+            }
+            SpeakButton(owner = "probe", label = "🔊 Probe hören") {
+                "So klingt das Vorlesen in dieser Geschwindigkeit. Mein Helfer für den Tag liest dir Tagesplan, Dokumente und Anleitung vor."
+            }
+            Text(
+                "Die App lässt sich auch mit TalkBack bedienen, dem Bildschirmleser von Android (Android-Einstellungen → Bedienungshilfen).",
                 style = MaterialTheme.typography.bodySmall,
             )
         }

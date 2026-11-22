@@ -51,6 +51,7 @@ enum class DesignStyle(val key: String, val label: String, val description: Stri
     Sonnig("sonnig", "Sonnig", "Warm und freundlich in Gelb und Orange"),
     Natur("natur", "Natur", "Beruhigendes, sanftes Grün"),
     Aurora("aurora", "Aurora (Beta)", "Leuchtende Farbverläufe mit Glas und Leuchtrand"),
+    Kontrast("kontrast", "Hoher Kontrast", "Schwarz, Weiß und kräftige Farben, besonders gut lesbar"),
     ;
 
     companion object {
@@ -531,6 +532,42 @@ fun designSpec(style: DesignStyle, dark: Boolean): DesignSpec = when (style) {
             shapes = shapes(6, 10, 14, 18, 24),
             cardColor = null,
             cardBorder = null,
+            cardElevation = 0.dp,
+            backdrop = null,
+            preview = listOf(p.primary, p.primaryContainer, p.background),
+        )
+    }
+
+    DesignStyle.Kontrast -> {
+        // Barrierefreiheit: kräftige Kontraste, keine grauen Schriften, deutliche Ränder
+        val p = if (dark) {
+            Palette(
+                c(0xFFFFD600), c(0xFF000000), c(0xFF3A3000), c(0xFFFFFFFF), c(0xFF1F1F1F), c(0xFFFFFFFF),
+                c(0xFF000000), c(0xFFFFFFFF), c(0xFF1A1A1A), c(0xFFFFFFFF), c(0xFFFFFFFF), c(0xFFBDBDBD),
+                c(0xFF000000), c(0xFF0A0A0A), c(0xFF121212), c(0xFF1A1A1A), c(0xFF222222),
+            )
+        } else {
+            Palette(
+                c(0xFF0030B0), c(0xFFFFFFFF), c(0xFFFFE600), c(0xFF000000), c(0xFFFFF3A0), c(0xFF000000),
+                c(0xFFFFFFFF), c(0xFF000000), c(0xFFF0F0F0), c(0xFF000000), c(0xFF000000), c(0xFF444444),
+                c(0xFFFFFFFF), c(0xFFFFFFFF), c(0xFFF7F7F7), c(0xFFF0F0F0), c(0xFFEAEAEA),
+            )
+        }
+        val base = scheme(p, dark)
+        DesignSpec(
+            scheme = base.copy(
+                error = if (dark) c(0xFFFF8A80) else c(0xFFB00020),
+                onError = if (dark) c(0xFF000000) else c(0xFFFFFFFF),
+                errorContainer = if (dark) c(0xFF5C0000) else c(0xFFFFDAD6),
+                onErrorContainer = if (dark) c(0xFFFFFFFF) else c(0xFF000000),
+                tertiary = if (dark) c(0xFF80D8FF) else c(0xFF004D40),
+                onTertiary = if (dark) c(0xFF000000) else c(0xFFFFFFFF),
+                tertiaryContainer = if (dark) c(0xFF003A4F) else c(0xFFB2EBF2),
+                onTertiaryContainer = if (dark) c(0xFFFFFFFF) else c(0xFF000000),
+            ),
+            shapes = shapes(4, 6, 10, 12, 16),
+            cardColor = p.background,
+            cardBorder = BorderStroke(2.dp, if (dark) c(0xFFFFFFFF) else c(0xFF000000)),
             cardElevation = 0.dp,
             backdrop = null,
             preview = listOf(p.primary, p.primaryContainer, p.background),

@@ -121,7 +121,9 @@ internal fun DailyStartScreen(
     val confirmedAt = AppPrefs.reviewConfirmed(context, person?.id ?: 0L, yesterday)
 
     val today = LocalDate.ofEpochDay(todayDay)
-    val sections = DayPlan.build(person, meds, appointments, todos, doctors, today)
+    val vitals by vm.vitals.collectAsStateWithLifecycle()
+    val drinkGoal = person?.let { AppPrefs.drinkGoal(context, it.id) } ?: 0
+    val sections = DayPlan.build(person, meds, appointments, todos, doctors, today, vitals = vitals, drinkGoal = drinkGoal)
     val planTitle = "Tagesplan" + (person?.name?.let { " – $it" } ?: "")
     val planSubtitle = today.format(DayPlan.TITLE_DATE)
 
@@ -276,6 +278,7 @@ internal fun DailyStartScreen(
                                 s.lines.forEach { l ->
                                     Column {
                                         Text((if (l.check) "☐ " else "") + l.text, style = MaterialTheme.typography.bodyMedium)
+                                        if (l.boxes > 0) Text("☐ ".repeat(l.boxes).trim(), style = MaterialTheme.typography.titleMedium)
                                         l.sub?.let { Text(it, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = if (l.check) 22.dp else 0.dp)) }
                                     }
                                 }
@@ -296,6 +299,7 @@ internal fun DailyStartScreen(
                                 }.onFailure { toast(context, "Drucken ist nicht möglich.") }
                             }
                         }) { Text("Drucken") }
+                        SpeakButton(owner = "tagesplan") { planSpeech("$planTitle, $planSubtitle", sections) }
                     }
                 }
                 item {

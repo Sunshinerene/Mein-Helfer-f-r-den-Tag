@@ -706,6 +706,15 @@ internal fun DocumentDetailDialog(
                 facts.forEach { Text(it, style = MaterialTheme.typography.bodyMedium) }
                 extra?.invoke()
                 androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    if (doc.summary.isNotBlank() || doc.text.isNotBlank()) {
+                        SpeakButton(owner = "dokument_${doc.id}") {
+                            listOfNotNull(
+                                doc.title,
+                                doc.summary.takeIf { it.isNotBlank() }?.let { "Zusammenfassung: $it" },
+                                doc.text.takeIf { it.isNotBlank() }?.let { "Text des Dokuments: $it" },
+                            ).joinToString(". ")
+                        }
+                    }
                     OutlinedButton(shape = buttonShape(), onClick = {
                         if (AppPrefs.internalViewer(context) && canViewInside(doc)) {
                             showViewer = true

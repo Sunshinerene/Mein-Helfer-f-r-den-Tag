@@ -38,6 +38,20 @@ object AppPrefs {
         prefs(context).edit().putBoolean("widget_details", on).apply()
     }
 
+    /** Größe der ganzen Oberfläche (Knöpfe, Abstände, Schrift) als Faktor: 1.0 normal, bis 1.25. */
+    fun uiScale(context: Context): Float = prefs(context).getFloat("ui_faktor", 1f).coerceIn(1f, 1.3f)
+
+    fun setUiScale(context: Context, factor: Float) {
+        prefs(context).edit().putFloat("ui_faktor", factor).apply()
+    }
+
+    /** Geschwindigkeit beim Vorlesen (1.0 = normal). */
+    fun speechRate(context: Context): Float = prefs(context).getFloat("vorlesen_tempo", 0.95f).coerceIn(0.5f, 1.6f)
+
+    fun setSpeechRate(context: Context, rate: Float) {
+        prefs(context).edit().putFloat("vorlesen_tempo", rate).apply()
+    }
+
     private const val KEY_THEME = "design"
 
     /** "system", "light" oder "dark" */

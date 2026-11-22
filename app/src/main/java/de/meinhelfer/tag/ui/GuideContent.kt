@@ -108,7 +108,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
         items = listOf(
             GuideItem(
                 "Tagesstart: Rückblick und Tagesplan",
-                "Beim ersten Öffnen am Tag zeigt die App den Rückblick auf gestern: Zusammenfassung, Einnahmen und Termine (was noch fehlt, ist rot und lässt sich direkt nachtragen), erledigte Aufgaben und die Bemerkung zum Tag. Mit „Bestätigen“ hältst du fest, dass der Tag geprüft ist. Danach kommt der Tagesplan für heute: Wichtiges, Einnahmen, Termine, Aufgaben (überfällig, heute, dringend, nächste 3 Tage), Nachbestellen und Termine morgen. Er lässt sich als PDF teilen oder drucken (mit Kästchen zum Abhaken auf Papier). Oben auf der Heute-Seite erreichst du beides jederzeit („Rückblick gestern“, „Tagesplan (PDF)“). Bei mehreren Personen gibt es den Tagesstart je Person. Abschalten: Einstellungen → Heute-Seite, Motivator und Widget.",
+                "Beim ersten Öffnen am Tag zeigt die App den Rückblick auf gestern: Zusammenfassung, Einnahmen und Termine (was noch fehlt, ist rot und lässt sich direkt nachtragen), erledigte Aufgaben und die Bemerkung zum Tag. Mit „Bestätigen“ hältst du fest, dass der Tag geprüft ist. Danach kommt der Tagesplan für heute: Wichtiges, Einnahmen, Termine, Aufgaben (überfällig, heute, dringend, nächste 3 Tage), Trinken und Werte, Nachbestellen und Termine morgen. Unter „Trinken und Werte“ steht das Trinkziel mit einem Kästchen je Glas (200 ml) und wie viel gestern getrunken wurde; für jeden Wert, der in den letzten 14 Tagen gemessen wurde (z. B. Blutdruck), gibt es eine Zeile zum Eintragen auf Papier mit dem letzten Wert als Hinweis. Bei Trinkziel 0 fällt die Trinkzeile weg. Er lässt sich als PDF teilen oder drucken (mit Kästchen zum Abhaken auf Papier) und mit „🔊 Vorlesen“ anhören. Oben auf der Heute-Seite erreichst du beides jederzeit („Rückblick gestern“, „Tagesplan (PDF)“). Bei mehreren Personen gibt es den Tagesstart je Person. Abschalten: Einstellungen → Heute-Seite, Motivator und Widget.",
             ),
             GuideItem(
                 "Trinken und Werte",
@@ -705,14 +705,14 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Die Bereiche",
-                "Meine Daten und Zustimmung (wer du bist, Adresse, Nutzungsbedingungen und Nachweis). Darstellung (hell/dunkel, Schriftgröße, Design mit eigenen Farben, Ecken, Effekte, Einspieler beim Start). Heute-Seite, Motivator und Widget (Notfallkarte, Tagesstart, Motivator-Karte, Stimmungs-Check, Widget auf dem Startbildschirm). Erinnerungen und Freigaben (Android-Freigaben, Einnahmen abhaken). Dokumente (Betrachter in der App oder andere App). Sicherheit und Sicherung (App-Sperre, Sicherung, Wiederherstellung, Zurücksetzen). KI und Internet (KI-Assistent, Medikamenten-Beschreibung; freiwillig). Hilfe und Rückmeldung (Anleitung, Rundgang, Feedback). App und Updates (Version, Updates, Neuigkeiten und Pläne, Infos zur App).",
+                "Meine Daten und Zustimmung (wer du bist, Adresse, Nutzungsbedingungen und Nachweis). Darstellung (hell/dunkel, Schriftgröße, Design mit eigenen Farben, Barrierefreiheit mit hohem Kontrast, Größe und Vorlesen, Ecken, Effekte, Einspieler beim Start). Heute-Seite, Motivator und Widget (Notfallkarte, Tagesstart, Motivator-Karte, Stimmungs-Check, Widget auf dem Startbildschirm). Erinnerungen und Freigaben (Android-Freigaben, Einnahmen abhaken). Dokumente (Betrachter in der App oder andere App). Sicherheit und Sicherung (App-Sperre, Sicherung, Wiederherstellung, Zurücksetzen). KI und Internet (KI-Assistent, Medikamenten-Beschreibung; freiwillig). Hilfe und Rückmeldung (Anleitung, Rundgang, Feedback). App und Updates (Version, Updates, Neuigkeiten und Pläne, Infos zur App).",
             ),
         ),
     ),
     GuideSection(
         id = "updates",
         title = "Updates, Darstellung und Feedback",
-        summary = "App aktualisieren, Schrift, Design, Ecken und Effekte, Logo und Einspieler, Notfallkarte, Feedback",
+        summary = "App aktualisieren, Schrift, Design, Barrierefreiheit, Ecken und Effekte, Logo und Einspieler, Notfallkarte, Feedback",
         items = listOf(
             GuideItem(
                 "Selbsttest",
@@ -724,7 +724,11 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Darstellung",
-                "In den Einstellungen wählst du, ob die App wie das Handy, immer hell oder immer dunkel aussehen soll. Die Schriftgröße der ganzen App stellst du von „Klein“ bis „Riesig“ ein (zusätzlich zur Schriftgröße des Handys). Außerdem gibt es sieben Designs zur Auswahl: Schlicht, Minimalistisch, Glas, Liquid, Sonnig, Natur und Aurora (Beta, leuchtende Farbverläufe mit Glas-Karten und Leuchtrand). Die Vorschau zeigt die Farben, ausprobieren kannst du jedes mit einem Tipp. Mit „Farben anpassen“ änderst du die drei Farben des gewählten Designs selbst: Hauptfarbe, Zweitfarbe und Hintergrund (bei Glas und Liquid die beiden Hintergrundfarben). Du siehst die Änderung sofort, „Standard“ und „Alles zurücksetzen“ stellen das Original wieder her. Unter „Ecken“ legst du einheitlich für Karten, Knöpfe, Eingabefelder und Fenster fest, wie die Ecken aussehen: eckig, dezent eckig, dezent rund oder rund („Wie im Design“ nimmt die Ecken des gewählten Designs).",
+                "In den Einstellungen wählst du, ob die App wie das Handy, immer hell oder immer dunkel aussehen soll. Die Schriftgröße der ganzen App stellst du von „Klein“ bis „Riesig“ ein (zusätzlich zur Schriftgröße des Handys). Außerdem gibt es acht Designs zur Auswahl: Schlicht, Minimalistisch, Glas, Liquid, Sonnig, Natur, Aurora (Beta, leuchtende Farbverläufe mit Glas-Karten und Leuchtrand) und Hoher Kontrast. Die Vorschau zeigt die Farben, ausprobieren kannst du jedes mit einem Tipp. Mit „Farben anpassen“ änderst du die drei Farben des gewählten Designs selbst: Hauptfarbe, Zweitfarbe und Hintergrund (bei Glas und Liquid die beiden Hintergrundfarben). Du siehst die Änderung sofort, „Standard“ und „Alles zurücksetzen“ stellen das Original wieder her. Unter „Ecken“ legst du einheitlich für Karten, Knöpfe, Eingabefelder und Fenster fest, wie die Ecken aussehen: eckig, dezent eckig, dezent rund oder rund („Wie im Design“ nimmt die Ecken des gewählten Designs).",
+            ),
+            GuideItem(
+                "Barrierefreiheit",
+                "Einstellungen → Darstellung → „Barrierefreiheit“. „Hohen Kontrast einschalten“ wählt das Design „Hoher Kontrast“: Schwarz und Weiß mit kräftigen Farben, deutlichen Rändern und ohne graue Schrift (dunkel: Gelb auf Schwarz). „Größe von Knöpfen und Feldern“ (Normal, Größer, Sehr groß) vergrößert die ganze App wie eine Lupe: Knöpfe, Kästchen, Abstände und Schrift, damit sie leichter zu treffen sind; die Schriftgröße gilt zusätzlich. „Vorlesen“: Im Tagesplan, bei jedem Dokument (Titel, Zusammenfassung, Text) und in jedem Abschnitt dieser Anleitung gibt es „🔊 Vorlesen“, nochmal tippen („⏹ Stopp“) hört auf, beim Verlassen der Seite auch. Die Geschwindigkeit (Langsam, Normal, Schneller) stellst du dort ein, „Probe hören“ spielt ein Beispiel. Gesprochen wird mit der Sprachausgabe des Handys; fehlt die deutsche Stimme, sagt die App, wo man sie installiert. Die App lässt sich außerdem mit TalkBack bedienen, dem Bildschirmleser von Android.",
             ),
             GuideItem(
                 "Logo und Einspieler",
