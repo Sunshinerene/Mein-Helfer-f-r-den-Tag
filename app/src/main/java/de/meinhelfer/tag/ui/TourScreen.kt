@@ -118,7 +118,7 @@ private val TOUR_PAGES = listOf(
     ),
     TourPage(
         title = "Budgets und Übergabe",
-        text = "Im Reiter „Infos“ oben: „Budgets der Pflegekasse“ zeigt, was vom Entlastungsbetrag und vom Jahresbetrag für Verhinderungs- und Kurzzeitpflege genutzt ist und was übrig bleibt. Der „Übergabe-Bericht“ fasst für eine Vertretung alles Wichtige als PDF zusammen.",
+        text = "Im Profil der Person auf der Heute-Seite: „Budgets“ zeigt, was vom Entlastungsbetrag und vom Jahresbetrag für Verhinderungs- und Kurzzeitpflege genutzt ist und was übrig bleibt. Der „Übergabe-Bericht“ fasst für eine Vertretung alles Wichtige als PDF zusammen.",
         tips = listOf("Ausgaben mit Stand eintragen: eingereicht, erstattet, abgelehnt.", "Eigene Hinweise im Übergabe-Bericht werden je Person gemerkt.", "Beträge Stand November 2026; für 2027 ist eine Reform geplant."),
         mock = { MockBudget() },
     ),
@@ -165,8 +165,8 @@ private val TOUR_PAGES = listOf(
         mock = { MockNotification() },
     ),
     TourPage(
-        title = "Auswertung",
-        text = "Für Tag, Woche oder Monat zeigt die Auswertung, was gut lief, was auffällt, welche Aufgaben erledigt wurden und welche nächsten Schritte sinnvoll sein könnten.",
+        title = "Berichte und Auswertung",
+        text = "Oben stehen alle Ausdrucke an einem Ort: Medikamentenplan, Notfallkarte, Tagesplan, Werte, Pflegetagebuch, Übergabe, Nachbestellung und Budgets. Darunter zeigt die Auswertung für Tag, Woche oder Monat, was gut lief, was auffällt, welche Aufgaben erledigt wurden und welche nächsten Schritte sinnvoll sein könnten.",
         tips = listOf("Das sind Anhaltspunkte, kein ärztlicher Rat.", "Empfehlungen lassen sich mit einem Tipp als Aufgabe merken."),
         mock = { MockSummary() },
     ),

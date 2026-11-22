@@ -92,6 +92,14 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
                 "Beim Anlegen oder über den Namen → „Profil bearbeiten“ kannst du Geburtsdatum, Pflegegrad (1 bis 5) und „Wichtig zu wissen“ eintragen, z. B. Allergien oder Besonderheiten. Dazu kommen Adresse (Straße, PLZ, Ort), Krankenkasse und Versichertennummer, damit der Wegweiser passende Links liefert und du Anträge schneller ausfüllen kannst. Alles ist freiwillig, bleibt nur in der App und wird nie automatisch gesendet. Auf der Heute-Seite steht oben das Profil mit Alter und Pflegegrad.",
             ),
             GuideItem(
+                "Budgets der Pflegekasse",
+                "Im Profil der Person auf der Heute-Seite unter „Budgets“ (oder unter „Berichte“) verfolgst du zwei Budgets mit: den Entlastungsbetrag (derzeit 131 € im Monat ab Pflegegrad 1, für anerkannte Alltagshilfe, Betreuung, Haushaltshilfe, Tages- oder Kurzzeitpflege) und den Gemeinsamen Jahresbetrag für Verhinderungs- und Kurzzeitpflege (derzeit 3.539 € im Kalenderjahr ab Pflegegrad 2, jeweils bis zu 8 Wochen). Mit „+ Ausgabe“ trägst du Datum, Betrag, ggf. Tage, Anbieter und den Stand ein (noch nicht eingereicht, eingereicht, erstattet, abgelehnt; Abgelehntes zählt nicht). Die App zeigt, was genutzt ist und was übrig bleibt, beim Entlastungsbetrag auch, was bis jetzt angesammelt ist und den Übertrag aus dem Vorjahr, der nach heutigem Recht bis 30. Juni genutzt werden kann. Unter „Beträge und Beginn“ trägst du ein, seit wann der Pflegegrad besteht, und passt die Beträge an, falls sich das Recht ändert. Stand November 2026 plant die Bundesregierung ab 2027 eine Reform (unter anderem soll der Entlastungsbetrag durch ein Sozialraumbudget ersetzt werden); noch ist das kein Gesetz. Maßgeblich sind immer die Bescheide der Pflegekasse.",
+            ),
+            GuideItem(
+                "Übergabe-Bericht",
+                "Für Urlaub, Krankheit oder einen Wechsel: Im Profil der Person auf der Heute-Seite unter „Übergabe“ (oder unter „Berichte“) wählst du den Zeitraum und wer vertritt, schreibst eigene Hinweise (Tagesablauf, Essen und Trinken, wichtige Hinweise, was hilft und was zu vermeiden ist; das wird je Person gemerkt) und hakst an, was hinein soll: Medikamente (mit Hinweis, wenn der Vorrat nicht bis zum Ende reicht), Termine im Zeitraum, Ärzte und Kontakte mit Zuständigkeiten und Vertretungen, offene Aufgaben, Trinkziel und letzte Werte, wobei Hilfe nötig ist (aus dem Pflegetagebuch) und auf Wunsch die Versichertennummer. „Als PDF teilen“ oder „Drucken“ erstellt den Bericht. Er enthält Gesundheitsdaten, also nur an Menschen geben, die die Pflege übernehmen.",
+            ),
+            GuideItem(
                 "Person wechseln oder anlegen",
                 "Auf den Namen tippen. Dort wählst du eine andere Person oder legst eine neue an. Praktisch, wenn du z. B. für beide Eltern sorgst.",
             ),
@@ -203,7 +211,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Hilfe auf jeder Seite",
-                "Unten links in der Leiste ist das Gesicht des Assistenten mit seinem Namen; ein roter Punkt heißt, es ist etwas offen oder er hat einen Vorschlag. Ein Tipp öffnet, was er zu dieser Seite sagt (z. B. unter Medikamente, was bald nachbestellt werden muss), seine Vorschläge, „So geht's hier“ mit den passenden Punkten der Anleitung und „Frag mich“: Du tippst eine Frage ein, etwa „Wie drucke ich den Medikamentenplan?“, und er sucht die Antwort in der Anleitung, ohne Internet.",
+                "Unten links in der Leiste ist das Gesicht des Assistenten mit seinem Namen; ein roter Punkt heißt, es ist etwas offen oder er hat einen Vorschlag. Ein Tipp öffnet, was er zu dieser Seite sagt (z. B. unter Medikamente, was bald nachbestellt werden muss), seine Vorschläge, „So geht's hier“ mit den passenden Punkten der Anleitung und „Frag mich“: Du tippst eine Frage ein, etwa „Wie drucke ich den Medikamentenplan?“, und er sucht die Antwort in der Anleitung, ohne Internet. Ist eine KI eingerichtet, kann er die Frage auf Wunsch auch frei beantworten („… mit KI fragen“): Gesendet werden dann nur deine Frage und passende Abschnitte der Anleitung, keine Daten aus der App. Allgemeine Fragen zur Pflege beantwortet er nur als Anhaltspunkt, ohne medizinische, rechtliche oder finanzielle Beratung.",
             ),
             GuideItem(
                 "Was er macht",
@@ -324,16 +332,8 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
     GuideSection(
         id = "infos",
         title = "Infos",
-        summary = "Aktuelles zu Pflege, Gesetzen und deinen Themen, Budgets, Übergabe",
+        summary = "Aktuelles zu Pflege, Gesetzen und deinen Themen",
         items = listOf(
-            GuideItem(
-                "Budgets der Pflegekasse",
-                "Oben im Reiter „Infos“ (oder im Profil auf der Heute-Seite unter „Budgets“) verfolgst du zwei Budgets mit: den Entlastungsbetrag (derzeit 131 € im Monat ab Pflegegrad 1, für anerkannte Alltagshilfe, Betreuung, Haushaltshilfe, Tages- oder Kurzzeitpflege) und den Gemeinsamen Jahresbetrag für Verhinderungs- und Kurzzeitpflege (derzeit 3.539 € im Kalenderjahr ab Pflegegrad 2, jeweils bis zu 8 Wochen). Mit „+ Ausgabe“ trägst du Datum, Betrag, ggf. Tage, Anbieter und den Stand ein (noch nicht eingereicht, eingereicht, erstattet, abgelehnt; Abgelehntes zählt nicht). Die App zeigt, was genutzt ist und was übrig bleibt, beim Entlastungsbetrag auch, was bis jetzt angesammelt ist und den Übertrag aus dem Vorjahr, der nach heutigem Recht bis 30. Juni genutzt werden kann. Unter „Beträge und Beginn“ trägst du ein, seit wann der Pflegegrad besteht, und passt die Beträge an, falls sich das Recht ändert. Stand November 2026 plant die Bundesregierung ab 2027 eine Reform (unter anderem soll der Entlastungsbetrag durch ein Sozialraumbudget ersetzt werden); noch ist das kein Gesetz. Maßgeblich sind immer die Bescheide der Pflegekasse.",
-            ),
-            GuideItem(
-                "Übergabe-Bericht",
-                "Für Urlaub, Krankheit oder einen Wechsel: Im Reiter „Infos“ oben (oder im Profil unter „Übergabe“) wählst du den Zeitraum und wer vertritt, schreibst eigene Hinweise (Tagesablauf, Essen und Trinken, wichtige Hinweise, was hilft und was zu vermeiden ist; das wird je Person gemerkt) und hakst an, was hinein soll: Medikamente (mit Hinweis, wenn der Vorrat nicht bis zum Ende reicht), Termine im Zeitraum, Ärzte und Kontakte mit Zuständigkeiten und Vertretungen, offene Aufgaben, Trinkziel und letzte Werte, wobei Hilfe nötig ist (aus dem Pflegetagebuch) und auf Wunsch die Versichertennummer. „Als PDF teilen“ oder „Drucken“ erstellt den Bericht. Er enthält Gesundheitsdaten, also nur an Menschen geben, die die Pflege übernehmen.",
-            ),
             GuideItem(
                 "Was ist das?",
                 "Der Reiter „Infos“ sammelt aktuelle Themen rund um Pflege: Pflegereform und Gesetze, Beratung und Hilfe, Pflege und Beruf, Entlastung für Angehörige. Die Themenkarten tragen ein Datum („Stand“) und sind ohne Gewähr. Gesetze ändern sich, maßgeblich sind Gesetzestext, Pflegekasse und Beratungsstellen.",
@@ -623,6 +623,10 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
         title = "Auswertung",
         summary = "Tag, Woche, Monat: was gut lief und was auffällt",
         items = listOf(
+            GuideItem(
+                "Berichte und Ausdrucke",
+                "Ganz oben unter „Berichte und Auswertung“ (Heute-Seite → Auswertung, oder im Profil der Person → „Berichte“) stehen alle Ausdrucke der gewählten Person an einem Ort: Medikamentenplan, Notfallkarte (ohne Versichertennummer; mit Nummer über das rote Telefon), Tagesplan für heute, Trinken und Werte der letzten 14 Tage, Pflegetagebuch der letzten 30 Tage, Übergabe-Bericht, Nachbestell-Liste und Budgets. Was Einstellungen braucht (Tagesplan, Übergabe, Budgets), öffnet sich; der Rest entsteht direkt als PDF zum Teilen oder Drucken. Nichts wird von selbst verschickt.",
+            ),
             GuideItem(
                 "Öffnen",
                 "Auf der Heute-Seite ganz unten die Karte „Auswertung“ antippen. Die Zusammenfassung von gestern siehst du außerdem im Tagesstart („Rückblick gestern“).",

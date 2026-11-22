@@ -391,6 +391,8 @@ fun AssistantSheetContent(vm: MainViewModel, page: String, onOpenGuide: () -> Un
     val speaking by Speech.speaking.collectAsState()
     var question by remember { mutableStateOf("") }
     var open by remember { mutableStateOf<String?>(null) }
+    var aiAnswer by remember { mutableStateOf<String?>(null) }
+    val context = androidx.compose.ui.platform.LocalContext.current
     val help = remember(page) { guideFor(page) }
     val note = pageNote(page, vm, st)
     val answers = remember(question) { searchGuide(question) }
@@ -430,6 +432,29 @@ fun AssistantSheetContent(vm: MainViewModel, page: String, onOpenGuide: () -> Un
                     Text("❓ " + a.title, style = MaterialTheme.typography.bodyLarge)
                     if (open == "f_" + a.title) Text(a.text, style = MaterialTheme.typography.bodyMedium)
                 }
+            }
+            // Freiwillig: Frage mit KI beantworten, nur mit Abschnitten der Anleitung, ohne Daten aus der App
+            if (de.meinhelfer.tag.ai.AiConfig.isConfigured(context)) {
+                AiActionButton(
+                    label = "${st.name} mit KI fragen",
+                    note = "Gesendet werden nur deine Frage, so wie du sie eingetippt hast, und passende Abschnitte der Anleitung. " +
+                        "Keine Daten aus der App (keine Namen, Medikamente, Termine). Schreib in die Frage bitte keine Namen.",
+                    system = assistantAiSystem(st.name),
+                    prompt = { assistantAiPrompt(question, answers + searchGuide(question, 6) + help) },
+                    onAnswer = { a, _ ->
+                        aiAnswer = a.trim().takeIf { it.isNotBlank() }
+                        aiAnswer != null
+                    },
+                )
+            } else {
+                Text("Mit eingerichteter KI (Einstellungen → KI und Internet) kann ich Fragen auch frei beantworten.", style = MaterialTheme.typography.bodySmall)
+            }
+            aiAnswer?.let {
+                Text("🤖 $it", style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    "KI-Antwort, nur ein Anhaltspunkt. Bei Gesundheit, Recht und Geld zählt, was Ärztin, Arzt, Apotheke, Pflegekasse oder eine Beratungsstelle sagen.",
+                    style = MaterialTheme.typography.bodySmall,
+                )
             }
         }
 
@@ -662,5 +687,28 @@ fun ReminderOverviewCard(vm: MainViewModel) {
                 }
             }
         }
+    }
+}
+
+/** Anweisung für die KI, wenn „Frag mich“ mit KI beantwortet wird. */
+internal fun assistantAiSystem(name: String): String =
+    "Du bist $name, der persönliche Assistent in der Android-App „Mein Helfer für den Tag“ für pflegende Angehörige. " +
+        "Antworte freundlich, in einfacher Sprache, in der Du-Form und kurz (höchstens sechs Sätze). " +
+        "Fragen zur Bedienung der App beantwortest du nur anhand der mitgeschickten Abschnitte der Anleitung; erfinde keine Funktionen. " +
+        "Steht die Antwort nicht darin, sag das ehrlich und nenne, wo man in der App nachsehen kann. " +
+        "Allgemeine Fragen zur Pflege darfst du kurz allgemein beantworten, ausdrücklich als Anhaltspunkt, und auf Pflegestützpunkt, Pflegekasse oder Beratungsstellen verweisen. " +
+        "Gib keine medizinischen Ratschläge, keine Diagnosen und keine Rechts- oder Finanzberatung."
+
+/** Frage und passende Abschnitte der Anleitung (ohne Daten aus der App). */
+internal fun assistantAiPrompt(question: String, items: List<GuideItem>): String = buildString {
+    appendLine("Frage: " + question.trim().take(500))
+    appendLine()
+    appendLine("Passende Abschnitte der Anleitung:")
+    var size = 0
+    items.distinctBy { it.title }.forEach { item ->
+        val block = "- " + item.title + ": " + item.text
+        if (size + block.length > 7000) return@forEach
+        appendLine(block)
+        size += block.length
     }
 }

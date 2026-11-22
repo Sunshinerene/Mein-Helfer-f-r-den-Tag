@@ -41,7 +41,13 @@ import de.meinhelfer.tag.summary.Summary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SummaryScreen(vm: MainViewModel, onBack: () -> Unit) {
+fun SummaryScreen(
+    vm: MainViewModel,
+    onBack: () -> Unit,
+    onOpenDailyPlan: () -> Unit = {},
+    onOpenHandover: () -> Unit = {},
+    onOpenBudget: () -> Unit = {},
+) {
     val context = LocalContext.current
     var period by remember { mutableStateOf(Period.Day) }
     var offset by remember { mutableIntStateOf(0) }
@@ -57,7 +63,7 @@ fun SummaryScreen(vm: MainViewModel, onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Auswertung") },
+                title = { Text("Berichte und Auswertung") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Zurück")
@@ -71,6 +77,8 @@ fun SummaryScreen(vm: MainViewModel, onBack: () -> Unit) {
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            item { ReportsCard(vm, onOpenDailyPlan = onOpenDailyPlan, onOpenHandover = onOpenHandover, onOpenBudget = onOpenBudget) }
+            item { Text("Auswertung", style = MaterialTheme.typography.titleMedium) }
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Period.entries.forEach { p ->

@@ -417,7 +417,17 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
             caregiver = caregiver,
         )
     } else if (showSummary) {
-        SummaryScreen(vm = vm, onBack = { showSummary = false })
+        SummaryScreen(
+            vm = vm,
+            onBack = { showSummary = false },
+            // Auswertung bleibt darunter offen: Zurück führt wieder hierher
+            onOpenDailyPlan = {
+                dailyPlanOnly = true
+                showDailyStart = true
+            },
+            onOpenHandover = { showHandover = true },
+            onOpenBudget = { showBudget = true },
+        )
     } else {
         Scaffold(
             topBar = {

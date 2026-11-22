@@ -218,12 +218,7 @@ fun InfoScreen(
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        item {
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                androidx.compose.material3.OutlinedButton(shape = buttonShape(), onClick = onOpenBudget) { Text("💶 Budgets der Pflegekasse") }
-                androidx.compose.material3.OutlinedButton(shape = buttonShape(), onClick = onOpenHandover) { Text("📋 Übergabe-Bericht") }
-            }
-        }
+        // Budgets und Übergabe gehören zur Person: im Profil auf der Heute-Seite und unter „Berichte und Auswertung“
         item {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(selected = !showFav, onClick = { showFav = false }, label = { Text("Alle Infos") })
