@@ -125,7 +125,7 @@ fun DocSummaryBox(
         )
         if (!configured && !otherReady) {
             Text(
-                "KI nicht eingerichtet. Unter Einstellungen → KI-Assistent kannst du sie einrichten, dann erstellt sie hier eine Zusammenfassung.",
+                "KI nicht eingerichtet. Unter Einstellungen → KI und Internet kannst du sie einrichten, dann erstellt sie hier eine Zusammenfassung.",
                 style = MaterialTheme.typography.bodySmall,
             )
         }
@@ -160,7 +160,7 @@ fun DocSummaryBox(
         if (limitHit) {
             Text(
                 if (otherReady) "Wähle oben einen anderen KI-Dienst und sende erneut."
-                else "Du kannst unter Einstellungen → KI-Assistent einen weiteren Dienst einrichten und dann hier umschalten.",
+                else "Du kannst unter Einstellungen → KI und Internet einen weiteren Dienst einrichten und dann hier umschalten.",
                 style = MaterialTheme.typography.bodySmall,
             )
         }

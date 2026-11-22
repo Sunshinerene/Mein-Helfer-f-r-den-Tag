@@ -58,13 +58,13 @@ private val TOUR_PAGES = listOf(
     ),
     TourPage(
         title = "Wer du bist",
-        text = "Unter Einstellungen → Meine Daten stehen dein Name, deine Rolle (z. B. Angehörige/r, Pflegedienst, Betreuer/in) und auf Wunsch deine Adresse. Damit unterschreibt die App vorbereitete E-Mails und zeigt passende Tipps. Deine Zustimmung zu den Nutzungsbedingungen gilt für genau diese Person.",
+        text = "Unter Einstellungen → Meine Daten und Zustimmung stehen dein Name, deine Rolle (z. B. Angehörige/r, Pflegedienst, Betreuer/in) und auf Wunsch deine Adresse. Damit unterschreibt die App vorbereitete E-Mails und zeigt passende Tipps. Deine Zustimmung zu den Nutzungsbedingungen gilt für genau diese Person.",
         tips = listOf("Änderst du Name oder Rolle, bestätigst du die Nutzungsbedingungen neu.", "Name und Adresse lassen sich auch vom Ausweis auslesen; das Foto wird danach sofort gelöscht.", "Die App ersetzt keinen Arzt und keine Apotheke. Im Notfall immer 112."),
         mock = { MockConsent() },
     ),
     TourPage(
         title = "Freigaben für Erinnerungen",
-        text = "Damit Erinnerungen pünktlich kommen, braucht die App Benachrichtigungen und pünktliche Wecker. Unter Einstellungen → Freigaben siehst du, was erlaubt ist, und kommst mit einem Tipp in die richtige Android-Einstellung.",
+        text = "Damit Erinnerungen pünktlich kommen, braucht die App Benachrichtigungen und pünktliche Wecker. Unter Einstellungen → Erinnerungen und Freigaben siehst du, was erlaubt ist, und kommst mit einem Tipp in die richtige Android-Einstellung.",
         tips = listOf("Fehlt etwas Wichtiges, zeigt die Heute-Seite oben eine rote Karte.", "Akku-Optimierung ausschalten hilft auf manchen Handys."),
         mock = { MockPermissions() },
     ),
@@ -101,13 +101,13 @@ private val TOUR_PAGES = listOf(
     TourPage(
         title = "Tagesstart",
         text = "Beim ersten Öffnen am Tag kommt zuerst der Rückblick auf gestern: Was fehlt noch, wie lief es? Du ergänzt und bestätigst. Danach folgt der Tagesplan für heute, den du als PDF teilen oder drucken kannst.",
-        tips = listOf("Oben auf der Heute-Seite jederzeit über „Rückblick gestern“ und „Tagesplan“.", "Abschaltbar unter Einstellungen → Heute-Seite."),
+        tips = listOf("Oben auf der Heute-Seite jederzeit über „Rückblick gestern“ und „Tagesplan“.", "Abschaltbar unter Einstellungen → Heute-Seite und Motivator."),
         mock = { MockDailyStart() },
     ),
     TourPage(
         title = "Tages-Motivator",
         text = "Ein Satz für den Tag, was du in den letzten Tagen geschafft hast und kleine Vorhaben für heute. Der kurze Stimmungs-Check mit Smileys hilft dabei. Ziele, etwa einen Antrag oder etwas für deine Gesundheit, gehst du Schritt für Schritt an; der Motivator schätzt deinen Weg ein.",
-        tips = listOf("Wie oft nach der Stimmung gefragt wird, stellst du unter Einstellungen → Tages-Motivator ein.", "Für Ziele gibt es Vorlagen, z. B. „Pflegegrad beantragen“. Auf Wunsch schlägt die KI einen Weg vor."),
+        tips = listOf("Wie oft nach der Stimmung gefragt wird, stellst du unter Einstellungen → Heute-Seite und Motivator ein.", "Für Ziele gibt es Vorlagen, z. B. „Pflegegrad beantragen“. Auf Wunsch schlägt die KI einen Weg vor."),
         mock = { MockMotivator() },
     ),
     TourPage(
@@ -143,7 +143,7 @@ private val TOUR_PAGES = listOf(
     TourPage(
         title = "Erinnerungen",
         text = "Zur Einnahmezeit meldet sich die App. Mit „Eingenommen“ direkt in der Benachrichtigung hakst du ab, ohne die App zu öffnen. Wurde schon abgehakt, bleibt die Erinnerung aus.",
-        tips = listOf("Bei mehreren Personen steht der Name dabei, ein Tipp öffnet die richtige Person.", "Kommt nichts an: Einstellungen → Freigaben prüfen."),
+        tips = listOf("Bei mehreren Personen steht der Name dabei, ein Tipp öffnet die richtige Person.", "Kommt nichts an: Einstellungen → Erinnerungen und Freigaben prüfen."),
         mock = { MockNotification() },
     ),
     TourPage(
@@ -155,7 +155,7 @@ private val TOUR_PAGES = listOf(
     TourPage(
         title = "Sicher und privat",
         text = "Deine Daten bleiben verschlüsselt auf deinem Handy, ohne Konto und ohne Cloud. Ins Internet geht die App nur, wenn du etwas anforderst, z. B. Updates, Meldungen, Umkreissuche oder die KI. Eine App-Sperre und eine verschlüsselte Sicherung findest du in den Einstellungen.",
-        tips = listOf("Lege regelmäßig eine Sicherung an und bewahre sie außerhalb des Handys auf.", "Anleitung: Info-Symbol oben. Einstellungen: Zahnrad oben.", "Aussehen nach Geschmack: Design, Ecken, Schriftgröße und Effekte (Beta) in den Einstellungen."),
+        tips = listOf("Lege regelmäßig eine Sicherung an und bewahre sie außerhalb des Handys auf.", "Anleitung: Info-Symbol oben. Einstellungen: Zahnrad oben, nach Bereichen sortiert und durchsuchbar.", "Aussehen nach Geschmack: Design, Ecken, Schriftgröße und Effekte (Beta) in den Einstellungen."),
         mock = { MockPrivacy() },
     ),
 )

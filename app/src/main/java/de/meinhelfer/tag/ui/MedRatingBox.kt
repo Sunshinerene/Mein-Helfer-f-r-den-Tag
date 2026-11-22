@@ -123,7 +123,7 @@ fun MedRatingBox(med: Medication, otherNames: List<String>, onUpdate: (Medicatio
         }
         if (!configured && !otherReady) {
             Text(
-                "KI nicht eingerichtet. Du kannst sie unter Einstellungen → KI-Assistent einrichten (z. B. kostenlos mit Google Gemini).",
+                "KI nicht eingerichtet. Du kannst sie unter Einstellungen → KI und Internet einrichten (z. B. kostenlos mit Google Gemini).",
                 style = MaterialTheme.typography.bodySmall,
             )
         }
@@ -149,7 +149,7 @@ fun MedRatingBox(med: Medication, otherNames: List<String>, onUpdate: (Medicatio
         if (limitHit) {
             Text(
                 if (otherReady) "Wähle oben einen anderen KI-Dienst und sende erneut."
-                else "Du kannst unter Einstellungen → KI-Assistent einen weiteren Dienst einrichten und dann hier umschalten.",
+                else "Du kannst unter Einstellungen → KI und Internet einen weiteren Dienst einrichten und dann hier umschalten.",
                 style = MaterialTheme.typography.bodySmall,
             )
         }

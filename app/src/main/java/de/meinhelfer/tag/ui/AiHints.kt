@@ -81,7 +81,7 @@ fun AiHintBox(
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         if (!configured) {
             Text(
-                "KI nicht eingerichtet. Du kannst sie unter Einstellungen → KI-Assistent einrichten (z. B. kostenlos mit Google Gemini).",
+                "KI nicht eingerichtet. Du kannst sie unter Einstellungen → KI und Internet einrichten (z. B. kostenlos mit Google Gemini).",
                 style = MaterialTheme.typography.bodySmall,
             )
         }
@@ -105,7 +105,7 @@ fun AiHintBox(
         if (limitHit) {
             Text(
                 if (otherReady) "Wähle oben einen anderen KI-Dienst und sende erneut."
-                else "Du kannst unter Einstellungen → KI-Assistent einen weiteren Dienst einrichten (z. B. Groq oder Mistral, kostenlos) und dann hier umschalten.",
+                else "Du kannst unter Einstellungen → KI und Internet einen weiteren Dienst einrichten (z. B. Groq oder Mistral, kostenlos) und dann hier umschalten.",
                 style = MaterialTheme.typography.bodySmall,
             )
         }

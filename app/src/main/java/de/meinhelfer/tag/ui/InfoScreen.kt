@@ -300,7 +300,7 @@ fun InfoScreen(
             item {
                 Text("Für dich: ${role.label}", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(top = 4.dp))
                 Text(
-                    "Tipps und Hilfen passend zu deiner Rolle (Stand $INFO_STAND, ohne Gewähr). Rolle ändern unter Einstellungen → Meine Daten.",
+                    "Tipps und Hilfen passend zu deiner Rolle (Stand $INFO_STAND, ohne Gewähr). Rolle ändern unter Einstellungen → Meine Daten und Zustimmung.",
                     style = MaterialTheme.typography.bodySmall,
                 )
             }

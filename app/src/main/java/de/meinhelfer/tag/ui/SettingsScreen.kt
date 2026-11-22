@@ -35,6 +35,8 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -84,12 +86,17 @@ fun SettingsScreen(
         }
     }
 
+    var categoryKey by rememberSaveable { mutableStateOf<String?>(null) }
+    var query by rememberSaveable { mutableStateOf("") }
+    val category = SettingsCategory.entries.firstOrNull { it.name == categoryKey }
+    androidx.activity.compose.BackHandler(enabled = category != null) { categoryKey = null }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Einstellungen") },
+                title = { Text(category?.title ?: "Einstellungen") },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = { if (category != null) categoryKey = null else onBack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Zurück")
                     }
                 },
@@ -101,41 +108,161 @@ fun SettingsScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            item {
-                UpdateCard(
-                    state = updateState,
-                    autoCheck = autoCheck,
-                    onAutoCheckChange = { enabled ->
-                        autoCheck = enabled
-                        AppPrefs.setAutoUpdateCheck(context, enabled)
-                        if (enabled) UpdateWorker.schedule(context) else UpdateWorker.cancel(context)
-                    },
-                    onCheck = { vm.checkForUpdate() },
-                    onDownload = { vm.downloadUpdate() },
-                    context = context,
-                )
+            when (category) {
+                null -> {
+                    val available = updateState is UpdateState.Available || updateState is UpdateState.Ready
+                    if (available) {
+                        item {
+                            HCard(
+                                Modifier.fillMaxWidth(),
+                                onClick = { categoryKey = SettingsCategory.App.name },
+                                colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                            ) {
+                                Text("Neue Version verfügbar. Tippen zum Aktualisieren.", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(16.dp))
+                            }
+                        }
+                    }
+                    item {
+                        OutlinedTextField(
+                            value = query,
+                            onValueChange = { query = it.take(40) },
+                            placeholder = { Text("Einstellung suchen, z. B. Schrift, KI, Sicherung") },
+                            singleLine = true,
+                            trailingIcon = {
+                                if (query.isNotEmpty()) TextButton(onClick = { query = "" }) { Text("✕") }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
+                    val q = query.trim().lowercase()
+                    val shown = SettingsCategory.entries.filter { c ->
+                        q.isEmpty() || c.title.lowercase().contains(q) || c.keywords.split(" ").any { it.startsWith(q) || q.startsWith(it) && it.length >= 4 }
+                    }
+                    if (shown.isEmpty()) {
+                        item { Text("Nichts gefunden. Versuch ein anderes Wort.", style = MaterialTheme.typography.bodyMedium) }
+                    }
+                    shown.forEach { c ->
+                        item(key = c.name) {
+                            CategoryRow(c, categorySummary(c, vm, caregiver, updateState, context)) { categoryKey = c.name }
+                        }
+                    }
+                }
+                SettingsCategory.Profil -> {
+                    item { CaregiverCard(caregiver, onEditCaregiver) }
+                    item { ConsentCard(onRevoked = onConsentRevoked) }
+                }
+                SettingsCategory.Darstellung -> {
+                    item { ThemeCard(vm) }
+                    item { EffectsCard(vm) }
+                }
+                SettingsCategory.Startseite -> {
+                    item { HomeCardsCard() }
+                    item { MotivatorSettingsCard(vm) }
+                }
+                SettingsCategory.Erinnerungen -> {
+                    item { PermissionsCard() }
+                    item { IntakeCard() }
+                }
+                SettingsCategory.Dokumente -> {
+                    item { ViewerCard() }
+                }
+                SettingsCategory.Sicherheit -> {
+                    item { SecurityCard() }
+                    item { BackupCard() }
+                }
+                SettingsCategory.Internet -> {
+                    item {
+                        Text(
+                            "Alles hier ist freiwillig. Ohne Einrichtung funktioniert die App vollständig, nur ohne Hilfen aus dem Internet.",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                    item { AiCard() }
+                    item { MedInfoCard() }
+                }
+                SettingsCategory.Hilfe -> {
+                    item { HelpCard(onOpenGuide, onStartTour) }
+                    item { FeedbackCard(context) }
+                }
+                SettingsCategory.App -> {
+                    item {
+                        UpdateCard(
+                            state = updateState,
+                            autoCheck = autoCheck,
+                            onAutoCheckChange = { enabled ->
+                                autoCheck = enabled
+                                AppPrefs.setAutoUpdateCheck(context, enabled)
+                                if (enabled) UpdateWorker.schedule(context) else UpdateWorker.cancel(context)
+                            },
+                            onCheck = { vm.checkForUpdate() },
+                            onDownload = { vm.downloadUpdate() },
+                            context = context,
+                        )
+                    }
+                    item { RoadmapCard(roadmap, roadmapError) }
+                    item { AboutCard(context) }
+                }
             }
-            item { SectionTitle("Allgemein") }
-            item { CaregiverCard(caregiver, onEditCaregiver) }
-            item { PermissionsCard() }
-            item { ThemeCard(vm) }
-            item { EffectsCard(vm) }
-            item { HomeCardsCard() }
-            item { MotivatorSettingsCard(vm) }
-            item { IntakeCard() }
-            item { ViewerCard() }
-            item { SectionTitle("Daten und Sicherheit") }
-            item { SecurityCard() }
-            item { BackupCard() }
-            item { ConsentCard(onRevoked = onConsentRevoked) }
-            item { SectionTitle("Hilfen aus dem Internet (freiwillig)") }
-            item { MedInfoCard() }
-            item { AiCard() }
-            item { SectionTitle("Hilfe und Rückmeldung") }
-            item { HelpCard(onOpenGuide, onStartTour) }
-            item { FeedbackCard(context) }
-            item { RoadmapCard(roadmap, roadmapError) }
-            item { AboutCard(context) }
+        }
+    }
+}
+
+/** Kategorien der Einstellungen; [keywords] fuer die Suche. */
+private enum class SettingsCategory(val emoji: String, val title: String, val keywords: String) {
+    Profil("👤", "Meine Daten und Zustimmung", "name adresse telefon rolle ausweis angehörige pflegedienst zustimmung nutzungsbedingungen widerruf nachweis"),
+    Darstellung("🎨", "Darstellung", "hell dunkel design farben schrift schriftgröße größe ecken effekte glas aurora liquid animation glanz transparenz"),
+    Startseite("🏠", "Heute-Seite und Motivator", "heute karten notfallkarte tagesstart motivator stimmung smiley ziele"),
+    Erinnerungen("🔔", "Erinnerungen und Freigaben", "benachrichtigung freigabe freigaben wecker alarm akku einnahme zeitfenster ton erinnerung"),
+    Dokumente("📄", "Dokumente", "betrachter viewer pdf drucken öffnen dokument"),
+    Sicherheit("🔒", "Sicherheit und Sicherung", "app-sperre sperre fingerabdruck gesicht pin sicherung backup wiederherstellen zurücksetzen reset löschen"),
+    Internet("🤖", "KI und Internet", "ki assistent schlüssel api gemini openai chatgpt claude ollama groq mistral wikipedia beschreibung internet"),
+    Hilfe("💬", "Hilfe und Rückmeldung", "anleitung rundgang hilfe feedback fehler wunsch rückmeldung"),
+    App("ℹ️", "App und Updates", "update aktualisieren version neuigkeiten neu geplant über app"),
+}
+
+private fun categorySummary(
+    c: SettingsCategory,
+    vm: MainViewModel,
+    caregiver: de.meinhelfer.tag.data.CaregiverProfile,
+    updateState: UpdateState,
+    context: Context,
+): String = when (c) {
+    SettingsCategory.Profil -> listOfNotNull(
+        caregiver.name.takeIf { it.isNotBlank() } ?: "Noch nicht eingetragen",
+        caregiver.roleValue?.label,
+    ).joinToString(" · ")
+    SettingsCategory.Darstellung -> {
+        val mode = when (vm.themeMode.value) {
+            "dark" -> "Dunkel"
+            "light" -> "Hell"
+            else -> "Wie das Handy"
+        }
+        val font = listOf(0.85f to "Klein", 1f to "Normal", 1.15f to "Groß", 1.3f to "Sehr groß", 1.5f to "Riesig")
+            .minByOrNull { kotlin.math.abs(it.first - vm.fontFactor.value) }?.second ?: "Normal"
+        "${vm.designStyle.value.label} · $mode · Schrift $font · Ecken ${vm.cornerStyle.value.label}"
+    }
+    SettingsCategory.Startseite ->
+        "Motivator " + (if (vm.motivatorOnToday.value) "an" else "aus") + " · Stimmungs-Check: " + vm.moodMode.value.label
+    SettingsCategory.Erinnerungen -> "Freigaben für zuverlässige Erinnerungen, Einnahme-Zeitfenster"
+    SettingsCategory.Dokumente -> if (AppPrefs.internalViewer(context)) "Öffnen im eingebauten Betrachter" else "Öffnen mit einer anderen App"
+    SettingsCategory.Sicherheit -> "App-Sperre " + (if (AppPrefs.lockEnabled(context)) "an" else "aus") + " · Sicherung, Zurücksetzen"
+    SettingsCategory.Internet ->
+        if (AiConfig.isConfigured(context)) "KI: " + AiConfig.provider(context).label else "KI nicht eingerichtet · Medikamenten-Infos"
+    SettingsCategory.Hilfe -> "Anleitung, Rundgang, Fehler oder Wunsch melden"
+    SettingsCategory.App -> "Version " + UpdateChecker.installedVersion(context) +
+        if (updateState is UpdateState.Available || updateState is UpdateState.Ready) " · Update verfügbar" else ""
+}
+
+@Composable
+private fun CategoryRow(c: SettingsCategory, summary: String, onClick: () -> Unit) {
+    HCard(Modifier.fillMaxWidth(), onClick = onClick) {
+        Row(Modifier.padding(horizontal = 16.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(c.emoji, style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(end = 14.dp))
+            Column(Modifier.weight(1f)) {
+                Text(c.title, style = MaterialTheme.typography.titleMedium)
+                Text(summary, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2)
+            }
+            Text("›", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -286,16 +413,16 @@ private fun ThemeCard(vm: MainViewModel) {
         "light" -> false
         else -> isSystemInDarkTheme()
     }
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
     HCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Darstellung", style = MaterialTheme.typography.titleMedium)
-            Text("Hell oder dunkel", style = MaterialTheme.typography.labelLarge)
+            Text("Hell oder dunkel", style = MaterialTheme.typography.titleMedium)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf("system" to "Wie das Handy", "light" to "Hell", "dark" to "Dunkel").forEach { (key, label) ->
                     FilterChip(selected = mode == key, onClick = { vm.setThemeMode(key) }, label = { Text(label) })
                 }
             }
-            Text("Schriftgröße", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 8.dp))
+            Text("Schriftgröße", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 12.dp))
             val fontFactor by vm.fontFactor.collectAsStateWithLifecycle()
             androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf(0.85f to "Klein", 1f to "Normal", 1.15f to "Groß", 1.3f to "Sehr groß", 1.5f to "Riesig").forEach { (f, label) ->
@@ -303,7 +430,11 @@ private fun ThemeCard(vm: MainViewModel) {
                 }
             }
             Text("So groß wird die Schrift in der ganzen App. Sie gilt zusätzlich zur Schriftgröße des Handys.", style = MaterialTheme.typography.bodySmall)
-            Text("Design", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 8.dp))
+        }
+    }
+    HCard(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text("Design", style = MaterialTheme.typography.titleMedium)
             DesignStyle.entries.forEach { option ->
                 val colors = tweakedSpec(option, darkNow, tweaks[option]).preview
                 Row(
@@ -331,7 +462,14 @@ private fun ThemeCard(vm: MainViewModel) {
                     }
                 }
             }
-            Text("Ecken", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 8.dp))
+            OutlinedButton(shape = buttonShape(), onClick = { tweaking = true }, modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
+                Text("Farben von „${style.label}“ anpassen" + if (tweaks[style]?.isEmpty == false) " (geändert)" else "")
+            }
+        }
+    }
+    HCard(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Ecken", style = MaterialTheme.typography.titleMedium)
             val corners by vm.cornerStyle.collectAsStateWithLifecycle()
             androidx.compose.foundation.layout.FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -345,10 +483,8 @@ private fun ThemeCard(vm: MainViewModel) {
                 "Gilt einheitlich für Karten, Knöpfe, Eingabefelder und Fenster. „Wie im Design“ nimmt die Ecken des gewählten Designs.",
                 style = MaterialTheme.typography.bodySmall,
             )
-            OutlinedButton(shape = buttonShape(), onClick = { tweaking = true }, modifier = Modifier.fillMaxWidth()) {
-                Text("Farben von „${style.label}“ anpassen" + if (tweaks[style]?.isEmpty == false) " (geändert)" else "")
-            }
         }
+    }
     }
     if (tweaking) {
         ColorTweakDialog(

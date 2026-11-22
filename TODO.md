@@ -1,6 +1,6 @@
 # TODO
 
-Stand: v0.45.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.46.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
@@ -42,6 +42,7 @@ Stand: v0.45.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 - [ ] Ausweis und Krankenkarte auslesen (Erkennung je nach Licht und Kartenversion), Foto wird gelöscht
 - [ ] Medikamentenplan übernehmen: Texterkennung bei Tabellen, Code oben rechts auf dem Plan, KI; Vorschlag nur bei neuerem Plan
 - [ ] Neue KI-Dienste (Cerebras, SambaNova, GitHub Models, Hugging Face, Cohere, OVHcloud, Scaleway, xAI, Together, Nebius, IONOS) und eigener Server (Ollama, LM Studio) im Heimnetz testen
+- [ ] Einstellungen: Übersicht, Bereiche, Suche und Zurück-Taste
 - [ ] Ecken und Effekte (Beta): alle Ansichten mit „Eckig“ und „Rund“, Aurora hell und dunkel, bewegter Hintergrund flüssig und akkuschonend
 
 ## Rechtliches vor einer Veröffentlichung
@@ -50,6 +51,11 @@ Stand: v0.45.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 - [ ] Entscheiden: Aufbewahrung der Nachweise 3 Jahre oder länger (30-Jahres-Frist bei Gesundheitsschäden); zusätzlicher Nachweis beim App-Ersteller (Server) ja oder nein
 - [ ] Medizinprodukte-Recht (MDR) prüfen lassen, vor allem den KI-Gesamt-Check der Medikamente; Zweckbestimmung als Organisationshilfe klar festhalten
 - [ ] Impressum und Datenschutzerklärung für eine Veröffentlichung (z. B. Play Store), eigener Signaturschlüssel statt Test-Schlüssel
+
+## Version 0.46.0 (fertig)
+
+- [x] Einstellungen aufgeräumt: Übersicht mit 9 Bereichen (Meine Daten und Zustimmung, Darstellung, Heute-Seite und Motivator, Erinnerungen und Freigaben, Dokumente, Sicherheit und Sicherung, KI und Internet, Hilfe und Rückmeldung, App und Updates), je mit kurzem Stand, Suche und Update-Hinweis
+- [x] Darstellung in eigene Karten geteilt (Hell/Dunkel und Schrift, Design mit Farben, Ecken, Effekte); Verweise in Anleitung, Rundgang und Hinweisen angepasst
 
 ## Version 0.45.0 (fertig)
 

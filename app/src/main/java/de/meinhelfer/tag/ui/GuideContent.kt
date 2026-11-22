@@ -31,7 +31,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Empfohlene Reihenfolge",
-                "1. Nutzungsbedingungen bestätigen (mit deinem Namen und deiner Rolle). 2. Unter Einstellungen → Freigaben Benachrichtigungen und pünktliche Wecker erlauben. 3. Person umbenennen und Profil ausfüllen (Pflegegrad, Adresse, Stockwerk, Wichtiges). 4. Kontakte eintragen (z. B. Hausarzt, Apotheke). 5. Medikamente mit Einnahmezeiten und Vorrat anlegen. 6. Termine eintragen. 7. Eine Sicherung anlegen. Danach genügt meist die Heute-Seite mit dem Tagesstart.",
+                "1. Nutzungsbedingungen bestätigen (mit deinem Namen und deiner Rolle). 2. Unter Einstellungen → Erinnerungen und Freigaben Benachrichtigungen und pünktliche Wecker erlauben. 3. Person umbenennen und Profil ausfüllen (Pflegegrad, Adresse, Stockwerk, Wichtiges). 4. Kontakte eintragen (z. B. Hausarzt, Apotheke). 5. Medikamente mit Einnahmezeiten und Vorrat anlegen. 6. Termine eintragen. 7. Eine Sicherung anlegen. Danach genügt meist die Heute-Seite mit dem Tagesstart.",
             ),
         ),
     ),
@@ -42,7 +42,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
         items = listOf(
             GuideItem(
                 "Meine Daten",
-                "Unter Einstellungen → Meine Daten (und beim ersten Start) trägst du ein, wer du bist: pflegende/r Angehörige/r, Pflegekraft vom Pflegedienst, Betreuungs- oder Haushaltskraft, Betreuer/in oder Bevollmächtigte/r, Nachbar/in oder Ehrenamt, du selbst oder etwas anderes. Dazu kommen Name, ggf. Beziehung (z. B. Sohn) oder Pflegedienst, Telefon, E-Mail und deine Adresse. Name und Adresse kannst du mit „Ausweis fotografieren“ auch auslesen lassen (siehe Personen). Die Adresse steht dann bei Bedarf unter E-Mails und Schreiben, in der Vollmacht und Schweigepflicht-Entbindung (als Adresse der bevollmächtigten Person) und auf der Notfallkarte bei der Ansprechperson. Das bleibt nur auf deinem Handy und wird nie automatisch gesendet. Name und Rolle stammen aus deiner Zustimmung zu den Nutzungsbedingungen. Änderst du sie hier, musst du die Nutzungsbedingungen neu bestätigen.",
+                "Unter Einstellungen → Meine Daten und Zustimmung (und beim ersten Start) trägst du ein, wer du bist: pflegende/r Angehörige/r, Pflegekraft vom Pflegedienst, Betreuungs- oder Haushaltskraft, Betreuer/in oder Bevollmächtigte/r, Nachbar/in oder Ehrenamt, du selbst oder etwas anderes. Dazu kommen Name, ggf. Beziehung (z. B. Sohn) oder Pflegedienst, Telefon, E-Mail und deine Adresse. Name und Adresse kannst du mit „Ausweis fotografieren“ auch auslesen lassen (siehe Personen). Die Adresse steht dann bei Bedarf unter E-Mails und Schreiben, in der Vollmacht und Schweigepflicht-Entbindung (als Adresse der bevollmächtigten Person) und auf der Notfallkarte bei der Ansprechperson. Das bleibt nur auf deinem Handy und wird nie automatisch gesendet. Name und Rolle stammen aus deiner Zustimmung zu den Nutzungsbedingungen. Änderst du sie hier, musst du die Nutzungsbedingungen neu bestätigen.",
             ),
             GuideItem(
                 "Vorbereitete E-Mails",
@@ -104,7 +104,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
         items = listOf(
             GuideItem(
                 "Tagesstart: Rückblick und Tagesplan",
-                "Beim ersten Öffnen am Tag zeigt die App den Rückblick auf gestern: Zusammenfassung, Einnahmen und Termine (was noch fehlt, ist rot und lässt sich direkt nachtragen), erledigte Aufgaben und die Bemerkung zum Tag. Mit „Bestätigen“ hältst du fest, dass der Tag geprüft ist. Danach kommt der Tagesplan für heute: Wichtiges, Einnahmen, Termine, Aufgaben (überfällig, heute, dringend, nächste 3 Tage), Nachbestellen und Termine morgen. Er lässt sich als PDF teilen oder drucken (mit Kästchen zum Abhaken auf Papier). Oben auf der Heute-Seite erreichst du beides jederzeit („Rückblick gestern“, „Tagesplan (PDF)“). Bei mehreren Personen gibt es den Tagesstart je Person. Abschalten: Einstellungen → Heute-Seite.",
+                "Beim ersten Öffnen am Tag zeigt die App den Rückblick auf gestern: Zusammenfassung, Einnahmen und Termine (was noch fehlt, ist rot und lässt sich direkt nachtragen), erledigte Aufgaben und die Bemerkung zum Tag. Mit „Bestätigen“ hältst du fest, dass der Tag geprüft ist. Danach kommt der Tagesplan für heute: Wichtiges, Einnahmen, Termine, Aufgaben (überfällig, heute, dringend, nächste 3 Tage), Nachbestellen und Termine morgen. Er lässt sich als PDF teilen oder drucken (mit Kästchen zum Abhaken auf Papier). Oben auf der Heute-Seite erreichst du beides jederzeit („Rückblick gestern“, „Tagesplan (PDF)“). Bei mehreren Personen gibt es den Tagesstart je Person. Abschalten: Einstellungen → Heute-Seite und Motivator.",
             ),
             GuideItem(
                 "Tag, Woche, Monat",
@@ -120,7 +120,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Einnahmen abhaken",
-                "Unter „Heute einnehmen“ steht jede Einnahme mit Uhrzeit. Weil bei Medikamenten die Zeit zählt, lässt sich nur rund um die Einnahmezeit normal abhaken (Standard: 1 Stunde davor und danach, einstellbar unter Einstellungen → Einnahmen abhaken). Vorher steht „abhakbar ab …“. Ist das Fenster vorbei, steht die Zeile in Rot und du tippst darauf, um nachzutragen, wie es lief.",
+                "Unter „Heute einnehmen“ steht jede Einnahme mit Uhrzeit. Weil bei Medikamenten die Zeit zählt, lässt sich nur rund um die Einnahmezeit normal abhaken (Standard: 1 Stunde davor und danach, einstellbar unter Einstellungen → Erinnerungen und Freigaben → Einnahmen abhaken). Vorher steht „abhakbar ab …“. Ist das Fenster vorbei, steht die Zeile in Rot und du tippst darauf, um nachzutragen, wie es lief.",
             ),
             GuideItem(
                 "Kurz nachgefragt",
@@ -171,7 +171,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Stimmungs-Check",
-                "Mit einem Tipp auf einen Smiley (sehr gut bis schlecht) hältst du fest, wie es dir geht, auf Wunsch mit Stichworten (z. B. erschöpft, gestresst, zufrieden) und einer Notiz. Unter Einstellungen → Tages-Motivator wählst du, wie oft gefragt wird: aus, bei jedem Öffnen (höchstens alle 30 Minuten), 1×, 2× oder 3× täglich (morgens, mittags, abends; nachts nie). „Später“ gilt für das jeweilige Zeitfenster. Auf Wunsch erinnert eine Benachrichtigung, aber nur, wenn im Zeitfenster noch nichts eingetragen ist. Unter Mehr → Stimmung siehst du die letzten 14 Tage und kannst Einträge löschen. Die Stimmung bestimmt mit, welche Sätze, Vorhaben und Tipps der Motivator zeigt.",
+                "Mit einem Tipp auf einen Smiley (sehr gut bis schlecht) hältst du fest, wie es dir geht, auf Wunsch mit Stichworten (z. B. erschöpft, gestresst, zufrieden) und einer Notiz. Unter Einstellungen → Heute-Seite und Motivator wählst du, wie oft gefragt wird: aus, bei jedem Öffnen (höchstens alle 30 Minuten), 1×, 2× oder 3× täglich (morgens, mittags, abends; nachts nie). „Später“ gilt für das jeweilige Zeitfenster. Auf Wunsch erinnert eine Benachrichtigung, aber nur, wenn im Zeitfenster noch nichts eingetragen ist. Unter Mehr → Stimmung siehst du die letzten 14 Tage und kannst Einträge löschen. Die Stimmung bestimmt mit, welche Sätze, Vorhaben und Tipps der Motivator zeigt.",
             ),
             GuideItem(
                 "Wenn es dir nicht gut geht",
@@ -475,7 +475,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Einrichten",
-                "Einstellungen → KI-Assistent. Dienst wählen: kostenlos nutzbar (mit Mengengrenzen) sind Google Gemini, Groq, Mistral, OpenRouter (Modelle mit „:free“), Cerebras, SambaNova, GitHub Models, Hugging Face (kleines Monatsguthaben), Cohere (Test-Schlüssel), OVHcloud (EU, auch ganz ohne Schlüssel mit 2 Anfragen pro Minute) und Scaleway (EU, 1 Million Tokens). Kostenpflichtig nach Verbrauch sind OpenAI, Anthropic (Claude), xAI (Grok), Together AI, Nebius, IONOS (Server in Deutschland) und DeepSeek. Dann den eigenen API-Schlüssel eintragen („Schlüssel besorgen“ öffnet die Seite des Anbieters) und „Testen“ antippen. Mit „Verfügbare Modelle laden“ wählst du ein anderes Modell, falls das vorgeschlagene nicht mehr angeboten wird. Ein Abo bei ChatGPT oder Claude reicht nicht, es braucht den API-Schlüssel. Angaben zu kostenlosen Kontingenten ändern sich häufig; maßgeblich ist die Seite des Anbieters.",
+                "Einstellungen → KI und Internet. Dienst wählen: kostenlos nutzbar (mit Mengengrenzen) sind Google Gemini, Groq, Mistral, OpenRouter (Modelle mit „:free“), Cerebras, SambaNova, GitHub Models, Hugging Face (kleines Monatsguthaben), Cohere (Test-Schlüssel), OVHcloud (EU, auch ganz ohne Schlüssel mit 2 Anfragen pro Minute) und Scaleway (EU, 1 Million Tokens). Kostenpflichtig nach Verbrauch sind OpenAI, Anthropic (Claude), xAI (Grok), Together AI, Nebius, IONOS (Server in Deutschland) und DeepSeek. Dann den eigenen API-Schlüssel eintragen („Schlüssel besorgen“ öffnet die Seite des Anbieters) und „Testen“ antippen. Mit „Verfügbare Modelle laden“ wählst du ein anderes Modell, falls das vorgeschlagene nicht mehr angeboten wird. Ein Abo bei ChatGPT oder Claude reicht nicht, es braucht den API-Schlüssel. Angaben zu kostenlosen Kontingenten ändern sich häufig; maßgeblich ist die Seite des Anbieters.",
             ),
             GuideItem(
                 "Einschätzung zu einem Medikament",
@@ -518,7 +518,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
         items = listOf(
             GuideItem(
                 "Freigaben in Android",
-                "Unter Einstellungen → „Freigaben (Android)“ siehst du, was erlaubt ist (✓) und was fehlt: Benachrichtigungen, Erinnerungen mit Ton, pünktliche Wecker, Akku-Optimierung aus (empfohlen) und Updates installieren. Die Knöpfe öffnen direkt die passende Stelle in den Android-Einstellungen. Fehlt etwas Wichtiges für Erinnerungen, erscheint oben auf der Heute-Seite eine rote Karte mit den Knöpfen zum Einschalten.",
+                "Unter Einstellungen → Erinnerungen und Freigaben → „Freigaben (Android)“ siehst du, was erlaubt ist (✓) und was fehlt: Benachrichtigungen, Erinnerungen mit Ton, pünktliche Wecker, Akku-Optimierung aus (empfohlen) und Updates installieren. Die Knöpfe öffnen direkt die passende Stelle in den Android-Einstellungen. Fehlt etwas Wichtiges für Erinnerungen, erscheint oben auf der Heute-Seite eine rote Karte mit den Knöpfen zum Einschalten.",
             ),
             GuideItem(
                 "Medikamente",
@@ -530,7 +530,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Wenn nichts erscheint",
-                "Öffne Einstellungen → „Freigaben (Android)“. Dort siehst du, was fehlt, und kommst mit einem Tipp in die richtige Android-Einstellung. Auf manchen Handys hilft zusätzlich, die Akku-Optimierung für die App auszuschalten. Termin-Erinnerungen werden für die nächsten 60 Tage geplant und bei jedem Öffnen der App aufgefrischt.",
+                "Öffne Einstellungen → Erinnerungen und Freigaben → „Freigaben (Android)“. Dort siehst du, was fehlt, und kommst mit einem Tipp in die richtige Android-Einstellung. Auf manchen Handys hilft zusätzlich, die Akku-Optimierung für die App auszuschalten. Termin-Erinnerungen werden für die nächsten 60 Tage geplant und bei jedem Öffnen der App aufgefrischt.",
             ),
         ),
     ),
@@ -572,7 +572,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
         items = listOf(
             GuideItem(
                 "Nutzungsbedingungen und Zustimmung",
-                "Vor der ersten Nutzung (und nach jeder neuen Fassung) bestätigst du einzeln: Die App ersetzt keinen Arzt, keine Apotheke, keine Pflegefachkraft und kein Krankenhaus, im Notfall gilt 112. Einschätzungen und Empfehlungen sind nur Anhaltspunkte, die du prüfst bzw. prüfen lässt. Und du akzeptierst die Nutzungsbedingungen mit der Haftungsregelung. Dazu gibst du Name und Rolle an. Ohne Zustimmung lässt sich die App nicht nutzen. Die Zustimmung wird als Nachweis verschlüsselt auf dem Handy gespeichert (Name, Rolle, Zeitpunkt, App-Version, Gerät, Fassung und Prüfsumme des Textes, verkettet gegen nachträgliche Änderungen). Unter Einstellungen → „Nutzungsbedingungen und Zustimmung“ kannst du den Text lesen, den Nachweis teilen und die Zustimmung widerrufen. Frühere Nachweise werden bis zum Ende des dritten Kalenderjahres aufbewahrt und dann automatisch gelöscht. Ändern sich Name oder Rolle unter „Meine Daten“, muss erneut zugestimmt werden: Die Zustimmung gilt immer für eine bestimmte pflegende Person. Der neue Nachweis wird abgelegt, der alte bleibt mit Frist erhalten.",
+                "Vor der ersten Nutzung (und nach jeder neuen Fassung) bestätigst du einzeln: Die App ersetzt keinen Arzt, keine Apotheke, keine Pflegefachkraft und kein Krankenhaus, im Notfall gilt 112. Einschätzungen und Empfehlungen sind nur Anhaltspunkte, die du prüfst bzw. prüfen lässt. Und du akzeptierst die Nutzungsbedingungen mit der Haftungsregelung. Dazu gibst du Name und Rolle an. Ohne Zustimmung lässt sich die App nicht nutzen. Die Zustimmung wird als Nachweis verschlüsselt auf dem Handy gespeichert (Name, Rolle, Zeitpunkt, App-Version, Gerät, Fassung und Prüfsumme des Textes, verkettet gegen nachträgliche Änderungen). Unter Einstellungen → Meine Daten und Zustimmung → „Nutzungsbedingungen und Zustimmung“ kannst du den Text lesen, den Nachweis teilen und die Zustimmung widerrufen. Frühere Nachweise werden bis zum Ende des dritten Kalenderjahres aufbewahrt und dann automatisch gelöscht. Ändern sich Name oder Rolle unter „Meine Daten“, muss erneut zugestimmt werden: Die Zustimmung gilt immer für eine bestimmte pflegende Person. Der neue Nachweis wird abgelegt, der alte bleibt mit Frist erhalten.",
             ),
             GuideItem(
                 "Nur auf deinem Handy",
@@ -607,7 +607,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Einschalten",
-                "Einstellungen → Sicherheit → „App-Sperre“. Voraussetzung ist eine Bildschirmsperre auf dem Handy (PIN, Muster, Fingerabdruck oder Gesicht). Zur Sicherheit musst du das Ein- und Ausschalten selbst bestätigen.",
+                "Einstellungen → Sicherheit und Sicherung → „App-Sperre“. Voraussetzung ist eine Bildschirmsperre auf dem Handy (PIN, Muster, Fingerabdruck oder Gesicht). Zur Sicherheit musst du das Ein- und Ausschalten selbst bestätigen.",
             ),
             GuideItem(
                 "Wann sperrt die App?",
@@ -626,7 +626,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
         items = listOf(
             GuideItem(
                 "Sicherung erstellen",
-                "Einstellungen → „Sicherung und Wiederherstellung“ → „Sicherung erstellen“. Du wählst ein Passwort (mindestens 8 Zeichen) und dann, wo die Datei gespeichert wird, z. B. in Downloads, in einer Cloud oder auf einem USB-Stick. Gesichert werden Personen, Medikamente, Termine, Kontakte, Aufgaben, Dokumente, Fotos und die Einstellungen. Die Datei ist mit deinem Passwort verschlüsselt. Nicht enthalten ist der Zugangsschlüssel für die KI, den trägst du neu ein.",
+                "Einstellungen → Sicherheit und Sicherung → „Sicherung und Wiederherstellung“ → „Sicherung erstellen“. Du wählst ein Passwort (mindestens 8 Zeichen) und dann, wo die Datei gespeichert wird, z. B. in Downloads, in einer Cloud oder auf einem USB-Stick. Gesichert werden Personen, Medikamente, Termine, Kontakte, Aufgaben, Dokumente, Fotos und die Einstellungen. Die Datei ist mit deinem Passwort verschlüsselt. Nicht enthalten ist der Zugangsschlüssel für die KI, den trägst du neu ein.",
             ),
             GuideItem(
                 "Wiederherstellen",
@@ -638,7 +638,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "App zurücksetzen",
-                "Einstellungen → „Sicherung, Wiederherstellung und Zurücksetzen“ → „App zurücksetzen …“. Zuerst warnt die App und zeigt, wann zuletzt gesichert wurde. Mit „Erst Sicherung erstellen“ legst du vorher eine Sicherung an und gehst danach weiter. Zum Schluss bestätigst du mit der Bildschirmsperre deines Handys (PIN, Muster, Fingerabdruck oder Gesicht). Ohne eingerichtete Bildschirmsperre ist kein Zurücksetzen möglich. Gelöscht werden alle Personen, Medikamente, Termine, Aufgaben samt Verlauf, Dokumente, Fotos, Kontakte, Bemerkungen, PDFs, Einstellungen und KI-Schlüssel. Danach startet die App wie neu. Erhalten bleiben nur die Nachweise deiner Zustimmung mit ihrer Aufbewahrungsfrist, das Zurücksetzen selbst wird dort vermerkt.",
+                "Einstellungen → Sicherheit und Sicherung → „Sicherung, Wiederherstellung und Zurücksetzen“ → „App zurücksetzen …“. Zuerst warnt die App und zeigt, wann zuletzt gesichert wurde. Mit „Erst Sicherung erstellen“ legst du vorher eine Sicherung an und gehst danach weiter. Zum Schluss bestätigst du mit der Bildschirmsperre deines Handys (PIN, Muster, Fingerabdruck oder Gesicht). Ohne eingerichtete Bildschirmsperre ist kein Zurücksetzen möglich. Gelöscht werden alle Personen, Medikamente, Termine, Aufgaben samt Verlauf, Dokumente, Fotos, Kontakte, Bemerkungen, PDFs, Einstellungen und KI-Schlüssel. Danach startet die App wie neu. Erhalten bleiben nur die Nachweise deiner Zustimmung mit ihrer Aufbewahrungsfrist, das Zurücksetzen selbst wird dort vermerkt.",
             ),
         ),
     ),
@@ -648,24 +648,12 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
         summary = "Was wo eingestellt wird (Zahnrad oben rechts)",
         items = listOf(
             GuideItem(
-                "Ganz oben",
-                "App-Updates: installierte Version, „Nach Updates suchen“ und die automatische Suche im Hintergrund.",
+                "Aufbau",
+                "Die Einstellungen beginnen mit einer Übersicht der Bereiche. Jede Zeile zeigt kurz, was gerade eingestellt ist; ein Tipp öffnet den Bereich, der Pfeil oben links (oder Zurück) führt zur Übersicht. Oben kannst du suchen, z. B. nach „Schrift“, „KI“ oder „Sicherung“. Gibt es eine neue Version, steht ganz oben ein Hinweis.",
             ),
             GuideItem(
-                "Allgemein",
-                "Meine Daten (wer du bist, für E-Mails und Zustimmung), Freigaben (Android) für zuverlässige Erinnerungen, Darstellung (hell/dunkel, Schriftgröße, Design, Ecken, eigene Farben), Effekte (Beta), Heute-Seite (Notfallkarte einblenden, Tagesstart automatisch), Tages-Motivator (Karte, Tagesstart, Stimmungs-Check und Erinnerung), Einnahmen abhaken (Zeitfenster und Nachfrage) und Dokumente ansehen (Betrachter in der App oder andere App).",
-            ),
-            GuideItem(
-                "Daten und Sicherheit",
-                "Sicherheit (App-Sperre, Bildschirmfotos sperren), Sicherung, Wiederherstellung und Zurücksetzen sowie Nutzungsbedingungen und Zustimmung (lesen, Nachweis teilen, widerrufen).",
-            ),
-            GuideItem(
-                "Hilfen aus dem Internet (freiwillig)",
-                "Medikamenten-Beschreibung aus Wikipedia (auf Knopfdruck oder automatisch) und der KI-Assistent mit Dienst, Schlüssel und Modell.",
-            ),
-            GuideItem(
-                "Hilfe und Rückmeldung",
-                "Anleitung und Rundgang, Feedback, die Vorschau auf geplante Funktionen und Infos zur App.",
+                "Die Bereiche",
+                "Meine Daten und Zustimmung (wer du bist, Adresse, Nutzungsbedingungen und Nachweis). Darstellung (hell/dunkel, Schriftgröße, Design mit eigenen Farben, Ecken, Effekte). Heute-Seite und Motivator (Notfallkarte, Tagesstart, Motivator-Karte, Stimmungs-Check). Erinnerungen und Freigaben (Android-Freigaben, Einnahmen abhaken). Dokumente (Betrachter in der App oder andere App). Sicherheit und Sicherung (App-Sperre, Sicherung, Wiederherstellung, Zurücksetzen). KI und Internet (KI-Assistent, Medikamenten-Beschreibung; freiwillig). Hilfe und Rückmeldung (Anleitung, Rundgang, Feedback). App und Updates (Version, Updates, Neuigkeiten und Pläne, Infos zur App).",
             ),
         ),
     ),
@@ -676,7 +664,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
         items = listOf(
             GuideItem(
                 "App aktualisieren",
-                "Zahnrad → „Nach Updates suchen“ → „Herunterladen“ → „Installieren“. Die App meldet neue Versionen auch von selbst, das lässt sich in den Einstellungen abschalten.",
+                "Zahnrad → App und Updates → „Nach Updates suchen“ → „Herunterladen“ → „Installieren“. Die App meldet neue Versionen auch von selbst, das lässt sich in den Einstellungen abschalten.",
             ),
             GuideItem(
                 "Darstellung",
@@ -684,11 +672,11 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Effekte (Beta)",
-                "Unter Einstellungen → „Effekte (Beta)“ → „Einstellen“ machst du die App lebendiger: Deckkraft der Karten (weniger = mehr Glas, der Hintergrund scheint durch), Leuchtrand um die Karten, Stärke der Farbflecken im Hintergrund, ein sanft bewegter Hintergrund, lebendige Animationen (Karten geben beim Antippen nach, Auf- und Zuklappen und Reiterwechsel gleiten weich) und Glanz auf Skalen und Balken. Am schönsten wirkt das mit „Aurora“, „Glas“ oder „Liquid“. „Alles wie im Design“ stellt die Werte des Designs wieder her. Der bewegte Hintergrund braucht etwas mehr Akku. Die Effekte sind neu und noch in Erprobung.",
+                "Unter Einstellungen → Darstellung → „Effekte (Beta)“ → „Einstellen“ machst du die App lebendiger: Deckkraft der Karten (weniger = mehr Glas, der Hintergrund scheint durch), Leuchtrand um die Karten, Stärke der Farbflecken im Hintergrund, ein sanft bewegter Hintergrund, lebendige Animationen (Karten geben beim Antippen nach, Auf- und Zuklappen und Reiterwechsel gleiten weich) und Glanz auf Skalen und Balken. Am schönsten wirkt das mit „Aurora“, „Glas“ oder „Liquid“. „Alles wie im Design“ stellt die Werte des Designs wieder her. Der bewegte Hintergrund braucht etwas mehr Akku. Die Effekte sind neu und noch in Erprobung.",
             ),
             GuideItem(
                 "Notfallkarte",
-                "Die Notfallkarte öffnest du immer über das rote Telefon oben („Notfallkarte zeigen“). Unter Einstellungen → „Heute-Seite“ kannst du sie zusätzlich als Karte auf der Heute-Seite einblenden. Sie zeigt Name, Geburtsdatum, Pflegegrad, Wichtiges, Medikamente, Kontakte und deine Ansprechdaten auf einen Blick, mit Notruf-Taste (öffnet nur die Telefon-App), zum Kopieren oder Teilen. Die Versichertennummer zeigst du nur auf Wunsch.",
+                "Die Notfallkarte öffnest du immer über das rote Telefon oben („Notfallkarte zeigen“). Unter Einstellungen → Heute-Seite und Motivator → „Heute-Seite“ kannst du sie zusätzlich als Karte auf der Heute-Seite einblenden. Sie zeigt Name, Geburtsdatum, Pflegegrad, Wichtiges, Medikamente, Kontakte und deine Ansprechdaten auf einen Blick, mit Notruf-Taste (öffnet nur die Telefon-App), zum Kopieren oder Teilen. Die Versichertennummer zeigst du nur auf Wunsch.",
             ),
             GuideItem(
                 "Feedback",
@@ -719,7 +707,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Erinnerungen kommen nicht oder zu spät.",
-                "Einstellungen → „Freigaben (Android)“ öffnen und alles mit ✗ einschalten. Auf manchen Handys zusätzlich die Akku-Optimierung für die App ausschalten. Ist etwas Wichtiges aus, zeigt die Heute-Seite oben eine rote Karte.",
+                "Einstellungen → Erinnerungen und Freigaben → „Freigaben (Android)“ öffnen und alles mit ✗ einschalten. Auf manchen Handys zusätzlich die Akku-Optimierung für die App ausschalten. Ist etwas Wichtiges aus, zeigt die Heute-Seite oben eine rote Karte.",
             ),
             GuideItem(
                 "Warum soll ich wieder zustimmen?",
@@ -739,7 +727,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Kann ich meine Daten sichern?",
-                "Ja. Einstellungen → „Sicherung und Wiederherstellung“. Die App legt eine verschlüsselte Datei mit allen Daten an (mit deinem Passwort). Mit ihr kannst du alles auf diesem oder einem neuen Handy wiederherstellen.",
+                "Ja. Einstellungen → Sicherheit und Sicherung → „Sicherung und Wiederherstellung“. Die App legt eine verschlüsselte Datei mit allen Daten an (mit deinem Passwort). Mit ihr kannst du alles auf diesem oder einem neuen Handy wiederherstellen.",
             ),
         ),
     ),

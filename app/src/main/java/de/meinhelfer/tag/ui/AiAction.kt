@@ -59,7 +59,7 @@ fun AiActionButton(
     Column(modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
         if (!configured && !otherReady) {
             Text(
-                "KI nicht eingerichtet. Unter Einstellungen → KI-Assistent kannst du sie einrichten (z. B. kostenlos mit Google Gemini).",
+                "KI nicht eingerichtet. Unter Einstellungen → KI und Internet kannst du sie einrichten (z. B. kostenlos mit Google Gemini).",
                 style = MaterialTheme.typography.bodySmall,
             )
             return@Column
@@ -88,7 +88,7 @@ fun AiActionButton(
         if (limitHit) {
             Text(
                 if (otherReady) "Wähle oben einen anderen KI-Dienst und sende erneut."
-                else "Unter Einstellungen → KI-Assistent kannst du einen weiteren Dienst einrichten und hier umschalten.",
+                else "Unter Einstellungen → KI und Internet kannst du einen weiteren Dienst einrichten und hier umschalten.",
                 style = MaterialTheme.typography.bodySmall,
             )
         }
