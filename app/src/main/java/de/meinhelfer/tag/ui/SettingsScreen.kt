@@ -1007,6 +1007,7 @@ private fun AccessibilityCard(vm: MainViewModel) {
                     }, label = { Text(label) })
                 }
             }
+            VoiceChooser()
             SpeakButton(owner = "probe", label = "🔊 Probe hören") {
                 "So klingt das Vorlesen in dieser Geschwindigkeit. Mein Helfer für den Tag liest dir Tagesplan, Dokumente und Anleitung vor."
             }

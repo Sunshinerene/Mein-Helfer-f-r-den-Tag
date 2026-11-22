@@ -129,6 +129,16 @@ object AppPrefs {
         prefs(context).edit().putBoolean("assistent_eigene_werte", on).apply()
     }
 
+    /** Sprachausgabe fürs Vorlesen (Paketname, leer = Standard des Handys). */
+    fun speechEngine(context: Context): String = prefs(context).getString("vorlesen_engine", "") ?: ""
+
+    /** Stimme fürs Vorlesen (Name der Stimme, leer = Standardstimme Deutsch). */
+    fun speechVoice(context: Context): String = prefs(context).getString("vorlesen_stimme", "") ?: ""
+
+    fun setSpeech(context: Context, engine: String, voice: String) {
+        prefs(context).edit().putString("vorlesen_engine", engine).putString("vorlesen_stimme", voice).apply()
+    }
+
     private const val KEY_THEME = "design"
 
     /** "system", "light" oder "dark" */

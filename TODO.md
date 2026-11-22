@@ -1,6 +1,6 @@
 # TODO
 
-Stand: v0.62.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.63.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
@@ -23,6 +23,7 @@ Stand: v0.62.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Datenbank prüfen, Beispiel-PDFs mit erfundenen Daten, Beispiel-Grafiken, Test-Benachrichtigungen). Die Datenbank-Umstellungen von Version 5 bis 26 prüft seit v0.54.0 bei jedem Bauen ein automatischer Test gegen das Schema (Tabellen, Spalten, Typen); auf dem Handy bleibt zu prüfen, dass die eigenen Daten nach dem Update vollständig da sind.
 
+- [ ] Heute-Seite: „Heute einnehmen“ und Aufgaben springen nach oben, wenn etwas dran ist; Tagesstart-Angebot in Sunnys Karte; Stimme wählen (z. B. SherpaTTS mit Piper-Stimme) und Probe hören
 - [ ] Assistent morgens und abends (kommt die Benachrichtigung, passt der Text?), Checkliste an der Terminerinnerung, PDF-Knöpfe in der Vorbereitung, Ruhezeit (Trinken/Stimmung schweigen, Medikamente kommen), Erinnerungsübersicht, eigene Werte (Schlaf, Schritte, Ruhepuls) und „Das ist mein eigenes Gerät“
 - [ ] Assistent (Beta): Karte oben auf der Heute-Seite, Gesicht und Ausdrücke, Vorschläge übernehmen und ablehnen, Terminvorbereitung, Gesicht in der Leiste auf allen Seiten, „Frag mich“, Name ändern, ausschalten (Motivator kommt zurück); Hinweis auf neue Uhr-Werte in „Trinken und Werte“
 - [ ] Health Connect (Beta): Zugriff erlauben, Werte holen, Quellen wählen (z. B. Fitbit, Samsung Health, Garmin, Withings, Blutdruckgerät-App), Übernahme ohne Doppelte, Einstellungen → Beta-Funktionen
@@ -65,9 +66,16 @@ Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Daten
 
 ## Als Nächstes: Assistent (Plan aus der Prozess-Prüfung)
 
-- [ ] Vorlesen mit besserer Stimme prüfen: (1) Stimme der Sprachausgabe in der App wählbar machen (z. B. höherwertige deutsche Stimmen der Google-Sprachausgabe); (2) KI-Stimme direkt auf dem Handy ohne Internet (z. B. Piper-Stimmen über sherpa-onnx, deutsche Stimmen vorhanden) – App-Größe durch das Stimmmodell und Lizenz prüfen; (3) Online-Stimmen nur mit Zustimmung, weil der Text das Handy verlässt
-- [ ] v0.63.0: Heute-Seite und Tagesplan auf die gemeinsame Tageslage umstellen, Reihenfolge nach Dringlichkeit, Tagesstart über den Assistenten
+- [ ] Eigene KI-Stimme direkt in der App (nur falls SherpaTTS nicht reicht): sherpa-onnx mit Piper-Stimme Thorsten oder Kerstin (CC0) oder apptor-tiny-tts (Apache-2.0, 21 MB); macht die App 25–70 MB größer, Lizenzen der Bibliotheken prüfen
 - [ ] v0.64.0: Liste „Berichte und Ausdrucke“, Budgets und Übergabe zur Person, „Frag den Assistenten“ auf Wunsch mit KI
+
+## Version 0.63.0 (fertig)
+
+- [x] Heute-Seite nach Dringlichkeit: offene Einnahme im Zeitfenster und fällige oder überfällige Aufgaben stehen direkt unter dem Assistenten
+- [x] Gemeinsame Regeln: Einnahme-Zeitfenster aus den Einstellungen gilt für Heute-Seite, Assistent, Widget und Benachrichtigungen; Tagesplan lässt abgesagte und verschobene Termine weg
+- [x] Tagesstart über den Assistenten: Angebot in seiner Karte statt automatischem Fenster; Rückblick und Tagesplan als Knöpfe in der Karte
+- [x] Vorlesen: Sprachausgabe und Stimme wählbar (nur deutsche Stimmen ohne Internet), Hinweis auf SherpaTTS mit Piper-Stimmen (Thorsten, Kerstin; CC0)
+- [x] Automatische Tests: Tagesplan ohne abgesagte Termine
 
 ## Version 0.62.0 (fertig)
 
