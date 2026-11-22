@@ -263,7 +263,7 @@ fun VitalEntryDialog(initialKind: VitalKind?, vm: MainViewModel, onDone: () -> U
 
 /** Einfacher Verlauf als Linie (bzw. zwei Linien beim Blutdruck), mit optionalem Bereich oder Ziel als gestrichelte Linie. */
 @Composable
-private fun MiniChart(values: List<Double>, values2: List<Double>?, marks: List<Double>, bars: Boolean = false) {
+internal fun MiniChart(values: List<Double>, values2: List<Double>?, marks: List<Double>, bars: Boolean = false) {
     if (values.isEmpty()) return
     val primary = MaterialTheme.colorScheme.primary
     val secondary = MaterialTheme.colorScheme.tertiary

@@ -96,6 +96,25 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun deleteVital(item: de.meinhelfer.tag.data.VitalEntry) = viewModelScope.launch { db.vitalDao().delete(item) }
 
+    /** Selbsttest: Version, Pruefung der Datenbank und Anzahl der Eintraege je Tabelle. */
+    suspend fun dbCheck(): List<String> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        val out = mutableListOf<String>()
+        val sdb = db.openHelper.readableDatabase
+        val expected = de.meinhelfer.tag.data.AppDatabase.ALL_MIGRATIONS.last().endVersion
+        out += "Datenbank-Version ${sdb.version} (erwartet $expected)" + if (sdb.version == expected) " ✓" else " ✗"
+        runCatching {
+            sdb.query("PRAGMA quick_check").use { c -> if (c.moveToFirst()) out += "Prüfung der Datei: " + c.getString(0) + if (c.getString(0) == "ok") " ✓" else " ✗" }
+        }.onFailure { out += "Prüfung der Datei nicht möglich: ${it.message}" }
+        listOf(
+            "Person", "Medication", "Appointment", "Doctor", "Checkin", "DayNote", "Todo", "Document", "ConsentRecord",
+            "MoodEntry", "Goal", "GoalStep", "Responsibility", "VitalEntry", "CareLogEntry", "BudgetEntry",
+        ).forEach { t ->
+            runCatching { sdb.query("SELECT COUNT(*) FROM `$t`").use { c -> c.moveToFirst(); out += "$t: ${c.getInt(0)} Einträge" } }
+                .onFailure { out += "$t: fehlt ✗" }
+        }
+        out
+    }
+
     /** Ausgaben aus den Budgets der Pflegekasse fuer die aktuelle Person. */
     val budget: StateFlow<List<de.meinhelfer.tag.data.BudgetEntry>> =
         combine(db.budgetDao().all(), _personId) { list, id -> list.filter { it.personId == id } }

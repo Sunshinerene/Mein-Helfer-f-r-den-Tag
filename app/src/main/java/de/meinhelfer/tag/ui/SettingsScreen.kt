@@ -185,6 +185,7 @@ fun SettingsScreen(
                 SettingsCategory.Hilfe -> {
                     item { HelpCard(onOpenGuide, onStartTour) }
                     item { FeedbackCard(context) }
+                    item { SelfTestCard(vm) }
                 }
                 SettingsCategory.App -> {
                     item {
@@ -218,7 +219,7 @@ private enum class SettingsCategory(val emoji: String, val title: String, val ke
     Dokumente("📄", "Dokumente", "betrachter viewer pdf drucken öffnen dokument"),
     Sicherheit("🔒", "Sicherheit und Sicherung", "app-sperre sperre fingerabdruck gesicht pin sicherung backup wiederherstellen zurücksetzen reset löschen"),
     Internet("🤖", "KI und Internet", "ki assistent schlüssel api gemini openai chatgpt claude ollama groq mistral wikipedia beschreibung internet"),
-    Hilfe("💬", "Hilfe und Rückmeldung", "anleitung rundgang hilfe feedback fehler wunsch rückmeldung"),
+    Hilfe("💬", "Hilfe und Rückmeldung", "anleitung rundgang hilfe feedback fehler wunsch rückmeldung selbsttest test prüfen beispiel pdf datenbank"),
     App("ℹ️", "App und Updates", "update aktualisieren version neuigkeiten neu geplant über app"),
 }
 
@@ -250,7 +251,7 @@ private fun categorySummary(
     SettingsCategory.Sicherheit -> "App-Sperre " + (if (AppPrefs.lockEnabled(context)) "an" else "aus") + " · Sicherung, Zurücksetzen"
     SettingsCategory.Internet ->
         if (AiConfig.isConfigured(context)) "KI: " + AiConfig.provider(context).label else "KI nicht eingerichtet · Medikamenten-Infos"
-    SettingsCategory.Hilfe -> "Anleitung, Rundgang, Fehler oder Wunsch melden"
+    SettingsCategory.Hilfe -> "Anleitung, Rundgang, Fehler oder Wunsch melden, Selbsttest"
     SettingsCategory.App -> "Version " + UpdateChecker.installedVersion(context) +
         if (updateState is UpdateState.Available || updateState is UpdateState.Ready) " · Update verfügbar" else ""
 }

@@ -10,7 +10,8 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 @Database(
     entities = [Medication::class, Appointment::class, Doctor::class, Checkin::class, DayNote::class, Person::class, Todo::class, Document::class, ConsentRecord::class, MoodEntry::class, Goal::class, GoalStep::class, Responsibility::class, VitalEntry::class, CareLogEntry::class, BudgetEntry::class],
     version = 26,
-    exportSchema = false,
+    // Das Schema wird beim Bauen exportiert; ein Test vergleicht es mit den Umstellungen (MigrationSchemaTest).
+    exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun medicationDao(): MedicationDao
@@ -316,6 +317,14 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /** Alle Umstellungen in Reihenfolge (auch fuer den Test der Umstellungen). */
+        internal val ALL_MIGRATIONS: Array<Migration> = arrayOf(
+            MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9,
+            MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16,
+            MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23,
+            MIGRATION_23_24, MIGRATION_24_25, MIGRATION_25_26,
+        )
+
         fun get(context: Context): AppDatabase =
             instance ?: synchronized(this) {
                 instance ?: open(context.applicationContext).also { instance = it }
@@ -323,7 +332,7 @@ abstract class AppDatabase : RoomDatabase() {
 
         private fun build(context: Context, encrypted: Boolean): AppDatabase {
             val builder = Room.databaseBuilder(context, AppDatabase::class.java, DbCrypto.DB_NAME)
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25, MIGRATION_25_26)
+                .addMigrations(*ALL_MIGRATIONS)
             if (encrypted) {
                 builder.openHelperFactory(
                     net.zetetic.database.sqlcipher.SupportOpenHelperFactory(DbCrypto.passphrase(context).toByteArray(Charsets.UTF_8)),

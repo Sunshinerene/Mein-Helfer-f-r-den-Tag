@@ -44,6 +44,14 @@ android {
     buildFeatures {
         compose = true
     }
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
+}
+
+// Datenbank-Schema exportieren, damit ein Test die Umstellungen pruefen kann
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
 }
 
 dependencies {
@@ -76,4 +84,6 @@ dependencies {
     ksp("androidx.room:room-compiler:$room")
 
     testImplementation("junit:junit:4.13.2")
+    // Echtes SQLite fuer den Test der Datenbank-Umstellungen (nur beim Bauen, nicht in der App)
+    testImplementation("org.xerial:sqlite-jdbc:3.46.1.0")
 }
