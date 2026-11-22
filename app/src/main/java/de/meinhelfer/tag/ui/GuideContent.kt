@@ -194,11 +194,15 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
     GuideSection(
         id = "medikamente",
         title = "Medikamente",
-        summary = "Anlegen, Foto, PZN, Beschreibung, Vorrat",
+        summary = "Anlegen, Foto, Plan übernehmen, PZN, Beschreibung, Vorrat",
         items = listOf(
             GuideItem(
                 "Überblick und Gesamt-Check",
                 "Im Reiter „Medikamente“ oben „Überblick & Check“ antippen. Dort siehst du alle Medikamente mit ihrer Einschätzung (Wirkstärke, Nebenwirkungen, Wechselwirkungen) und das Gesamtbild: Anzahl, Einnahmen pro Tag und Hinweise zu deinen Ansprüchen (Medikationsplan vom Hausarzt ab 3 dauerhaft verordneten Medikamenten, kostenlose erweiterte Medikationsberatung in der Apotheke ab 5). Mit „Gesamt-Check per KI“ (freiwillig, KI muss eingerichtet sein) schätzt die KI alle Medikamente zusammen ein: welche Paare sich beeinflussen können (Gering, Beachten, Wichtig), Hinweise zu Einnahmezeiten, ein Gesamtbild und Fragen für Arzt oder Apotheke. Vorher siehst du genau, was gesendet wird: nur Medikamente mit Dosierung und Zeiten, ohne Namen der Person, das Alter nur auf Wunsch. Fragen lassen sich als Aufgabe merken, der Überblick lässt sich teilen, z. B. für den Arztbesuch. Ändert sich der Plan, weist die App darauf hin. Alles nur Anhaltspunkte: nie eigenmächtig absetzen oder ändern, sondern prüfen lassen.",
+            ),
+            GuideItem(
+                "Medikamentenplan aus einem Dokument übernehmen",
+                "Lädst du einen Medikamentenplan oder Entlassbrief unter Dokumente hoch, erkennt die App ihn (Kategorie „Medikamentenplan“ oder typische Einträge wie „1-0-1-0“). Ist er neuer als deine letzte Änderung an der Liste, erscheint unter Medikamente „Neuer Medikamentenplan gefunden“; im Dokument steht die Karte „Medikamentenplan“. Es gibt drei Wege zum Auslesen: aus dem erkannten Text, aus dem quadratischen Code oben rechts auf dem bundeseinheitlichen Medikationsplan (Foto, wird gleich gelöscht; dort stehen alle Einnahmen genau) oder per KI (freiwillig, Name und Nummern der Person werden vorher ersetzt). Danach prüfst du jeden Eintrag: neu, geändert (mit „bisher“) oder unverändert, Name und Dosierung lassen sich korrigieren. Einnahmezeiten werden aus dem Schema gesetzt (morgens 08:00, mittags 12:00, abends 18:00, zur Nacht 22:00). Medikamente, die nicht mehr im Plan stehen, entfernst du nur, wenn du es ankreuzt. Die App merkt sich den Stand des Plans und das Datum deiner letzten Änderung; einen älteren Plan zeigt sie nicht mehr als neu an. Den Vorrat trägst du danach beim Medikament ein. Maßgeblich ist immer der Plan von Arztpraxis oder Apotheke.",
             ),
             GuideItem(
                 "Medikament anlegen",

@@ -1,10 +1,10 @@
 # TODO
 
-Stand: v0.42.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.43.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
-- [ ] Medikamentenplan aus einem Dokument übernehmen: Medikamente mit Dosierung und Einnahmezeiten vorschlagen, nur wenn der Plan neuer ist als der letzte Stand (Datum der letzten Plan-Änderung merken); Bilder höchstens aus frei nutzbaren Quellen
+- [ ] Medikamentenbilder aus frei nutzbaren Quellen (z. B. Wikimedia Commons, Lizenz und Quelle anzeigen) statt geschützter Packungsfotos; Code des Medikationsplans auch beim Hochladen automatisch lesen; Namen zu PZN ohne Datenbank sind nicht möglich
 - [ ] Medikamentenplan als PDF zum Mitnehmen (alle Medikamente mit Dosierung, Zeiten, Hinweisen; angelehnt an den bundeseinheitlichen Medikationsplan)
 - [ ] Vorrat: Knopf „Neue Packung“ (+ Packungsgröße), Packungsgröße beim Medikament merken
 - [ ] Aufgaben mit Erinnerung zur Frist (Benachrichtigung) und „In Kalender eintragen“
@@ -40,6 +40,7 @@ Stand: v0.42.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 - [ ] App zurücksetzen (am besten erst mit Testdaten und vorheriger Sicherung)
 - [ ] Tages-Motivator: Stimmungs-Check zur richtigen Zeit (Zeitfenster, „Später“, Benachrichtigung), Vorhaben abhaken, Ziele mit Vorlagen und KI-Weg
 - [ ] Ausweis und Krankenkarte auslesen (Erkennung je nach Licht und Kartenversion), Foto wird gelöscht
+- [ ] Medikamentenplan übernehmen: Texterkennung bei Tabellen, Code oben rechts auf dem Plan, KI; Vorschlag nur bei neuerem Plan
 - [ ] Ecken und Effekte (Beta): alle Ansichten mit „Eckig“ und „Rund“, Aurora hell und dunkel, bewegter Hintergrund flüssig und akkuschonend
 
 ## Rechtliches vor einer Veröffentlichung
@@ -48,6 +49,11 @@ Stand: v0.42.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 - [ ] Entscheiden: Aufbewahrung der Nachweise 3 Jahre oder länger (30-Jahres-Frist bei Gesundheitsschäden); zusätzlicher Nachweis beim App-Ersteller (Server) ja oder nein
 - [ ] Medizinprodukte-Recht (MDR) prüfen lassen, vor allem den KI-Gesamt-Check der Medikamente; Zweckbestimmung als Organisationshilfe klar festhalten
 - [ ] Impressum und Datenschutzerklärung für eine Veröffentlichung (z. B. Play Store), eigener Signaturschlüssel statt Test-Schlüssel
+
+## Version 0.43.0 (fertig)
+
+- [x] Medikamentenplan aus Dokumenten übernehmen (Text, Code des bundeseinheitlichen Medikationsplans oder KI): neu, geändert, unverändert, nicht mehr im Plan; Einnahmezeiten aus dem Schema
+- [x] Stand des Plans und letzte Änderung der Medikamentenliste werden gemerkt; Vorschlag auf der Medikamente-Seite nur bei neuerem Plan
 
 ## Version 0.42.0 (fertig)
 

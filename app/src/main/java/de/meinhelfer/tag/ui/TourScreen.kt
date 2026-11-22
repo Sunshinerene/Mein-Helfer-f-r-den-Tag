@@ -83,7 +83,7 @@ private val TOUR_PAGES = listOf(
     TourPage(
         title = "Medikamente",
         text = "Foto der Packung machen: Die App liest Name und Packungsgröße direkt auf dem Handy aus. Dann Einnahmezeiten und Vorrat eintragen. Der Vorrat sinkt täglich, rechtzeitig vor dem Ende erinnert die App ans Nachbestellen.",
-        tips = listOf("Alles vom Foto ist nur ein Vorschlag, bitte kurz prüfen.", "„Nachbestellen“ bereitet Anruf, E-Mail oder PDF für Arzt und Apotheke vor."),
+        tips = listOf("Alles vom Foto ist nur ein Vorschlag, bitte kurz prüfen.", "Einen Medikamentenplan als Dokument hochladen: Die App schlägt vor, alle Medikamente mit Einnahmezeiten zu übernehmen.", "„Nachbestellen“ bereitet Anruf, E-Mail oder PDF für Arzt und Apotheke vor."),
         mock = { MockMedication() },
     ),
     TourPage(
