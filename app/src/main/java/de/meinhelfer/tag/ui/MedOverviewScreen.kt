@@ -140,13 +140,17 @@ fun MedOverviewScreen(
             )
         },
     ) { inner ->
+        val overviewList = androidx.compose.foundation.lazy.rememberLazyListState()
+        val overviewJumps = rememberJumpList(overviewList)
         LazyColumn(
+            state = overviewList,
             modifier = Modifier.padding(inner),
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            overviewJumps.reset()
             // ---- Gesamtbild
-            item {
+            jumpItem(overviewJumps, "Gesamtbild") {
                 HCard(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text("Gesamtbild" + (person?.name?.let { " – $it" } ?: ""), style = MaterialTheme.typography.titleMedium)
@@ -202,7 +206,7 @@ fun MedOverviewScreen(
             }
 
             // ---- Plan zum Ausdrucken
-            item {
+            jumpItem(overviewJumps, "Medikamentenplan als PDF") {
                 HCard(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text("Medikamentenplan als PDF", style = MaterialTheme.typography.titleMedium)
@@ -222,7 +226,7 @@ fun MedOverviewScreen(
             }
 
             // ---- KI-Gesamt-Check
-            item {
+            jumpItem(overviewJumps, "KI-Gesamt-Check") {
                 HCard(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text("Wie passen die Medikamente zusammen?", style = MaterialTheme.typography.titleMedium)
@@ -317,11 +321,11 @@ fun MedOverviewScreen(
             }
 
             // ---- Einzelne Medikamente
-            item {
+            jumpItem(overviewJumps, "Die Medikamente einzeln") {
                 Text("Die Medikamente einzeln", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(start = 4.dp, top = 4.dp))
             }
             meds.forEachIndexed { index, m ->
-                item(key = m.id) {
+                jumpItem(overviewJumps, m.name, key = m.id) {
                     val r = MedRating.fromStored(m.rating)
                     val fromCheck = check?.let { itemFor(m, index, it.items) }
                     HCard(Modifier.fillMaxWidth()) {
@@ -347,7 +351,7 @@ fun MedOverviewScreen(
             }
 
             // ---- Teilen und Hinweis
-            item {
+            jumpItem(overviewJumps, "Teilen") {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton(shape = buttonShape(), onClick = { shareText(context, overviewText(meds, check, person)) }) { Text("Teilen") }
                     OutlinedButton(shape = buttonShape(), onClick = {
@@ -357,7 +361,7 @@ fun MedOverviewScreen(
                     }) { Text("Kopieren") }
                 }
             }
-            item {
+            jumpItem(overviewJumps, null) {
                 Text(
                     "Nur ein Anhaltspunkt aus einer KI, kein ärztlicher Rat. Dosis, Vorerkrankungen, Nierenwerte und das genaue Präparat sind nicht berücksichtigt. " +
                         "Nichts eigenmächtig absetzen oder ändern. Lass den Plan von Hausarzt oder Apotheke prüfen. Bei akuten Beschwerden 116 117, im Notfall 112.",

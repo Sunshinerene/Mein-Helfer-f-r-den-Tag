@@ -378,7 +378,16 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?
                 detailId = null
             },
             onClose = { detailId = null },
-            extra = { if (MedPlans.isPlanDocument(doc)) MedPlanImportBox(doc, person, meds, vm) },
+            extra = {
+                if (MedPlans.isPlanDocument(doc)) MedPlanImportBox(doc, person, meds, vm)
+                if (isLetterDraft(doc)) {
+                    OutlinedButton(shape = buttonShape(), onClick = {
+                        scope.launch {
+                            mailLetterDraft(context, doc, doctors.firstOrNull { it.id == doc.doctorId }?.email, de.meinhelfer.tag.update.AppPrefs.caregiver(context).name)
+                        }
+                    }) { Text("✉ Schreiben per E-Mail senden") }
+                }
+            },
         )
     }
     editItem?.let { doc ->

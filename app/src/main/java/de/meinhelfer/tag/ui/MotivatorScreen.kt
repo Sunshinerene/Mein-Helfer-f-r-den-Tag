@@ -164,7 +164,7 @@ internal fun ProgressBar(fraction: Float) {
 fun MotivatorCard(vm: MainViewModel, onOpen: (tab: Int) -> Unit, onMood: () -> Unit) {
     val plan by vm.motivator.collectAsStateWithLifecycle()
     val p = plan ?: return
-    val moodText = p.lastMood?.let { " · Stimmung ${Motivator.emoji(it.mood)}" } ?: ""
+    val moodText = p.moodEmoji?.let { " · Stimmung $it" } ?: ""
     Foldable(
         key = "motivator",
         title = "Tages-Motivator",
@@ -174,13 +174,14 @@ fun MotivatorCard(vm: MainViewModel, onOpen: (tab: Int) -> Unit, onMood: () -> U
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(p.greeting, style = MaterialTheme.typography.titleMedium)
                 Text(p.sentence, style = MaterialTheme.typography.bodyLarge, fontStyle = FontStyle.Italic)
+                p.impulse?.let { Text("Dein Impuls (KI): $it", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary) }
                 MoodStrip(p)
                 TextButton(onClick = onMood) { Text(if (p.moodToday) "Stimmung nochmal eintragen" else "Wie geht es dir? Stimmung eintragen") }
                 if (p.achieved.isNotEmpty()) {
                     Text("Geschafft: " + p.achieved.take(3).joinToString(" · "), style = MaterialTheme.typography.bodySmall)
                 }
                 Text("Vorhaben für heute", style = MaterialTheme.typography.labelLarge)
-                p.intentions.take(4).forEach { IntentionRow(it, vm) }
+                p.intentions.forEach { IntentionRow(it, vm) }
                 p.goals.take(2).forEach { g -> GoalMini(g) { onOpen(2) } }
                 if (p.support != SupportLevel.None) {
                     TextButton(onClick = { onOpen(0) }) { Text("Unterstützung, wenn du sie brauchst") }
@@ -270,19 +271,19 @@ private fun TodayTab(vm: MainViewModel, caregiver: CaregiverProfile, onMood: () 
     val context = LocalContext.current
     val plan by vm.motivator.collectAsStateWithLifecycle()
     val p = plan ?: return
-    var impulseJson by remember { mutableStateOf(AppPrefs.motivatorImpulse(context)) }
-    val impulse = MotivatorImpulse.fromJson(impulseJson)?.takeIf { it.day == p.day }
-    var kiTick by remember { mutableStateOf(0) }
-    val doneKeys = remember(kiTick, p) { AppPrefs.motivatorDone(context, p.day) }
+    val impulse = p.impulse
 
-    LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        item {
+    val motList = androidx.compose.foundation.lazy.rememberLazyListState()
+    val motJumps = rememberJumpList(motList)
+    LazyColumn(state = motList, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        motJumps.reset()
+        jumpItem(motJumps, "Satz und Stimmung") {
             HCard(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(p.greeting, style = MaterialTheme.typography.titleLarge)
                     Text(p.sentence, style = MaterialTheme.typography.bodyLarge, fontStyle = FontStyle.Italic)
                     impulse?.let {
-                        Text("Dein Impuls (KI): " + it.sentence, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.primary)
+                        Text("Dein Impuls (KI): $it", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.primary)
                     }
                     MoodStrip(p)
                     val trend = when (p.moodTrend) {
@@ -295,7 +296,7 @@ private fun TodayTab(vm: MainViewModel, caregiver: CaregiverProfile, onMood: () 
                 }
             }
         }
-        item {
+        jumpItem(motJumps, "Das hast du geschafft") {
             HCard(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text("Das hast du geschafft", style = MaterialTheme.typography.titleMedium)
@@ -308,7 +309,7 @@ private fun TodayTab(vm: MainViewModel, caregiver: CaregiverProfile, onMood: () 
                 }
             }
         }
-        item {
+        jumpItem(motJumps, "Vorhaben für heute") {
             HCard(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(start = 8.dp, end = 16.dp, top = 16.dp, bottom = 8.dp)) {
                     Text("Vorhaben für heute", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(start = 8.dp))
@@ -318,18 +319,12 @@ private fun TodayTab(vm: MainViewModel, caregiver: CaregiverProfile, onMood: () 
                         modifier = Modifier.padding(start = 8.dp, bottom = 4.dp),
                     )
                     p.intentions.forEach { IntentionRow(it, vm) }
-                    impulse?.intentions?.forEachIndexed { i, text ->
-                        IntentionRow(Intention("ki:$i", text, "ki:$i" in doneKeys), vm) {
-                            vm.toggleOwnIntention("ki:$i")
-                            kiTick++
-                        }
-                    }
                 }
             }
         }
-        val tips = p.tips + (impulse?.tips ?: emptyList())
+        val tips = p.tips
         if (tips.isNotEmpty()) {
-            item {
+            jumpItem(motJumps, "Tipps") {
                 HCard(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text("Tipps", style = MaterialTheme.typography.titleMedium)
@@ -339,9 +334,9 @@ private fun TodayTab(vm: MainViewModel, caregiver: CaregiverProfile, onMood: () 
             }
         }
         if (p.support != SupportLevel.None) {
-            item { SupportBox(p.support, p.professional) }
+            jumpItem(motJumps, "Unterstützung") { SupportBox(p.support, p.professional) }
         }
-        item {
+        jumpItem(motJumps, "Persönlicher Impuls (KI)") {
             HCard(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Persönlicher Impuls (KI, optional)", style = MaterialTheme.typography.titleMedium)
@@ -359,7 +354,7 @@ private fun TodayTab(vm: MainViewModel, caregiver: CaregiverProfile, onMood: () 
                             if (parsed != null) {
                                 val json = parsed.toJson()
                                 AppPrefs.setMotivatorImpulse(context, json)
-                                impulseJson = json
+                                vm.refreshMotivator()
                             }
                             parsed != null
                         },
@@ -367,7 +362,7 @@ private fun TodayTab(vm: MainViewModel, caregiver: CaregiverProfile, onMood: () 
                 }
             }
         }
-        item {
+        jumpItem(motJumps, null) {
             Text(
                 "Der Motivator ist eine Alltagshilfe mit Anhaltspunkten. Er ersetzt keine ärztliche, psychologische oder Pflegeberatung. Im Notfall 112.",
                 style = MaterialTheme.typography.bodySmall,

@@ -229,7 +229,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         combine(_today, _motivatorTick) { d, _ -> d },
     ) { (m, g, s), (t, c, a), day ->
         val app = getApplication<Application>()
-        Motivator.plan(
+        val done = AppPrefs.motivatorDone(app, day)
+        val plan = Motivator.plan(
             today = day,
             hour = LocalTime.now().hour,
             caregiver = AppPrefs.caregiver(app),
@@ -239,8 +240,21 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             appointments = a,
             goals = g,
             steps = s,
-            doneKeys = AppPrefs.motivatorDone(app, day),
+            doneKeys = done,
         )
+        // KI-Impuls von heute gehoert dazu, damit Karte und Motivator-Seite dieselben Vorhaben zeigen
+        val impulse = de.meinhelfer.tag.ai.MotivatorImpulse.fromJson(AppPrefs.motivatorImpulse(app))?.takeIf { it.day == day }
+        if (impulse == null) {
+            plan
+        } else {
+            plan.copy(
+                intentions = plan.intentions + impulse.intentions.mapIndexed { i, text ->
+                    de.meinhelfer.tag.summary.Intention("ki:$i", text, "ki:$i" in done)
+                },
+                tips = (plan.tips + impulse.tips).distinct(),
+                impulse = impulse.sentence.takeIf { it.isNotBlank() },
+            )
+        }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     private val _motivatorOnToday = MutableStateFlow(AppPrefs.motivatorOnToday(app))
@@ -485,6 +499,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         db.documentDao().insert(item.copy(personId = _personId.value))
     }
 
+    /** Dokument speichern und die neue ID zurueckgeben (z. B. um es mit einer Aufgabe zu verknuepfen). */
+    suspend fun addDocumentNow(item: Document): Long = db.documentDao().insert(item.copy(personId = _personId.value))
+
     fun update(item: Document) = viewModelScope.launch { db.documentDao().update(item) }
 
     /** Entwurf eines Schreibens als unterschrieben vermerken und die Aufgabe „ausdrucken, unterschreiben …“ abhaken. */
@@ -493,7 +510,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         db.documentDao().update(
             draft.copy(notes = listOf(draft.notes, "${de.meinhelfer.tag.letters.SignedCopies.SIGNED_NOTE} am $day.").filter { it.isNotBlank() }.joinToString("\n")),
         )
-        val prefix = "„" + de.meinhelfer.tag.letters.SignedCopies.baseTitle(draft) + "“ ausdrucken"
+        val prefix = "„" + de.meinhelfer.tag.letters.SignedCopies.baseTitle(draft) + "“"
         db.todoDao().list().filter { !it.done && it.personId == draft.personId && it.text.startsWith(prefix) }.forEach {
             db.todoDao().update(it.copy(done = true, doneMillis = System.currentTimeMillis(), result = "Unterschriebene Fassung eingescannt"))
         }
@@ -683,6 +700,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 dueDay = it.dueDay,
                 outside = it.outside,
                 remindAt = it.remindAt,
+                docIds = it.docIds,
             )
             val id = db.todoDao().insert(todo)
             if (todo.remindAt != null) ReminderScheduler.scheduleTodo(getApplication(), todo.copy(id = id))

@@ -46,6 +46,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.Row
+import androidx.compose.material3.Checkbox
+import de.meinhelfer.tag.letters.SignedCopies
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -122,7 +126,9 @@ internal fun LetterScreen(
     var preview by remember { mutableStateOf<Bitmap?>(null) }
     var working by remember { mutableStateOf(false) }
     var savedToDocs by remember { mutableStateOf(false) }
+    var savedDocId by remember { mutableStateOf<Long?>(null) }
     var taskAdded by remember { mutableStateOf(false) }
+    var attachPdf by remember { mutableStateOf(true) }
 
     val saveLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")) { uri ->
         val file = pdf
@@ -409,6 +415,38 @@ internal fun LetterScreen(
                         modifier = Modifier.fillMaxWidth(),
                     ) { Text(if (working) "Erstelle PDF …" else if (pdf == null) "PDF erstellen" else "PDF neu erstellen") }
 
+                    // ---- Als E-Mail: derselbe Text, auf Wunsch mit der PDF als Anhang
+                    val toEmail = doctors.firstOrNull { it.id == recipientId }?.email.orEmpty()
+                    val sender = caregiver.name.ifBlank { person?.name.orEmpty() }
+                    val enclosureList = enclosuresText.split(',', '\n').map { it.trim() }.filter { it.isNotEmpty() }
+                    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
+                        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text("Als E-Mail senden", style = MaterialTheme.typography.titleSmall)
+                            if (pdf != null) {
+                                Row(Modifier.fillMaxWidth().clickable { attachPdf = !attachPdf }, verticalAlignment = Alignment.CenterVertically) {
+                                    Checkbox(checked = attachPdf, onCheckedChange = { attachPdf = it })
+                                    Text("PDF anhängen", style = MaterialTheme.typography.bodyMedium)
+                                }
+                            } else if (form) {
+                                Text("Für Formulare zuerst „PDF erstellen“, dann wird sie angehängt.", style = MaterialTheme.typography.bodySmall)
+                            }
+                            OutlinedButton(shape = buttonShape(), enabled = body.isNotBlank() && (!form || pdf != null), onClick = {
+                                openLetterMail(
+                                    context,
+                                    toEmail,
+                                    subject,
+                                    letterMailText(subject, reference, body, signatures, enclosureList, form, sender),
+                                    if (attachPdf || form) pdf else null,
+                                )
+                            }) { Text("✉ In E-Mail-App öffnen") }
+                            Text(
+                                (if (toEmail.isBlank()) "Beim Empfänger ist keine E-Mail-Adresse hinterlegt, du trägst sie in der E-Mail-App ein. " else "An: $toEmail. ") +
+                                    "Normale E-Mails sind nicht verschlüsselt. Wo eine Unterschrift nötig ist (z. B. Widerspruch, Kündigung, Vollmacht), die PDF ausdrucken, unterschreiben und per Post schicken oder die unterschriebene, eingescannte Fassung anhängen.",
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
+                    }
+
                     val file = pdf
                     if (file != null) {
                         preview?.let {
@@ -437,37 +475,63 @@ internal fun LetterScreen(
                             }) { Text("Teilen") }
                         }
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            // Entwurf ablegen; der Text enthaelt Gruss und Unterschrift, damit er spaeter auch als E-Mail taugt
+                            suspend fun saveDraft(): Long? = savedDocId ?: try {
+                                val stored = DocumentStore.store(context, file)
+                                val text = if (form) {
+                                    listOf(subject, body).filter { it.isNotBlank() }.joinToString("\n\n")
+                                } else {
+                                    subject + "\n\n" + letterMailText(subject, reference, body, signatures, enclosuresText.split(',', '\n').map { it.trim() }.filter { it.isNotEmpty() }, false, "")
+                                }
+                                vm.addDocumentNow(
+                                    Document(
+                                        title = t.title + SignedCopies.DRAFT_MARK + LocalDate.now().toString() + ")",
+                                        category = t.docCategory,
+                                        docDate = LocalDate.now().toEpochDay(),
+                                        fileName = stored,
+                                        mimeType = "application/pdf",
+                                        text = text,
+                                        notes = "Erstellt in der App. Per Post (unterschrieben) oder per E-Mail abschicken; die unterschriebene Fassung später einscannen.",
+                                        doctorId = recipientId,
+                                    ),
+                                ).also {
+                                    savedDocId = it
+                                    savedToDocs = true
+                                }
+                            } catch (_: Exception) {
+                                null
+                            }
                             OutlinedButton(shape = buttonShape(), enabled = !savedToDocs, onClick = {
                                 scope.launch {
-                                    try {
-                                        val stored = DocumentStore.store(context, file)
-                                        vm.add(
-                                            Document(
-                                                title = t.title + " (Entwurf, " + LocalDate.now().toString() + ")",
-                                                category = t.docCategory,
-                                                docDate = LocalDate.now().toEpochDay(),
-                                                fileName = stored,
-                                                mimeType = "application/pdf",
-                                                text = listOf(subject, reference, body).filter { it.isNotBlank() }.joinToString("\n\n"),
-                                                notes = "Erstellt in der App zum Ausdrucken. Die unterschriebene Fassung später einscannen und als eigenes Dokument ablegen.",
-                                                doctorId = recipientId,
-                                            ),
-                                        )
-                                        savedToDocs = true
+                                    if (saveDraft() != null) {
                                         Toast.makeText(context, "Unter Dokumente abgelegt.", Toast.LENGTH_SHORT).show()
-                                    } catch (_: Exception) {
+                                    } else {
                                         Toast.makeText(context, "Ablegen hat nicht geklappt.", Toast.LENGTH_LONG).show()
                                     }
                                 }
                             }) { Text(if (savedToDocs) "Abgelegt ✓" else "In Dokumente ablegen") }
                             OutlinedButton(shape = buttonShape(), enabled = !taskAdded, onClick = {
-                                vm.addTodo("„" + t.title + "“ ausdrucken, unterschreiben und abschicken; unterschriebene Fassung einscannen")
-                                taskAdded = true
-                                Toast.makeText(context, "Aufgabe angelegt.", Toast.LENGTH_SHORT).show()
+                                scope.launch {
+                                    // Aufgabe mit Empfaenger und Entwurf verknuepfen: dort gibt es dann „Schreiben mailen“
+                                    val docId = saveDraft()
+                                    vm.addTasks(
+                                        listOf(
+                                            TaskDraft(
+                                                text = "„" + t.title + "“ abschicken (unterschrieben per Post oder per E-Mail); unterschriebene Fassung einscannen",
+                                                doctorId = recipientId,
+                                                priority = 1,
+                                                dueDay = LocalDate.now().toEpochDay() + 3,
+                                                docIds = docId?.toString().orEmpty(),
+                                            ),
+                                        ),
+                                    )
+                                    taskAdded = true
+                                    Toast.makeText(context, "Aufgabe angelegt (mit Entwurf, Empfänger und „Schreiben mailen“).", Toast.LENGTH_LONG).show()
+                                }
                             }) { Text(if (taskAdded) "Aufgabe angelegt ✓" else "Als Aufgabe merken") }
                         }
                         Text(
-                            "Die PDF liegt nur auf deinem Handy. Gesendet wird nichts automatisch. Nach dem Unterschreiben: abschicken und die unterschriebene Fassung im Tab „Dokumente“ einscannen. Liegt der Entwurf unter Dokumente, schlägt die App vor, beide zuzuordnen.",
+                            "Die PDF liegt nur auf deinem Handy. Gesendet wird nichts automatisch. Nach dem Unterschreiben: abschicken und die unterschriebene Fassung im Tab „Dokumente“ einscannen. Liegt der Entwurf unter Dokumente, schlägt die App vor, beide zuzuordnen. Die Aufgabe bekommt Empfänger und Entwurf, dort geht es auch später noch per E-Mail.",
                             style = MaterialTheme.typography.bodySmall,
                         )
                     }

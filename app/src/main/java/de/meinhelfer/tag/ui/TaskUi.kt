@@ -39,6 +39,7 @@ import de.meinhelfer.tag.data.Doctor
 import de.meinhelfer.tag.data.Document
 import de.meinhelfer.tag.data.Person
 import de.meinhelfer.tag.data.Todo
+import kotlinx.coroutines.launch
 import org.json.JSONArray
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -54,6 +55,8 @@ data class TaskDraft(
     val outside: Boolean = false,
     /** Erinnerung per Benachrichtigung (Millisekunden), null = keine. */
     val remindAt: Long? = null,
+    /** Verknuepfte Dokumente (IDs, kommagetrennt). */
+    val docIds: String = "",
 )
 
 private val REMIND_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("EE dd.MM., HH:mm", Locale.GERMANY)
@@ -152,6 +155,7 @@ internal fun TasksCard(
 ) {
     val context = LocalContext.current
     var docsFor by remember { mutableStateOf<Todo?>(null) }
+    val taskScope = androidx.compose.runtime.rememberCoroutineScope()
     var mailFor by remember { mutableStateOf<Todo?>(null) }
     var showAdd by remember { mutableStateOf(false) }
     var editItem by remember { mutableStateOf<Todo?>(null) }
@@ -234,8 +238,14 @@ internal fun TasksCard(
                                         startIntent(context, Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + doctor.phone.filter { it.isDigit() || it == '+' })))
                                     }) { Text("Anrufen") }
                                 }
+                                val letter = t.attachedIds().mapNotNull { id -> documents.firstOrNull { it.id == id } }.firstOrNull { isLetterDraft(it) }
+                                if (letter != null) {
+                                    TextButton(contentPadding = pad, onClick = {
+                                        taskScope.launch { mailLetterDraft(context, letter, doctor?.email, caregiver.name) }
+                                    }) { Text("✉ Schreiben mailen") }
+                                }
                                 if (doctor != null && doctor.email.isNotBlank()) {
-                                    TextButton(contentPadding = pad, onClick = { mailFor = t }) { Text("E-Mail") }
+                                    TextButton(contentPadding = pad, onClick = { mailFor = t }) { Text(if (letter != null) "Andere E-Mail" else "E-Mail") }
                                 }
                                 if (t.outside) {
                                     TextButton(contentPadding = pad, onClick = { rideFor = t }) { Text("Fahrdienst") }

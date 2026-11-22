@@ -96,8 +96,11 @@ fun BudgetScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit) {
             )
         },
     ) { inner ->
-        LazyColumn(Modifier.padding(inner), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            item {
+        val budgetList = androidx.compose.foundation.lazy.rememberLazyListState()
+        val budgetJumps = rememberJumpList(budgetList)
+        LazyColumn(Modifier.padding(inner), state = budgetList, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            budgetJumps.reset()
+            jumpItem(budgetJumps, null) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     OutlinedButton(shape = buttonShape(), onClick = { year-- }, contentPadding = PaddingValues(horizontal = 12.dp)) { Text("◀") }
                     Text("Jahr $year" + (person?.name?.let { " – $it" } ?: ""), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f).padding(horizontal = 8.dp))
@@ -105,7 +108,7 @@ fun BudgetScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit) {
                 }
             }
             if (careLevel == 0) {
-                item {
+                jumpItem(budgetJumps, null) {
                     Text(
                         "Im Profil ist noch kein Pflegegrad eingetragen. Diese Budgets gibt es erst mit Pflegegrad (Antrag bei der Pflegekasse, siehe Wegweiser).",
                         style = MaterialTheme.typography.bodySmall,
@@ -115,7 +118,7 @@ fun BudgetScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit) {
             }
             // ---- Hinweis zur geplanten Reform (Stand 22.11.2026)
             if (year >= 2026 && today.year <= 2027) {
-                item {
+                jumpItem(budgetJumps, "Hinweis: Reform 2027") {
                     HCard(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
                         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text("Geplante Pflegereform ab 2027", style = MaterialTheme.typography.titleSmall)
@@ -128,7 +131,7 @@ fun BudgetScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit) {
                 }
             }
             // ---- Entlastungsbetrag
-            item {
+            jumpItem(budgetJumps, "Entlastungsbetrag") {
                 HCard(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text("Entlastungsbetrag", style = MaterialTheme.typography.titleMedium)
@@ -156,7 +159,7 @@ fun BudgetScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit) {
                 }
             }
             // ---- Gemeinsamer Jahresbetrag
-            item {
+            jumpItem(budgetJumps, "Verhinderungs- und Kurzzeitpflege") {
                 HCard(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text("Verhinderungs- und Kurzzeitpflege", style = MaterialTheme.typography.titleMedium)
@@ -186,12 +189,12 @@ fun BudgetScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit) {
                 }
             }
             // ---- Ausgaben
-            item { Text("Ausgaben $year", style = MaterialTheme.typography.titleMedium) }
+            jumpItem(budgetJumps, "Ausgaben") { Text("Ausgaben $year", style = MaterialTheme.typography.titleMedium) }
             if (inYear.isEmpty()) {
-                item { Text("Noch keine Ausgaben eingetragen.", style = MaterialTheme.typography.bodyMedium) }
+                jumpItem(budgetJumps, null) { Text("Noch keine Ausgaben eingetragen.", style = MaterialTheme.typography.bodyMedium) }
             }
             inYear.forEach { e ->
-                item(key = e.id) {
+                jumpItem(budgetJumps, null, key = e.id) {
                     val st = BudgetStatus.of(e.status)
                     HCard(Modifier.fillMaxWidth().clickable { editing = e }) {
                         Column(Modifier.padding(12.dp)) {
@@ -218,11 +221,11 @@ fun BudgetScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit) {
                 }
             }
             inYear.count { it.status == BudgetStatus.Offen.key }.takeIf { it > 0 }?.let { open ->
-                item {
+                jumpItem(budgetJumps, null) {
                     Text("$open Ausgabe(n) noch nicht bei der Pflegekasse eingereicht. Belege sammeln und einreichen (viele Kassen haben dafür eine App).", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary)
                 }
             }
-            item {
+            jumpItem(budgetJumps, "Beträge und Beginn") {
                 HCard(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text("Beträge und Beginn", style = MaterialTheme.typography.titleSmall)
@@ -235,7 +238,7 @@ fun BudgetScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit) {
                     }
                 }
             }
-            item {
+            jumpItem(budgetJumps, null) {
                 Text(
                     "Nur zum Mitverfolgen, alles bleibt auf dem Handy. Maßgeblich sind die Bescheide und Abrechnungen der Pflegekasse. Beträge Stand November 2026, ohne Gewähr.",
                     style = MaterialTheme.typography.bodySmall,

@@ -10,6 +10,12 @@ import kotlinx.coroutines.Dispatchers
 import de.meinhelfer.tag.media.DocumentStore
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.clickable
+import kotlinx.coroutines.launch
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.background
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -85,7 +91,7 @@ private enum class Tab(val label: String, val icon: ImageVector) {
     Infos("Infos", InfoIcon),
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun HelferApp(vm: MainViewModel = viewModel()) {
     // Ohne Zustimmung zu den Nutzungsbedingungen keine Nutzung
@@ -144,6 +150,26 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
     // Beim ersten Start einmal den Rundgang anbieten
     var showTourOffer by rememberSaveable { mutableStateOf(!AppPrefs.tourSeen(appContext)) }
     val tab = Tab.entries[tabIndex]
+    val jumpRegistry = remember { JumpRegistry() }
+
+    /** Alle Unterseiten schliessen, z. B. wenn unten ein Reiter angetippt wird. */
+    fun closeOverlays() {
+        showSettings = false
+        settingsCategory = null
+        showSummary = false
+        showGuide = false
+        showReorder = false
+        showWegweiser = false
+        showLetters = false
+        showMedOverview = false
+        showDailyStart = false
+        showMoodCheck = false
+        showMotivator = false
+        showVitals = false
+        showDiary = false
+        showBudget = false
+        showHandover = false
+    }
 
     // Nach dem Willkommens-Dialog einmal nach den eigenen Daten fragen
     LaunchedEffect(showTourOffer, showTour) {
@@ -236,7 +262,20 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
 
     if (showTour) {
         TourScreen(onClose = { showTour = false })
-    } else if (showMoodCheck) {
+    } else {
+    androidx.compose.runtime.CompositionLocalProvider(LocalJumps provides jumpRegistry) {
+    // Die Leiste unten ist auf allen Seiten sichtbar; nach oben wischen zeigt die Bereiche der Seite
+    Scaffold(
+        containerColor = androidx.compose.ui.graphics.Color.Transparent,
+        bottomBar = {
+            DockBar(tabIndex) { i ->
+                closeOverlays()
+                tabIndex = i
+            }
+        },
+    ) { dockInner ->
+    Box(Modifier.padding(dockInner).consumeWindowInsets(dockInner).fillMaxSize()) {
+    if (showMoodCheck) {
         MoodCheckScreen(
             name = caregiver.name,
             professional = de.meinhelfer.tag.summary.Motivator.isProfessional(caregiver),
@@ -356,19 +395,6 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
                     },
                 )
             },
-            bottomBar = {
-                NavigationBar {
-                    val navLabelSize = remember(androidx.compose.ui.platform.LocalDensity.current.fontScale) { androidx.compose.runtime.mutableFloatStateOf(12f) }
-                    Tab.entries.forEachIndexed { i, t ->
-                        NavigationBarItem(
-                            selected = i == tabIndex,
-                            onClick = { tabIndex = i },
-                            icon = { Icon(t.icon, contentDescription = t.label) },
-                            label = { FitText(t.label, maxSize = 12.sp, shared = navLabelSize) },
-                        )
-                    }
-                }
-            },
         ) { inner ->
             Column(Modifier.padding(inner).fillMaxSize()) {
               PersonBar(persons = persons, currentId = personId, vm = vm)
@@ -463,6 +489,10 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
               }
             }
         }
+    }
+    }
+    }
+    }
     }
 
     if (showProfile) {
@@ -597,6 +627,7 @@ private fun MedicationScreen(
             emptyText = "Noch keine Medikamente. Mit + hinzufügen.",
             onAdd = { showAdd = true },
             modifier = Modifier.weight(1f),
+            jumpLabel = { it.name },
         ) { m ->
             val days = m.daysLeft()
             ItemCard(
@@ -785,6 +816,8 @@ private fun AppointmentScreen(
         )
     }
 
+    val apptList = androidx.compose.foundation.lazy.rememberLazyListState()
+    val apptJumps = rememberJumpList(apptList)
     Box(Modifier.fillMaxSize()) {
         if (items.isEmpty()) {
             Text(
@@ -794,11 +827,13 @@ private fun AppointmentScreen(
             )
         } else {
             LazyColumn(
+                state = apptList,
                 contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 88.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
+                apptJumps.reset()
                 if (coming.isEmpty()) {
-                    item {
+                    jumpItem(apptJumps, null) {
                         Text(
                             "Keine kommenden Termine. Mit + einen neuen anlegen.",
                             style = MaterialTheme.typography.bodyLarge,
@@ -806,14 +841,14 @@ private fun AppointmentScreen(
                         )
                     }
                 }
-                lazyItems(coming, key = { it.id }) { apptItem(it) }
+                jumpItems(apptJumps, coming, label = { formatAppointmentTime(it.whenMillis, it.endMillis) + " – " + it.title }, key = { it.id }) { apptItem(it) }
                 if (earlier.isNotEmpty()) {
-                    item {
+                    jumpItem(apptJumps, "Vergangene Termine") {
                         OutlinedButton(shape = buttonShape(), onClick = { showPast = !showPast }, modifier = Modifier.fillMaxWidth()) {
                             Text(if (showPast) "Vergangene Termine ausblenden" else "Vergangene Termine anzeigen (${earlier.size})")
                         }
                     }
-                    if (showPast) lazyItems(earlier, key = { it.id }) { apptItem(it) }
+                    if (showPast) jumpItems(apptJumps, earlier, label = { null }, key = { it.id }) { apptItem(it) }
                 }
             }
         }
@@ -930,6 +965,7 @@ private fun DoctorScreen(
         emptyText = "Noch keine Kontakte (Ärzte, Pflegedienst, Apotheke, Pflegekasse …). Mit + hinzufügen.",
         onAdd = { showAdd = true },
         modifier = Modifier.weight(1f),
+        jumpLabel = { doctorLabel(it) },
     ) { d ->
         ItemCard(
             title = doctorLabel(d),
@@ -1029,6 +1065,104 @@ private fun launch(context: Context, intent: Intent) {
     }
 }
 
+// ---------------------------------------------------------------- Leiste unten mit Schnellsprung
+
+/** Reiter-Leiste fuer alle Seiten. Nach oben wischen oder den Griff antippen zeigt die Bereiche der aktuellen Seite. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DockBar(selected: Int, onSelect: (Int) -> Unit) {
+    val registry = LocalJumps.current
+    var sheet by remember { mutableStateOf(false) }
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    Column(
+        Modifier.pointerInput(Unit) {
+            androidx.compose.foundation.gestures.awaitEachGesture {
+                val down = androidx.compose.foundation.gestures.awaitFirstDown(
+                    requireUnconsumed = false,
+                    pass = androidx.compose.ui.input.pointer.PointerEventPass.Initial,
+                )
+                var total = 0f
+                while (true) {
+                    val ev = awaitPointerEvent(androidx.compose.ui.input.pointer.PointerEventPass.Initial)
+                    val c = ev.changes.firstOrNull { it.id == down.id } ?: break
+                    if (!c.pressed) break
+                    total += c.position.y - c.previousPosition.y
+                    if (total < -40.dp.toPx()) {
+                        // Wischen nach oben: Liste oeffnen, Antippen des Reiters verhindern
+                        c.consume()
+                        sheet = true
+                        break
+                    }
+                }
+            }
+        },
+    ) {
+        androidx.compose.material3.Surface(
+            color = androidx.compose.material3.NavigationBarDefaults.containerColor,
+            modifier = Modifier.fillMaxWidth().clickable { sheet = true },
+        ) {
+            Row(
+                Modifier.fillMaxWidth().padding(top = 6.dp, bottom = 1.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(
+                    Modifier
+                        .width(36.dp)
+                        .height(4.dp)
+                        .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f), androidx.compose.foundation.shape.RoundedCornerShape(2.dp)),
+                )
+                Text(
+                    "  Bereiche",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+        NavigationBar {
+            val navLabelSize = remember(androidx.compose.ui.platform.LocalDensity.current.fontScale) { androidx.compose.runtime.mutableFloatStateOf(12f) }
+            Tab.entries.forEachIndexed { i, t ->
+                NavigationBarItem(
+                    selected = i == selected,
+                    onClick = { onSelect(i) },
+                    icon = { Icon(t.icon, contentDescription = t.label) },
+                    label = { FitText(t.label, maxSize = 12.sp, shared = navLabelSize) },
+                )
+            }
+        }
+    }
+    if (sheet) {
+        androidx.compose.material3.ModalBottomSheet(onDismissRequest = { sheet = false }) {
+            val targets = registry.current()
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp, bottom = 24.dp)
+                    .verticalScroll(androidx.compose.foundation.rememberScrollState()),
+            ) {
+                Text("Springen zu", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(bottom = 4.dp))
+                if (targets.isEmpty()) {
+                    Text("Auf dieser Seite gibt es keine Bereiche zum Springen.", style = MaterialTheme.typography.bodyMedium)
+                }
+                targets.forEach { t ->
+                    TextButton(
+                        onClick = {
+                            sheet = false
+                            scope.launch { runCatching { t.jump() } }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { Text(t.label, modifier = Modifier.fillMaxWidth(), style = MaterialTheme.typography.bodyLarge) }
+                }
+                Text(
+                    "Tipp: Die Leiste unten nach oben wischen öffnet diese Liste jederzeit.",
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+            }
+        }
+    }
+}
+
 // ---------------------------------------------------------------- Bausteine
 
 @Composable
@@ -1037,8 +1171,11 @@ internal fun <T> ListScreen(
     emptyText: String,
     onAdd: () -> Unit,
     modifier: Modifier = Modifier,
+    jumpLabel: ((T) -> String)? = null,
     row: @Composable (T) -> Unit,
 ) {
+    val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+    val jumps = rememberJumpList(listState)
     Box(modifier.fillMaxSize()) {
         if (items.isEmpty()) {
             Text(
@@ -1048,10 +1185,12 @@ internal fun <T> ListScreen(
             )
         } else {
             LazyColumn(
+                state = listState,
                 contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 88.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                lazyItems(items) { row(it) }
+                jumps.reset()
+                jumpItems(jumps, items, label = { jumpLabel?.invoke(it) }) { row(it) }
             }
         }
         FloatingActionButton(

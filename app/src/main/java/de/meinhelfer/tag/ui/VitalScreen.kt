@@ -326,12 +326,16 @@ fun VitalScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit) {
             )
         },
     ) { inner ->
+        val vitalList = androidx.compose.foundation.lazy.rememberLazyListState()
+        val vitalJumps = rememberJumpList(vitalList)
         LazyColumn(
+            state = vitalList,
             modifier = Modifier.padding(inner),
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            item {
+            vitalJumps.reset()
+            jumpItem(vitalJumps, "💧 Trinken") {
                 HCard(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         val drunk = drinkTotals.last().toInt()
@@ -373,7 +377,7 @@ fun VitalScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit) {
                 }
             }
 
-            item {
+            jumpItem(vitalJumps, "Messwerte eintragen") {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text("Messwerte", style = MaterialTheme.typography.titleMedium)
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -390,7 +394,7 @@ fun VitalScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit) {
             VitalKind.MEASURES.forEach { k ->
                 val list = vitals.filter { it.kind == k.key }
                 if (list.isEmpty()) return@forEach
-                item(key = k.key) {
+                jumpItem(vitalJumps, "${k.emoji} ${k.label}", key = k.key) {
                     val range = remember(rangeTick, pid) { AppPrefs.vitalRange(context, pid, k.key) }
                     val recent = list.take(30).reversed()
                     val unit = list.first().unit.ifBlank { k.unit }
@@ -438,7 +442,7 @@ fun VitalScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit) {
                 }
             }
 
-            item {
+            jumpItem(vitalJumps, "Protokoll als PDF") {
                 HCard(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text("Protokoll als PDF", style = MaterialTheme.typography.titleMedium)
@@ -456,7 +460,7 @@ fun VitalScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit) {
                     }
                 }
             }
-            item {
+            jumpItem(vitalJumps, null) {
                 Text(
                     "Alles bleibt auf dem Handy. Die App bewertet keine Werte; „außerhalb“ bezieht sich nur auf den Bereich, den du selbst eingetragen hast (z. B. wie vom Arzt besprochen). Bei Beschwerden Arzt anrufen, im Notfall 112.",
                     style = MaterialTheme.typography.bodySmall,

@@ -194,7 +194,7 @@ interface DocumentDao {
     suspend fun clearDoctor(contactId: Long)
 
     @Insert
-    suspend fun insert(item: Document)
+    suspend fun insert(item: Document): Long
 
     @Update
     suspend fun update(item: Document)

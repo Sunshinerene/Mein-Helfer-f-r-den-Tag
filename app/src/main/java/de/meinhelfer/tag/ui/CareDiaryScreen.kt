@@ -213,12 +213,16 @@ fun CareDiaryScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit) {
             )
         },
     ) { inner ->
+        val diaryList = androidx.compose.foundation.lazy.rememberLazyListState()
+        val diaryJumps = rememberJumpList(diaryList)
         LazyColumn(
+            state = diaryList,
             modifier = Modifier.padding(inner),
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            item {
+            diaryJumps.reset()
+            jumpItem(diaryJumps, "Wozu?") {
                 HCard(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text("Wozu?", style = MaterialTheme.typography.titleSmall)
@@ -233,7 +237,7 @@ fun CareDiaryScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit) {
                     }
                 }
             }
-            item {
+            jumpItem(diaryJumps, "Tag wählen") {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     OutlinedButton(shape = buttonShape(), onClick = { day-- }, contentPadding = PaddingValues(horizontal = 12.dp)) { Text("◀") }
                     Column(Modifier.weight(1f).padding(horizontal = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -250,7 +254,7 @@ fun CareDiaryScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit) {
                     OutlinedButton(shape = buttonShape(), enabled = day < today, onClick = { day++ }, contentPadding = PaddingValues(horizontal = 12.dp)) { Text("▶") }
                 }
             }
-            item {
+            jumpItem(diaryJumps, null) {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(shape = buttonShape(), onClick = { adding = true }) { Text("+ Eintrag") }
                     if (previous != null && entries.isEmpty()) {
@@ -261,10 +265,10 @@ fun CareDiaryScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit) {
                 }
             }
             if (entries.isEmpty()) {
-                item { Text("Für diesen Tag gibt es noch keine Einträge.", style = MaterialTheme.typography.bodyMedium) }
+                jumpItem(diaryJumps, null) { Text("Für diesen Tag gibt es noch keine Einträge.", style = MaterialTheme.typography.bodyMedium) }
             }
             entries.groupBy { it.module }.forEach { (module, list) ->
-                item(key = "m$module") {
+                jumpItem(diaryJumps, CareAreas.of(module).title, key = "m$module") {
                     val area = CareAreas.of(module)
                     HCard(Modifier.fillMaxWidth()) {
                         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -279,7 +283,7 @@ fun CareDiaryScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit) {
                     }
                 }
             }
-            item {
+            jumpItem(diaryJumps, "Bericht für die Begutachtung") {
                 HCard(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text("Bericht für die Begutachtung (PDF)", style = MaterialTheme.typography.titleMedium)
@@ -296,12 +300,12 @@ fun CareDiaryScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit) {
                     }
                 }
             }
-            item {
+            jumpItem(diaryJumps, "Erinnerung am Abend") {
                 HCard(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp)) { DiaryReminderSetting() }
                 }
             }
-            item {
+            jumpItem(diaryJumps, null) {
                 Text(
                     "Selbst geführt, ersetzt keine Begutachtung. Den Pflegegrad legt die Pflegekasse nach der Begutachtung fest. Alles bleibt auf dem Handy, bis du die PDF teilst.",
                     style = MaterialTheme.typography.bodySmall,

@@ -178,13 +178,17 @@ fun TodayScreen(
         onPauseOrDispose { }
     }
     val remindersOk = remember(permTick) { AppPermissions.remindersReliable(context) }
+    val todayList = androidx.compose.foundation.lazy.rememberLazyListState()
+    val jumps = rememberJumpList(todayList)
 
     LazyColumn(
+        state = todayList,
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        jumps.reset()
         if (newVersion != null) {
-            item {
+            jumpItem(jumps, "Neue Version") {
                 HCard(
                     onClick = onOpenSettings,
                     modifier = Modifier.fillMaxWidth(),
@@ -199,10 +203,10 @@ fun TodayScreen(
         }
 
         if (!remindersOk) {
-            item { ReminderWarningCard() }
+            jumpItem(jumps, "Erinnerungen einrichten") { ReminderWarningCard() }
         }
 
-        item {
+        jumpItem(jumps, null) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(shape = buttonShape(), onClick = { onOpenDailyStart(false) }, modifier = Modifier.weight(1f)) {
                     FitText("Rückblick gestern", maxSize = 14.sp)
@@ -213,7 +217,7 @@ fun TodayScreen(
             }
         }
 
-        item {
+        jumpItem(jumps, "Profil") {
             if (person != null) {
                 Foldable(
                     key = "profil",
@@ -224,13 +228,13 @@ fun TodayScreen(
         }
 
         if (motivatorOn) {
-            item { MotivatorCard(vm, onOpen = onOpenMotivator, onMood = onOpenMood) }
+            jumpItem(jumps, "Tages-Motivator") { MotivatorCard(vm, onOpen = onOpenMotivator, onMood = onOpenMood) }
         }
-        item { BackupReminderCard(onOpenBackup) }
+        jumpItem(jumps, null) { BackupReminderCard(onOpenBackup) }
 
         // ---- Rueckfragen
         if (followUps.isNotEmpty()) {
-            item {
+            jumpItem(jumps, "Kurz nachgefragt") {
             Foldable(key = "nachgefragt", title = "Kurz nachgefragt", summary = "${followUps.size} offen", colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
                 HCard(
                     Modifier.fillMaxWidth(),
@@ -257,7 +261,7 @@ fun TodayScreen(
         }
         }
 
-        item {
+        jumpItem(jumps, "Wichtig und demnächst") {
             DayAheadCard(todos = todos, appointments = appointments, doctors = doctors, todayDay = todayDay, vm = vm) { a ->
                 val day = Instant.ofEpochMilli(a.whenMillis).atZone(zone).toLocalDate().toEpochDay()
                 val check = apptChecks[a.id to day]
@@ -291,15 +295,15 @@ fun TodayScreen(
         }
 
         if (!caregiver.isSet) {
-            item { CaregiverPromptCard(onEditCaregiver) }
+            jumpItem(jumps, null) { CaregiverPromptCard(onEditCaregiver) }
         }
 
         if (AppPrefs.betaEmergency(context)) {
-            item { EmergencyEntryCard { showEmergency = true } }
+            jumpItem(jumps, "Notfallkarte") { EmergencyEntryCard { showEmergency = true } }
         }
 
         if (lowStock.isNotEmpty()) {
-            item {
+            jumpItem(jumps, "Bald nachbestellen") {
             Foldable(key = "nachbestellen", title = "Bald nachbestellen", summary = if (lowStock.size == 1) "1 Medikament" else "${lowStock.size} Medikamente", colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)) {
                 HCard(
                     modifier = Modifier.fillMaxWidth(),
@@ -328,7 +332,7 @@ fun TodayScreen(
         }
 
         // ---- Einnahmen
-        item {
+        jumpItem(jumps, "Heute einnehmen") {
             Foldable(key = "einnahmen", title = "Heute einnehmen", summary = if (intakes.isEmpty()) "Keine Einnahmen eingetragen" else "$intakesDone von ${intakes.size} abgehakt, ${intakes.size - intakesDone} offen") {
             HCard(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(start = 8.dp, end = 8.dp, top = 16.dp, bottom = 8.dp)) {
@@ -412,11 +416,11 @@ fun TodayScreen(
         }
 
         // ---- Trinken und Werte, Pflegetagebuch
-        item { VitalTodayCard(vm, person, todayDay, onOpen = onOpenVitals) }
-        item { CareDiaryTodayCard(vm, todayDay, onOpen = onOpenDiary) }
+        jumpItem(jumps, "Trinken und Werte") { VitalTodayCard(vm, person, todayDay, onOpen = onOpenVitals) }
+        jumpItem(jumps, "Pflegetagebuch") { CareDiaryTodayCard(vm, todayDay, onOpen = onOpenDiary) }
 
         // ---- Aufgaben
-        item {
+        jumpItem(jumps, "Aufgaben") {
             val openTodos = todos.count { !it.done }
             val urgentTodos = todos.count { !it.done && it.priority == 2 }
             Foldable(
@@ -429,7 +433,7 @@ fun TodayScreen(
         }
 
         // ---- Bemerkung zum Tag
-        item {
+        jumpItem(jumps, "Bemerkung zum Tag") {
             Foldable(key = "bemerkung", title = "Bemerkung zum Tag", summary = dayNote?.text?.takeIf { it.isNotBlank() }?.let { if (it.length > 60) it.take(60) + "…" else it } ?: "Noch nichts notiert") {
             HCard(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -448,7 +452,7 @@ fun TodayScreen(
         }
 
         // ---- Auswertung
-        item {
+        jumpItem(jumps, "Auswertung") {
             HCard(
                 onClick = onOpenSummary,
                 modifier = Modifier.fillMaxWidth(),
@@ -463,7 +467,7 @@ fun TodayScreen(
                 }
             }
         }
-        item {
+        jumpItem(jumps, null) {
             Text(
                 "Mein Helfer für den Tag · by $AUTHOR",
                 style = MaterialTheme.typography.labelSmall,

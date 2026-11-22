@@ -68,7 +68,13 @@ data class MotivatorPlan(
     val goals: List<GoalProgress>,
     /** Pflegekraft oder Betreuungskraft (beruflich): andere Entlastungs-Hinweise */
     val professional: Boolean,
+    /** Satz aus dem KI-Impuls fuer heute, falls geholt */
+    val impulse: String? = null,
 ) {
+    /** Stimmung heute (Durchschnitt), sonst die letzte eingetragene: wie in der Smiley-Leiste. */
+    val moodEmoji: String?
+        get() = moodDays.lastOrNull()?.avg?.let { Motivator.emojiFor(it) } ?: lastMood?.let { Motivator.emoji(it.mood) }
+
     val openIntentions: Int get() = intentions.count { !it.done }
 }
 
