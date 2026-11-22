@@ -34,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import de.meinhelfer.tag.ai.MedPlanAi
 import de.meinhelfer.tag.data.Document
 import de.meinhelfer.tag.data.Medication
@@ -65,6 +66,10 @@ internal fun lastPlanChangeDay(context: Context, personId: Long, meds: List<Medi
     val created = meds.filter { it.personId == personId }.maxOfOrNull { it.createdDay }
     return listOfNotNull(changed, stand, created).maxOrNull()
 }
+
+/** Stand des Plans; ohne Dokument (nur Code fotografiert) das Datum im Code oder heute. */
+private fun planDayFor(doc: Document?, plan: MedPlan?): Long =
+    if (doc != null) MedPlans.planDay(doc, plan) else plan?.day ?: LocalDate.now().toEpochDay()
 
 private class ReviewRow(val match: PlanMatch) {
     var use by mutableStateOf(match.status != PlanStatus.Same)
@@ -232,17 +237,17 @@ fun MedPlanReviewDialog(
 
 /** Im Dokument: Medikamentenplan erkannt, uebernehmen (Text, Code auf dem Plan oder KI). */
 @Composable
-fun MedPlanImportBox(doc: Document, person: Person?, meds: List<Medication>, vm: MainViewModel) {
+fun MedPlanImportBox(doc: Document?, person: Person?, meds: List<Medication>, vm: MainViewModel) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val personId = person?.id ?: doc.personId
-    val local = remember(doc.text) { MedPlans.parseText(doc.text) }
-    var plan by remember(doc.id) { mutableStateOf(local.takeIf { it.meds.isNotEmpty() }) }
+    val personId = person?.id ?: doc?.personId ?: 1L
+    val local = remember(doc?.text) { doc?.let { MedPlans.parseText(it.text) } ?: MedPlan(null, emptyList(), "Text") }
+    var plan by remember(doc?.id) { mutableStateOf(local.takeIf { it.meds.isNotEmpty() }) }
     var review by remember { mutableStateOf(false) }
     var reading by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf<String?>(null) }
     var pendingPath by rememberSaveable { mutableStateOf<String?>(null) }
-    val planDay = MedPlans.planDay(doc, plan)
+    val planDay = planDayFor(doc, plan)
     val last = lastPlanChangeDay(context, personId, meds)
 
     val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
@@ -283,8 +288,11 @@ fun MedPlanImportBox(doc: Document, person: Person?, meds: List<Medication>, vm:
             Text("Medikamentenplan", style = MaterialTheme.typography.titleSmall)
             val p = plan
             Text(
-                if (p != null) "${p.meds.size} Medikamente erkannt, Stand " + LocalDate.ofEpochDay(planDay).format(PLAN_DAY) + "."
-                else "Im Text wurden keine Medikamente sicher erkannt. Versuche den Code auf dem Plan oder die KI.",
+                when {
+                    p != null -> "${p.meds.size} Medikamente erkannt, Stand " + LocalDate.ofEpochDay(planDay).format(PLAN_DAY) + "."
+                    doc == null -> "Fotografiere den quadratischen Code oben rechts auf dem Medikationsplan. Oder lade den Plan unter Dokumente hoch, dann geht es auch über den Text oder die KI."
+                    else -> "Im Text wurden keine Medikamente sicher erkannt. Versuche den Code auf dem Plan oder die KI."
+                },
                 style = MaterialTheme.typography.bodyMedium,
             )
             last?.let {
@@ -319,7 +327,7 @@ fun MedPlanImportBox(doc: Document, person: Person?, meds: List<Medication>, vm:
                 "Der bundeseinheitliche Medikationsplan hat oben rechts einen Code mit allen Einnahmen. Das Foto wird nur auf dem Handy gelesen und gleich gelöscht.",
                 style = MaterialTheme.typography.bodySmall,
             )
-            AiActionButton(
+            if (doc != null) AiActionButton(
                 label = "Mit KI genauer auslesen",
                 note = "Gesendet wird der erkannte Text des Dokuments; Name, Geburtsdatum, Versichertennummer und Straße der Person werden vorher ersetzt.",
                 system = MedPlanAi.SYSTEM_PROMPT,
@@ -341,58 +349,121 @@ fun MedPlanImportBox(doc: Document, person: Person?, meds: List<Medication>, vm:
     if (review && current != null) {
         MedPlanReviewDialog(
             plan = current,
-            planDay = MedPlans.planDay(doc, current),
+            planDay = planDayFor(doc, current),
             meds = meds,
             personId = personId,
-            docId = doc.id,
+            docId = doc?.id,
             vm = vm,
             onDone = { review = false },
         )
     }
 }
 
-/** Auf der Medikamente-Seite: neuer Medikamentenplan in den Dokumenten gefunden. */
+/**
+ * Auf der Medikamente-Seite. Leere Liste: automatischer Hinweis auf einen vorhandenen Medikamentenplan.
+ * Sonst der Knopf „Medikamentenplan einlesen“ (mit Hinweis, wenn ein neuerer Plan da ist).
+ */
 @Composable
 fun MedPlanSuggestion(documents: List<Document>, meds: List<Medication>, person: Person?, vm: MainViewModel) {
     val context = LocalContext.current
     val personId = person?.id ?: return
     var hidden by remember { mutableStateOf(AppPrefs.medPlanHandled(context)) }
-    var open by remember { mutableStateOf(false) }
+    var chooser by remember { mutableStateOf(false) }
+    var openDoc by remember { mutableStateOf<Document?>(null) }
+    val own = meds.filter { it.personId == personId }
     val last = lastPlanChangeDay(context, personId, meds)
-    val candidate = remember(documents, hidden, last) {
-        documents.filter { it.personId == personId && it.id.toString() !in hidden && MedPlans.isPlanDocument(it) }
+    // Alle Plaene der Person, neuester zuerst
+    val plans = remember(documents, personId) {
+        documents.filter { it.personId == personId && MedPlans.isPlanDocument(it) }
             .map { it to MedPlans.planDay(it) }
-            .filter { (_, day) -> last == null || day > last }
-            .maxByOrNull { it.second }
-    } ?: return
-    val (doc, day) = candidate
-    HCard(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
-        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text("Neuer Medikamentenplan gefunden", style = MaterialTheme.typography.titleSmall)
-            Text(
-                "„${doc.title}“ vom " + LocalDate.ofEpochDay(day).format(PLAN_DAY) + " ist neuer als deine Liste. Medikamente mit Einnahmezeiten übernehmen?",
-                style = MaterialTheme.typography.bodyMedium,
-            )
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(shape = buttonShape(), onClick = { open = true }) { Text("Ansehen") }
-                TextButton(onClick = {
-                    AppPrefs.addMedPlanHandled(context, doc.id)
-                    hidden = AppPrefs.medPlanHandled(context)
-                }) { Text("Nicht jetzt") }
+            .sortedByDescending { it.second }
+    }
+    val newest = plans.firstOrNull()
+
+    if (own.isEmpty()) {
+        val candidate = plans.firstOrNull { it.first.id.toString() !in hidden }
+        if (candidate != null) {
+            val (doc, day) = candidate
+            HCard(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
+                Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text("Medikamentenplan vorhanden", style = MaterialTheme.typography.titleSmall)
+                    Text(
+                        "Unter Dokumente liegt „${doc.title}“ vom " + LocalDate.ofEpochDay(day).format(PLAN_DAY) + ". Alle Medikamente mit Einnahmezeiten in die Liste übernehmen?",
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(shape = buttonShape(), onClick = { openDoc = doc }) { Text("Ansehen") }
+                        TextButton(onClick = {
+                            AppPrefs.addMedPlanHandled(context, doc.id)
+                            hidden = AppPrefs.medPlanHandled(context)
+                        }) { Text("Nicht jetzt") }
+                    }
+                }
             }
+            openDoc?.let { d -> PlanDialog(d, person, meds, vm) { openDoc = null } }
+            return
         }
     }
-    if (open) {
+
+    // Knopf: immer da, solange es Medikamente gibt oder kein Hinweis gezeigt wird
+    Column(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp)) {
+        OutlinedButton(shape = buttonShape(), onClick = { chooser = true }, modifier = Modifier.fillMaxWidth()) {
+            FitText("Medikamentenplan einlesen", maxSize = 14.sp)
+        }
+        if (newest != null && last != null && newest.second > last) {
+            Text(
+                "Neuerer Plan vom " + LocalDate.ofEpochDay(newest.second).format(PLAN_DAY) + " vorhanden (deine Liste: " + LocalDate.ofEpochDay(last).format(PLAN_DAY) + ").",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
+    }
+
+    if (chooser) {
         AlertDialog(
-            onDismissRequest = { open = false },
-            title = { Text(doc.title) },
-            text = { Column(Modifier.verticalScroll(rememberScrollState())) { MedPlanImportBox(doc, person, meds, vm) } },
-            confirmButton = {
-                TextButton(onClick = {
-                    open = false
-                    hidden = AppPrefs.medPlanHandled(context)
-                }) { Text("Schließen") }
+            onDismissRequest = { chooser = false },
+            title = { Text("Medikamentenplan einlesen") },
+            text = {
+                Column(Modifier.heightIn(max = 480.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (plans.isEmpty()) {
+                        Text(
+                            "Unter Dokumente liegt noch kein Medikamentenplan. Lade ihn dort hoch (Foto oder PDF, Kategorie „Medikamentenplan“) oder fotografiere hier den Code auf dem Plan.",
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    } else {
+                        Text("Pläne unter Dokumente (neuester zuerst):", style = MaterialTheme.typography.labelLarge)
+                        plans.take(6).forEach { (d, day) ->
+                            val state = when {
+                                last == null -> ""
+                                day > last -> " · neuer als deine Liste"
+                                else -> " · nicht neuer als deine Liste"
+                            }
+                            OutlinedButton(shape = buttonShape(), onClick = {
+                                chooser = false
+                                openDoc = d
+                            }, modifier = Modifier.fillMaxWidth()) {
+                                Text(d.title + " (" + LocalDate.ofEpochDay(day).format(PLAN_DAY) + ")" + state, maxLines = 2)
+                            }
+                        }
+                        last?.let { Text("Deine Liste wurde zuletzt am " + LocalDate.ofEpochDay(it).format(PLAN_DAY) + " geändert.", style = MaterialTheme.typography.bodySmall) }
+                    }
+                    HorizontalDivider()
+                    Text("Ohne Dokument", style = MaterialTheme.typography.labelLarge)
+                    MedPlanImportBox(null, person, meds, vm)
+                }
             },
+            confirmButton = { TextButton(onClick = { chooser = false }) { Text("Schließen") } },
         )
     }
+    openDoc?.let { d -> PlanDialog(d, person, meds, vm) { openDoc = null } }
+}
+
+@Composable
+private fun PlanDialog(doc: Document, person: Person?, meds: List<Medication>, vm: MainViewModel, onClose: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onClose,
+        title = { Text(doc.title) },
+        text = { Column(Modifier.verticalScroll(rememberScrollState())) { MedPlanImportBox(doc, person, meds, vm) } },
+        confirmButton = { TextButton(onClick = onClose) { Text("Schließen") } },
+    )
 }

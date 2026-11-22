@@ -1,6 +1,6 @@
 # TODO
 
-Stand: v0.44.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.45.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
@@ -50,6 +50,10 @@ Stand: v0.44.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 - [ ] Entscheiden: Aufbewahrung der Nachweise 3 Jahre oder länger (30-Jahres-Frist bei Gesundheitsschäden); zusätzlicher Nachweis beim App-Ersteller (Server) ja oder nein
 - [ ] Medizinprodukte-Recht (MDR) prüfen lassen, vor allem den KI-Gesamt-Check der Medikamente; Zweckbestimmung als Organisationshilfe klar festhalten
 - [ ] Impressum und Datenschutzerklärung für eine Veröffentlichung (z. B. Play Store), eigener Signaturschlüssel statt Test-Schlüssel
+
+## Version 0.45.0 (fertig)
+
+- [x] Medikamente: Knopf „Medikamentenplan einlesen“ (alle Pläne aus den Dokumenten, neuester zuerst, oder direkt den Code fotografieren); automatischer Hinweis nur noch bei leerer Liste
 
 ## Version 0.44.0 (fertig)
 
