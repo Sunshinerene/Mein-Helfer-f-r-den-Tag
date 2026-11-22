@@ -65,6 +65,8 @@ data class Medication(
     val descriptionSource: String = "",
     /** KI-Einschaetzung (Staerke, Nebenwirkungen, Wechselwirkungen) als JSON, nur Anhaltspunkt, optional. */
     val rating: String = "",
+    /** Herkunft des Fotos, wenn es aus dem Internet stammt (Urheber, Lizenz, Quelle), sonst leer. */
+    val photoCredit: String = "",
 ) {
     fun timeList(): List<String> =
         times.split(",").map { it.trim() }.filter { it.isNotEmpty() }

@@ -9,6 +9,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Dispatchers
 import de.meinhelfer.tag.media.DocumentStore
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -52,6 +53,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -493,6 +495,10 @@ private fun MedicationScreen(
     var showAdd by remember { mutableStateOf(false) }
     var editItem by remember { mutableStateOf<Medication?>(null) }
     var detailId by remember { mutableStateOf<Long?>(null) }
+    var photoFor by remember { mutableStateOf<Long?>(null) }
+    var photoQueue by remember { mutableStateOf<List<Long>?>(null) }
+    var queueIndex by remember { mutableIntStateOf(0) }
+    val withoutPhoto = items.filter { it.photoPath == null }
 
     val lowCount = lowStockMeds(items).size
     Column(Modifier.fillMaxSize()) {
@@ -508,6 +514,15 @@ private fun MedicationScreen(
                 OutlinedButton(shape = buttonShape(), onClick = onReorder, modifier = Modifier.weight(1f)) {
                     FitText(if (lowCount > 0) "Nachbestellen ($lowCount)" else "Nachbestellen", maxSize = 14.sp)
                 }
+            }
+            if (withoutPhoto.isNotEmpty()) {
+                TextButton(
+                    onClick = {
+                        queueIndex = 0
+                        photoQueue = withoutPhoto.map { it.id }
+                    },
+                    modifier = Modifier.padding(start = 8.dp),
+                ) { Text("📷 Fotos ergänzen (${withoutPhoto.size} ohne Bild)") }
             }
         }
         ListScreen(
@@ -526,6 +541,7 @@ private fun MedicationScreen(
                 onClick = { detailId = m.id },
                 onDelete = { vm.delete(m) },
                 photoName = m.photoPath,
+                onPhotoClick = { photoFor = m.id },
             ) {
                 if (days != null && days <= 7) {
                     Text(
@@ -554,7 +570,36 @@ private fun MedicationScreen(
             onClose = { detailId = null },
             onUpdate = { vm.update(it) },
             onAddTodo = { vm.addTodo(it) },
+            onPhoto = {
+                photoFor = med.id
+                detailId = null
+            },
         )
+    }
+
+    photoFor?.let { id ->
+        items.firstOrNull { it.id == id }?.let { m ->
+            key(m.id) { MedPhotoDialog(m, vm, onDone = { photoFor = null }) }
+        }
+    }
+    photoQueue?.let { queue ->
+        val current = queue.drop(queueIndex).firstNotNullOfOrNull { id -> items.firstOrNull { it.id == id } }
+        if (current == null) {
+            LaunchedEffect(Unit) { photoQueue = null }
+        } else {
+            val pos = queue.indexOf(current.id)
+            val next = { if (pos + 1 < queue.size) queueIndex = pos + 1 else photoQueue = null }
+            key(current.id) {
+                MedPhotoDialog(
+                    med = current,
+                    vm = vm,
+                    onDone = { photoQueue = null },
+                    queueText = "${pos + 1} von ${queue.size}",
+                    onSkip = next,
+                    onSaved = next,
+                )
+            }
+        }
     }
 
     if (showAdd || editItem != null) {
@@ -896,6 +941,7 @@ internal fun ItemCard(
     onClick: () -> Unit,
     onDelete: () -> Unit,
     photoName: String? = null,
+    onPhotoClick: (() -> Unit)? = null,
     extra: @Composable ColumnScope.() -> Unit = {},
 ) {
     var confirmDelete by remember { mutableStateOf(false) }
@@ -906,7 +952,10 @@ internal fun ItemCard(
             verticalAlignment = Alignment.Top,
         ) {
             if (photoName != null) {
-                PhotoThumb(photoName, 64.dp)
+                PhotoThumb(photoName, 64.dp, if (onPhotoClick != null) Modifier.clickable { onPhotoClick() } else Modifier)
+                Spacer(Modifier.width(12.dp))
+            } else if (onPhotoClick != null) {
+                AddPhotoThumb(64.dp, onPhotoClick)
                 Spacer(Modifier.width(12.dp))
             }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {

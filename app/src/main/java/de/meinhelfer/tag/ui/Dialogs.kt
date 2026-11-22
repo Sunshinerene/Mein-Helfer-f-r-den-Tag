@@ -221,6 +221,8 @@ fun MedicationDialog(
                     dailyUse = dailyUse.trim().toIntOrNull() ?: maxOf(1, times.size),
                     notes = notes.trim(),
                     photoPath = photoName,
+                    // Herkunftsvermerk nur behalten, solange es dasselbe Bild ist
+                    photoCredit = if (photoName != null && photoName == originalPhoto) initial?.photoCredit.orEmpty() else "",
                 ),
             )
         },

@@ -44,6 +44,7 @@ fun MedicationDetailDialog(
     onClose: () -> Unit,
     onUpdate: (Medication) -> Unit,
     onAddTodo: (String) -> Unit,
+    onPhoto: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -78,6 +79,10 @@ fun MedicationDetailDialog(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 med.photoPath?.let { PhotoThumb(it, 140.dp) }
+                if (med.photoCredit.isNotBlank()) Text("Bild: " + med.photoCredit, style = MaterialTheme.typography.labelSmall)
+                if (onPhoto != null) {
+                    TextButton(onClick = onPhoto) { Text(if (med.photoPath == null) "📷 Foto hinzufügen" else "Foto ändern") }
+                }
                 val facts = listOfNotNull(
                     med.times.takeIf { it.isNotBlank() }?.let { "Einnahme: ${it.replace(",", ", ")} Uhr" },
                     "Vorrat: ${med.currentStock(today)} Stück" + (days?.let { " (reicht ca. $it Tage)" } ?: ""),

@@ -1,10 +1,11 @@
 # TODO
 
-Stand: v0.47.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.48.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
-- [ ] Medikamentenbilder aus frei nutzbaren Quellen (z. B. Wikimedia Commons, Lizenz und Quelle anzeigen) statt geschützter Packungsfotos; Code des Medikationsplans auch beim Hochladen automatisch lesen; Namen zu PZN ohne Datenbank sind nicht möglich
+- [ ] Code des Medikationsplans auch beim Hochladen automatisch lesen; Namen zu PZN ohne Datenbank sind nicht möglich
+- [ ] Vorrat nach dem Einlesen eines Plans: „unbekannt“ statt 0, damit nicht alles als „nachbestellen“ erscheint
 - [ ] Medikamentenplan als PDF zum Mitnehmen (alle Medikamente mit Dosierung, Zeiten, Hinweisen; angelehnt an den bundeseinheitlichen Medikationsplan)
 - [ ] Vorrat: Knopf „Neue Packung“ (+ Packungsgröße), Packungsgröße beim Medikament merken
 - [ ] Aufgaben mit Erinnerung zur Frist (Benachrichtigung) und „In Kalender eintragen“
@@ -44,6 +45,7 @@ Stand: v0.47.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 - [ ] Medikamentenplan übernehmen: Texterkennung bei Tabellen, Code oben rechts auf dem Plan, KI; Vorschlag nur bei neuerem Plan
 - [ ] Neue KI-Dienste (Cerebras, SambaNova, GitHub Models, Hugging Face, Cohere, OVHcloud, Scaleway, xAI, Together, Nebius, IONOS) und eigener Server (Ollama, LM Studio) im Heimnetz testen
 - [ ] Einstellungen: Übersicht, Bereiche, Suche und Zurück-Taste
+- [ ] Fotos zu Medikamenten: Kamera, Galerie, freie Bilder (Wikimedia), Internetsuche, „Fotos ergänzen“ nacheinander; Datenbank 21
 - [ ] Ecken und Effekte (Beta): alle Ansichten mit „Eckig“ und „Rund“, Aurora hell und dunkel, bewegter Hintergrund flüssig und akkuschonend
 
 ## Rechtliches vor einer Veröffentlichung
@@ -52,6 +54,11 @@ Stand: v0.47.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 - [ ] Entscheiden: Aufbewahrung der Nachweise 3 Jahre oder länger (30-Jahres-Frist bei Gesundheitsschäden); zusätzlicher Nachweis beim App-Ersteller (Server) ja oder nein
 - [ ] Medizinprodukte-Recht (MDR) prüfen lassen, vor allem den KI-Gesamt-Check der Medikamente; Zweckbestimmung als Organisationshilfe klar festhalten
 - [ ] Impressum und Datenschutzerklärung für eine Veröffentlichung (z. B. Play Store), eigener Signaturschlüssel statt Test-Schlüssel
+
+## Version 0.48.0 (fertig)
+
+- [x] Fotos zu Medikamenten nachträglich: Platzhalter „📷 Foto“ in der Liste und „Foto hinzufügen/ändern“ in den Infos; fotografieren, Galerie, freie Bilder von Wikimedia Commons (Urheber und Lizenz werden gespeichert und angezeigt) oder Internetsuche im Browser
+- [x] „Fotos ergänzen“: alle Medikamente ohne Bild nacheinander, mit Überspringen
 
 ## Version 0.47.0 (fertig)
 
