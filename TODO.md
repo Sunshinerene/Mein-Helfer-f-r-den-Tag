@@ -21,9 +21,9 @@ Stand: v0.54.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Bitte auf dem Handy prüfen (bisher nicht getestet)
 
-Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Datenbank prüfen, Beispiel-PDFs mit erfundenen Daten, Beispiel-Grafiken, Test-Benachrichtigungen). Die Datenbank-Umstellungen ab Version 12 prüft seit v0.54.0 zusätzlich bei jedem Bauen ein automatischer Test gegen das Schema.
+Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Datenbank prüfen, Beispiel-PDFs mit erfundenen Daten, Beispiel-Grafiken, Test-Benachrichtigungen). Die Datenbank-Umstellungen von Version 5 bis 26 prüft seit v0.54.0 bei jedem Bauen ein automatischer Test gegen das Schema (Tabellen, Spalten, Typen); auf dem Handy bleibt zu prüfen, dass die eigenen Daten nach dem Update vollständig da sind.
 
-- [ ] Datenbank-Umstellungen bis Version 19 (alte Daten bleiben erhalten?), Wiederherstellen einer Sicherung
+- [ ] Nach den Updates: alte Daten vollständig da (Selbsttest → „Datenbank prüfen“ zeigt die Anzahl je Bereich), Wiederherstellen einer Sicherung
 - [ ] Wiederkehrende Termine: Anlegen, „nur diesen“ und „alle folgenden“ ändern und löschen, Erinnerungen
 - [ ] Tagesstart: erscheint einmal am Tag, Rückblick bestätigen, Tagesplan-PDF teilen und drucken
 - [ ] PDF-Layouts: Schreiben und Vollmachten, Tagesplan, Nachbestell-Liste
