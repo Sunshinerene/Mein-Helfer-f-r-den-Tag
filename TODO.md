@@ -1,6 +1,6 @@
 # TODO
 
-Stand: v0.63.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.64.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
@@ -23,6 +23,7 @@ Stand: v0.63.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Datenbank prüfen, Beispiel-PDFs mit erfundenen Daten, Beispiel-Grafiken, Test-Benachrichtigungen). Die Datenbank-Umstellungen von Version 5 bis 26 prüft seit v0.54.0 bei jedem Bauen ein automatischer Test gegen das Schema (Tabellen, Spalten, Typen); auf dem Handy bleibt zu prüfen, dass die eigenen Daten nach dem Update vollständig da sind.
 
+- [ ] Berichte und Auswertung: jedes PDF einmal erzeugen und teilen; Budgets und Übergabe aus dem Profil; „Frag mich“ mit KI
 - [ ] Heute-Seite: „Heute einnehmen“ und Aufgaben springen nach oben, wenn etwas dran ist; Tagesstart-Angebot in Sunnys Karte; Stimme wählen (z. B. SherpaTTS mit Piper-Stimme) und Probe hören
 - [ ] Assistent morgens und abends (kommt die Benachrichtigung, passt der Text?), Checkliste an der Terminerinnerung, PDF-Knöpfe in der Vorbereitung, Ruhezeit (Trinken/Stimmung schweigen, Medikamente kommen), Erinnerungsübersicht, eigene Werte (Schlaf, Schritte, Ruhepuls) und „Das ist mein eigenes Gerät“
 - [ ] Assistent (Beta): Karte oben auf der Heute-Seite, Gesicht und Ausdrücke, Vorschläge übernehmen und ablehnen, Terminvorbereitung, Gesicht in der Leiste auf allen Seiten, „Frag mich“, Name ändern, ausschalten (Motivator kommt zurück); Hinweis auf neue Uhr-Werte in „Trinken und Werte“
@@ -64,10 +65,17 @@ Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Daten
 - [ ] Medizinprodukte-Recht (MDR) prüfen lassen, vor allem den KI-Gesamt-Check der Medikamente; Zweckbestimmung als Organisationshilfe klar festhalten
 - [ ] Impressum und Datenschutzerklärung für eine Veröffentlichung (z. B. Play Store), eigener Signaturschlüssel statt Test-Schlüssel
 
-## Als Nächstes: Assistent (Plan aus der Prozess-Prüfung)
+## Als Nächstes: Assistent (Plan aus der Prozess-Prüfung, Schritte 1–4 erledigt)
+
+- [ ] Rückmeldungen aus dem Test einarbeiten; danach den Assistenten aus der Beta fest übernehmen
 
 - [ ] Eigene KI-Stimme direkt in der App (nur falls SherpaTTS nicht reicht): sherpa-onnx mit Piper-Stimme Thorsten oder Kerstin (CC0) oder apptor-tiny-tts (Apache-2.0, 21 MB); macht die App 25–70 MB größer, Lizenzen der Bibliotheken prüfen
-- [ ] v0.64.0: Liste „Berichte und Ausdrucke“, Budgets und Übergabe zur Person, „Frag den Assistenten“ auf Wunsch mit KI
+
+## Version 0.64.0 (fertig)
+
+- [x] „Berichte und Ausdrucke“ oben in der Auswertung (jetzt „Berichte und Auswertung“): Medikamentenplan, Notfallkarte, Tagesplan, Werte (14 Tage), Pflegetagebuch (30 Tage), Übergabe, Nachbestellung, Budgets; erreichbar auch im Profil unter „Berichte“
+- [x] Budgets und Übergabe aus dem Reiter Infos ins Profil der Person verlegt (Infos bleibt für Wissen und Meldungen); Anleitung und Rundgang angepasst
+- [x] „Frag mich“ beim Assistenten auf Wunsch mit KI: nur Frage und passende Abschnitte der Anleitung werden gesendet, keine Daten aus der App; allgemeine Pflegefragen nur als Anhaltspunkt
 
 ## Version 0.63.0 (fertig)
 
