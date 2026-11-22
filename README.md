@@ -4,7 +4,7 @@ by Sunshine@R
 
 Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbezogenen Daten bleiben lokal auf dem Gerät.
 
-## Stand: v0.55.0
+## Stand: v0.56.0
 
 ### Funktionsübersicht
 
@@ -45,6 +45,7 @@ Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbe
 **Aufgaben**
 - Kontakt, Wichtigkeit, Frist, Fahrdienst, verknüpfte Unterlagen; beim Erledigen Ergebnis und Sterne festhalten
 - Erinnerung per Benachrichtigung, „In Kalender eintragen“
+- E-Mail zur Aufgabe mit frei gewählten Anhängen aus den Dokumenten, Unterlagen drucken
 - Verlauf mit Suche (auch nach Jahren); frühere Aufgaben zum gleichen Thema werden automatisch angezeigt
 - Vorschläge aus Dokument-Zusammenfassungen, Wegweiser und Auswertung
 

@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -625,12 +626,15 @@ private fun MedicationScreen(
         if (doctors.isNotEmpty()) {
             DutySummaryRow(person, doctors, duties, onEdit = { showDuties = true }, modifier = Modifier.padding(start = 16.dp, end = 8.dp))
         }
+        val medFold = rememberCardFoldState("medikamente")
         ListScreen(
             items = items,
             emptyText = "Noch keine Medikamente. Mit + hinzufügen.",
             onAdd = { showAdd = true },
             modifier = Modifier.weight(1f),
             jumpLabel = { it.name },
+            fold = medFold,
+            foldKey = { it.id },
         ) { m ->
             val days = m.daysLeft()
             ItemCard(
@@ -643,17 +647,16 @@ private fun MedicationScreen(
                 onDelete = { vm.delete(m) },
                 photoName = m.photoPath,
                 onPhotoClick = { photoFor = m.id },
+                fold = medFold,
+                foldKey = m.id,
+                note = when {
+                    days != null && days <= 0 -> "Vorrat aufgebraucht – bitte nachbestellen"
+                    days != null && days <= 7 -> "Bald nachbestellen"
+                    !m.stockKnown -> "Vorrat noch nicht eingetragen"
+                    else -> null
+                },
+                noteColor = if (days != null && days <= 7) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary,
             ) {
-                if (days != null && days <= 7) {
-                    Text(
-                        if (days <= 0) "Vorrat aufgebraucht – bitte nachbestellen" else "Bald nachbestellen",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.error,
-                    )
-                }
-                if (!m.stockKnown) {
-                    Text("Vorrat noch nicht eingetragen", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.tertiary)
-                }
                 FlowRow {
                     TextButton(onClick = { detailId = m.id }, contentPadding = PaddingValues(horizontal = 8.dp)) { Text("Infos") }
                     TextButton(onClick = { editItem = m }, contentPadding = PaddingValues(horizontal = 8.dp)) { Text("Bearbeiten") }
@@ -799,6 +802,7 @@ private fun AppointmentScreen(
     var showPast by rememberSaveable { mutableStateOf(false) }
     var deleteFor by remember { mutableStateOf<Appointment?>(null) }
 
+    val apptFold = rememberCardFoldState("termine")
     val apptItem: @Composable (Appointment) -> Unit = { a ->
         val doctor = doctors.firstOrNull { it.id == a.doctorId }
         val attached = a.attachedIds().mapNotNull { id -> documents.firstOrNull { it.id == id } }
@@ -816,6 +820,8 @@ private fun AppointmentScreen(
                 val more = (seriesRest[a.seriesId]?.size ?: 1) - 1
                 if (a.whenMillis >= todayStart && more > 0) "$rule · danach noch $more Termine (alle in Woche und Monat)" else rule
             },
+            open = apptFold.isOpen(a.id),
+            onToggle = { apptFold.toggle(a.id) },
         )
     }
 
@@ -843,6 +849,9 @@ private fun AppointmentScreen(
                             modifier = Modifier.padding(horizontal = 4.dp),
                         )
                     }
+                }
+                if (coming.size > 1) {
+                    jumpItem(apptJumps, null) { FoldAllRow(apptFold, coming.map { it.id }) }
                 }
                 jumpItems(apptJumps, coming, label = { formatAppointmentTime(it.whenMillis, it.endMillis) + " – " + it.title }, key = { it.id }) { apptItem(it) }
                 if (earlier.isNotEmpty()) {
@@ -963,14 +972,20 @@ private fun DoctorScreen(
         }
     }
 
+    val contactFold = rememberCardFoldState("kontakte")
     ListScreen(
         items = shown,
         emptyText = "Noch keine Kontakte (Ärzte, Pflegedienst, Apotheke, Pflegekasse …). Mit + hinzufügen.",
         onAdd = { showAdd = true },
         modifier = Modifier.weight(1f),
         jumpLabel = { doctorLabel(it) },
+        fold = contactFold,
+        foldKey = { it.id },
     ) { d ->
         ItemCard(
+            fold = contactFold,
+            foldKey = d.id,
+            openLabel = "Bearbeiten",
             title = doctorLabel(d),
             lines = listOfNotNull(
                 d.phone.takeIf { it.isNotBlank() }?.let { "Tel. $it" },
@@ -1175,6 +1190,8 @@ internal fun <T> ListScreen(
     onAdd: () -> Unit,
     modifier: Modifier = Modifier,
     jumpLabel: ((T) -> String)? = null,
+    fold: CardFoldState? = null,
+    foldKey: (T) -> Any = { it as Any },
     row: @Composable (T) -> Unit,
 ) {
     val listState = androidx.compose.foundation.lazy.rememberLazyListState()
@@ -1193,6 +1210,9 @@ internal fun <T> ListScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 jumps.reset()
+                if (fold != null && items.size > 1) {
+                    jumpItem(jumps, null) { FoldAllRow(fold, items.map(foldKey)) }
+                }
                 jumpItems(jumps, items, label = { jumpLabel?.invoke(it) }) { row(it) }
             }
         }
@@ -1205,7 +1225,11 @@ internal fun <T> ListScreen(
     }
 }
 
-/** Karte: Antippen = bearbeiten, Papierkorb = loeschen (mit Rueckfrage). */
+/**
+ * Karte einer Liste. Ohne [fold]: Antippen = [onClick], Papierkorb = loeschen (mit Rueckfrage).
+ * Mit [fold]: Antippen klappt auf und zu. Zugeklappt stehen nur Titel, die ersten [collapsedLines] Zeilen und [note];
+ * aufgeklappt alles, die Knoepfe aus [extra], [openLabel] (ruft [onClick]) und der Papierkorb.
+ */
 @Composable
 internal fun ItemCard(
     title: String,
@@ -1214,29 +1238,51 @@ internal fun ItemCard(
     onDelete: () -> Unit,
     photoName: String? = null,
     onPhotoClick: (() -> Unit)? = null,
+    fold: CardFoldState? = null,
+    foldKey: Any = title,
+    collapsedLines: Int = 1,
+    note: String? = null,
+    noteColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.error,
+    openLabel: String? = null,
     extra: @Composable ColumnScope.() -> Unit = {},
 ) {
     var confirmDelete by remember { mutableStateOf(false) }
+    val open = fold?.isOpen(foldKey) ?: true
+    val animate = LocalEffects.current.animations
 
-    HCard(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+    HCard(
+        onClick = { if (fold != null) fold.toggle(foldKey) else onClick() },
+        modifier = Modifier.fillMaxWidth().then(if (animate) Modifier.animateContentSize() else Modifier),
+    ) {
         Row(
-            Modifier.padding(start = 16.dp, top = 12.dp, bottom = 8.dp, end = 4.dp),
-            verticalAlignment = Alignment.Top,
+            Modifier.padding(start = 16.dp, top = 12.dp, bottom = if (open) 8.dp else 12.dp, end = 4.dp),
+            verticalAlignment = if (open) Alignment.Top else Alignment.CenterVertically,
         ) {
+            val thumb = if (open) 64.dp else 44.dp
             if (photoName != null) {
-                PhotoThumb(photoName, 64.dp, if (onPhotoClick != null) Modifier.clickable { onPhotoClick() } else Modifier)
+                PhotoThumb(photoName, thumb, if (onPhotoClick != null) Modifier.clickable { onPhotoClick() } else Modifier)
                 Spacer(Modifier.width(12.dp))
-            } else if (onPhotoClick != null) {
-                AddPhotoThumb(64.dp, onPhotoClick)
+            } else if (onPhotoClick != null && open) {
+                AddPhotoThumb(thumb, onPhotoClick)
                 Spacer(Modifier.width(12.dp))
             }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(title, style = MaterialTheme.typography.titleMedium)
-                lines.forEach { Text(it, style = MaterialTheme.typography.bodyMedium) }
-                extra()
+                (if (open) lines else lines.take(collapsedLines)).forEach { Text(it, style = MaterialTheme.typography.bodyMedium) }
+                note?.let { Text(it, style = MaterialTheme.typography.labelLarge, color = noteColor) }
+                if (open) {
+                    extra()
+                    if (fold != null && openLabel != null) {
+                        TextButton(onClick = onClick, contentPadding = PaddingValues(horizontal = 8.dp)) { Text(openLabel) }
+                    }
+                }
             }
-            IconButton(onClick = { confirmDelete = true }) {
-                Icon(Icons.Default.Delete, contentDescription = "Löschen")
+            if (open) {
+                IconButton(onClick = { confirmDelete = true }) {
+                    Icon(Icons.Default.Delete, contentDescription = "Löschen")
+                }
+            } else {
+                Text("▾", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(horizontal = 12.dp))
             }
         }
     }

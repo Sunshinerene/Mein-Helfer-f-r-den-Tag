@@ -4,6 +4,7 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -93,6 +94,9 @@ internal fun AppointmentCard(
     onMail: (() -> Unit)? = null,
     /** z. B. "Jede Woche · noch 12 weitere Termine" bei Serien */
     seriesInfo: String? = null,
+    /** Aufgeklappt? Mit [onToggle] klappt Antippen auf und zu (sonst oeffnet Antippen [onEdit]). */
+    open: Boolean = true,
+    onToggle: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
 
@@ -106,7 +110,8 @@ internal fun AppointmentCard(
     val countdown = countdownText(a.whenMillis)
     val soon = !past && (countdown == "heute" || countdown == "morgen")
 
-    HCard(onClick = onEdit, modifier = Modifier.fillMaxWidth()) {
+    val animate = LocalEffects.current.animations
+    HCard(onClick = onToggle ?: onEdit, modifier = Modifier.fillMaxWidth().then(if (animate) Modifier.animateContentSize() else Modifier)) {
         Row(
             Modifier.padding(start = 12.dp, top = 12.dp, bottom = 4.dp, end = 4.dp),
             verticalAlignment = Alignment.Top,
@@ -161,6 +166,7 @@ internal fun AppointmentCard(
                 doctor?.let {
                     Text(doctorLabel(it), style = MaterialTheme.typography.bodyMedium)
                 }
+                if (open) {
                 a.place.takeIf { it.isNotBlank() }?.let {
                     Text("Ort: $it", style = MaterialTheme.typography.bodyMedium)
                 }
@@ -193,13 +199,18 @@ internal fun AppointmentCard(
                         color = MaterialTheme.colorScheme.primary,
                     )
                 }
+                }
             }
-            IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = "Löschen")
+            if (open) {
+                IconButton(onClick = onDelete) {
+                    Icon(Icons.Default.Delete, contentDescription = "Löschen")
+                }
+            } else {
+                Text("▾", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp))
             }
         }
 
-        FlowRow(
+        if (open) FlowRow(
             Modifier.padding(horizontal = 8.dp).padding(bottom = 4.dp),
             horizontalArrangement = Arrangement.spacedBy(0.dp),
         ) {
@@ -224,6 +235,7 @@ internal fun AppointmentCard(
                 Text(if (attached.isEmpty()) "Unterlagen" else "Unterlagen (${attached.size})")
             }
             if (!past) TextButton(onClick = onCalendar) { Text("In Kalender eintragen") }
+            if (onToggle != null) TextButton(onClick = onEdit) { Text("Bearbeiten") }
         }
     }
 }

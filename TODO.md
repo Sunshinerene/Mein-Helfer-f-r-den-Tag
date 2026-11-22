@@ -1,6 +1,6 @@
 # TODO
 
-Stand: v0.55.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.56.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
@@ -44,6 +44,7 @@ Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Daten
 - [ ] Zuständigkeiten (Datenbank 24): Standard-Arzt und -Apotheke, „Standard“ im Medikament, Vertretung mit Zeitraum in Nachbestellung, Infos, Folgerezept und Medikamentenplan-PDF
 - [ ] Trinken und Werte, Pflegetagebuch (Datenbank 25): Schnelltasten und Werte eintragen im Alltag, „Wie am Vortag“, Auswertung (Grafiken und PDFs vorab im Selbsttest ansehen)
 - [ ] Budgets (Datenbank 26): Ausgaben eintragen, Übertrag bis 30. Juni, „Beträge und Beginn“; Übergabe-Bericht mit eigenen Daten
+- [ ] Auf- und Zuklappen überall (Tipp auf den oberen Rand der Heute-Karten), E-Mail mit mehreren Anhängen aus einer Aufgabe (kommen alle Anhänge in deiner E-Mail-App an?), Drucken aus der Aufgabe
 - [ ] Erinnerungen ans Trinken und abends ans Pflegetagebuch (kommen nur, wenn nötig; Antippen öffnet die richtige Seite, zuerst mit den Test-Benachrichtigungen im Selbsttest)
 - [ ] Leiste unten auf allen Seiten (Abstände oben und unten, Tastatur), Wischen nach oben und „Springen zu“; Schreiben per E-Mail (mit Anhang in deiner E-Mail-App), „✉ Schreiben mailen“ an der Aufgabe
 - [ ] Ecken und Effekte (Beta): alle Ansichten mit „Eckig“ und „Rund“, Aurora hell und dunkel, bewegter Hintergrund flüssig und akkuschonend
@@ -54,6 +55,12 @@ Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Daten
 - [ ] Entscheiden: Aufbewahrung der Nachweise 3 Jahre oder länger (30-Jahres-Frist bei Gesundheitsschäden); zusätzlicher Nachweis beim App-Ersteller (Server) ja oder nein
 - [ ] Medizinprodukte-Recht (MDR) prüfen lassen, vor allem den KI-Gesamt-Check der Medikamente; Zweckbestimmung als Organisationshilfe klar festhalten
 - [ ] Impressum und Datenschutzerklärung für eine Veröffentlichung (z. B. Play Store), eigener Signaturschlüssel statt Test-Schlüssel
+
+## Version 0.56.0 (fertig)
+
+- [x] Aufgaben: „✉ E-Mail“ bzw. „✉ Schreiben mailen“ mit Empfänger, Betreff und Text (aus dem Schreiben), Anhänge frei aus allen Dokumenten wählbar (verknüpfte vorausgewählt, Suche, auf Wunsch verknüpfen); „🖨 Drucken“ der verknüpften Unterlagen mit Teilen und Ansehen
+- [x] Einheitliches Auf- und Zuklappen: Dokumente, Medikamente, Kontakte, Termine und Aufgaben per Tipp, oben „Alle aufklappen“ bzw. „Alle zuklappen“; Karten auf der Heute-Seite ohne „Einklappen“-Schrift, ein Tipp auf den oberen Rand klappt zu
+- [x] Aufgaben: Tipp auf den Text klappt auf statt abzuhaken (abhaken nur mit dem Kästchen)
 
 ## Version 0.55.0 (fertig)
 

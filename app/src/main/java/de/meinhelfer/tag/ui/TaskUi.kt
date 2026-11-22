@@ -157,6 +157,9 @@ internal fun TasksCard(
     var docsFor by remember { mutableStateOf<Todo?>(null) }
     val taskScope = androidx.compose.runtime.rememberCoroutineScope()
     var mailFor by remember { mutableStateOf<Todo?>(null) }
+    var taskMailFor by remember { mutableStateOf<Todo?>(null) }
+    var printFor by remember { mutableStateOf<Todo?>(null) }
+    var viewDoc by remember { mutableStateOf<Document?>(null) }
     var showAdd by remember { mutableStateOf(false) }
     var editItem by remember { mutableStateOf<Todo?>(null) }
     var rideFor by remember { mutableStateOf<Todo?>(null) }
@@ -169,6 +172,9 @@ internal fun TasksCard(
     val history by vm.taskHistory.collectAsStateWithLifecycle()
     val today = LocalDate.now().toEpochDay()
     val openCount = todos.count { !it.done }
+    // Antippen des Textes klappt eine Aufgabe auf (Kontakt, Knoepfe) und wieder zu; abhaken nur mit dem Kaestchen
+    val taskFold = rememberCardFoldState("aufgaben")
+    val openIds = todos.filter { !it.done }.map { it.id }
 
     HCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(start = 8.dp, end = 8.dp, top = 16.dp, bottom = 8.dp)) {
@@ -177,6 +183,7 @@ internal fun TasksCard(
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(start = 8.dp, bottom = 4.dp),
             )
+            if (openIds.size > 1) FoldAllRow(taskFold, openIds)
             if (todos.isEmpty()) {
                 Text(
                     "Noch nichts vorgemerkt, z. B. „Blutuntersuchung beim Hausarzt“. Aufgaben können einen Arzt, eine Frist und eine Wichtigkeit haben.",
@@ -193,16 +200,27 @@ internal fun TasksCard(
                         vm.setTodoDone(t, checked)
                         if (checked) resultFor = t
                     })
+                    val open = t.done || taskFold.isOpen(t.id)
                     Column(Modifier.weight(1f).padding(top = 4.dp, bottom = 2.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        Text(
-                            t.text,
-                            style = MaterialTheme.typography.bodyMedium,
-                            textDecoration = if (t.done) TextDecoration.LineThrough else TextDecoration.None,
-                            modifier = Modifier.clickable {
-                                vm.setTodoDone(t, !t.done)
-                                if (!t.done) resultFor = t
-                            }.padding(vertical = 4.dp),
-                        )
+                        Row(
+                            Modifier.fillMaxWidth().clickable(enabled = !t.done) { taskFold.toggle(t.id) },
+                            verticalAlignment = Alignment.Top,
+                        ) {
+                            Text(
+                                t.text,
+                                style = MaterialTheme.typography.bodyMedium,
+                                textDecoration = if (t.done) TextDecoration.LineThrough else TextDecoration.None,
+                                modifier = Modifier.weight(1f).padding(vertical = 4.dp),
+                            )
+                            if (!t.done) {
+                                Text(
+                                    if (open) "▴" else "▾",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 2.dp),
+                                )
+                            }
+                        }
                         if (!t.done) {
                             val meta = listOfNotNull(
                                 when (t.priority) {
@@ -221,8 +239,8 @@ internal fun TasksCard(
                                     else MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
-                            doctor?.let { Text(doctorLabel(it), style = MaterialTheme.typography.bodySmall) }
-                            val past = TopicMatcher.similar(t.text, t.doctorId, history, excludeId = t.id)
+                            if (open) doctor?.let { Text(doctorLabel(it), style = MaterialTheme.typography.bodySmall) }
+                            val past = if (open) TopicMatcher.similar(t.text, t.doctorId, history, excludeId = t.id) else emptyList()
                             if (past.isNotEmpty()) {
                                 Text(
                                     "Dazu gab es schon etwas (${past.size}) – antippen",
@@ -231,21 +249,19 @@ internal fun TasksCard(
                                     modifier = Modifier.clickable { pastFor = t }.padding(vertical = 2.dp),
                                 )
                             }
-                            FlowRow {
+                            if (open) FlowRow {
                                 val pad = PaddingValues(horizontal = 8.dp)
                                 if (doctor != null && doctor.phone.isNotBlank()) {
                                     TextButton(contentPadding = pad, onClick = {
                                         startIntent(context, Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + doctor.phone.filter { it.isDigit() || it == '+' })))
                                     }) { Text("Anrufen") }
                                 }
-                                val letter = t.attachedIds().mapNotNull { id -> documents.firstOrNull { it.id == id } }.firstOrNull { isLetterDraft(it) }
-                                if (letter != null) {
-                                    TextButton(contentPadding = pad, onClick = {
-                                        taskScope.launch { mailLetterDraft(context, letter, doctor?.email, caregiver.name) }
-                                    }) { Text("✉ Schreiben mailen") }
-                                }
-                                if (doctor != null && doctor.email.isNotBlank()) {
-                                    TextButton(contentPadding = pad, onClick = { mailFor = t }) { Text(if (letter != null) "Andere E-Mail" else "E-Mail") }
+                                val linkedDocs = t.attachedIds().mapNotNull { id -> documents.firstOrNull { it.id == id } }
+                                val letter = linkedDocs.firstOrNull { isLetterDraft(it) }
+                                // E-Mail immer moeglich: mit Text aus dem Schreiben (falls verknuepft) und frei waehlbaren Anhaengen
+                                TextButton(contentPadding = pad, onClick = { taskMailFor = t }) { Text(if (letter != null) "✉ Schreiben mailen" else "✉ E-Mail") }
+                                if (linkedDocs.isNotEmpty()) {
+                                    TextButton(contentPadding = pad, onClick = { printFor = t }) { Text(if (letter != null) "🖨 Schreiben drucken" else "🖨 Drucken") }
                                 }
                                 if (t.outside) {
                                     TextButton(contentPadding = pad, onClick = { rideFor = t }) { Text("Fahrdienst") }
@@ -367,6 +383,25 @@ internal fun TasksCard(
             },
             onClose = { docsFor = null },
         )
+    }
+
+    taskMailFor?.let { t ->
+        val d = doctors.firstOrNull { it.id == t.doctorId }
+        TaskMailDialog(
+            task = t,
+            doctor = d,
+            documents = documents,
+            caregiver = caregiver,
+            onLink = { ids -> vm.updateTodo(t.copy(docIds = ids.joinToString(","))) },
+            onTopicMail = if (d != null) ({ taskMailFor = null; mailFor = t }) else null,
+            onClose = { taskMailFor = null },
+        )
+    }
+    printFor?.let { t ->
+        TaskPrintDialog(task = t, documents = documents, onView = { viewDoc = it }, onClose = { printFor = null })
+    }
+    viewDoc?.let { d ->
+        DocumentDetailDialog(doc = d, doctors = doctors, onEdit = null, onClose = { viewDoc = null })
     }
 
     mailFor?.let { t ->

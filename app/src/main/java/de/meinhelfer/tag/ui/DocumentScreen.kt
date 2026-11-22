@@ -80,7 +80,7 @@ val DocumentIcon: ImageVector = ImageVector.Builder(
     fill = SolidColor(Color.Black),
 ).build()
 
-private fun Document.dateText(): String? = docDate?.let { LocalDate.ofEpochDay(it).format(DOC_DATE) }
+internal fun Document.dateText(): String? = docDate?.let { LocalDate.ofEpochDay(it).format(DOC_DATE) }
 
 /** Dokumente: Berichte, Befunde, Bescheide. Fotografieren, aus der Galerie oder als Datei laden. */
 @Composable
@@ -236,7 +236,10 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?
                 Text("Schreiben / Vollmacht erstellen")
             }
         }
+        val docFold = rememberCardFoldState("dokumente")
         ListScreen(
+            fold = docFold,
+            foldKey = { it.doc.id },
             items = ordered,
             emptyText = if (items.isEmpty()) {
                 "Noch keine Dokumente. Mit + Berichte, Befunde oder Bescheide fotografieren oder als Datei laden."
@@ -257,6 +260,9 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?
                 ),
                 onClick = { detailId = d.id },
                 onDelete = { vm.delete(d) },
+                fold = docFold,
+                foldKey = d.id,
+                openLabel = "Öffnen",
             )
         }
     }

@@ -131,7 +131,7 @@ private val TOUR_PAGES = listOf(
     TourPage(
         title = "Tag, Woche, Monat",
         text = "Oben auf dem ersten Reiter wählst du Tag, Woche oder Monat. Der Tag zeigt zuerst „Wichtig und demnächst“: Dringendes, die Termine von heute und die nächsten Tage. In Woche und Monat kannst du Termine, Aufgaben und Einnahmen antippen, ändern und abhaken.",
-        tips = listOf("Aufgaben mit hoher Priorität stehen immer ganz oben.", "„Trinken und Werte“ zählt die Trinkmenge mit einem Tipp; das Pflegetagebuch hilft bei der Begutachtung.", "Aufgaben können per Benachrichtigung erinnern und lassen sich in den Kalender eintragen.", "Jede Karte lässt sich einklappen, dann bleibt nur eine Kurzinfo."),
+        tips = listOf("Aufgaben mit hoher Priorität stehen immer ganz oben.", "„Trinken und Werte“ zählt die Trinkmenge mit einem Tipp; das Pflegetagebuch hilft bei der Begutachtung.", "Aufgaben können per Benachrichtigung erinnern und lassen sich in den Kalender eintragen.", "Antippen klappt Karten und Einträge auf, ein Tipp auf den oberen Rand klappt wieder zu.", "Aufgaben mit Schreiben: per E-Mail mit frei gewählten Anhängen senden oder drucken."),
         mock = { MockPeriods() },
     ),
     TourPage(
@@ -662,7 +662,12 @@ private fun MockPeriods() {
         Text("Dringend: Rezept abholen (heute fällig)", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
         Text("Termine heute: 10:30 Uhr – Hausarzt", style = MaterialTheme.typography.bodyMedium)
         Text("Morgen: 14:00 Uhr – Physiotherapie", style = MaterialTheme.typography.bodyMedium)
-        Text("Einklappen ▴", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+    }
+    MockCard {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Kurz nachgefragt · 2 offen", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+            Text("▾", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+        }
     }
 }
 

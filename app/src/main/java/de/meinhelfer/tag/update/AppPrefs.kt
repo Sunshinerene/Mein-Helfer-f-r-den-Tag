@@ -182,6 +182,13 @@ object AppPrefs {
     /** Eingeklappte Karten auf der Heute-Seite. */
     fun folded(context: Context, key: String): Boolean = prefs(context).getBoolean("eingeklappt_$key", false)
 
+    /** Karten einer Liste (z. B. "dokumente") standardmaessig aufgeklappt? */
+    fun listOpen(context: Context, key: String): Boolean = prefs(context).getBoolean("liste_offen_$key", false)
+
+    fun setListOpen(context: Context, key: String, open: Boolean) {
+        prefs(context).edit().putBoolean("liste_offen_$key", open).apply()
+    }
+
     fun setFolded(context: Context, key: String, value: Boolean) {
         prefs(context).edit().putBoolean("eingeklappt_$key", value).apply()
     }
