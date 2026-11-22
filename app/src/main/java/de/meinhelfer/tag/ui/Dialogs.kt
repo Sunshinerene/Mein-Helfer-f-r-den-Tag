@@ -47,6 +47,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import de.meinhelfer.tag.data.Appointment
 import de.meinhelfer.tag.data.Doctor
+import de.meinhelfer.tag.data.Duties
 import de.meinhelfer.tag.data.Medication
 import de.meinhelfer.tag.reminder.ReminderScheduler
 import java.time.Instant
@@ -89,6 +90,8 @@ fun MedicationDialog(
     doctors: List<Doctor>,
     onDismiss: () -> Unit,
     onSave: (Medication) -> Unit,
+    duties: List<de.meinhelfer.tag.data.Responsibility> = emptyList(),
+    personId: Long = initial?.personId ?: 1L,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -376,19 +379,32 @@ fun MedicationDialog(
                 style = MaterialTheme.typography.bodySmall,
             )
         } else {
+            // Ohne eigene Auswahl gilt der zustaendige Kontakt der Person (Kontakte bzw. Medikamente → „Zuständig“)
+            val stdRx = Duties.defaultFor(duties, personId, Duties.REZEPT)?.let { id -> doctors.firstOrNull { it.id == id } }
+                ?.let { "Standard: ${it.name} (zuständig)" }
+            val stdPh = Duties.defaultFor(duties, personId, Duties.APOTHEKE)?.let { id -> doctors.firstOrNull { it.id == id } }
+                ?.let { "Standard: ${it.name} (zuständig)" }
             DropdownField(
                 label = "Zuständiger Arzt (Rezept)",
-                value = doctors.firstOrNull { it.id == doctorId }?.let { doctorLabel(it) } ?: "",
-                options = listOf(NO_DOCTOR) + prescribers.map { doctorLabel(it) },
+                value = doctors.firstOrNull { it.id == doctorId }?.let { doctorLabel(it) } ?: stdRx ?: "",
+                options = listOf(stdRx ?: NO_DOCTOR) + prescribers.map { doctorLabel(it) },
                 editable = false,
                 onValueChange = { chosen -> doctorId = doctors.firstOrNull { doctorLabel(it) == chosen }?.id },
             )
             DropdownField(
                 label = "Apotheke",
-                value = doctors.firstOrNull { it.id == pharmacyId }?.let { doctorLabel(it) } ?: "",
-                options = listOf(NO_DOCTOR) + pharmacies.map { doctorLabel(it) },
+                value = doctors.firstOrNull { it.id == pharmacyId }?.let { doctorLabel(it) } ?: stdPh ?: "",
+                options = listOf(stdPh ?: NO_DOCTOR) + pharmacies.map { doctorLabel(it) },
                 editable = false,
                 onValueChange = { chosen -> pharmacyId = doctors.firstOrNull { doctorLabel(it) == chosen }?.id },
+            )
+            Text(
+                if (stdRx == null && stdPh == null) {
+                    "Tipp: Unter Medikamente oder bei einem Kontakt („Zuständig …“) legst du Arzt und Apotheke für alle Medikamente fest. Hier wählst du nur, wenn es bei diesem Medikament anders ist."
+                } else {
+                    "„Standard“ folgt dem zuständigen Kontakt, auch bei Vertretung im Urlaub. Wähle nur dann einen anderen, wenn es bei diesem Medikament anders ist."
+                },
+                style = MaterialTheme.typography.bodySmall,
             )
         }
         OutlinedTextField(

@@ -49,6 +49,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.meinhelfer.tag.data.CaregiverProfile
 import de.meinhelfer.tag.data.CaregiverRole
 import de.meinhelfer.tag.data.Doctor
@@ -106,6 +107,7 @@ internal fun LetterScreen(
     var proxy by remember { mutableStateOf(caregiver.isSet && caregiver.roleValue != CaregiverRole.Selbst) }
     var withNumber by remember { mutableStateOf(true) }
     var recipientId by remember { mutableStateOf<Long?>(null) }
+    val duties by vm.duties.collectAsStateWithLifecycle()
     var recipientText by remember { mutableStateOf("") }
     var senderText by remember { mutableStateOf("") }
     var place by remember { mutableStateOf(person?.city.orEmpty()) }
@@ -152,6 +154,14 @@ internal fun LetterScreen(
         }
         recipientId = null
         recipientText = ""
+        // Folgerezept: zustaendigen Arzt (bzw. seine Vertretung) vorschlagen
+        if (t.id == "rezept") {
+            val id = de.meinhelfer.tag.data.Duties.resolve(duties, null, person?.id ?: 0L, de.meinhelfer.tag.data.Duties.REZEPT).id
+            doctors.firstOrNull { it.id == id }?.let { d ->
+                recipientId = d.id
+                recipientText = (listOf(d.name) + d.address.split(",").map { it.trim() }.filter { it.isNotEmpty() }).joinToString("\n")
+            }
+        }
         withNumber = t.to == LetterTo.Kasse
         val lines = buildList {
             person?.name?.takeIf { it.isNotBlank() }?.let { add(it) }

@@ -73,9 +73,13 @@ fun ReorderScreen(
     personName: String?,
     onBack: () -> Unit,
     caregiver: de.meinhelfer.tag.data.CaregiverProfile = de.meinhelfer.tag.data.CaregiverProfile(),
+    duties: List<de.meinhelfer.tag.data.Responsibility> = emptyList(),
 ) {
     val context = LocalContext.current
     val today = LocalDate.now().toEpochDay()
+    // Zustaendige Arzt- und Apotheken-Kontakte (Standard und Vertretung) einsetzen, nur fuer diese Ansicht
+    @Suppress("NAME_SHADOWING")
+    val meds = remember(meds, duties, today) { meds.map { de.meinhelfer.tag.data.Duties.effective(it, duties, today) } }
 
     val sorted = meds.sortedBy { it.daysLeft(today) ?: Int.MAX_VALUE }
     // Standard: alles, was knapp wird. Mit den Haken kann man Medikamente zusaetzlich waehlen oder abwaehlen.

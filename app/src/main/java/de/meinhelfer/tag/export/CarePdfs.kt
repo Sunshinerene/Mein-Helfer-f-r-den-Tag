@@ -178,7 +178,12 @@ object CarePdfs {
         meds: List<Medication>,
         doctors: List<Doctor>,
         caregiver: CaregiverProfile,
+        duties: List<de.meinhelfer.tag.data.Responsibility> = emptyList(),
     ): File {
+        val pid = person?.id ?: 1L
+        val rx = de.meinhelfer.tag.data.Duties.defaultFor(duties, pid, de.meinhelfer.tag.data.Duties.REZEPT)?.let { id -> doctors.firstOrNull { it.id == id } }
+            ?: familyDoctor(doctors)
+        val pharmacy = de.meinhelfer.tag.data.Duties.defaultFor(duties, pid, de.meinhelfer.tag.data.Duties.APOTHEKE)?.let { id -> doctors.firstOrNull { it.id == id } }
         val file = File(PdfPages.dir(context, "medikationsplan"), "Medikamentenplan_${safe(person?.name ?: "")}_${LocalDate.now()}.pdf")
         val own = meds.filter { person == null || it.personId == person.id }
             .sortedBy { it.timeList().firstOrNull() ?: "99" }
@@ -196,7 +201,8 @@ object CarePdfs {
             ).joinToString(" · ")
             if (who.isNotBlank()) p.text("für: $who", 11f)
             val from = listOfNotNull(
-                familyDoctor(doctors)?.let { "Arzt: " + it.name + if (it.phone.isNotBlank()) ", ${it.phone}" else "" },
+                rx?.let { "Arzt: " + it.name + if (it.phone.isNotBlank()) ", ${it.phone}" else "" },
+                pharmacy?.let { "Apotheke: " + it.name + if (it.phone.isNotBlank()) ", ${it.phone}" else "" },
                 caregiver.takeIf { it.isSet && it.name.isNotBlank() }?.let { "erstellt von: " + it.name + (it.phone.takeIf { ph -> ph.isNotBlank() }?.let { ph -> ", $ph" } ?: "") },
                 "Stand: " + LocalDate.now().format(DATE),
             ).joinToString("   ")

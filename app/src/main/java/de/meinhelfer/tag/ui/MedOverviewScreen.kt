@@ -48,6 +48,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.meinhelfer.tag.ai.AiClient
 import de.meinhelfer.tag.ai.AiConfig
 import de.meinhelfer.tag.ai.AiLimitException
@@ -118,8 +119,9 @@ fun MedOverviewScreen(
     val configured = AiConfig.isConfigured(context)
     val otherReady = AiProvider.entries.any { it != provider && AiConfig.isReady(context, it) }
     val perDay = meds.sumOf { it.timeList().distinct().size }
-    val hausarzt = matchDoctor("hausarzt", doctors)
-    val apotheke = matchDoctor("apotheke", doctors)
+    val duties by vm.duties.collectAsStateWithLifecycle()
+    val hausarzt = de.meinhelfer.tag.data.Duties.resolve(duties, null, personId, de.meinhelfer.tag.data.Duties.REZEPT).id ?: matchDoctor("hausarzt", doctors)
+    val apotheke = de.meinhelfer.tag.data.Duties.resolve(duties, null, personId, de.meinhelfer.tag.data.Duties.APOTHEKE).id ?: matchDoctor("apotheke", doctors)
 
     fun addTask(text: String, doctorId: Long?) {
         if (text in added) return
@@ -209,7 +211,7 @@ fun MedOverviewScreen(
                             style = MaterialTheme.typography.bodySmall,
                         )
                         PdfButtons(shareLabel = "Als PDF teilen", chooserTitle = "Medikamentenplan teilen") { ctx ->
-                            CarePdfs.medPlan(ctx, person, meds, doctors, AppPrefs.caregiver(ctx))
+                            CarePdfs.medPlan(ctx, person, meds, doctors, AppPrefs.caregiver(ctx), duties)
                         }
                         Text(
                             "Kein offizieller bundeseinheitlicher Medikationsplan. Maßgeblich sind die Angaben von Arztpraxis und Apotheke.",

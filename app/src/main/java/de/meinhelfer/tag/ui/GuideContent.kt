@@ -229,6 +229,10 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
                 "Morgens, Mittags, Abends, Nachts antippen oder eine eigene Uhrzeit hinzufügen. Zu jeder Zeit gibt es eine Erinnerung und einen Eintrag auf der Heute-Seite.",
             ),
             GuideItem(
+                "Zuständiger Arzt und Apotheke",
+                "Unter Medikamente steht oben „Rezepte: … · Apotheke: …“ mit „Festlegen“ bzw. „Ändern“ (das geht auch bei jedem Kontakt über „Zuständig …“). Dort legst du je Person fest, welcher Arzt für Rezepte und Medikamente zuständig ist und über welche Apotheke bestellt und abgeholt wird. Das gilt für alle Medikamente, bei denen nichts anderes eingetragen ist, auch für neu eingelesene aus einem Medikamentenplan. Beim einzelnen Medikament steht dann „Standard: … (zuständig)“; wählst du dort einen anderen Kontakt, gilt nur für dieses Medikament der andere. Ist jemand im Urlaub, trägst du unter „Vertretung“ ein, wer vertritt und von wann bis wann. In dieser Zeit nutzen Nachbestellung, Infos zum Medikament und das Folgerezept-Schreiben automatisch die Vertretung, danach wieder den üblichen Kontakt. Der Medikamentenplan als PDF nennt Arzt und Apotheke.",
+            ),
+            GuideItem(
                 "Vorrat und „Pro Tag“",
                 "Vorrat = Stückzahl, die du jetzt hast. „Pro Tag“ = Verbrauch pro Tag (leer lassen = Anzahl der Einnahmen). Der Vorrat sinkt danach automatisch jeden Tag. Neue Packung gekauft? Trägst du beim Medikament „Stück pro Packung“ ein (beim Anlegen, Bearbeiten oder im Vorrat-Fenster), steht an der Karte der Knopf „Neue Packung“: ein Tipp zählt eine Packung zum jetzigen Vorrat dazu. Sonst bei der Karte auf „Vorrat“ tippen und den neuen Vorrat eintragen (dort hilft „+ Packung“). Die Zählung beginnt dann ab heute neu. Bleibt das Feld leer, heißt es „Vorrat: unbekannt“: Dann rechnet die App nichts aus und warnt nicht vor dem Nachbestellen. Mit „📦 Vorrat eintragen“ oben unter Medikamente gehst du alle mit unbekanntem Vorrat nacheinander durch.",
             ),
@@ -265,7 +269,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Arzt oder Apotheke",
-                "Oben wählst du, ob du nach Arzt (Rezept) oder nach Apotheke gruppieren willst. Zu jedem Kontakt siehst du, was dort fehlt. „Anrufen“ öffnet die Telefon-App, „E-Mail mit Liste“ dein Mailprogramm mit fertigem Text.",
+                "Oben wählst du, ob du nach Arzt (Rezept) oder nach Apotheke gruppieren willst. Zu jedem Kontakt siehst du, was dort fehlt. Ohne eigene Angabe beim Medikament gilt der zuständige Arzt bzw. die zuständige Apotheke, während einer Vertretung die Vertretung. „Anrufen“ öffnet die Telefon-App, „E-Mail mit Liste“ dein Mailprogramm mit fertigem Text.",
             ),
             GuideItem(
                 "Nichts passiert automatisch",
@@ -469,6 +473,10 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             GuideItem(
                 "Für alle Personen gleich",
                 "Kontakte gelten für alle betreuten Personen. Du legst sie nur einmal an.",
+            ),
+            GuideItem(
+                "Zuständig und Vertretung",
+                "„Zuständig …“ auf der Karte eines Kontakts: Hake an, ob dieser Arzt für Rezepte und Medikamente bzw. diese Apotheke für Bestellung und Abholung der aktuellen Person zuständig ist (ein bisheriger wird ersetzt). Darunter trägst du ein, wer vertritt, wenn der Kontakt abwesend ist, z. B. im Urlaub, mit Von und Bis. Auf der Karte stehen dann „💊 Rezepte“, „🏥 Apotheke“ bzw. „Abwesend, Vertretung: …“. Vertretungen gelten für alle Personen.",
             ),
         ),
     ),

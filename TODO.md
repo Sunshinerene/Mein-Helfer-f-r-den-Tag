@@ -1,6 +1,6 @@
 # TODO
 
-Stand: v0.51.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.52.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
@@ -41,6 +41,7 @@ Stand: v0.51.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 - [ ] Vorrat „unbekannt“: Umstellung auf Datenbank 22 (bisheriger Vorrat 0 gilt als unbekannt), Schnelleingabe und „Vorrat eintragen“ nacheinander
 - [ ] Datenbank 23 (Packungsgröße), „Neue Packung“, Sicherungs-Erinnerung auf der Heute-Seite, PDFs von Notfallkarte (Karte für die Geldbörse richtig groß?) und Medikamentenplan
 - [ ] Aufgaben-Erinnerung (kommt pünktlich, nicht mehr nach „erledigt“), „In Kalender eintragen“ mit deiner Kalender-App, Zoom mit zwei Fingern im Betrachter, Text-Dokumente drucken, Plan-Code beim Hochladen, Zuordnung der unterschriebenen Fassung
+- [ ] Zuständigkeiten (Datenbank 24): Standard-Arzt und -Apotheke, „Standard“ im Medikament, Vertretung mit Zeitraum in Nachbestellung, Infos, Folgerezept und Medikamentenplan-PDF
 - [ ] Ecken und Effekte (Beta): alle Ansichten mit „Eckig“ und „Rund“, Aurora hell und dunkel, bewegter Hintergrund flüssig und akkuschonend
 
 ## Rechtliches vor einer Veröffentlichung
@@ -49,6 +50,13 @@ Stand: v0.51.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 - [ ] Entscheiden: Aufbewahrung der Nachweise 3 Jahre oder länger (30-Jahres-Frist bei Gesundheitsschäden); zusätzlicher Nachweis beim App-Ersteller (Server) ja oder nein
 - [ ] Medizinprodukte-Recht (MDR) prüfen lassen, vor allem den KI-Gesamt-Check der Medikamente; Zweckbestimmung als Organisationshilfe klar festhalten
 - [ ] Impressum und Datenschutzerklärung für eine Veröffentlichung (z. B. Play Store), eigener Signaturschlüssel statt Test-Schlüssel
+
+## Version 0.52.0 (fertig)
+
+- [x] Zuständigkeiten je Person: Arzt für Rezepte und Medikamente, Apotheke für Bestellung und Abholung; festlegen unter Medikamente oder beim Kontakt („Zuständig …“)
+- [x] Medikamente ohne eigene Angabe nutzen den zuständigen Kontakt („Standard“), auch nach dem Einlesen eines Plans; einzeln weiterhin änderbar
+- [x] Vertretung mit Von und Bis (z. B. Urlaub), gilt automatisch in Nachbestellung, Medikament-Infos, Folgerezept-Schreiben und Überblick
+- [x] Medikamentenplan-PDF nennt zuständigen Arzt und Apotheke
 
 ## Version 0.51.0 (fertig)
 

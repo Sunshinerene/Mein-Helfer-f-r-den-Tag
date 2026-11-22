@@ -65,6 +65,34 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val doctors: StateFlow<List<Doctor>> = db.doctorDao().all()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    /** Zustaendigkeiten (Arzt fuer Rezepte, Apotheke) und Vertretungen, fuer alle Personen. */
+    val duties: StateFlow<List<de.meinhelfer.tag.data.Responsibility>> = db.responsibilityDao().all()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    /** Setzt den zustaendigen Kontakt einer Rolle fuer die Person (null = keiner). */
+    fun setDuty(personId: Long, role: String, contactId: Long?) = viewModelScope.launch {
+        db.responsibilityDao().clearRole(personId, role)
+        if (contactId != null) {
+            db.responsibilityDao().insert(de.meinhelfer.tag.data.Responsibility(personId = personId, role = role, contactId = contactId))
+        }
+    }
+
+    /** Vertretung eintragen: [substituteId] vertritt [absentId] im Zeitraum (gilt fuer alle Personen). */
+    fun addSubstitute(absentId: Long, substituteId: Long, fromDay: Long?, untilDay: Long?) = viewModelScope.launch {
+        db.responsibilityDao().insert(
+            de.meinhelfer.tag.data.Responsibility(
+                personId = 0,
+                role = de.meinhelfer.tag.data.Duties.VERTRETUNG,
+                contactId = substituteId,
+                replacesId = absentId,
+                fromDay = fromDay,
+                untilDay = untilDay,
+            ),
+        )
+    }
+
+    fun deleteDuty(item: de.meinhelfer.tag.data.Responsibility) = viewModelScope.launch { db.responsibilityDao().delete(item) }
+
     // ---- "Heute": aktueller Tag (Epoch-Tag), Abhaken und Tagesbemerkung
     private val _today = MutableStateFlow(LocalDate.now().toEpochDay())
     val today: StateFlow<Long> = _today
@@ -662,6 +690,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
         db.dayNoteDao().deleteForPerson(person.id)
         db.todoDao().deleteForPerson(person.id)
+        db.responsibilityDao().deleteForPerson(person.id)
         db.goalDao().deleteStepsForPerson(person.id)
         db.goalDao().deleteForPerson(person.id)
         db.personDao().delete(person)
@@ -697,6 +726,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         db.doctorDao().delete(item)
         db.medicationDao().clearDoctor(item.id)
         db.medicationDao().clearPharmacy(item.id)
+        db.responsibilityDao().deleteForContact(item.id)
         db.appointmentDao().clearDoctor(item.id)
         db.todoDao().clearDoctor(item.id)
         db.documentDao().clearDoctor(item.id)

@@ -45,6 +45,7 @@ fun MedicationDetailDialog(
     onUpdate: (Medication) -> Unit,
     onAddTodo: (String) -> Unit,
     onPhoto: (() -> Unit)? = null,
+    duties: List<de.meinhelfer.tag.data.Responsibility> = emptyList(),
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -87,8 +88,12 @@ fun MedicationDetailDialog(
                     med.times.takeIf { it.isNotBlank() }?.let { "Einnahme: ${it.replace(",", ", ")} Uhr" },
                     med.stockText(today) + (days?.let { " (reicht ca. $it Tage)" } ?: ""),
                     med.pzn.takeIf { it.isNotBlank() }?.let { "PZN: $it" },
-                    doctors.firstOrNull { it.id == med.doctorId }?.let { "Arzt: ${doctorLabel(it)}" },
-                    doctors.firstOrNull { it.id == med.pharmacyId }?.let { "Apotheke: ${doctorLabel(it)}" },
+                    de.meinhelfer.tag.data.Duties.resolve(duties, med.doctorId, med.personId, de.meinhelfer.tag.data.Duties.REZEPT).let { r ->
+                        doctors.firstOrNull { it.id == r.id }?.let { "Arzt: ${doctorLabel(it)} ${de.meinhelfer.tag.data.Duties.note(r, doctors)}".trim() }
+                    },
+                    de.meinhelfer.tag.data.Duties.resolve(duties, med.pharmacyId, med.personId, de.meinhelfer.tag.data.Duties.APOTHEKE).let { r ->
+                        doctors.firstOrNull { it.id == r.id }?.let { "Apotheke: ${doctorLabel(it)} ${de.meinhelfer.tag.data.Duties.note(r, doctors)}".trim() }
+                    },
                     med.notes.takeIf { it.isNotBlank() }?.let { "Notizen: $it" },
                 )
                 facts.forEach { Text(it, style = MaterialTheme.typography.bodyMedium) }

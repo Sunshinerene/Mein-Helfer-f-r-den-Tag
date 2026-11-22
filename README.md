@@ -4,7 +4,7 @@ by Sunshine@R
 
 Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbezogenen Daten bleiben lokal auf dem Gerät.
 
-## Stand: v0.51.0
+## Stand: v0.52.0
 
 ### Funktionsübersicht
 
@@ -29,6 +29,7 @@ Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbe
 - Überblick aller Medikamente mit Gesamtbild; KI-Gesamt-Check: wie die Medikamente zusammenpassen (Gering/Beachten/Wichtig), Einnahmezeiten, Fragen an Arzt/Apotheke
 - Nachbestellung: Liste, Anruf, E-Mail an Arzt oder Apotheke, PDF drucken
 - „Neue Packung“ mit gemerkter Packungsgröße
+- Zuständiger Arzt (Rezepte) und Apotheke je Person, pro Medikament änderbar, Vertretung im Urlaub mit Zeitraum
 - Medikamentenplan als PDF (Querformat, morgens/mittags/abends/zur Nacht; kein offizieller Medikationsplan)
 
 **Termine**

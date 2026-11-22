@@ -144,6 +144,7 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
     val meds by vm.medications.collectAsStateWithLifecycle()
     val appointments by vm.appointments.collectAsStateWithLifecycle()
     val doctors by vm.doctors.collectAsStateWithLifecycle()
+    val duties by vm.duties.collectAsStateWithLifecycle()
     val updateState by vm.updateState.collectAsStateWithLifecycle()
     val checkins by vm.checkins.collectAsStateWithLifecycle()
     val dayNote by vm.dayNote.collectAsStateWithLifecycle()
@@ -293,6 +294,7 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
         ReorderScreen(
             meds = meds,
             doctors = doctors,
+            duties = duties,
             personName = persons.firstOrNull { it.id == personId }?.name,
             onBack = { showReorder = false },
             caregiver = caregiver,
@@ -513,6 +515,8 @@ private fun MedicationScreen(
     var stockQueue by remember { mutableStateOf<List<Long>?>(null) }
     var stockIndex by remember { mutableIntStateOf(0) }
     val unknownStock = items.filter { !it.stockKnown }
+    val duties by vm.duties.collectAsStateWithLifecycle()
+    var showDuties by remember { mutableStateOf(false) }
 
     val lowCount = lowStockMeds(items).size
     Column(Modifier.fillMaxSize()) {
@@ -545,6 +549,9 @@ private fun MedicationScreen(
                     }
                 }
             }
+        }
+        if (doctors.isNotEmpty()) {
+            DutySummaryRow(person, doctors, duties, onEdit = { showDuties = true }, modifier = Modifier.padding(start = 16.dp, end = 8.dp))
         }
         ListScreen(
             items = items,
@@ -590,10 +597,15 @@ private fun MedicationScreen(
         }
     }
 
+    if (showDuties) {
+        DutyDialog(person = person, doctors = doctors, duties = duties, vm = vm, onClose = { showDuties = false })
+    }
+
     items.firstOrNull { it.id == detailId }?.let { med ->
         MedicationDetailDialog(
             med = med,
             doctors = doctors,
+            duties = duties,
             otherNames = items.filter { it.id != med.id }.map { it.name },
             onEdit = {
                 editItem = med
@@ -667,6 +679,8 @@ private fun MedicationScreen(
         MedicationDialog(
             initial = editItem,
             doctors = doctors,
+            duties = duties,
+            personId = editItem?.personId ?: person?.id ?: 1L,
             onDismiss = {
                 showAdd = false
                 editItem = null
@@ -842,6 +856,8 @@ private fun DoctorScreen(
     var showAdd by remember { mutableStateOf(false) }
     var showNearby by remember { mutableStateOf(false) }
     var editItem by remember { mutableStateOf<Doctor?>(null) }
+    var dutyFor by remember { mutableStateOf<Doctor?>(null) }
+    val duties by vm.duties.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     // Filter nach Art des Kontakts (nur sichtbar, wenn es mehrere Arten gibt)
@@ -886,6 +902,15 @@ private fun DoctorScreen(
                     d.floor.takeIf { it.isNotBlank() },
                     when (d.elevator) { 1 -> "mit Aufzug"; 2 -> "ohne Aufzug"; else -> null },
                 ).joinToString(", ").takeIf { it.isNotEmpty() },
+                person?.let { p ->
+                    listOfNotNull(
+                        if (de.meinhelfer.tag.data.Duties.defaultFor(duties, p.id, de.meinhelfer.tag.data.Duties.REZEPT) == d.id) "💊 Rezepte" else null,
+                        if (de.meinhelfer.tag.data.Duties.defaultFor(duties, p.id, de.meinhelfer.tag.data.Duties.APOTHEKE) == d.id) "🏥 Apotheke" else null,
+                    ).takeIf { it.isNotEmpty() }?.joinToString(" · ", postfix = " für ${p.name}")
+                },
+                de.meinhelfer.tag.data.Duties.substituteFor(duties, d.id)?.let { s ->
+                    "Abwesend, Vertretung: " + (items.firstOrNull { it.id == s.contactId }?.name ?: "–") + " " + de.meinhelfer.tag.data.Duties.period(s)
+                },
             ),
             onClick = { editItem = d },
             onDelete = { vm.delete(d) },
@@ -899,6 +924,7 @@ private fun DoctorScreen(
                 if (d.email.isNotBlank()) {
                     TextButton(onClick = { mailTo = d }) { Text("E-Mail") }
                 }
+                TextButton(onClick = { dutyFor = d }) { Text("Zuständig …") }
             }
         }
     }
@@ -906,6 +932,10 @@ private fun DoctorScreen(
 
     if (showNearby) {
         NearbyDialog(person = person, onSaveContact = { vm.add(it) }, onClose = { showNearby = false })
+    }
+
+    dutyFor?.let { d ->
+        DutyDialog(person = person, doctors = items, duties = duties, vm = vm, onClose = { dutyFor = null }, contact = d)
     }
 
     mailTo?.let { d ->
