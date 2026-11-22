@@ -111,6 +111,24 @@ private val TOUR_PAGES = listOf(
         mock = { MockMotivator() },
     ),
     TourPage(
+        title = "Trinken, Werte, Pflegetagebuch",
+        text = "Auf der Heute-Seite zählst du mit einem Tipp, was getrunken wurde (+150, +200 …), und trägst Blutdruck, Gewicht, Blutzucker und mehr ein. Das Pflegetagebuch hält fest, wobei und wie geholfen wurde, nach den sechs Bereichen der Begutachtung. Beides gibt es als PDF.",
+        tips = listOf("Erinnerungen ans Trinken und abends ans Tagebuch lassen sich einschalten.", "„Wie am Vortag übernehmen“ spart Tipparbeit.", "Die App bewertet keine Werte; Bereiche trägst du selbst ein, z. B. wie mit dem Arzt besprochen."),
+        mock = { MockCareLog() },
+    ),
+    TourPage(
+        title = "Budgets und Übergabe",
+        text = "Im Reiter „Infos“ oben: „Budgets der Pflegekasse“ zeigt, was vom Entlastungsbetrag und vom Jahresbetrag für Verhinderungs- und Kurzzeitpflege genutzt ist und was übrig bleibt. Der „Übergabe-Bericht“ fasst für eine Vertretung alles Wichtige als PDF zusammen.",
+        tips = listOf("Ausgaben mit Stand eintragen: eingereicht, erstattet, abgelehnt.", "Eigene Hinweise im Übergabe-Bericht werden je Person gemerkt.", "Beträge Stand November 2026; für 2027 ist eine Reform geplant."),
+        mock = { MockBudget() },
+    ),
+    TourPage(
+        title = "KI (freiwillig)",
+        text = "Die KI gibt auf Wunsch Anhaltspunkte, z. B. zu Medikamenten oder Dokumenten. Dafür brauchst du einen Schlüssel: eine Art Ausweis dieser App bei einem KI-Dienst. Bei Google Gemini bekommst du ihn kostenlos mit deinem Google-Konto, eine Anleitung Schritt für Schritt steht in den Einstellungen unter „KI und Internet“.",
+        tips = listOf("Ohne KI funktioniert alles andere genauso.", "Gesendet wird nur nach deiner Bestätigung und nie mit Namen.", "Der Schlüssel bleibt verschlüsselt auf dem Handy."),
+        mock = { MockAiKey() },
+    ),
+    TourPage(
         title = "Tag, Woche, Monat",
         text = "Oben auf dem ersten Reiter wählst du Tag, Woche oder Monat. Der Tag zeigt zuerst „Wichtig und demnächst“: Dringendes, die Termine von heute und die nächsten Tage. In Woche und Monat kannst du Termine, Aufgaben und Einnahmen antippen, ändern und abhaken.",
         tips = listOf("Aufgaben mit hoher Priorität stehen immer ganz oben.", "„Trinken und Werte“ zählt die Trinkmenge mit einem Tipp; das Pflegetagebuch hilft bei der Begutachtung.", "Aufgaben können per Benachrichtigung erinnern und lassen sich in den Kalender eintragen.", "Jede Karte lässt sich einklappen, dann bleibt nur eine Kurzinfo."),
@@ -570,6 +588,65 @@ private fun MockMotivator() {
         Text("Geschafft: 4 Aufgaben erledigt · 12 Einnahmen gegeben", style = MaterialTheme.typography.bodySmall)
         MockCheckRow(true, "„Pflegegrad beantragen“: Antrag stellen")
         MockCheckRow(false, "Eine kleine Pause zwischendurch einplanen")
+    }
+}
+
+@Composable
+private fun MockCareLog() {
+    MockCard {
+        Text("💧 Heute getrunken: 900 ml von 1300 ml", style = MaterialTheme.typography.bodyMedium)
+        androidx.compose.material3.LinearProgressIndicator(progress = { 0.69f }, modifier = Modifier.fillMaxWidth())
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            MockButton("+150")
+            MockButton("+200")
+            MockButton("+250")
+        }
+    }
+    MockCard {
+        Text("Pflegetagebuch", style = MaterialTheme.typography.titleSmall)
+        Text("• Duschen oder Baden – teilweise übernommen, 1×, 20 Min.", style = MaterialTheme.typography.bodyMedium)
+        Text("• Nächtliche Unruhe – beruhigt/eingegriffen, 1×, auch nachts", style = MaterialTheme.typography.bodyMedium)
+        MockButton("+ Eintrag", filled = true)
+    }
+}
+
+@Composable
+private fun MockBudget() {
+    MockCard {
+        Text("Entlastungsbetrag", style = MaterialTheme.typography.titleSmall)
+        androidx.compose.material3.LinearProgressIndicator(progress = { 0.4f }, modifier = Modifier.fillMaxWidth())
+        Text("Genutzt: 628,80 € von 1.572,00 €", style = MaterialTheme.typography.bodyMedium)
+    }
+    MockCard {
+        Text("Übergabe-Bericht", style = MaterialTheme.typography.titleSmall)
+        MockCheckRowSimple("Medikamente")
+        MockCheckRowSimple("Termine im Zeitraum")
+        MockButton("Als PDF teilen")
+    }
+}
+
+@Composable
+private fun MockCheckRowSimple(text: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Checkbox(checked = true, onCheckedChange = null, modifier = Modifier.padding(end = 8.dp))
+        Text(text, style = MaterialTheme.typography.bodyMedium)
+    }
+}
+
+@Composable
+private fun MockAiKey() {
+    MockCard {
+        Text("KI-Assistent (optional)", style = MaterialTheme.typography.titleSmall)
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            MockChip("Google Gemini ✓", selected = true)
+            MockChip("Groq")
+        }
+        MockField("API-Schlüssel für Google Gemini", "AIza••••••••••••", Modifier.fillMaxWidth())
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            MockButton("Schlüssel besorgen")
+            MockButton("Testen", filled = true)
+        }
+        Text("Verbindung klappt.", style = MaterialTheme.typography.bodyMedium)
     }
 }
 

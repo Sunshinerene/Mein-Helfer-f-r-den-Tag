@@ -726,6 +726,7 @@ private fun AiCard() {
                     "Ein Abo bei ChatGPT oder Claude reicht dafür nicht, es braucht einen API-Schlüssel des jeweiligen Anbieters.",
                 style = MaterialTheme.typography.bodySmall,
             )
+            AiBeginnerHelp()
             if (!storageOk) {
                 Text(
                     "Der verschlüsselte Speicher ist auf diesem Handy nicht verfügbar, deshalb können keine Schlüssel gespeichert werden.",

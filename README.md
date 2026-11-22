@@ -4,7 +4,7 @@ by Sunshine@R
 
 Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbezogenen Daten bleiben lokal auf dem Gerät.
 
-## Stand: v0.53.0
+## Stand: v0.54.0
 
 ### Funktionsübersicht
 
@@ -16,6 +16,9 @@ Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbe
 - Auswertung für Tag, Woche, Monat mit erledigten Aufgaben, Trinkmenge und Messwerten (lokal berechnet, nur Anhaltspunkte)
 - Trinken und Werte: Trinkmenge mit Schnelltasten und Ziel, Blutdruck, Puls, Gewicht, Blutzucker, Temperatur, Sauerstoff; Verlauf, eigener Bereich, PDF-Protokoll
 - Pflegetagebuch für die Begutachtung (sechs Bereiche, Art der Hilfe, wie oft, nachts), „wie am Vortag“, PDF-Bericht
+- Erinnerungen ans Trinken (nur wenn unter Plan) und abends ans Pflegetagebuch
+- Budgets der Pflegekasse (Entlastungsbetrag mit Übertrag, Gemeinsamer Jahresbetrag für Verhinderungs- und Kurzzeitpflege)
+- Übergabe-Bericht als PDF für Vertretung oder Urlaub
 
 **Tages-Motivator**
 - Satz für den Tag, „Das hast du geschafft“ und Vorhaben aus den letzten drei Tagen (Schritte und Aufgaben direkt abhaken)
@@ -82,8 +85,9 @@ Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbe
 - Freigaben (Android): Benachrichtigungen, Ton, pünktliche Wecker, Akku, Updates – mit Status und Sprung in die Android-Einstellungen
 - App-Sperre, Bildschirmschutz, verschlüsselte Datenbank, Sicherung und Wiederherstellung, Erinnerung an die Sicherung
 - App zurücksetzen mit Warnung, Angebot zur Sicherung und Bestätigung per Bildschirmsperre
-- Medikamenten-Beschreibung, KI-Assistent mit 18 Diensten (u. a. Gemini, Groq, Mistral, OpenRouter, Cerebras, GitHub Models, OVHcloud und Scaleway in der EU, IONOS in Deutschland, OpenAI, Claude) oder eigenem Server im Heimnetz (Ollama, LM Studio), alternativ Teilen an eine KI-App wie Gemini – freiwillig
+- Medikamenten-Beschreibung, KI-Assistent mit 18 Diensten (u. a. Gemini, Groq, Mistral, OpenRouter, Cerebras, GitHub Models, OVHcloud und Scaleway in der EU, IONOS in Deutschland, OpenAI, Claude) oder eigenem Server im Heimnetz (Ollama, LM Studio), alternativ Teilen an eine KI-App wie Gemini – freiwillig; Erklärung für Einsteiger (Schlüssel, Kosten, Daten, Schritt für Schritt)
 - Anleitung mit Suche, Rundgang, Feedback, Vorschau, App-Update über GitHub
+- Selbsttest (Datenbank prüfen, Beispiel-PDFs und -Grafiken, Test-Benachrichtigungen); automatische Tests der Datenbank-Umstellungen und Rechenlogik beim Bauen
 
 Alle personenbezogenen Daten bleiben verschlüsselt auf dem Handy. Nichts wird automatisch gesendet.
 

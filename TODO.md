@@ -1,17 +1,15 @@
 # TODO
 
-Stand: v0.53.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.54.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
-- [ ] Punkte aus „Ideen und Optimierungen“ nach Wunsch vorziehen (Vorschlag: Budget-Übersicht, Übergabe-Bericht)
+- [ ] Punkte aus „Ideen und Optimierungen“ nach Wunsch vorziehen (Vorschlag: Vorschläge aus Entlassberichten, Startbildschirm-Widget)
+- [ ] Budgets: Beträge prüfen und anpassen, sobald die Pflegereform 2027 (Pflegeneuordnungsgesetz) beschlossen ist
 
 ## Ideen und Optimierungen
 
-- [ ] Trink-Erinnerung (z. B. alle 2 Stunden tagsüber, wenn unter Ziel), Trinkmenge und Werte im Tagesplan-PDF
-- [ ] Pflegetagebuch: Erinnerung abends, Selbsteinschätzung je Bereich als Vorbereitung auf die Begutachtung
-- [ ] Budget-Übersicht Entlastungsbetrag, Verhinderungs- und Kurzzeitpflege (verbraucht, übrig, Fristen)
-- [ ] Übergabe-Bericht als PDF für Vertretung, Urlaub oder Pflegedienst (Person, Medikamente, Termine, Kontakte, Besonderheiten)
+- [ ] Trinkmenge und Werte im Tagesplan-PDF; Pflegetagebuch: Selbsteinschätzung je Bereich als Vorbereitung auf die Begutachtung
 - [ ] Dokumente: Medikamente und Kontrolltermine aus dem erkannten Text vorschlagen (z. B. aus Entlassbericht), immer mit Bestätigung
 - [ ] Packungsfoto: Erkennung verbessern (Wirkstoff, Packungsbeilage), Barcode live mit der Kamera
 - [ ] Startbildschirm-Widget: nächste Einnahme und nächster Termin
@@ -22,6 +20,8 @@ Stand: v0.53.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 - [ ] Designs verfeinern (Schriftarten, weitere Varianten); Effekte: echte Unschärfe hinter Glas-Karten ab Android 12, Glanz auch auf Knöpfen
 
 ## Bitte auf dem Handy prüfen (bisher nicht getestet)
+
+Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Datenbank prüfen, Beispiel-PDFs mit erfundenen Daten, Beispiel-Grafiken, Test-Benachrichtigungen). Die Datenbank-Umstellungen ab Version 12 prüft seit v0.54.0 zusätzlich bei jedem Bauen ein automatischer Test gegen das Schema.
 
 - [ ] Datenbank-Umstellungen bis Version 19 (alte Daten bleiben erhalten?), Wiederherstellen einer Sicherung
 - [ ] Wiederkehrende Termine: Anlegen, „nur diesen“ und „alle folgenden“ ändern und löschen, Erinnerungen
@@ -42,7 +42,9 @@ Stand: v0.53.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 - [ ] Datenbank 23 (Packungsgröße), „Neue Packung“, Sicherungs-Erinnerung auf der Heute-Seite, PDFs von Notfallkarte (Karte für die Geldbörse richtig groß?) und Medikamentenplan
 - [ ] Aufgaben-Erinnerung (kommt pünktlich, nicht mehr nach „erledigt“), „In Kalender eintragen“ mit deiner Kalender-App, Zoom mit zwei Fingern im Betrachter, Text-Dokumente drucken, Plan-Code beim Hochladen, Zuordnung der unterschriebenen Fassung
 - [ ] Zuständigkeiten (Datenbank 24): Standard-Arzt und -Apotheke, „Standard“ im Medikament, Vertretung mit Zeitraum in Nachbestellung, Infos, Folgerezept und Medikamentenplan-PDF
-- [ ] Trinken und Werte, Pflegetagebuch (Datenbank 25): Schnelltasten, Werte eintragen, Verlauf, eigener Bereich, PDFs (Protokoll im Querformat, Tagebuch-Bericht), „Wie am Vortag“, Auswertung
+- [ ] Trinken und Werte, Pflegetagebuch (Datenbank 25): Schnelltasten und Werte eintragen im Alltag, „Wie am Vortag“, Auswertung (Grafiken und PDFs vorab im Selbsttest ansehen)
+- [ ] Budgets (Datenbank 26): Ausgaben eintragen, Übertrag bis 30. Juni, „Beträge und Beginn“; Übergabe-Bericht mit eigenen Daten
+- [ ] Erinnerungen ans Trinken und abends ans Pflegetagebuch (kommen nur, wenn nötig; Antippen öffnet die richtige Seite, zuerst mit den Test-Benachrichtigungen im Selbsttest)
 - [ ] Ecken und Effekte (Beta): alle Ansichten mit „Eckig“ und „Rund“, Aurora hell und dunkel, bewegter Hintergrund flüssig und akkuschonend
 
 ## Rechtliches vor einer Veröffentlichung
@@ -51,6 +53,14 @@ Stand: v0.53.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 - [ ] Entscheiden: Aufbewahrung der Nachweise 3 Jahre oder länger (30-Jahres-Frist bei Gesundheitsschäden); zusätzlicher Nachweis beim App-Ersteller (Server) ja oder nein
 - [ ] Medizinprodukte-Recht (MDR) prüfen lassen, vor allem den KI-Gesamt-Check der Medikamente; Zweckbestimmung als Organisationshilfe klar festhalten
 - [ ] Impressum und Datenschutzerklärung für eine Veröffentlichung (z. B. Play Store), eigener Signaturschlüssel statt Test-Schlüssel
+
+## Version 0.54.0 (fertig)
+
+- [x] Trink-Erinnerung (aus, alle 2 oder 3 Stunden, nur wenn unter Plan) und abendliche Erinnerung ans Pflegetagebuch (nur wenn heute leer); Antippen öffnet die passende Seite
+- [x] Budgets der Pflegekasse: Entlastungsbetrag (131 €/Monat, Übertrag bis 30. Juni) und Gemeinsamer Jahresbetrag für Verhinderungs- und Kurzzeitpflege (3.539 €, je bis 8 Wochen) mit Ausgaben, Stand der Erstattung, Rest; Hinweis auf die geplante Reform 2027; Beträge änderbar
+- [x] Übergabe-Bericht als PDF für Vertretung, Urlaub oder Pflegedienst: Zeitraum, Vertretung, eigene Hinweise (je Person gemerkt), Medikamente mit Vorrats-Hinweis, Termine, Kontakte und Zuständigkeiten, Aufgaben, Werte, Hilfebedarf aus dem Pflegetagebuch
+- [x] Prüfhilfen: automatischer Test der Datenbank-Umstellungen gegen das exportierte Schema und Tests der Rechenlogik bei jedem Bauen; Selbsttest in der App mit Datenbank-Prüfung, Beispiel-PDFs, Beispiel-Grafiken und Test-Benachrichtigungen
+- [x] KI für Einsteiger erklärt (Was ist ein Schlüssel, Kosten, Daten, Schritt für Schritt mit Gemini, Probleme lösen) in den Einstellungen und in der Anleitung; Anleitung und Rundgang ergänzt
 
 ## Version 0.53.0 (fertig)
 

@@ -108,11 +108,11 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Trinken und Werte",
-                "Die Karte „Trinken und Werte“ auf der Heute-Seite zählt, was heute getrunken wurde: Mit +150, +200, +250 oder +500 trägst du ein Glas oder eine Tasse ein, „Andere Menge“ für alles andere, „Rückgängig“ nimmt den letzten Eintrag zurück. Der Balken zeigt den Stand zum Trinkziel. Voreingestellt sind 1300 ml, der Richtwert der Deutschen Gesellschaft für Ernährung für Menschen ab 65 über Getränke. Bei Herz- oder Nierenerkrankungen gibt der Arzt oft eine andere Menge vor; ändern unter „Verlauf und PDF“ → „Trinkziel“. Mit „Wert eintragen“ hältst du Blutdruck (mit Puls), Puls, Gewicht, Blutzucker (mg/dl oder mmol/l), Temperatur oder Sauerstoff fest, mit Tag, Uhrzeit und Notiz. Ungewöhnliche Zahlen (Tippfehler) werden abgefangen. „Verlauf und PDF“ zeigt die letzten 14 Tage Trinkmenge als Balken, jeden Messwert als Verlauf und alle Einträge zum Löschen. Je Messwert kannst du einen eigenen Bereich eintragen, z. B. wie mit dem Arzt besprochen; Werte außerhalb werden markiert und in der Auswertung genannt. Das Protokoll gibt es als PDF für 7, 14 oder 30 Tage. Die App bewertet keine Werte.",
+                "Die Karte „Trinken und Werte“ auf der Heute-Seite zählt, was heute getrunken wurde: Mit +150, +200, +250 oder +500 trägst du ein Glas oder eine Tasse ein, „Andere Menge“ für alles andere, „Rückgängig“ nimmt den letzten Eintrag zurück. Der Balken zeigt den Stand zum Trinkziel. Voreingestellt sind 1300 ml, der Richtwert der Deutschen Gesellschaft für Ernährung für Menschen ab 65 über Getränke. Bei Herz- oder Nierenerkrankungen gibt der Arzt oft eine andere Menge vor; ändern unter „Verlauf und PDF“ → „Trinkziel“. Mit „Wert eintragen“ hältst du Blutdruck (mit Puls), Puls, Gewicht, Blutzucker (mg/dl oder mmol/l), Temperatur oder Sauerstoff fest, mit Tag, Uhrzeit und Notiz. Ungewöhnliche Zahlen (Tippfehler) werden abgefangen. „Verlauf und PDF“ zeigt die letzten 14 Tage Trinkmenge als Balken, jeden Messwert als Verlauf und alle Einträge zum Löschen. Je Messwert kannst du einen eigenen Bereich eintragen, z. B. wie mit dem Arzt besprochen; Werte außerhalb werden markiert und in der Auswertung genannt. Das Protokoll gibt es als PDF für 7, 14 oder 30 Tage. Unter „Ans Trinken erinnern“ (auch in Einstellungen → Erinnerungen und Freigaben) wählst du Aus, alle 2 oder alle 3 Stunden: Die App meldet sich tagsüber nur, wenn bis dahin weniger getrunken wurde als geplant, und nur bei Personen mit Trinkziel, für die in den letzten 7 Tagen etwas eingetragen wurde. Antippen öffnet „Trinken und Werte“. Die App bewertet keine Werte.",
             ),
             GuideItem(
                 "Pflegetagebuch",
-                "Für die Begutachtung (Pflegegrad, Höherstufung) zählt, wie selbständig die Person in sechs Bereichen ist: Mobilität, Verstehen und Sprechen, Verhalten und Psyche, Selbstversorgung, Krankheit und Therapie, Alltag und Kontakte. Mit „+ Eintrag“ auf der Karte „Pflegetagebuch“ hältst du fest, wobei geholfen wurde (Auswahl je Bereich oder eigener Text), wie (erinnern, beaufsichtigen, teilweise oder ganz übernehmen, beruhigen), wie oft, ungefähr wie lange, ob auch nachts, und was genau. Mit „Öffnen und PDF“ blätterst du durch die Tage, änderst Einträge (antippen) und übernimmst mit „Wie am Vortag übernehmen“ alles vom letzten Tag, wenn es ähnlich war. Der PDF-Bericht für 7, 14 oder 28 Tage fasst je Bereich zusammen (an wie vielen Tagen, wie oft, Art der Hilfe, nachts) und listet alle Einträge Tag für Tag. Am besten 1 bis 2 Wochen führen und zur Begutachtung bereitlegen.",
+                "Für die Begutachtung (Pflegegrad, Höherstufung) zählt, wie selbständig die Person in sechs Bereichen ist: Mobilität, Verstehen und Sprechen, Verhalten und Psyche, Selbstversorgung, Krankheit und Therapie, Alltag und Kontakte. Mit „+ Eintrag“ auf der Karte „Pflegetagebuch“ hältst du fest, wobei geholfen wurde (Auswahl je Bereich oder eigener Text), wie (erinnern, beaufsichtigen, teilweise oder ganz übernehmen, beruhigen), wie oft, ungefähr wie lange, ob auch nachts, und was genau. Mit „Öffnen und PDF“ blätterst du durch die Tage, änderst Einträge (antippen) und übernimmst mit „Wie am Vortag übernehmen“ alles vom letzten Tag, wenn es ähnlich war. Der PDF-Bericht für 7, 14 oder 28 Tage fasst je Bereich zusammen (an wie vielen Tagen, wie oft, Art der Hilfe, nachts) und listet alle Einträge Tag für Tag. Am besten 1 bis 2 Wochen führen und zur Begutachtung bereitlegen. Mit „Abends ans Pflegetagebuch erinnern“ (im Tagebuch unten oder in Einstellungen → Erinnerungen und Freigaben) meldet sich die App zur gewählten Uhrzeit, wenn für die Person heute noch nichts eingetragen ist; antippen öffnet das Tagebuch.",
             ),
             GuideItem(
                 "Tag, Woche, Monat",
@@ -292,8 +292,16 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
     GuideSection(
         id = "infos",
         title = "Infos",
-        summary = "Aktuelles zu Pflege, Gesetzen und deinen Themen",
+        summary = "Aktuelles zu Pflege, Gesetzen und deinen Themen, Budgets, Übergabe",
         items = listOf(
+            GuideItem(
+                "Budgets der Pflegekasse",
+                "Oben im Reiter „Infos“ (oder im Profil auf der Heute-Seite unter „Budgets“) verfolgst du zwei Budgets mit: den Entlastungsbetrag (derzeit 131 € im Monat ab Pflegegrad 1, für anerkannte Alltagshilfe, Betreuung, Haushaltshilfe, Tages- oder Kurzzeitpflege) und den Gemeinsamen Jahresbetrag für Verhinderungs- und Kurzzeitpflege (derzeit 3.539 € im Kalenderjahr ab Pflegegrad 2, jeweils bis zu 8 Wochen). Mit „+ Ausgabe“ trägst du Datum, Betrag, ggf. Tage, Anbieter und den Stand ein (noch nicht eingereicht, eingereicht, erstattet, abgelehnt; Abgelehntes zählt nicht). Die App zeigt, was genutzt ist und was übrig bleibt, beim Entlastungsbetrag auch, was bis jetzt angesammelt ist und den Übertrag aus dem Vorjahr, der nach heutigem Recht bis 30. Juni genutzt werden kann. Unter „Beträge und Beginn“ trägst du ein, seit wann der Pflegegrad besteht, und passt die Beträge an, falls sich das Recht ändert. Stand November 2026 plant die Bundesregierung ab 2027 eine Reform (unter anderem soll der Entlastungsbetrag durch ein Sozialraumbudget ersetzt werden); noch ist das kein Gesetz. Maßgeblich sind immer die Bescheide der Pflegekasse.",
+            ),
+            GuideItem(
+                "Übergabe-Bericht",
+                "Für Urlaub, Krankheit oder einen Wechsel: Im Reiter „Infos“ oben (oder im Profil unter „Übergabe“) wählst du den Zeitraum und wer vertritt, schreibst eigene Hinweise (Tagesablauf, Essen und Trinken, wichtige Hinweise, was hilft und was zu vermeiden ist; das wird je Person gemerkt) und hakst an, was hinein soll: Medikamente (mit Hinweis, wenn der Vorrat nicht bis zum Ende reicht), Termine im Zeitraum, Ärzte und Kontakte mit Zuständigkeiten und Vertretungen, offene Aufgaben, Trinkziel und letzte Werte, wobei Hilfe nötig ist (aus dem Pflegetagebuch) und auf Wunsch die Versichertennummer. „Als PDF teilen“ oder „Drucken“ erstellt den Bericht. Er enthält Gesundheitsdaten, also nur an Menschen geben, die die Pflege übernehmen.",
+            ),
             GuideItem(
                 "Was ist das?",
                 "Der Reiter „Infos“ sammelt aktuelle Themen rund um Pflege: Pflegereform und Gesetze, Beratung und Hilfe, Pflege und Beruf, Entlastung für Angehörige. Die Themenkarten tragen ein Datum („Stand“) und sind ohne Gewähr. Gesetze ändern sich, maßgeblich sind Gesetzestext, Pflegekasse und Beratungsstellen.",
@@ -491,8 +499,8 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
     GuideSection(
         id = "ki",
         title = "KI-Assistent",
-        summary = "Optionale Hinweise, Dienst frei wählbar",
-        items = listOf(
+        summary = "Optionale Hinweise, Schlüssel einfach erklärt, Dienst frei wählbar",
+        items = AI_BEGINNER_HELP.map { (q, a) -> GuideItem(q, a) } + listOf(
             GuideItem(
                 "Wofür?",
                 "Die KI gibt Anhaltspunkte, z. B. „Medikamentenplan vom Hausarzt prüfen lassen“ oder Fragen für den Apotheker. Sie ist kein Arzt und kein Apotheker und ersetzt beide nie. Sie stellt keine Diagnosen und empfiehlt keine Dosierungen.",
@@ -542,8 +550,12 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
     GuideSection(
         id = "erinnerungen",
         title = "Erinnerungen",
-        summary = "Benachrichtigungen und der Knopf „Eingenommen“",
+        summary = "Benachrichtigungen, „Eingenommen“, Trinken und Pflegetagebuch",
         items = listOf(
+            GuideItem(
+                "Trinken und Pflegetagebuch",
+                "Einstellungen → Erinnerungen und Freigaben → „Trinken und Pflegetagebuch“: „Ans Trinken erinnern“ (Aus, alle 2 Stunden um 10, 12, 14, 16 und 18 Uhr, alle 3 Stunden um 10, 13, 16 und 19 Uhr; nur wenn bis dahin weniger getrunken wurde als geplant) und „Abends ans Pflegetagebuch erinnern“ mit Uhrzeit (nur wenn heute noch nichts eingetragen ist). Ein Tipp auf die Benachrichtigung öffnet die passende Seite bei der richtigen Person. Diese Erinnerungen kommen ungefähr zur Uhrzeit, nicht auf die Minute genau.",
+            ),
             GuideItem(
                 "Freigaben in Android",
                 "Unter Einstellungen → Erinnerungen und Freigaben → „Freigaben (Android)“ siehst du, was erlaubt ist (✓) und was fehlt: Benachrichtigungen, Erinnerungen mit Ton, pünktliche Wecker, Akku-Optimierung aus (empfohlen) und Updates installieren. Die Knöpfe öffnen direkt die passende Stelle in den Android-Einstellungen. Fehlt etwas Wichtiges für Erinnerungen, erscheint oben auf der Heute-Seite eine rote Karte mit den Knöpfen zum Einschalten.",
@@ -690,6 +702,10 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
         title = "Updates, Darstellung und Feedback",
         summary = "App aktualisieren, Schrift, Design, Ecken und Effekte, Notfallkarte, Feedback",
         items = listOf(
+            GuideItem(
+                "Selbsttest",
+                "Einstellungen → Hilfe und Rückmeldung → „Selbsttest“. „Datenbank prüfen“ zeigt die Version der Datenbank, ob die Datei in Ordnung ist und wie viele Einträge es je Bereich gibt; das Ergebnis kannst du ohne persönliche Daten teilen. Darunter erzeugst du Beispiel-PDFs mit erfundenen Daten („Erika Beispiel“): Trink- und Vitalprotokoll, Pflegetagebuch-Bericht, Übergabe-Bericht, Notfallkarte und Medikamentenplan. „Drucken“ zeigt eine Vorschau, ohne zu drucken. Außerdem siehst du Beispiel-Grafiken und kannst eine Test-Benachrichtigung für Trinken und Pflegetagebuch schicken; antippen sollte die passende Seite öffnen. Gespeichert oder gesendet wird dabei nichts.",
+            ),
             GuideItem(
                 "App aktualisieren",
                 "Zahnrad → App und Updates → „Nach Updates suchen“ → „Herunterladen“ → „Installieren“. Die App meldet neue Versionen auch von selbst, das lässt sich in den Einstellungen abschalten.",
