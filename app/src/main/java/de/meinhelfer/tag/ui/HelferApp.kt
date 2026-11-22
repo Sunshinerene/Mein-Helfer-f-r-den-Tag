@@ -10,6 +10,9 @@ import kotlinx.coroutines.Dispatchers
 import de.meinhelfer.tag.media.DocumentStore
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.awaitEachGesture
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.verticalScroll
@@ -1076,14 +1079,14 @@ private fun DockBar(selected: Int, onSelect: (Int) -> Unit) {
     val scope = androidx.compose.runtime.rememberCoroutineScope()
     Column(
         Modifier.pointerInput(Unit) {
-            androidx.compose.foundation.gestures.awaitEachGesture {
-                val down = androidx.compose.foundation.gestures.awaitFirstDown(
+            awaitEachGesture {
+                val down = awaitFirstDown(
                     requireUnconsumed = false,
-                    pass = androidx.compose.ui.input.pointer.PointerEventPass.Initial,
+                    pass = PointerEventPass.Initial,
                 )
                 var total = 0f
                 while (true) {
-                    val ev = awaitPointerEvent(androidx.compose.ui.input.pointer.PointerEventPass.Initial)
+                    val ev = awaitPointerEvent(PointerEventPass.Initial)
                     val c = ev.changes.firstOrNull { it.id == down.id } ?: break
                     if (!c.pressed) break
                     total += c.position.y - c.previousPosition.y

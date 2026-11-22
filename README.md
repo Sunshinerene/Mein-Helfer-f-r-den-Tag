@@ -4,7 +4,7 @@ by Sunshine@R
 
 Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbezogenen Daten bleiben lokal auf dem Gerät.
 
-## Stand: v0.54.0
+## Stand: v0.55.0
 
 ### Funktionsübersicht
 
@@ -53,7 +53,7 @@ Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbe
 - Kategorien (u. a. Krankenhaus / Entlassbericht) mit gewichteter Erkennung, Suche, Filter (Jahr, Arzt), Zusammenfassung (selbst oder per KI)
 - Eingebauter Betrachter (PDF, Fotos, Text) mit Zoom (zwei Finger), Drucken (auch Text), Teilen, „Andere App“ (einstellbar)
 - Code des Medikationsplans wird beim Hochladen gelesen
-- Schreiben und Vollmachten als PDF (Vollmacht, Schweigepflicht, Widerruf, Pflegegrad, Höherstufung, Widerspruch, Verhinderungspflege, Pflegehilfsmittel, Unterlagen anfordern, Folgerezept, Kündigung Pflegedienst, Schwerbehindertenausweis, frei); unterschriebene Fassung wird beim Einscannen dem Entwurf zugeordnet
+- Schreiben und Vollmachten als PDF (Vollmacht, Schweigepflicht, Widerruf, Pflegegrad, Höherstufung, Widerspruch, Verhinderungspflege, Pflegehilfsmittel, Unterlagen anfordern, Folgerezept, Kündigung Pflegedienst, Schwerbehindertenausweis, frei); auch als E-Mail (Text und PDF-Anhang); unterschriebene Fassung wird beim Einscannen dem Entwurf zugeordnet
 
 **Kontakte**
 - Ärzte, Pflegedienst, Apotheke, Kassen usw. mit Anruf und vorbereiteter E-Mail, Filter nach Art
@@ -87,6 +87,7 @@ Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbe
 - App zurücksetzen mit Warnung, Angebot zur Sicherung und Bestätigung per Bildschirmsperre
 - Medikamenten-Beschreibung, KI-Assistent mit 18 Diensten (u. a. Gemini, Groq, Mistral, OpenRouter, Cerebras, GitHub Models, OVHcloud und Scaleway in der EU, IONOS in Deutschland, OpenAI, Claude) oder eigenem Server im Heimnetz (Ollama, LM Studio), alternativ Teilen an eine KI-App wie Gemini – freiwillig; Erklärung für Einsteiger (Schlüssel, Kosten, Daten, Schritt für Schritt)
 - Anleitung mit Suche, Rundgang, Feedback, Vorschau, App-Update über GitHub
+- Leiste unten auf allen Seiten, nach oben wischen: Schnellsprung zu den Abschnitten der Seite
 - Selbsttest (Datenbank prüfen, Beispiel-PDFs und -Grafiken, Test-Benachrichtigungen); automatische Tests der Datenbank-Umstellungen und Rechenlogik beim Bauen
 
 Alle personenbezogenen Daten bleiben verschlüsselt auf dem Handy. Nichts wird automatisch gesendet.

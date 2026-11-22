@@ -53,7 +53,7 @@ private val TOUR_PAGES = listOf(
     TourPage(
         title = "Willkommen",
         text = "Dein Helfer für den Pflegealltag: Medikamente, Termine, Aufgaben, Dokumente, Kontakte und Notruf an einem Ort. Alles bleibt verschlüsselt auf deinem Handy. Der Rundgang zeigt in wenigen Schritten, wie alles zusammenspielt.",
-        tips = listOf("Du kannst jederzeit zurückblättern oder abbrechen.", "Alles Weitere steht in der Anleitung (Info-Symbol oben)."),
+        tips = listOf("Du kannst jederzeit zurückblättern oder abbrechen.", "Die Leiste unten ist überall da. Nach oben wischen zeigt die Abschnitte der Seite zum schnellen Hinspringen.", "Alles Weitere steht in der Anleitung (Info-Symbol oben)."),
         mock = { MockWelcome() },
     ),
     TourPage(
@@ -149,7 +149,7 @@ private val TOUR_PAGES = listOf(
     TourPage(
         title = "Dokumente und Schreiben",
         text = "Befunde, Berichte und Bescheide fotografieren oder laden. Die App liest den Text, schlägt Kategorie, Datum und Arzt vor und legt alles verschlüsselt ab. Öffnen, drucken und teilen geht direkt in der App. Für Anträge und Vollmachten gibt es Vorlagen als PDF.",
-        tips = listOf("Die Suche findet auch Wörter im Text, z. B. ein Medikament.", "Im Betrachter mit zwei Fingern zoomen.", "Unterschriebene Schreiben ordnet die App beim Einscannen dem Entwurf zu."),
+        tips = listOf("Die Suche findet auch Wörter im Text, z. B. ein Medikament.", "Schreiben gehen als PDF, per Post oder als E-Mail.", "Unterschriebene Schreiben ordnet die App beim Einscannen dem Entwurf zu."),
         mock = { MockDocuments() },
     ),
     TourPage(
