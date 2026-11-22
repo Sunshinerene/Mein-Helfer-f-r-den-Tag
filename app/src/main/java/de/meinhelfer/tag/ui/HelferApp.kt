@@ -138,6 +138,8 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
     var showMotivator by rememberSaveable { mutableStateOf(false) }
     var motivatorTab by rememberSaveable { mutableIntStateOf(0) }
     var showVitals by rememberSaveable { mutableStateOf(false) }
+    // Aus der Mess-Erinnerung: gleich den passenden Wert eintragen (z. B. "blutzucker")
+    var vitalStart by rememberSaveable { mutableStateOf<String?>(null) }
     var showDiary by rememberSaveable { mutableStateOf(false) }
     var showBudget by rememberSaveable { mutableStateOf(false) }
     var showHandover by rememberSaveable { mutableStateOf(false) }
@@ -146,6 +148,10 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
         when (openScreen) {
             "trinken" -> showVitals = true
             "tagebuch" -> showDiary = true
+            else -> if (openScreen?.startsWith("messen:") == true) {
+                vitalStart = openScreen?.substringAfter("messen:")
+                showVitals = true
+            }
         }
         if (openScreen != null) vm.requestScreen(null)
     }
@@ -170,6 +176,7 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
         showMoodCheck = false
         showMotivator = false
         showVitals = false
+        vitalStart = null
         showDiary = false
         showBudget = false
         showHandover = false
@@ -249,7 +256,10 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
         when {
             showBudget -> showBudget = false
             showHandover -> showHandover = false
-            showVitals -> showVitals = false
+            showVitals -> {
+                showVitals = false
+                vitalStart = null
+            }
             showDiary -> showDiary = false
             showMoodCheck -> showMoodCheck = false
             showDailyStart -> showDailyStart = false
@@ -341,7 +351,17 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
             onDone = { showDailyStart = false },
         )
     } else if (showVitals) {
-        VitalScreen(vm = vm, person = persons.firstOrNull { it.id == personId }, onBack = { showVitals = false })
+        androidx.compose.runtime.key(vitalStart) {
+            VitalScreen(
+                vm = vm,
+                person = persons.firstOrNull { it.id == personId },
+                onBack = {
+                    showVitals = false
+                    vitalStart = null
+                },
+                startKind = vitalStart?.let { de.meinhelfer.tag.summary.VitalKind.of(it) },
+            )
+        }
     } else if (showDiary) {
         CareDiaryScreen(vm = vm, person = persons.firstOrNull { it.id == personId }, onBack = { showDiary = false })
     } else if (showBudget) {

@@ -15,7 +15,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.meinhelfer.tag.export.CarePdfs
 import de.meinhelfer.tag.export.ReorderExport
-import de.meinhelfer.tag.summary.VitalKind
 import de.meinhelfer.tag.update.AppPrefs
 
 /**
@@ -62,21 +61,17 @@ fun ReportsCard(vm: MainViewModel, onOpenDailyPlan: () -> Unit, onOpenHandover: 
                 ReportRow("🗓 Tagesplan für heute", "Einnahmen, Termine, Aufgaben, Trinken und Werte, mit Kästchen zum Abhaken") {
                     OutlinedButton(shape = buttonShape(), onClick = onOpenDailyPlan) { Text("Öffnen") }
                 }
-                ReportRow("💧 Trinken und Werte", if (measured.isEmpty()) "In den letzten 14 Tagen nichts eingetragen" else "Letzte 14 Tage, ${measured.size} Einträge") {
-                    if (measured.isNotEmpty()) {
-                        PdfButtons(shareLabel = "Teilen", chooserTitle = "Protokoll teilen") { ctx ->
-                            CarePdfs.vitals(
-                                ctx, person, measured, AppPrefs.drinkGoal(ctx, personId),
-                                VitalKind.MEASURES.mapNotNull { k -> AppPrefs.vitalRange(ctx, personId, k.key)?.let { k.key to it } }.toMap(),
-                                today - 13, today,
-                            )
-                        }
-                    }
+                ReportRow(
+                    "💧 Messwerte und Trinken",
+                    (if (measured.isEmpty()) "In den letzten 14 Tagen nichts eingetragen" else "Letzte 14 Tage: ${measured.size} Einträge") +
+                        ". Zeitraum und Werte frei wählbar, mit Verlauf; teilen, drucken, mailen oder unter Dokumente ablegen",
+                ) {
+                    VitalReportButton(vm, person, label = "Bericht erstellen …")
                 }
                 ReportRow("📓 Pflegetagebuch", if (diary.isEmpty()) "In den letzten 30 Tagen nichts eingetragen" else "Letzte 30 Tage, an ${diary.map { it.day }.distinct().size} Tagen") {
                     if (diary.isNotEmpty()) {
                         PdfButtons(shareLabel = "Teilen", chooserTitle = "Pflegetagebuch teilen") { ctx ->
-                            CarePdfs.careDiary(ctx, person, diary, today - 29, today, AppPrefs.caregiver(ctx))
+                            CarePdfs.careDiary(ctx, person, diary, today - 29, today, AppPrefs.caregiver(ctx), vitals)
                         }
                     }
                 }

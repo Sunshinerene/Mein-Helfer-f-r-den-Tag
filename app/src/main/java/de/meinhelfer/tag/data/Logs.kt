@@ -9,7 +9,7 @@ import androidx.room.Query
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
-/** Trinkmenge oder Messwert (Blutdruck, Puls, Gewicht, Blutzucker, Temperatur, Sauerstoff). Nur lokal. */
+/** Trinkmenge oder Messwert (Blutdruck, Puls, Blutzucker, Temperatur, Sauerstoff, Gewicht, Atmung, Schmerz, INR, Urin). Nur lokal. */
 @Entity
 data class VitalEntry(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
@@ -25,6 +25,8 @@ data class VitalEntry(
     /** Einheit beim Eintragen, z. B. "mg/dl" oder "mmol/l" */
     val unit: String = "",
     val note: String = "",
+    /** Angabe zur Messung aus der Vorauswahl, z. B. "nüchtern" oder "Ohr" ([de.meinhelfer.tag.summary.VitalKind.contexts]). */
+    val context: String = "",
 )
 
 /** Eintrag im Pflegetagebuch: wobei wie geholfen wurde (fuer die Begutachtung). Nur lokal. */

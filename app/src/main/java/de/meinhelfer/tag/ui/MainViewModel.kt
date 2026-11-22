@@ -84,16 +84,37 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         combine(db.careLogDao().all(), _personId) { list, id -> list.filter { it.personId == id } }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    fun addVital(kind: String, value: Double, value2: Double? = null, unit: String = "", note: String = "", atMillis: Long = System.currentTimeMillis()) =
+    fun addVital(
+        kind: String,
+        value: Double,
+        value2: Double? = null,
+        unit: String = "",
+        note: String = "",
+        atMillis: Long = System.currentTimeMillis(),
+        context: String = "",
+    ) =
         viewModelScope.launch {
             val day = java.time.Instant.ofEpochMilli(atMillis).atZone(java.time.ZoneId.systemDefault()).toLocalDate().toEpochDay()
             db.vitalDao().insert(
                 de.meinhelfer.tag.data.VitalEntry(
                     personId = _personId.value, atMillis = atMillis, day = day, kind = kind,
-                    value = value, value2 = value2, unit = unit, note = note.trim(),
+                    value = value, value2 = value2, unit = unit, note = note.trim(), context = context,
                 ),
             )
         }
+
+    // ---- Messwerte: Schnellknöpfe und Messzeiten je Person (in den Einstellungen gespeichert)
+    private val _measurePlanTick = MutableStateFlow(0)
+    /** Zählt hoch, wenn Messzeiten oder Schnellknöpfe geändert wurden (damit Anzeigen neu rechnen). */
+    val measurePlanTick: StateFlow<Int> = _measurePlanTick
+
+    fun setMeasureSettings(personId: Long, quick: List<String>, plan: String) {
+        val app = getApplication<Application>()
+        AppPrefs.setVitalQuick(app, personId, quick)
+        AppPrefs.setMeasurePlan(app, personId, plan)
+        de.meinhelfer.tag.reminder.ReminderScheduler.scheduleMeasures(app, personId)
+        _measurePlanTick.value++
+    }
 
     fun deleteVital(item: de.meinhelfer.tag.data.VitalEntry) = viewModelScope.launch { db.vitalDao().delete(item) }
 
@@ -947,6 +968,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             ranges = de.meinhelfer.tag.summary.VitalKind.MEASURES.mapNotNull { k ->
                 AppPrefs.vitalRange(getApplication(), person, k.key)?.let { k.key to it }
             }.toMap(),
+            measurePlan = de.meinhelfer.tag.summary.MeasurePlans.parse(AppPrefs.measurePlan(getApplication(), person)),
+            personId = person,
         )
     }
 

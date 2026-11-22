@@ -44,8 +44,10 @@ object AssistantBrief {
         val intakes = line.count { it.kind == NextKind.Intake }
         val appts = line.count { it.kind == NextKind.Appointment }
         val tasks = line.count { it.kind == NextKind.Task }
+        val measures = line.count { it.kind == NextKind.Measure }
         val parts = listOfNotNull(
             intakes.takeIf { it > 0 }?.let { count(it, "Einnahmezeit", "Einnahmezeiten") },
+            measures.takeIf { it > 0 }?.let { count(it, "Messzeit", "Messzeiten") },
             appts.takeIf { it > 0 }?.let { count(it, "Termin", "Termine") },
             tasks.takeIf { it > 0 }?.let { count(it, "fällige Aufgabe", "fällige Aufgaben") },
         )

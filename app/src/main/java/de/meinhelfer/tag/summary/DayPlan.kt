@@ -8,6 +8,7 @@ import de.meinhelfer.tag.data.Todo
 import de.meinhelfer.tag.data.VitalEntry
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -66,6 +67,8 @@ object DayPlan {
         drinkGoal: Int = 0,
         /** Abgesagte und verschobene Termine fallen weg (gleiche Regel wie die Tageslage). */
         checkins: List<de.meinhelfer.tag.data.Checkin> = emptyList(),
+        /** Geplante Messzeiten der Person ([MeasurePlans]) */
+        measurePlan: Map<VitalKind, List<LocalTime>> = emptyMap(),
     ): List<PlanSection> {
         val day = today.toEpochDay()
         val out = mutableListOf<PlanSection>()
@@ -98,7 +101,7 @@ object DayPlan {
         val soon = open.filter { it !in now && it.dueDay != null && it.dueDay in (day + 1)..(day + 3) }.sortedBy { it.dueDay }
         if (soon.isNotEmpty()) out += PlanSection("Aufgaben: in den nächsten 3 Tagen", soon.map { taskLine(it, day, doctors) })
 
-        drinkAndValues(vitals, drinkGoal, day, zone)?.let { out += it }
+        drinkAndValues(vitals, drinkGoal, day, zone, measurePlan)?.let { out += it }
 
         val low = meds.filter { (it.daysLeft(day) ?: Int.MAX_VALUE) <= 7 }.map { m ->
             val d = m.daysLeft(day) ?: 0
@@ -122,7 +125,13 @@ object DayPlan {
      * Trinken und Werte: Trinkziel (ausser bei Ziel 0) mit Kaestchen zum Abhaken (je Glas), gestern getrunken, und fuer jeden Wert,
      * der in den letzten 14 Tagen gemessen wurde, eine Zeile zum Eintragen mit dem letzten Wert als Hinweis.
      */
-    internal fun drinkAndValues(vitals: List<VitalEntry>, drinkGoal: Int, day: Long, zone: ZoneId): PlanSection? {
+    internal fun drinkAndValues(
+        vitals: List<VitalEntry>,
+        drinkGoal: Int,
+        day: Long,
+        zone: ZoneId,
+        measurePlan: Map<VitalKind, List<LocalTime>> = emptyMap(),
+    ): PlanSection? {
         val lines = mutableListOf<PlanLine>()
         val drinks = vitals.filter { it.kind == VitalKind.Trinken.key }
         // Trinkziel 0 (in „Trinken und Werte“ einstellbar) blendet die Zeile aus
@@ -136,7 +145,18 @@ object DayPlan {
                 boxes = glasses,
             )
         }
+        // Geplante Messzeiten: je Uhrzeit eine Zeile zum Eintragen, zum Abhaken
+        measurePlan.entries.flatMap { (k, times) -> times.map { it to k } }.sortedBy { it.first }.forEach { (t, k) ->
+            val unit = vitals.lastOrNull { it.kind == k.key }?.unit?.ifBlank { null } ?: k.unit
+            val blank = if (k == VitalKind.Blutdruck) "______ / ______" else "__________"
+            lines += PlanLine(
+                t.format(TIME) + " Uhr – ${k.label} messen: $blank $unit".trimEnd(),
+                k.contexts.takeIf { it.isNotEmpty() }?.let { "Angabe: " + it.joinToString(" / ") },
+                check = true,
+            )
+        }
         VitalKind.MEASURES.forEach { k ->
+            if (k in measurePlan) return@forEach
             val last = vitals.filter { it.kind == k.key && it.day in (day - 14)..day }.maxByOrNull { it.atMillis } ?: return@forEach
             val unit = last.unit.ifBlank { k.unit }
             val at = Instant.ofEpochMilli(last.atMillis).atZone(zone)

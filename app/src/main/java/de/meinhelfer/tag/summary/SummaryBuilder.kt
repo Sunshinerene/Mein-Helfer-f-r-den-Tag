@@ -8,6 +8,7 @@ import de.meinhelfer.tag.reminder.ReminderScheduler
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -110,6 +111,9 @@ object SummaryBuilder {
         drinkGoal: Int = 0,
         careLog: List<de.meinhelfer.tag.data.CareLogEntry> = emptyList(),
         ranges: Map<String, Pair<Double?, Double?>> = emptyMap(),
+        /** Geplante Messzeiten der Person ([MeasurePlans]) */
+        measurePlan: Map<VitalKind, List<LocalTime>> = emptyMap(),
+        personId: Long = 0,
     ): Summary {
         val zone = ZoneId.systemDefault()
         val nowMillis = System.currentTimeMillis()
@@ -397,18 +401,23 @@ object SummaryBuilder {
                 }
             }
         }
+        val adherence = MeasurePlans.adherence(
+            personId, measurePlan, vitals, start.toEpochDay(), end.toEpochDay(), LocalDateTime.of(today, now), zone,
+        )
         VitalKind.MEASURES.forEach { k ->
-            val list = vitals.filter { it.kind == k.key }
+            val list = vitals.filter { it.kind == k.key }.sortedBy { it.atMillis }
+            adherence[k]?.let { (planned, done) ->
+                if (planned > 0) {
+                    val text = "${k.label}: $done von $planned geplanten Messungen"
+                    if (done < planned) notable += "$text (Messzeiten: ${MeasurePlans.timesText(measurePlan[k].orEmpty())} Uhr)." else good += "$text, alle gemessen."
+                }
+            }
             if (list.isEmpty()) return@forEach
-            val unit = list.last().unit.ifBlank { k.unit }
-            val same = list.filter { it.unit.ifBlank { k.unit } == unit }
-            val dec = if (k == VitalKind.Blutzucker && unit == "mmol/l") 1 else k.decimals
-            val avg = Vitals.number(same.map { it.value }.average(), dec) +
-                (same.mapNotNull { it.value2 }.takeIf { it.isNotEmpty() }?.let { "/" + Vitals.number(it.average(), dec) } ?: "")
-            val text = if (k == VitalKind.Gewicht && same.size >= 2) {
-                "Gewicht: von ${Vitals.valueText(same.first())} auf ${Vitals.valueText(same.last())}"
+            val stat = VitalStats.of(k, list, ranges[k.key]) ?: return@forEach
+            val text = if (k == VitalKind.Gewicht && list.size >= 2) {
+                "Gewicht: von ${Vitals.valueText(list.first())} auf ${Vitals.valueText(list.last())}"
             } else {
-                "${k.label}: ${list.size} Messung(en), im Schnitt $avg $unit"
+                "${k.label}: " + VitalStats.line(stat) + (VitalStats.contextLine(stat)?.let { "; $it" } ?: "")
             }
             overview += text
             val outside = list.filter { Vitals.outside(it, ranges[k.key]) }

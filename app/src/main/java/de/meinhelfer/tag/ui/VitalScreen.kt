@@ -50,7 +50,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.meinhelfer.tag.data.Person
 import de.meinhelfer.tag.data.VitalEntry
-import de.meinhelfer.tag.export.CarePdfs
 import de.meinhelfer.tag.summary.VitalKind
 import de.meinhelfer.tag.summary.Vitals
 import de.meinhelfer.tag.update.AppPrefs
@@ -88,6 +87,9 @@ fun VitalTodayCard(vm: MainViewModel, person: Person?, todayDay: Long, onOpen: (
     var showEntry by remember { mutableStateOf(false) }
     val lastDrink = vitals.firstOrNull { it.kind == VitalKind.Trinken.key && it.day == todayDay }
     val latest = VitalKind.MEASURES.mapNotNull { k -> vitals.firstOrNull { it.kind == k.key } }.sortedByDescending { it.atMillis }.take(3)
+    val planTick by vm.measurePlanTick.collectAsStateWithLifecycle()
+    val quick = remember(pid, planTick, vitals.size) { quickKinds(context, pid, vitals) }
+    val dues = remember(pid, planTick, vitals, todayDay) { todayMeasures(context, pid, vitals) }
 
     Foldable(
         key = "trinken",
@@ -117,18 +119,30 @@ fun VitalTodayCard(vm: MainViewModel, person: Person?, todayDay: Long, onOpen: (
                         TextButton(onClick = { vm.deleteVital(d) }) { Text("Rückgängig") }
                     }
                 }
+                TodayMeasures(dues) { k ->
+                    entryKind = k
+                    showEntry = true
+                }
                 if (latest.isNotEmpty()) {
                     Text(
-                        "Zuletzt gemessen: " + latest.joinToString(" · ") { e -> (VitalKind.of(e.kind)?.emoji ?: "") + " " + Vitals.valueText(e) + " (" + whenText(e, todayDay) + ")" },
+                        "Zuletzt gemessen: " + latest.joinToString(" · ") { e -> vitalShort(e) + " (" + whenText(e, todayDay) + ")" },
                         style = MaterialTheme.typography.bodySmall,
                     )
+                }
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    quick.forEach { k ->
+                        OutlinedButton(shape = buttonShape(), contentPadding = PaddingValues(horizontal = 10.dp), onClick = {
+                            entryKind = k
+                            showEntry = true
+                        }) { Text("+ ${k.emoji} ${k.label}") }
+                    }
                 }
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(shape = buttonShape(), onClick = {
                         entryKind = null
                         showEntry = true
-                    }) { Text("Wert eintragen") }
-                    OutlinedButton(shape = buttonShape(), onClick = onOpen) { Text("Verlauf und PDF") }
+                    }) { Text("Anderer Wert") }
+                    OutlinedButton(shape = buttonShape(), onClick = onOpen) { Text("Verlauf und Bericht") }
                 }
             }
         }
@@ -143,7 +157,12 @@ fun VitalTodayCard(vm: MainViewModel, person: Person?, todayDay: Long, onOpen: (
 @Composable
 fun VitalEntryDialog(initialKind: VitalKind?, vm: MainViewModel, onDone: () -> Unit) {
     val context = LocalContext.current
-    var kind by remember { mutableStateOf(initialKind ?: VitalKind.Blutdruck) }
+    val vitals by vm.vitals.collectAsStateWithLifecycle()
+    val pid by vm.personId.collectAsStateWithLifecycle()
+    // Häufig gemessene Werte der Person zuerst
+    val order = remember(pid) { quickKinds(context, pid, vitals).let { q -> q + VitalKind.MEASURES.filter { it !in q } } }
+    var kind by remember { mutableStateOf(initialKind ?: order.first()) }
+    var ctx by remember { mutableStateOf("") }
     var v1 by remember { mutableStateOf("") }
     var v2 by remember { mutableStateOf("") }
     var pulse by remember { mutableStateOf("") }
@@ -169,11 +188,12 @@ fun VitalEntryDialog(initialKind: VitalKind?, vm: MainViewModel, onDone: () -> U
             Column(Modifier.heightIn(max = 520.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (initialKind != VitalKind.Trinken) {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        VitalKind.entries.forEach { k ->
+                        (order + VitalKind.Trinken).forEach { k ->
                             FilterChip(selected = kind == k, onClick = {
                                 kind = k
                                 v1 = ""
                                 v2 = ""
+                                ctx = ""
                             }, label = { Text(k.emoji + " " + k.label) })
                         }
                     }
@@ -221,6 +241,22 @@ fun VitalEntryDialog(initialKind: VitalKind?, vm: MainViewModel, onDone: () -> U
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
+                if (kind == VitalKind.Schmerz) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        (0..10).forEach { n ->
+                            FilterChip(selected = a == n.toDouble(), onClick = { v1 = n.toString() }, label = { Text("$n") })
+                        }
+                    }
+                    Text("0 = kein Schmerz, 10 = stärkster vorstellbarer Schmerz", style = MaterialTheme.typography.bodySmall)
+                }
+                if (kind.contexts.isNotEmpty()) {
+                    Text("Angabe (optional)", style = MaterialTheme.typography.labelMedium)
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        kind.contexts.forEach { c ->
+                            FilterChip(selected = ctx == c, onClick = { ctx = if (ctx == c) "" else c }, label = { Text(c) })
+                        }
+                    }
+                }
                 if (kind == VitalKind.Trinken) {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         listOf(100, 150, 200, 250, 300, 500, 1000).forEach { ml ->
@@ -239,7 +275,7 @@ fun VitalEntryDialog(initialKind: VitalKind?, vm: MainViewModel, onDone: () -> U
                     value = note,
                     onValueChange = { note = it },
                     label = { Text("Notiz (optional)") },
-                    placeholder = { Text(if (kind == VitalKind.Trinken) "z. B. Tee, Suppe" else "z. B. nach dem Essen, im Sitzen") },
+                    placeholder = { Text(if (kind == VitalKind.Trinken) "z. B. Tee, Suppe" else if (kind == VitalKind.Schmerz) "z. B. Rücken, Knie" else "z. B. nach dem Spaziergang") },
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Text("Nur zum Festhalten. Die App bewertet keine Werte.", style = MaterialTheme.typography.bodySmall)
@@ -253,7 +289,7 @@ fun VitalEntryDialog(initialKind: VitalKind?, vm: MainViewModel, onDone: () -> U
                 } else {
                     LocalDateTime.of(date, time ?: LocalTime.of(12, 0)).atZone(zone).toInstant().toEpochMilli()
                 }
-                vm.addVital(kind.key, a!!, if (kind.second != null) b else null, unit, note, at)
+                vm.addVital(kind.key, a!!, if (kind.second != null) b else null, unit, note, at, ctx)
                 if (kind == VitalKind.Blutdruck && p != null) vm.addVital(VitalKind.Puls.key, p, null, VitalKind.Puls.unit, "", at)
                 onDone()
             }) { Text("Speichern") }
@@ -302,19 +338,24 @@ internal fun MiniChart(values: List<Double>, values2: List<Double>?, marks: List
 /** Ganze Seite: Trinken mit Ziel, alle Messwerte mit Verlauf, eigener Bereich, PDF. */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-fun VitalScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit) {
+fun VitalScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit, startKind: VitalKind? = null) {
     val context = LocalContext.current
     val vitals by vm.vitals.collectAsStateWithLifecycle()
     val pid = person?.id ?: 1L
     val today = LocalDate.now().toEpochDay()
     var goal by remember(pid) { mutableIntStateOf(AppPrefs.drinkGoal(context, pid)) }
     var editGoal by remember { mutableStateOf(false) }
-    var entryKind by remember { mutableStateOf<VitalKind?>(null) }
-    var showEntry by remember { mutableStateOf(false) }
+    var entryKind by remember { mutableStateOf(startKind) }
+    var showEntry by remember { mutableStateOf(startKind != null) }
     var rangeFor by remember { mutableStateOf<VitalKind?>(null) }
     var rangeTick by remember { mutableIntStateOf(0) }
     var expanded by remember { mutableStateOf<String?>(null) }
-    var pdfDays by remember { mutableIntStateOf(14) }
+    var showMeasureSettings by remember { mutableStateOf(false) }
+    var showReport by remember { mutableStateOf(false) }
+    val planTick by vm.measurePlanTick.collectAsStateWithLifecycle()
+    val quick = remember(pid, planTick, vitals.size) { quickKinds(context, pid, vitals) }
+    val dues = remember(pid, planTick, vitals, today) { todayMeasures(context, pid, vitals) }
+    val plan = remember(pid, planTick) { de.meinhelfer.tag.summary.MeasurePlans.parse(AppPrefs.measurePlan(context, pid)) }
 
     val drinkDays = (13 downTo 0).map { today - it }
     val drinkTotals = drinkDays.map { d -> vitals.filter { it.kind == VitalKind.Trinken.key && it.day == d }.sumOf { it.value } }
@@ -379,15 +420,38 @@ fun VitalScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit) {
             }
 
             jumpItem(vitalJumps, "Messwerte eintragen") {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text("Messwerte", style = MaterialTheme.typography.titleMedium)
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        VitalKind.MEASURES.forEach { k ->
-                            OutlinedButton(shape = buttonShape(), contentPadding = PaddingValues(horizontal = 12.dp), onClick = {
-                                entryKind = k
-                                showEntry = true
-                            }) { Text("+ ${k.emoji} ${k.label}") }
+                HCard(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text("Messwerte eintragen", style = MaterialTheme.typography.titleMedium)
+                        TodayMeasures(dues) { k ->
+                            entryKind = k
+                            showEntry = true
                         }
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            (quick + VitalKind.MEASURES.filter { it !in quick }).forEach { k ->
+                                val q = k in quick
+                                val onClick = {
+                                    entryKind = k
+                                    showEntry = true
+                                }
+                                if (q) {
+                                    Button(shape = buttonShape(), contentPadding = PaddingValues(horizontal = 12.dp), onClick = onClick) { Text("+ ${k.emoji} ${k.label}") }
+                                } else {
+                                    OutlinedButton(shape = buttonShape(), contentPadding = PaddingValues(horizontal = 12.dp), onClick = onClick) { Text("+ ${k.emoji} ${k.label}") }
+                                }
+                            }
+                        }
+                        if (plan.isNotEmpty()) {
+                            Text(
+                                "Messzeiten: " + plan.entries.joinToString("; ") { (k, t) -> k.label + " " + de.meinhelfer.tag.summary.MeasurePlans.timesText(t) },
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
+                        TextButton(onClick = { showMeasureSettings = true }) { Text("Schnellknöpfe und Messzeiten …") }
+                        Text(
+                            "Zu jedem Wert gibt es eine Vorauswahl für die Angabe, z. B. beim Blutzucker „nüchtern“ oder „nach dem Essen“, beim Fieber „Ohr“ oder „Stirn“.",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
                     }
                 }
             }
@@ -406,6 +470,10 @@ fun VitalScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit) {
                         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text("${k.emoji} ${k.label}", style = MaterialTheme.typography.titleMedium)
                             Text("Zuletzt: ${Vitals.valueText(list.first())} (${whenText(list.first(), today)})", style = MaterialTheme.typography.bodyLarge)
+                            de.meinhelfer.tag.summary.VitalStats.of(k, list.filter { it.day > today - 30 }, range)?.let { st ->
+                                Text("Letzte 30 Tage: " + de.meinhelfer.tag.summary.VitalStats.line(st), style = MaterialTheme.typography.bodySmall)
+                                de.meinhelfer.tag.summary.VitalStats.contextLine(st)?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
+                            }
                             if (sameUnit.size >= 2) {
                                 MiniChart(
                                     sameUnit.map { it.value },
@@ -427,7 +495,8 @@ fun VitalScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit) {
                                 val out = Vitals.outside(e, range)
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(
-                                        whenText(e, today) + "  " + Vitals.valueText(e) + (if (out) "  ⚠ außerhalb" else "") + (if (e.note.isNotBlank()) " · ${e.note}" else ""),
+                                        whenText(e, today) + "  " + Vitals.valueText(e) + (if (e.context.isNotBlank()) " (${e.context})" else "") +
+                                            (if (out) "  ⚠ außerhalb" else "") + (if (e.note.isNotBlank()) " · ${e.note}" else ""),
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = if (out) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
                                         modifier = Modifier.weight(1f),
@@ -445,21 +514,16 @@ fun VitalScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit) {
                 }
             }
 
-            jumpItem(vitalJumps, "Protokoll als PDF") {
+            jumpItem(vitalJumps, "Bericht für Arzt oder Pflegedienst") {
                 HCard(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text("Protokoll als PDF", style = MaterialTheme.typography.titleMedium)
-                        Text("Tabelle mit Trinkmenge und allen Messwerten je Tag, z. B. für den Arztbesuch oder den Pflegedienst.", style = MaterialTheme.typography.bodySmall)
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            listOf(7, 14, 30).forEach { d -> FilterChip(selected = pdfDays == d, onClick = { pdfDays = d }, label = { Text("$d Tage") }) }
-                        }
-                        PdfButtons(shareLabel = "Als PDF teilen", chooserTitle = "Protokoll teilen") { ctx ->
-                            CarePdfs.vitals(
-                                ctx, person, vitals.filter { it.day > today - pdfDays }, goal,
-                                VitalKind.MEASURES.mapNotNull { k -> AppPrefs.vitalRange(ctx, pid, k.key)?.let { k.key to it } }.toMap(),
-                                today - pdfDays + 1, today,
-                            )
-                        }
+                        Text("Bericht für Arzt oder Pflegedienst", style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            "Zeitraum frei wählen (7, 14, 30, 90 Tage oder von–bis) und welche Werte hinein sollen. Mit Zusammenfassung, Verlauf als Grafik " +
+                                "und allen Messungen. Als PDF teilen, drucken, per E-Mail senden oder unter Dokumente ablegen (z. B. als Unterlage für einen Termin).",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                        Button(shape = buttonShape(), onClick = { showReport = true }) { Text("Bericht erstellen …") }
                     }
                 }
             }
@@ -473,6 +537,8 @@ fun VitalScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit) {
     }
 
     if (showEntry) VitalEntryDialog(initialKind = entryKind, vm = vm, onDone = { showEntry = false })
+    if (showMeasureSettings) MeasureSettingsDialog(vm, pid, person?.name, vitals, onDone = { showMeasureSettings = false })
+    if (showReport) VitalReportDialog(vm, person, onClose = { showReport = false })
 
     if (editGoal) {
         var text by remember { mutableStateOf(if (goal > 0) goal.toString() else "") }

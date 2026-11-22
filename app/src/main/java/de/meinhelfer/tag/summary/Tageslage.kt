@@ -17,7 +17,7 @@ data class IntakeSlot(val personId: Long, val day: Long, val time: LocalTime, va
     val timeText: String get() = time.format(DateTimeFormatter.ofPattern("HH:mm"))
 }
 
-enum class NextKind { Intake, Appointment, Task }
+enum class NextKind { Intake, Appointment, Task, Measure }
 
 /** Ein Punkt im Tageslauf (über alle Personen), z. B. Einnahme, Termin oder fällige Aufgabe. */
 data class NextUp(
@@ -89,6 +89,8 @@ object Tageslage {
         now: LocalDateTime,
         zone: ZoneId = ZoneId.systemDefault(),
         windowMinutes: Long = GRACE_MINUTES,
+        /** Geplante, noch offene Messungen von heute ([MeasurePlans.openToday]) */
+        measures: List<MeasureDue> = emptyList(),
     ): List<NextUp> {
         val today = now.toLocalDate()
         val day = today.toEpochDay()
@@ -104,6 +106,19 @@ object Tageslage {
                 "Medikamente ${s.timeText}: " + s.open.map { it.name }.distinct().joinToString(", "),
                 s.personId,
                 names[s.personId].orEmpty(),
+                overdue = at.isBefore(now),
+            )
+        }
+        // Messungen: offen, solange das Fenster (3 Stunden nach der Uhrzeit) läuft; je Person und Uhrzeit zusammengefasst
+        measures.filter { !it.done && it.day == day }.groupBy { it.personId to it.time }.forEach { (key, list) ->
+            val at = today.atTime(key.second)
+            if (at.plusMinutes(MeasurePlans.AFTER_MINUTES).isBefore(now)) return@forEach
+            out += NextUp(
+                NextKind.Measure,
+                at.atZone(zone).toInstant().toEpochMilli(),
+                "Messen ${list.first().timeText}: " + list.joinToString(", ") { it.kind.label },
+                key.first,
+                names[key.first].orEmpty(),
                 overdue = at.isBefore(now),
             )
         }

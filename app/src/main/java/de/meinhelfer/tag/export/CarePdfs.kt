@@ -281,92 +281,6 @@ object CarePdfs {
         return pdf.save(file)
     }
 
-    // ------------------------------------------------------------------ Trink- und Vitalprotokoll
-
-    fun vitals(
-        context: Context,
-        person: Person?,
-        entries: List<de.meinhelfer.tag.data.VitalEntry>,
-        drinkGoal: Int,
-        ranges: Map<String, Pair<Double?, Double?>>,
-        fromDay: Long,
-        toDay: Long,
-    ): File {
-        val file = File(PdfPages.dir(context, "protokoll"), "Protokoll_${safe(person?.name ?: "")}_${LocalDate.now()}.pdf")
-        val kinds = VitalKind.entries.filter { k -> k == VitalKind.Trinken || entries.any { it.kind == k.key } }
-        val dayW = 70f
-        val time = DateTimeFormatter.ofPattern("HH:mm", Locale.GERMANY)
-        val zone = java.time.ZoneId.systemDefault()
-        fun header(p: PdfPages) {
-            p.text("Trink- und Vitalprotokoll", 17f, bold = true)
-            p.text(
-                listOfNotNull(
-                    person?.name,
-                    person?.birthDate?.let { "geb. " + LocalDate.ofEpochDay(it).format(DATE) },
-                    LocalDate.ofEpochDay(fromDay).format(DATE) + " bis " + LocalDate.ofEpochDay(toDay).format(DATE),
-                ).joinToString(" · "),
-                10.5f,
-            )
-            val extra = listOfNotNull(
-                drinkGoal.takeIf { it > 0 }?.let { "Trinkziel $it ml/Tag" },
-                ranges.entries.mapNotNull { (k, r) ->
-                    VitalKind.of(k)?.let { kind -> kind.label + " " + (r.first?.let { Vitals.number(it, kind.decimals) } ?: "…") + "–" + (r.second?.let { Vitals.number(it, kind.decimals) } ?: "…") }
-                }.takeIf { it.isNotEmpty() }?.joinToString(", ", prefix = "eigener Bereich: "),
-            ).joinToString(" · ")
-            if (extra.isNotBlank()) p.text(extra, 9f, gray = true)
-            p.gap(6f)
-            val colW = (p.width - dayW) / kinds.size
-            val top = p.y
-            p.fill(RectF(p.left, top, p.right, top + 22f), Color.rgb(232, 236, 240), radius = 2f)
-            p.draw(p.layout("Tag", p.paint(9f, bold = true), dayW.toInt()), p.left + 3f, top + 6f, advance = false)
-            kinds.forEachIndexed { i, k ->
-                p.draw(p.layout(k.label + " (" + (if (k == VitalKind.Blutzucker) entries.firstOrNull { it.kind == k.key }?.unit?.ifBlank { null } ?: k.unit else k.unit) + ")", p.paint(8.5f, bold = true), (colW - 6).toInt()), p.left + dayW + i * colW + 3f, top + 3f, advance = false)
-            }
-            p.y = top + 24f
-        }
-        val pdf = PdfPages(842, 595, margin = 34f, footer = "Trink- und Vitalprotokoll · Mein Helfer für den Tag", onNewPage = { header(it) })
-        pdf.newPage()
-        val grid = android.graphics.Paint().apply { color = Color.rgb(190, 190, 190); strokeWidth = 0.5f }
-        val colW = (pdf.width - dayW) / kinds.size
-        for (d in fromDay..toDay) {
-            val dayEntries = entries.filter { it.day == d }
-            if (dayEntries.isEmpty()) continue
-            val cells = kinds.map { k ->
-                val list = dayEntries.filter { it.kind == k.key }.sortedBy { it.atMillis }
-                if (k == VitalKind.Trinken) {
-                    val sum = list.sumOf { it.value }.toInt()
-                    if (sum == 0) "" else "$sum" + (if (drinkGoal > 0 && sum < drinkGoal) " ↓" else "")
-                } else {
-                    list.joinToString("\n") { e ->
-                        java.time.Instant.ofEpochMilli(e.atMillis).atZone(zone).format(time) + " " +
-                            Vitals.valueText(e).substringBeforeLast(' ') +
-                            (if (Vitals.outside(e, ranges[k.key])) " !" else "")
-                    }
-                }
-            }
-            val notes = dayEntries.filter { it.note.isNotBlank() }.joinToString("; ") { (VitalKind.of(it.kind)?.label ?: "") + ": " + it.note }
-            val layouts = cells.map { pdf.layout(it, pdf.paint(9f), (colW - 6).toInt()) }
-            val dayL = pdf.layout(LocalDate.ofEpochDay(d).format(DateTimeFormatter.ofPattern("EE dd.MM.", Locale.GERMANY)), pdf.paint(9f, bold = true), dayW.toInt())
-            val notesL = notes.takeIf { it.isNotBlank() }?.let { pdf.layout("Notiz: $it", pdf.paint(8f, gray = true), pdf.width - dayW.toInt() - 6) }
-            val rowH = maxOf(layouts.maxOfOrNull { it.height } ?: 0, dayL.height) + (notesL?.height ?: 0) + 8f
-            pdf.ensure(rowH)
-            val top = pdf.y
-            pdf.draw(dayL, pdf.left + 3f, top + 4f, advance = false)
-            layouts.forEachIndexed { i, l -> pdf.draw(l, pdf.left + dayW + i * colW + 3f, top + 4f, advance = false) }
-            notesL?.let { pdf.draw(it, pdf.left + dayW + 3f, top + 4f + (layouts.maxOfOrNull { l -> l.height } ?: 0), advance = false) }
-            pdf.y = top + rowH
-            pdf.canvas.drawLine(pdf.left, pdf.y, pdf.right, pdf.y, grid)
-        }
-        if (entries.isEmpty()) pdf.text("Keine Einträge im Zeitraum.", 11f)
-        pdf.gap(10f)
-        pdf.text(
-            "Selbst erfasst. ↓ = unter dem Trinkziel, ! = außerhalb des selbst eingetragenen Bereichs. Die App bewertet keine Werte; die Einschätzung bleibt Arzt oder Pflegefachkraft vorbehalten.",
-            8.5f,
-            gray = true,
-        )
-        return pdf.save(file)
-    }
-
     // ------------------------------------------------------------------ Pflegetagebuch
 
     fun careDiary(
@@ -376,6 +290,8 @@ object CarePdfs {
         fromDay: Long,
         toDay: Long,
         caregiver: CaregiverProfile,
+        /** Messwerte der Person: zeigen, wie oft gemessen wurde (Bereich 5, z. B. Blutzucker messen) */
+        vitals: List<de.meinhelfer.tag.data.VitalEntry> = emptyList(),
     ): File {
         val areas = de.meinhelfer.tag.summary.CareAreas
         val file = File(PdfPages.dir(context, "pflegetagebuch"), "Pflegetagebuch_${safe(person?.name ?: "")}_${LocalDate.now()}.pdf")
@@ -441,6 +357,27 @@ object CarePdfs {
                 }
                 pdf.y = t + h
                 pdf.rule(Color.rgb(215, 215, 215))
+            }
+        }
+
+        // Wie oft gemessen wurde (aus „Trinken und Werte“), als Beleg fuer Bereich 5
+        val measured = vitals.filter { it.day in fromDay..toDay && it.kind != VitalKind.Trinken.key }
+        if (measured.isNotEmpty()) {
+            pdf.gap(10f)
+            pdf.ensure(50f)
+            pdf.text("Messungen im Zeitraum (aus „Trinken und Werte“, zu Bereich 5)", 11f, bold = true)
+            val span = (toDay - fromDay + 1).toInt()
+            VitalKind.MEASURES.forEach { k ->
+                val list = measured.filter { it.kind == k.key }
+                if (list.isEmpty()) return@forEach
+                val mDays = list.map { it.day }.distinct().size
+                pdf.text(
+                    "• ${k.label}: an $mDays von $span Tagen gemessen, im Schnitt " +
+                        String.format(Locale.GERMANY, "%.1f", list.size.toDouble() / mDays) + "× an diesen Tagen",
+                    9.5f,
+                    x = pdf.left + 8f,
+                    w = pdf.width - 8,
+                )
             }
         }
 
@@ -624,9 +561,13 @@ object CarePdfs {
         // Werte
         if (o.values) {
             val latest = VitalKind.MEASURES.mapNotNull { k -> vitals.filter { it.personId == pid && it.kind == k.key }.maxByOrNull { it.atMillis } }
-            if (drinkGoal > 0 || latest.isNotEmpty()) {
+            val plan = de.meinhelfer.tag.summary.MeasurePlans.parse(de.meinhelfer.tag.update.AppPrefs.measurePlan(context, pid))
+            if (drinkGoal > 0 || latest.isNotEmpty() || plan.isNotEmpty()) {
                 section("Trinken und Werte")
                 if (drinkGoal > 0) pdf.text("Trinkziel: $drinkGoal ml am Tag", 10.5f)
+                plan.forEach { (k, times) ->
+                    pdf.text("${k.label} messen: täglich um " + de.meinhelfer.tag.summary.MeasurePlans.timesText(times) + " Uhr (in der App eintragen oder auf dem Tagesplan notieren)", 10.5f, bold = true)
+                }
                 latest.forEach { e ->
                     val k = VitalKind.of(e.kind)
                     val range = AppPrefsBridge.range(context, pid, e.kind)

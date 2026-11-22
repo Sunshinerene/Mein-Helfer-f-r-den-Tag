@@ -4,7 +4,7 @@ by Sunshine@R
 
 Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbezogenen Daten bleiben lokal auf dem Gerät.
 
-## Stand: v0.66.0
+## Stand: v0.67.0
 
 ### Funktionsübersicht
 
@@ -41,7 +41,9 @@ Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbe
 - Jede Karte einklappbar mit Kurzinfo, Zustand wird gemerkt
 - Wochen- und Monatsübersicht: alles antippbar, bearbeiten, löschen, neu anlegen, Aufgaben und Einnahmen abhaken, Termin-Status eintragen, erledigte Aufgaben am Erledigungstag
 - Auswertung für Tag, Woche, Monat mit erledigten Aufgaben, Trinkmenge und Messwerten (lokal berechnet, nur Anhaltspunkte)
-- Trinken und Werte: Trinkmenge mit Schnelltasten und Ziel, Blutdruck, Puls, Gewicht, Blutzucker, Temperatur, Sauerstoff; Verlauf, eigener Bereich, PDF-Protokoll
+- Trinken und Werte: Trinkmenge mit Schnelltasten und Ziel; Blutdruck, Puls, Blutzucker, Temperatur, Sauerstoff, Gewicht, Atemfrequenz, Schmerz (0–10), INR, Urin (Ausfuhr) mit Vorauswahl der Angabe (z. B. nüchtern, nach dem Essen, Ohr); Verlauf mit Zahlen, eigener Bereich
+- Schnellknöpfe je Person und feste Messzeiten mit Erinnerung (z. B. Blutzucker 3× täglich); „Heute zu messen“, Assistent, Tagesplan, Übergabe und Auswertung zeigen, was gemessen ist
+- Bericht über Messwerte für einen frei wählbaren Zeitraum (7/14/30/90 Tage oder von–bis), Werte wählbar, Verlauf als Grafik; teilen, drucken, per E-Mail an Arzt oder Pflegedienst oder unter Dokumente ablegen
 - Werte von Uhr, Fitnessband, Waage oder Blutdruckgerät über Health Connect übernehmen (Beta): nur lesen, Quelle je Person wählen, Vorschau und Bestätigung, keine Doppelten
 - Pflegetagebuch für die Begutachtung (sechs Bereiche, Art der Hilfe, wie oft, nachts), „wie am Vortag“, PDF-Bericht
 - Erinnerungen ans Trinken (nur wenn unter Plan) und abends ans Pflegetagebuch

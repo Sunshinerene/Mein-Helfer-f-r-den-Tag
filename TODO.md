@@ -1,6 +1,6 @@
 # TODO
 
-Stand: v0.66.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.67.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
@@ -24,6 +24,7 @@ Stand: v0.66.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Datenbank prüfen, Beispiel-PDFs mit erfundenen Daten, Beispiel-Grafiken, Test-Benachrichtigungen). Die Datenbank-Umstellungen von Version 5 bis 26 prüft seit v0.54.0 bei jedem Bauen ein automatischer Test gegen das Schema (Tabellen, Spalten, Typen); auf dem Handy bleibt zu prüfen, dass die eigenen Daten nach dem Update vollständig da sind.
 
+- [ ] Messwerte (Datenbank 28): neue Werte (Atemfrequenz, Schmerz, INR, Urin), Angabe wie „nüchtern“ oder „Ohr“, Schnellknöpfe auf der Heute-Seite, Messzeiten mit Erinnerung (kommt sie nur, wenn noch nicht gemessen? Antippen öffnet das Eintragen), „Heute zu messen“, Assistent und Tagesplan; Bericht mit eigenem Zeitraum, Grafik, E-Mail an den Arzt und „In Dokumente ablegen“; Pflegetagebuch-PDF mit Messungen
 - [ ] Medikamente mit Einheit (Datenbank 27): nach dem Update alle Medikamente mit Vorrat da? Insulin mit IE und Menge je Uhrzeit, Saft in ml, ½ Tablette; „Heute einnehmen“, Erinnerung, Tagesplan und Medikamentenplan-PDF zeigen die Menge; „Neue Packung“ und Vorrat-Fenster mit Komma; Packungsfoto mit ml oder Pens
 - [ ] Sammel-Import: mehrere Dateien, mehrere Fotos und „Ganzen Ordner laden“; stimmen die Vorschläge (Seite 1 und 2, Fotos kurz nacheinander)? Haken, „↑ nach oben“, „Dokument 2 von 5“, Überspringen, „Restliche verwerfen“; Einstellungen → Persönlicher Assistent
 - [ ] Berichte und Auswertung: jedes PDF einmal erzeugen und teilen; Budgets und Übergabe aus dem Profil; „Frag mich“ mit KI
@@ -74,6 +75,15 @@ Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Daten
 - [ ] Sammel-Import: Vorschläge mit echten Scans verfeinern (z. B. gleicher Absender und gleiches Datum als weiterer Hinweis)
 
 - [ ] Eigene KI-Stimme direkt in der App (nur falls SherpaTTS nicht reicht): sherpa-onnx mit Piper-Stimme Thorsten oder Kerstin (CC0) oder apptor-tiny-tts (Apache-2.0, 21 MB); macht die App 25–70 MB größer, Lizenzen der Bibliotheken prüfen
+
+## Version 0.67.0 (fertig)
+
+- [x] Weitere Messwerte: Atemfrequenz, Schmerz (0–10), INR (Gerinnung), Urin (Ausfuhr); Vorauswahl der Angabe je Wert (Blutzucker nüchtern/vor/nach dem Essen, Fieber Ohr/Stirn/Achsel, Blutdruck im Sitzen …), gespeichert in Datenbank 28
+- [x] Schnellknöpfe je Person auf der Heute-Seite (eigene Auswahl oder die häufigsten) und feste Messzeiten mit Erinnerung, nur wenn noch nicht gemessen; Antippen öffnet das Eintragen
+- [x] „Heute zu messen“ auf der Heute-Seite und in „Trinken und Werte“; offene Messzeiten beim Assistenten (Als Nächstes, Morgen und Abend), im Tagesplan als Zeile zum Eintragen, in der Übergabe
+- [x] Auswertung: je Wert Spanne und Schnitt (auch je Angabe), geplante Messungen erledigt (z. B. 18 von 21); Pflegetagebuch-PDF zeigt, wie oft gemessen wurde (Bereich 5)
+- [x] Bericht über Messwerte: Zeitraum 7/14/30/90 Tage oder von–bis, Werte wählbar, Verlauf als Grafik, Zusammenfassung und alle Messungen; teilen, drucken, per E-Mail (Empfänger aus den Kontakten) oder unter Dokumente ablegen (Befund / Labor); auch für die Terminvorbereitung des Assistenten
+- [x] Automatische Tests: Messzeiten, Zuordnung der Messungen, Zahlen für Bericht und Auswertung (MeasurePlanTest)
 
 ## Version 0.66.0 (fertig)
 

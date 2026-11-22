@@ -14,19 +14,31 @@ enum class VitalKind(
     val decimals: Int,
     val plausible: ClosedFloatingPointRange<Double>,
     val second: ClosedFloatingPointRange<Double>? = null,
+    /** Vorauswahl für die Angabe zur Messung, z. B. „nüchtern“ oder „Ohr“ (eine davon oder keine). */
+    val contexts: List<String> = emptyList(),
 ) {
     Trinken("trinken", "Trinkmenge", "ml", "💧", 0, 10.0..3000.0),
-    Blutdruck("blutdruck", "Blutdruck", "mmHg", "🩺", 0, 50.0..260.0, 30.0..160.0),
-    Puls("puls", "Puls", "/min", "❤️", 0, 20.0..250.0),
-    Gewicht("gewicht", "Gewicht", "kg", "⚖️", 1, 20.0..300.0),
-    Blutzucker("blutzucker", "Blutzucker", "mg/dl", "🩸", 0, 20.0..600.0),
-    Temperatur("temperatur", "Temperatur", "°C", "🌡️", 1, 33.0..43.0),
-    Sauerstoff("sauerstoff", "Sauerstoff (SpO₂)", "%", "🫁", 0, 50.0..100.0),
+    Blutdruck("blutdruck", "Blutdruck", "mmHg", "🩺", 0, 50.0..260.0, 30.0..160.0, listOf("im Sitzen", "im Liegen", "im Stehen", "nach Belastung")),
+    Puls("puls", "Puls", "/min", "❤️", 0, 20.0..250.0, contexts = listOf("in Ruhe", "nach Belastung")),
+    Blutzucker(
+        "blutzucker", "Blutzucker", "mg/dl", "🩸", 0, 20.0..600.0,
+        contexts = listOf("nüchtern", "vor dem Essen", "nach dem Essen", "vor dem Schlafen", "nachts"),
+    ),
+    Temperatur("temperatur", "Temperatur", "°C", "🌡️", 1, 33.0..43.0, contexts = listOf("Ohr", "Stirn", "Mund", "Achsel", "im Po (rektal)")),
+    Sauerstoff("sauerstoff", "Sauerstoff (SpO₂)", "%", "🫁", 0, 50.0..100.0, contexts = listOf("in Ruhe", "nach Belastung", "mit Sauerstoffgerät")),
+    Gewicht("gewicht", "Gewicht", "kg", "⚖️", 1, 20.0..300.0, contexts = listOf("morgens nüchtern", "mit Kleidung")),
+    Atmung("atmung", "Atemfrequenz", "/min", "🌬️", 0, 4.0..60.0, contexts = listOf("in Ruhe", "im Schlaf", "nach Belastung")),
+    Schmerz("schmerz", "Schmerz", "von 10", "🤕", 0, 0.0..10.0, contexts = listOf("in Ruhe", "bei Bewegung", "nach Schmerzmittel")),
+    INR("inr", "INR (Gerinnung)", "", "🧪", 1, 0.5..10.0, contexts = listOf("Selbstmessung", "in der Praxis")),
+    Urin("urin", "Urin (Ausfuhr)", "ml", "🚻", 0, 10.0..3000.0, contexts = listOf("Katheterbeutel", "Toilette/Steckbecken")),
     ;
 
     companion object {
         fun of(key: String): VitalKind? = entries.firstOrNull { it.key == key }
         val MEASURES = entries.filter { it != Trinken }
+
+        /** Ohne eigene Auswahl: diese Werte als Schnellknöpfe. */
+        val DEFAULT_QUICK = listOf(Blutdruck, Blutzucker, Temperatur)
 
         /** Blutzucker in mmol/l: andere Grenzen gegen Tippfehler */
         val MMOL_RANGE = 1.0..35.0
@@ -46,7 +58,7 @@ object Vitals {
         val unit = e.unit.ifBlank { k.unit }
         val dec = if (k == VitalKind.Blutzucker && unit == "mmol/l") 1 else k.decimals
         val main = number(e.value, dec) + (e.value2?.let { "/" + number(it, dec) } ?: "")
-        return "$main $unit"
+        return if (unit.isBlank()) main else "$main $unit"
     }
 
     /** Text wie "1,2" oder "120" in eine Zahl; Komma und Punkt sind erlaubt. */

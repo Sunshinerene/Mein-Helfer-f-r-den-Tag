@@ -73,7 +73,13 @@ private fun rememberAssistantState(vm: MainViewModel): AssistantState {
     val now = LocalDateTime.now()
     val zone = ZoneId.systemDefault()
     val window = AppPrefs.intakeWindow(androidx.compose.ui.platform.LocalContext.current).toLong()
-    val line = Tageslage.dayLine(persons, meds, checkins, appointments, todos, now, zone, window)
+    val appContext = androidx.compose.ui.platform.LocalContext.current
+    val planTick by vm.measurePlanTick.collectAsStateWithLifecycle()
+    val plans = remember(persons, planTick) {
+        persons.associate { p -> p.id to de.meinhelfer.tag.summary.MeasurePlans.parse(AppPrefs.measurePlan(appContext, p.id)) }
+    }
+    val measures = de.meinhelfer.tag.summary.MeasurePlans.openToday(plans, vitals, now, zone)
+    val line = Tageslage.dayLine(persons, meds, checkins, appointments, todos, now, zone, window, measures)
     val proposals = Assistant.proposals(persons, todos, meds, duties, doctors, today, dismissed)
     val measured = persons.associate { p ->
         p.id to vitals.any { it.personId == p.id && it.kind != VitalKind.Trinken.key && it.day >= today - 14 }
@@ -89,6 +95,7 @@ private fun icon(n: NextUp) = when (n.kind) {
     NextKind.Intake -> "💊"
     NextKind.Appointment -> "📅"
     NextKind.Task -> "✅"
+    NextKind.Measure -> "🩺"
 }
 
 @Composable
@@ -264,11 +271,7 @@ private fun PrepPdfButtons(vm: MainViewModel, personId: Long) {
                 scope.launch {
                     runCatching {
                         val f = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                            de.meinhelfer.tag.export.CarePdfs.vitals(
-                                context, person, values, AppPrefs.drinkGoal(context, personId),
-                                VitalKind.MEASURES.mapNotNull { k -> AppPrefs.vitalRange(context, personId, k.key)?.let { k.key to it } }.toMap(),
-                                today - 13, today,
-                            )
+                            recentVitalsPdf(context, person, values, 14)
                         }
                         sharePdfFile(context, f, "Werte teilen")
                     }
@@ -292,7 +295,7 @@ private val PAGE_HELP: Map<String, Pair<List<String>, List<String>>> = mapOf(
     "kontakte" to (listOf("kontakte") to emptyList()),
     "infos" to (listOf("infos") to emptyList()),
     "wegweiser" to (listOf("wegweiser") to emptyList()),
-    "werte" to (emptyList<String>() to listOf("Trinken und Werte", "Werte von Uhr oder Messgerät (Beta)", "Trinken und Pflegetagebuch")),
+    "werte" to (emptyList<String>() to listOf("Trinken und Werte", "Schnellknöpfe und Messzeiten", "Bericht über Messwerte: Zeitraum wählen, mailen, ablegen", "Werte von Uhr oder Messgerät (Beta)", "Trinken und Pflegetagebuch")),
     "tagebuch" to (emptyList<String>() to listOf("Pflegetagebuch", "Trinken und Pflegetagebuch")),
     "tagesstart" to (emptyList<String>() to listOf("Tagesstart: Rückblick und Tagesplan")),
     "budgets" to (emptyList<String>() to listOf("Budgets der Pflegekasse")),

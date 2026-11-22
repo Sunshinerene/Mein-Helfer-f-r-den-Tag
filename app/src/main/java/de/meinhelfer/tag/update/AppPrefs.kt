@@ -517,6 +517,21 @@ object AppPrefs {
         e.apply()
     }
 
+    /** Messwerte als Schnellknoepfe auf der Heute-Seite (Schluessel aus VitalKind), null = noch nicht gewaehlt. */
+    fun vitalQuick(context: Context, personId: Long): List<String>? =
+        prefs(context).getString("messwerte_auswahl_$personId", null)?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() }
+
+    fun setVitalQuick(context: Context, personId: Long, keys: List<String>) {
+        prefs(context).edit().putString("messwerte_auswahl_$personId", keys.joinToString(",")).apply()
+    }
+
+    /** Messzeiten je Person, z. B. "blutzucker=07:30,12:00;blutdruck=08:00" ([de.meinhelfer.tag.summary.MeasurePlans]). */
+    fun measurePlan(context: Context, personId: Long): String = prefs(context).getString("messzeiten_$personId", "") ?: ""
+
+    fun setMeasurePlan(context: Context, personId: Long, plan: String) {
+        prefs(context).edit().putString("messzeiten_$personId", plan).apply()
+    }
+
     /** Trink-Erinnerung: 0 = aus, sonst alle 2 oder 3 Stunden tagsueber. */
     fun drinkReminder(context: Context): Int = prefs(context).getInt("trink_erinnerung", 0)
 

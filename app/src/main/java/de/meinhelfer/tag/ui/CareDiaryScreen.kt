@@ -196,6 +196,7 @@ fun CareLogDialog(initial: CareLogEntry?, day: Long, onDismiss: () -> Unit, onSa
 @Composable
 fun CareDiaryScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit) {
     val log by vm.careLog.collectAsStateWithLifecycle()
+    val vitals by vm.vitals.collectAsStateWithLifecycle()
     val today = LocalDate.now().toEpochDay()
     var day by rememberSaveable { mutableLongStateOf(today) }
     var editing by remember { mutableStateOf<CareLogEntry?>(null) }
@@ -295,7 +296,7 @@ fun CareDiaryScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit) {
                             listOf(7, 14, 28).forEach { d -> FilterChip(selected = pdfDays == d, onClick = { pdfDays = d }, label = { Text("$d Tage") }) }
                         }
                         PdfButtons(shareLabel = "Als PDF teilen", chooserTitle = "Pflegetagebuch teilen") { ctx ->
-                            CarePdfs.careDiary(ctx, person, log.filter { it.day > today - pdfDays }, today - pdfDays + 1, today, AppPrefs.caregiver(ctx))
+                            CarePdfs.careDiary(ctx, person, log.filter { it.day > today - pdfDays }, today - pdfDays + 1, today, AppPrefs.caregiver(ctx), vitals)
                         }
                     }
                 }

@@ -30,6 +30,7 @@ object ReminderScheduler {
     const val TYPE_DRINK = "trinken"
     const val TYPE_DIARY = "tagebuch"
     const val TYPE_ASSIST = "assistent"
+    const val TYPE_MEASURE = "messen"
 
     /** Uhrzeiten der Trink-Erinnerung je Abstand */
     fun drinkHours(interval: Int): List<Int> = when (interval) {
@@ -68,6 +69,30 @@ object ReminderScheduler {
         scheduleDrink(app)
         scheduleDiary(app)
         scheduleAssistant(app)
+        db.personDao().list().forEach { scheduleMeasures(app, it.id) }
+    }
+
+    /**
+     * Erinnerungen an geplante Messungen einer Person (z. B. Blutzucker 07:30, 12:00, 18:00).
+     * Entfernte Uhrzeiten werden nicht abgebrochen: Der Receiver prüft den Plan und tut dann nichts.
+     */
+    fun scheduleMeasures(context: Context, personId: Long) {
+        val app = context.applicationContext
+        de.meinhelfer.tag.summary.MeasurePlans.parse(de.meinhelfer.tag.update.AppPrefs.measurePlan(app, personId)).forEach { (kind, times) ->
+            times.forEach { scheduleMeasure(app, personId, kind, it) }
+        }
+    }
+
+    fun scheduleMeasure(context: Context, personId: Long, kind: de.meinhelfer.tag.summary.VitalKind, time: java.time.LocalTime) {
+        val spec = kind.key + "@" + String.format(java.util.Locale.ROOT, "%02d:%02d", time.hour, time.minute)
+        setAlarm(
+            context = context,
+            requestCode = "measure:$personId:$spec".hashCode(),
+            triggerAt = nextAt(time.hour, time.minute),
+            type = TYPE_MEASURE,
+            id = personId,
+            time = spec,
+        )
     }
 
     /**

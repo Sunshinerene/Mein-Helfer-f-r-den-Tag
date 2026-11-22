@@ -112,8 +112,8 @@ private val TOUR_PAGES = listOf(
     ),
     TourPage(
         title = "Trinken, Werte, Pflegetagebuch",
-        text = "Auf der Heute-Seite zählst du mit einem Tipp, was getrunken wurde (+150, +200 …), und trägst Blutdruck, Gewicht, Blutzucker und mehr ein. Das Pflegetagebuch hält fest, wobei und wie geholfen wurde, nach den sechs Bereichen der Begutachtung. Beides gibt es als PDF.",
-        tips = listOf("Erinnerungen ans Trinken und abends ans Tagebuch lassen sich einschalten.", "„Wie am Vortag übernehmen“ spart Tipparbeit.", "Die App bewertet keine Werte; Bereiche trägst du selbst ein, z. B. wie mit dem Arzt besprochen.", "Neu (Beta): Werte von Uhr, Waage oder Blutdruckgerät über Health Connect übernehmen."),
+        text = "Auf der Heute-Seite zählst du mit einem Tipp, was getrunken wurde (+150, +200 …), und trägst Blutzucker, Fieber, Blutdruck, Schmerz und mehr ein, mit Vorauswahl wie „nüchtern“ oder „Ohr“. Das Pflegetagebuch hält fest, wobei und wie geholfen wurde, nach den sechs Bereichen der Begutachtung. Beides gibt es als PDF.",
+        tips = listOf("Erinnerungen ans Trinken und abends ans Tagebuch lassen sich einschalten.", "„Wie am Vortag übernehmen“ spart Tipparbeit.", "Die App bewertet keine Werte; Bereiche trägst du selbst ein, z. B. wie mit dem Arzt besprochen.", "Feste Messzeiten (z. B. Blutzucker 3× täglich) erinnern und stehen im Tagesplan.", "Bericht über einen frei wählbaren Zeitraum: teilen, drucken, mailen oder unter Dokumente ablegen.", "Neu (Beta): Werte von Uhr, Waage oder Blutdruckgerät über Health Connect übernehmen."),
         mock = { MockCareLog() },
     ),
     TourPage(

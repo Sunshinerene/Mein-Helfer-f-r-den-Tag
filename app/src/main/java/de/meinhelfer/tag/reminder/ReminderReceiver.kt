@@ -153,6 +153,30 @@ class ReminderReceiver : BroadcastReceiver() {
                 }
             }
 
+            ReminderScheduler.TYPE_MEASURE -> {
+                val spec = intent.getStringExtra(ReminderScheduler.EXTRA_TIME) ?: return
+                val kind = de.meinhelfer.tag.summary.VitalKind.of(spec.substringBefore("@")) ?: return
+                val hm = ReminderScheduler.parseTime(spec.substringAfter("@")) ?: return
+                val time = java.time.LocalTime.of(hm.first, hm.second)
+                // Plan geändert oder Person gelöscht: alter Alarm, nichts tun und nicht neu planen
+                val plan = de.meinhelfer.tag.summary.MeasurePlans.parse(de.meinhelfer.tag.update.AppPrefs.measurePlan(context, id))
+                if (plan[kind]?.contains(time) != true || persons.none { it.id == id }) return
+                ReminderScheduler.scheduleMeasure(context, id, kind, time)
+                val all = db.vitalDao().all().first()
+                // Schon gemessen (z. B. etwas früher): keine Erinnerung
+                if (de.meinhelfer.tag.summary.MeasurePlans.measured(all, id, kind, java.time.LocalDate.now().atTime(time))) return
+                val timeText = spec.substringAfter("@")
+                Notifications.show(
+                    context,
+                    "measure:$id:$spec".hashCode(),
+                    "${kind.emoji} ${kind.label} messen" + forPerson(id),
+                    "Geplant um $timeText Uhr. Antippen zum Eintragen.",
+                    personId = id,
+                    channel = Notifications.CHANNEL_CARE,
+                    screen = "messen:${kind.key}",
+                )
+            }
+
             ReminderScheduler.TYPE_DIARY -> {
                 ReminderScheduler.scheduleDiary(context)
                 if (de.meinhelfer.tag.update.AppPrefs.diaryReminder(context) < 0) return
@@ -191,8 +215,10 @@ class ReminderReceiver : BroadcastReceiver() {
                 val vitals = db.vitalDao().all().first()
                 val multi = persons.size > 1
                 val measured = persons.associate { p -> p.id to vitals.any { it.personId == p.id && it.kind != "trinken" && it.day >= today - 14 } }
+                val plans = persons.associate { p -> p.id to de.meinhelfer.tag.summary.MeasurePlans.parse(de.meinhelfer.tag.update.AppPrefs.measurePlan(context, p.id)) }
                 val line = de.meinhelfer.tag.summary.Tageslage.dayLine(
                     persons, meds, checkins, appointments, todos, now, zone, de.meinhelfer.tag.update.AppPrefs.intakeWindow(context).toLong(),
+                    de.meinhelfer.tag.summary.MeasurePlans.openToday(plans, vitals, now, zone),
                 )
                 val preps = de.meinhelfer.tag.summary.Assistant.preps(persons, appointments, checkins, meds, doctors, measured, now, zone)
                 fun dayOf(millis: Long) = java.time.Instant.ofEpochMilli(millis).atZone(zone).toLocalDate().toEpochDay()

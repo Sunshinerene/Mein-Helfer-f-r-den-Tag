@@ -82,7 +82,10 @@ internal object DemoData {
             add(VitalEntry(personId = PID, atMillis = at(d, 8, 10), day = d, kind = "blutdruck", value = 128.0 + (i * 7 % 19), value2 = 78.0 + (i * 3 % 9), unit = "mmHg"))
             add(VitalEntry(personId = PID, atMillis = at(d, 8, 10), day = d, kind = "puls", value = 66.0 + (i * 5 % 11), unit = "/min"))
             if (i % 3 == 0) add(VitalEntry(personId = PID, atMillis = at(d, 7, 30), day = d, kind = "gewicht", value = 68.4 + (i % 4) * 0.3, unit = "kg"))
-            if (i % 2 == 0) add(VitalEntry(personId = PID, atMillis = at(d, 7, 45), day = d, kind = "blutzucker", value = 110.0 + (i * 11 % 40), unit = "mg/dl", note = if (i == 4) "nach dem Frühstück" else ""))
+            add(VitalEntry(personId = PID, atMillis = at(d, 7, 35), day = d, kind = "blutzucker", value = 105.0 + (i * 11 % 30), unit = "mg/dl", context = "nüchtern"))
+            if (i % 2 == 0) add(VitalEntry(personId = PID, atMillis = at(d, 12, 10), day = d, kind = "blutzucker", value = 140.0 + (i * 13 % 50), unit = "mg/dl", context = "nach dem Essen", note = if (i == 4) "Kuchen beim Besuch" else ""))
+            if (i % 3 != 1) add(VitalEntry(personId = PID, atMillis = at(d, 18, 5), day = d, kind = "blutzucker", value = 120.0 + (i * 7 % 35), unit = "mg/dl", context = "vor dem Essen"))
+            if (i in 2..4) add(VitalEntry(personId = PID, atMillis = at(d, 19), day = d, kind = "temperatur", value = 37.4 + (4 - i) * 0.4, unit = "°C", context = "Ohr"))
         }
     }
 
@@ -148,13 +151,17 @@ fun SelfTestCard(vm: MainViewModel) {
             HorizontalDivider()
             Text("2. Beispiel-PDFs", style = MaterialTheme.typography.titleSmall)
             Text("„Drucken“ zeigt eine Vorschau, ohne dass du wirklich drucken musst.", style = MaterialTheme.typography.bodySmall)
-            Text("Trink- und Vitalprotokoll (Querformat)", style = MaterialTheme.typography.bodyMedium)
+            Text("Messwerte-Bericht mit Verlauf (Blutzucker mit Messzeiten)", style = MaterialTheme.typography.bodyMedium)
             PdfButtons(shareLabel = "Teilen", chooserTitle = "Beispiel teilen") { ctx ->
-                CarePdfs.vitals(ctx, DemoData.person, DemoData.vitals(today), 1300, mapOf("blutdruck" to (100.0 to 135.0)), today - 13, today)
+                de.meinhelfer.tag.export.VitalReportPdf.build(
+                    ctx, DemoData.person, DemoData.vitals(today), de.meinhelfer.tag.summary.VitalKind.entries.toList(), today - 13, today, 1300,
+                    mapOf("blutdruck" to (100.0 to 135.0), "blutzucker" to (70.0 to 180.0)), charts = true,
+                    plan = de.meinhelfer.tag.summary.MeasurePlans.parse("blutzucker=07:30,12:00,18:00"),
+                )
             }
             Text("Pflegetagebuch-Bericht", style = MaterialTheme.typography.bodyMedium)
             PdfButtons(shareLabel = "Teilen", chooserTitle = "Beispiel teilen") { ctx ->
-                CarePdfs.careDiary(ctx, DemoData.person, DemoData.careLog(today), today - 9, today, DemoData.caregiver)
+                CarePdfs.careDiary(ctx, DemoData.person, DemoData.careLog(today), today - 9, today, DemoData.caregiver, DemoData.vitals(today))
             }
             Text("Übergabe-Bericht", style = MaterialTheme.typography.bodyMedium)
             PdfButtons(shareLabel = "Teilen", chooserTitle = "Beispiel teilen") { ctx ->
