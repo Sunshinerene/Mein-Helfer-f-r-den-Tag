@@ -39,8 +39,11 @@ data class NextUp(
  * damit überall dasselbe steht.
  */
 object Tageslage {
-    /** Eine offene Einnahme gilt bis so viele Minuten nach der Uhrzeit noch als „offen seit …“. */
-    const val GRACE_MINUTES = 120L
+    /**
+     * Standard für das Einnahme-Zeitfenster (Einstellungen → Erinnerungen): So lange nach der Uhrzeit gilt eine Einnahme
+     * als „offen seit …“, danach fragt die Heute-Seite unter „Kurz nachgefragt“ nach. Gleiche Regel wie dort.
+     */
+    const val GRACE_MINUTES = 60L
 
     private val HM = DateTimeFormatter.ofPattern("HH:mm")
 
@@ -85,6 +88,7 @@ object Tageslage {
         todos: List<Todo>,
         now: LocalDateTime,
         zone: ZoneId = ZoneId.systemDefault(),
+        windowMinutes: Long = GRACE_MINUTES,
     ): List<NextUp> {
         val today = now.toLocalDate()
         val day = today.toEpochDay()
@@ -93,7 +97,7 @@ object Tageslage {
         intakeSlots(meds, checkins, day).forEach { s ->
             if (s.open.isEmpty()) return@forEach
             val at = today.atTime(s.time)
-            if (at.plusMinutes(GRACE_MINUTES).isBefore(now)) return@forEach
+            if (at.plusMinutes(windowMinutes).isBefore(now)) return@forEach
             out += NextUp(
                 NextKind.Intake,
                 at.atZone(zone).toInstant().toEpochMilli(),

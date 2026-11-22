@@ -191,7 +191,9 @@ class ReminderReceiver : BroadcastReceiver() {
                 val vitals = db.vitalDao().all().first()
                 val multi = persons.size > 1
                 val measured = persons.associate { p -> p.id to vitals.any { it.personId == p.id && it.kind != "trinken" && it.day >= today - 14 } }
-                val line = de.meinhelfer.tag.summary.Tageslage.dayLine(persons, meds, checkins, appointments, todos, now, zone)
+                val line = de.meinhelfer.tag.summary.Tageslage.dayLine(
+                    persons, meds, checkins, appointments, todos, now, zone, de.meinhelfer.tag.update.AppPrefs.intakeWindow(context).toLong(),
+                )
                 val preps = de.meinhelfer.tag.summary.Assistant.preps(persons, appointments, checkins, meds, doctors, measured, now, zone)
                 fun dayOf(millis: Long) = java.time.Instant.ofEpochMilli(millis).atZone(zone).toLocalDate().toEpochDay()
                 val (title, text) = if (id == 0L) {

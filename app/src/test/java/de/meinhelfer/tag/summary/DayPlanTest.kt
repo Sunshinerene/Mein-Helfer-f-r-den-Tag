@@ -41,4 +41,22 @@ class DayPlanTest {
         assertNull(DayPlan.drinkAndValues(emptyList(), 0, d, zone))
         assertEquals(1, DayPlan.drinkAndValues(emptyList(), 1500, d, zone)!!.lines.size)
     }
+
+    @Test
+    fun cancelledAppointmentsAreLeftOut() {
+        val appts = listOf(
+            de.meinhelfer.tag.data.Appointment(id = 1, title = "Hausarzt", whenMillis = at(d, 9), personId = 1),
+            de.meinhelfer.tag.data.Appointment(id = 2, title = "Fußpflege", whenMillis = at(d, 14), personId = 1),
+            de.meinhelfer.tag.data.Appointment(id = 3, title = "Zahnarzt", whenMillis = at(d + 1, 10), personId = 1),
+        )
+        val checkins = listOf(
+            de.meinhelfer.tag.data.Checkin(kind = de.meinhelfer.tag.data.Checkin.APPT, refId = 1, day = d, status = de.meinhelfer.tag.data.Checkin.CANCELLED),
+            de.meinhelfer.tag.data.Checkin(kind = de.meinhelfer.tag.data.Checkin.APPT, refId = 3, day = d + 1, status = de.meinhelfer.tag.data.Checkin.MOVED),
+        )
+        val all = DayPlan.build(null, emptyList(), appts, emptyList(), emptyList(), today, zone)
+        val filtered = DayPlan.build(null, emptyList(), appts, emptyList(), emptyList(), today, zone, checkins = checkins)
+        assertEquals(2, all.first { it.title == "Termine heute" }.lines.size)
+        assertEquals(listOf("14:10 Uhr – Fußpflege"), filtered.first { it.title == "Termine heute" }.lines.map { it.text })
+        assertTrue(filtered.none { it.title == "Morgen" })
+    }
 }

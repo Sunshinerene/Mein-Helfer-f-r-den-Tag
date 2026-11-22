@@ -64,6 +64,8 @@ object DayPlan {
         zone: ZoneId = ZoneId.systemDefault(),
         vitals: List<VitalEntry> = emptyList(),
         drinkGoal: Int = 0,
+        /** Abgesagte und verschobene Termine fallen weg (gleiche Regel wie die Tageslage). */
+        checkins: List<de.meinhelfer.tag.data.Checkin> = emptyList(),
     ): List<PlanSection> {
         val day = today.toEpochDay()
         val out = mutableListOf<PlanSection>()
@@ -78,7 +80,7 @@ object DayPlan {
             .map { (time, m) -> PlanLine("$time Uhr – ${m.name}" + if (m.dosage.isNotBlank()) " (${m.dosage})" else "", m.notes.takeIf { it.isNotBlank() }) }
         if (intakes.isNotEmpty()) out += PlanSection("Einnahmen heute", intakes)
 
-        val appts = appointments.filter { dayOf(it.whenMillis, zone) == today }.sortedBy { it.whenMillis }.map { a ->
+        val appts = appointments.filter { dayOf(it.whenMillis, zone) == today && !Tageslage.skipped(it, checkins, zone) }.sortedBy { it.whenMillis }.map { a ->
             val doctor = doctors.firstOrNull { it.id == a.doctorId }
             val where = a.place.ifBlank { doctor?.address.orEmpty() }
             PlanLine(
@@ -105,7 +107,7 @@ object DayPlan {
         if (low.isNotEmpty()) out += PlanSection("Bald nachbestellen", low)
 
         val tomorrow = today.plusDays(1)
-        val next = appointments.filter { dayOf(it.whenMillis, zone) == tomorrow }.sortedBy { it.whenMillis }
+        val next = appointments.filter { dayOf(it.whenMillis, zone) == tomorrow && !Tageslage.skipped(it, checkins, zone) }.sortedBy { it.whenMillis }
             .map { PlanLine("${timeText(it, zone)} – ${it.title}", contact(doctors, it.doctorId), check = false) }
         if (next.isNotEmpty()) out += PlanSection("Morgen", next)
         return out

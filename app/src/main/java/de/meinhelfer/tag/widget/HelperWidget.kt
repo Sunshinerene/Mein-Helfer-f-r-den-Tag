@@ -74,7 +74,7 @@ object HelperWidget {
             val meds = db.medicationDao().listFor(person.id)
             val appointments = db.appointmentDao().listFor(person.id)
             val checkins = db.checkinDao().rangeList(today - 1, today + 400)
-            val intake = WidgetInfo.nextIntake(meds, checkins, now)
+            val intake = WidgetInfo.nextIntake(meds, checkins, now, AppPrefs.intakeWindow(context).toLong())
             val appointment = WidgetInfo.nextAppointment(appointments, checkins, now)
             views.setTextViewText(R.id.widget_intake, WidgetInfo.intakeLine(intake, now.toLocalDate(), details))
             views.setTextViewText(R.id.widget_appointment, WidgetInfo.appointmentLine(appointment, now, details))

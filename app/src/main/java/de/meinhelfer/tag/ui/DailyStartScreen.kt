@@ -123,7 +123,7 @@ internal fun DailyStartScreen(
     val today = LocalDate.ofEpochDay(todayDay)
     val vitals by vm.vitals.collectAsStateWithLifecycle()
     val drinkGoal = person?.let { AppPrefs.drinkGoal(context, it.id) } ?: 0
-    val sections = DayPlan.build(person, meds, appointments, todos, doctors, today, vitals = vitals, drinkGoal = drinkGoal)
+    val sections = DayPlan.build(person, meds, appointments, todos, doctors, today, vitals = vitals, drinkGoal = drinkGoal, checkins = checkins)
     val planTitle = "Tagesplan" + (person?.name?.let { " – $it" } ?: "")
     val planSubtitle = today.format(DayPlan.TITLE_DATE)
 

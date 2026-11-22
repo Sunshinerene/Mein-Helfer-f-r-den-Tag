@@ -166,6 +166,14 @@ fun TodayScreen(
 
     val lowStock = meds.filter { (it.daysLeft(todayDay) ?: Int.MAX_VALUE) <= 7 }
 
+    // Dringlichkeit (gleiche Regeln wie die Tageslage): Einnahme im Zeitfenster noch offen, Aufgabe heute fällig oder überfällig
+    val intakeNow = intakes.any { (time, m) ->
+        val c = medChecks[time to m.id]
+        m.createdDay <= todayDay && (c == null || (!c.done && c.status.isEmpty())) &&
+            intakePhase(todayDay, time, todayDay, nowMinutes, window) == IntakePhase.Open
+    }
+    val tasksUrgent = todos.any { !it.done && !it.archived && it.dueDay != null && it.dueDay <= todayDay }
+
     val newVersion = when (updateState) {
         is UpdateState.Available -> updateState.info.version
         is UpdateState.Downloading -> updateState.info.version
@@ -189,6 +197,108 @@ fun TodayScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         jumps.reset()
+        // Bausteine, die je nach Dringlichkeit oben oder an ihrem gewohnten Platz stehen
+        fun intakeBlock() {
+            // ---- Einnahmen
+            jumpItem(jumps, "Heute einnehmen") {
+                Foldable(key = "einnahmen", title = "Heute einnehmen", summary = if (intakes.isEmpty()) "Keine Einnahmen eingetragen" else "$intakesDone von ${intakes.size} abgehakt, ${intakes.size - intakesDone} offen") {
+                HCard(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(start = 8.dp, end = 8.dp, top = 16.dp, bottom = 8.dp)) {
+                        Text(
+                            "Heute einnehmen" + if (intakes.isNotEmpty()) " ($intakesDone von ${intakes.size})" else "",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(start = 8.dp, bottom = 4.dp),
+                        )
+                        if (intakes.isEmpty()) {
+                            Text(
+                                "Noch keine Einnahmezeiten eingetragen.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.padding(start = 8.dp, bottom = 8.dp),
+                            )
+                        }
+                        intakes.forEach { (time, m) ->
+                            val check = medChecks[time to m.id]
+                            val done = check?.done == true
+                            val st = check?.status.orEmpty()
+                            val phase = intakePhase(todayDay, time, todayDay, nowMinutes, window)
+                            val label = "$time Uhr – ${m.name}" + if (m.dosage.isNotBlank()) " (${m.dosage})" else ""
+                            val slotMinutes = (parseSlot(time)?.let { it.hour * 60 + it.minute }) ?: 0
+                            val sub: String?
+                            val warn: Boolean
+                            when {
+                                st.isNotEmpty() -> {
+                                    sub = statusText(check)
+                                    warn = st == Checkin.MISSED
+                                }
+                                done -> {
+                                    sub = null
+                                    warn = false
+                                }
+                                phase == IntakePhase.Before -> {
+                                    sub = "abhakbar ab ${clockText(slotMinutes - window)} Uhr"
+                                    warn = false
+                                }
+                                phase == IntakePhase.Past -> {
+                                    sub = "Zeit vorbei – bitte kurz nachtragen"
+                                    warn = true
+                                }
+                                else -> {
+                                    sub = null
+                                    warn = false
+                                }
+                            }
+                            CheckRow(
+                                state = when {
+                                    done -> ToggleableState.On
+                                    st == Checkin.MISSED || st == Checkin.SKIPPED -> ToggleableState.Indeterminate
+                                    else -> ToggleableState.Off
+                                },
+                                title = label,
+                                subtitle = sub,
+                                warn = warn,
+                                note = check?.note.orEmpty(),
+                                onClick = {
+                                    if (st.isEmpty() && phase == IntakePhase.Open) {
+                                        vm.saveCheckin(Checkin.MED, m.id, todayDay, time, done = !done, status = "", actual = "")
+                                    } else {
+                                        statusTarget = StatusTarget(
+                                            Checkin.MED, m.id, todayDay, time, label,
+                                            if (phase == IntakePhase.Before) "Die Zeit ist noch nicht da. Wurde die Einnahme schon vorgezogen?"
+                                            else "Das Zeitfenster zum Abhaken ist vorbei. Wie war es?",
+                                            if (phase == IntakePhase.Before) MED_BEFORE_OPTIONS else MED_PAST_OPTIONS,
+                                            check,
+                                        )
+                                    }
+                                },
+                                onNote = {
+                                    noteTarget = NoteTarget(
+                                        Checkin.MED, m.id, todayDay, time, "Bemerkung: ${m.name}, $time Uhr",
+                                        check?.note.orEmpty(), MED_SUGGESTIONS,
+                                    )
+                                },
+                            )
+                        }
+                    }
+                }
+            }
+            }
+        }
+
+        fun tasksBlock() {
+            // ---- Aufgaben
+            jumpItem(jumps, "Aufgaben") {
+                val openTodos = todos.count { !it.done }
+                val urgentTodos = todos.count { !it.done && it.priority == 2 }
+                Foldable(
+                    key = "aufgaben",
+                    title = "Aufgaben",
+                    summary = if (openTodos == 0) "Nichts offen" else "$openTodos offen" + if (urgentTodos > 0) ", davon $urgentTodos dringend" else "",
+                ) {
+                    TasksCard(todos = todos, doctors = doctors, person = person, vm = vm, meds = meds, caregiver = caregiver, onEditCaregiver = onEditCaregiver, documents = documents)
+                }
+            }
+        }
+
         if (newVersion != null) {
             jumpItem(jumps, "Neue Version") {
                 HCard(
@@ -208,7 +318,7 @@ fun TodayScreen(
             jumpItem(jumps, "Erinnerungen einrichten") { ReminderWarningCard() }
         }
 
-        jumpItem(jumps, null) {
+        if (!assistantOn) jumpItem(jumps, null) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(shape = buttonShape(), onClick = { onOpenDailyStart(false) }, modifier = Modifier.weight(1f)) {
                     FitText("Rückblick gestern", maxSize = 14.sp)
@@ -221,8 +331,13 @@ fun TodayScreen(
 
         // Persoenlicher Assistent (Beta) ganz oben, statt des Tages-Motivators
         if (assistantOn) {
-            jumpItem(jumps, assistantName) { AssistantCard(vm, onOpen = onOpenMotivator, onMood = onOpenMood) }
+            jumpItem(jumps, assistantName) {
+                AssistantCard(vm, onOpen = onOpenMotivator, onMood = onOpenMood, onOpenDailyStart = onOpenDailyStart)
+            }
         }
+        // Was gerade dran ist, kommt nach oben
+        if (intakeNow) intakeBlock()
+        if (tasksUrgent) tasksBlock()
         jumpItem(jumps, "Profil") {
             if (person != null) {
                 Foldable(
@@ -337,106 +452,15 @@ fun TodayScreen(
         }
         }
 
-        // ---- Einnahmen
-        jumpItem(jumps, "Heute einnehmen") {
-            Foldable(key = "einnahmen", title = "Heute einnehmen", summary = if (intakes.isEmpty()) "Keine Einnahmen eingetragen" else "$intakesDone von ${intakes.size} abgehakt, ${intakes.size - intakesDone} offen") {
-            HCard(Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(start = 8.dp, end = 8.dp, top = 16.dp, bottom = 8.dp)) {
-                    Text(
-                        "Heute einnehmen" + if (intakes.isNotEmpty()) " ($intakesDone von ${intakes.size})" else "",
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(start = 8.dp, bottom = 4.dp),
-                    )
-                    if (intakes.isEmpty()) {
-                        Text(
-                            "Noch keine Einnahmezeiten eingetragen.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.padding(start = 8.dp, bottom = 8.dp),
-                        )
-                    }
-                    intakes.forEach { (time, m) ->
-                        val check = medChecks[time to m.id]
-                        val done = check?.done == true
-                        val st = check?.status.orEmpty()
-                        val phase = intakePhase(todayDay, time, todayDay, nowMinutes, window)
-                        val label = "$time Uhr – ${m.name}" + if (m.dosage.isNotBlank()) " (${m.dosage})" else ""
-                        val slotMinutes = (parseSlot(time)?.let { it.hour * 60 + it.minute }) ?: 0
-                        val sub: String?
-                        val warn: Boolean
-                        when {
-                            st.isNotEmpty() -> {
-                                sub = statusText(check)
-                                warn = st == Checkin.MISSED
-                            }
-                            done -> {
-                                sub = null
-                                warn = false
-                            }
-                            phase == IntakePhase.Before -> {
-                                sub = "abhakbar ab ${clockText(slotMinutes - window)} Uhr"
-                                warn = false
-                            }
-                            phase == IntakePhase.Past -> {
-                                sub = "Zeit vorbei – bitte kurz nachtragen"
-                                warn = true
-                            }
-                            else -> {
-                                sub = null
-                                warn = false
-                            }
-                        }
-                        CheckRow(
-                            state = when {
-                                done -> ToggleableState.On
-                                st == Checkin.MISSED || st == Checkin.SKIPPED -> ToggleableState.Indeterminate
-                                else -> ToggleableState.Off
-                            },
-                            title = label,
-                            subtitle = sub,
-                            warn = warn,
-                            note = check?.note.orEmpty(),
-                            onClick = {
-                                if (st.isEmpty() && phase == IntakePhase.Open) {
-                                    vm.saveCheckin(Checkin.MED, m.id, todayDay, time, done = !done, status = "", actual = "")
-                                } else {
-                                    statusTarget = StatusTarget(
-                                        Checkin.MED, m.id, todayDay, time, label,
-                                        if (phase == IntakePhase.Before) "Die Zeit ist noch nicht da. Wurde die Einnahme schon vorgezogen?"
-                                        else "Das Zeitfenster zum Abhaken ist vorbei. Wie war es?",
-                                        if (phase == IntakePhase.Before) MED_BEFORE_OPTIONS else MED_PAST_OPTIONS,
-                                        check,
-                                    )
-                                }
-                            },
-                            onNote = {
-                                noteTarget = NoteTarget(
-                                    Checkin.MED, m.id, todayDay, time, "Bemerkung: ${m.name}, $time Uhr",
-                                    check?.note.orEmpty(), MED_SUGGESTIONS,
-                                )
-                            },
-                        )
-                    }
-                }
-            }
-        }
-        }
+        // ---- Einnahmen (steht weiter oben, wenn gerade etwas dran ist)
+        if (!intakeNow) intakeBlock()
 
         // ---- Trinken und Werte, Pflegetagebuch
         jumpItem(jumps, "Trinken und Werte") { VitalTodayCard(vm, person, todayDay, onOpen = onOpenVitals) }
         jumpItem(jumps, "Pflegetagebuch") { CareDiaryTodayCard(vm, todayDay, onOpen = onOpenDiary) }
 
-        // ---- Aufgaben
-        jumpItem(jumps, "Aufgaben") {
-            val openTodos = todos.count { !it.done }
-            val urgentTodos = todos.count { !it.done && it.priority == 2 }
-            Foldable(
-                key = "aufgaben",
-                title = "Aufgaben",
-                summary = if (openTodos == 0) "Nichts offen" else "$openTodos offen" + if (urgentTodos > 0) ", davon $urgentTodos dringend" else "",
-            ) {
-                TasksCard(todos = todos, doctors = doctors, person = person, vm = vm, meds = meds, caregiver = caregiver, onEditCaregiver = onEditCaregiver, documents = documents)
-            }
-        }
+        // ---- Aufgaben (stehen weiter oben, wenn etwas fällig oder überfällig ist)
+        if (!tasksUrgent) tasksBlock()
 
         // ---- Bemerkung zum Tag
         jumpItem(jumps, "Bemerkung zum Tag") {

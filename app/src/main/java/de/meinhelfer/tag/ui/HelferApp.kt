@@ -199,7 +199,8 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
     // Tagesstart: einmal am Tag je Person automatisch (Rueckblick auf gestern, dann Tagesplan)
     val hasData = meds.isNotEmpty() || appointments.isNotEmpty() || todos.isNotEmpty()
     LaunchedEffect(personId, todayDay, hasData, showTourOffer) {
-        if (hasData && !showTourOffer && personId > 0 && AppPrefs.dailyStartEnabled(appContext) &&
+        // Mit Assistent bietet dieser den Tagesstart in seiner Karte an, statt ihn automatisch zu öffnen
+        if (hasData && !showTourOffer && personId > 0 && AppPrefs.dailyStartEnabled(appContext) && !AppPrefs.assistantEnabled(appContext) &&
             AppPrefs.lastDailyStart(appContext, personId) < todayDay
         ) {
             AppPrefs.setLastDailyStart(appContext, personId, todayDay)

@@ -72,7 +72,8 @@ private fun rememberAssistantState(vm: MainViewModel): AssistantState {
     val today by vm.today.collectAsStateWithLifecycle()
     val now = LocalDateTime.now()
     val zone = ZoneId.systemDefault()
-    val line = Tageslage.dayLine(persons, meds, checkins, appointments, todos, now, zone)
+    val window = AppPrefs.intakeWindow(androidx.compose.ui.platform.LocalContext.current).toLong()
+    val line = Tageslage.dayLine(persons, meds, checkins, appointments, todos, now, zone, window)
     val proposals = Assistant.proposals(persons, todos, meds, duties, doctors, today, dismissed)
     val measured = persons.associate { p ->
         p.id to vitals.any { it.personId == p.id && it.kind != VitalKind.Trinken.key && it.day >= today - 14 }
@@ -125,7 +126,15 @@ private fun speech(st: AssistantState, greeting: String?, sentence: String?): St
 
 /** Karte auf der Heute-Seite (ersetzt den Tages-Motivator, solange der Assistent an ist). */
 @Composable
-fun AssistantCard(vm: MainViewModel, onOpen: (tab: Int) -> Unit, onMood: () -> Unit) {
+fun AssistantCard(vm: MainViewModel, onOpen: (tab: Int) -> Unit, onMood: () -> Unit, onOpenDailyStart: (planOnly: Boolean) -> Unit = {}) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val personId by vm.personId.collectAsStateWithLifecycle()
+    val todayDay by vm.today.collectAsStateWithLifecycle()
+    var startTick by remember { mutableStateOf(0) }
+    // Tagesstart über den Assistenten: einmal am Tag anbieten statt automatisch zu öffnen
+    val offerStart = remember(personId, todayDay, startTick) {
+        AppPrefs.dailyStartEnabled(context) && personId > 0 && AppPrefs.lastDailyStart(context, personId) < todayDay
+    }
     val st = rememberAssistantState(vm)
     val plan by vm.motivator.collectAsStateWithLifecycle()
     val speaking by Speech.speaking.collectAsState()
@@ -145,6 +154,24 @@ fun AssistantCard(vm: MainViewModel, onOpen: (tab: Int) -> Unit, onMood: () -> U
                     Column(Modifier.weight(1f)) {
                         Text(p?.greeting ?: "Hallo", style = MaterialTheme.typography.titleMedium)
                         Text("Ich bin ${st.name}, dein Assistent (Beta).", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+                if (offerStart) {
+                    HCard(Modifier.fillMaxWidth(), colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
+                        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text("Wollen wir kurz auf gestern schauen und den Tag planen?", style = MaterialTheme.typography.bodyLarge)
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Button(shape = buttonShape(), onClick = {
+                                    AppPrefs.setLastDailyStart(context, personId, todayDay)
+                                    startTick++
+                                    onOpenDailyStart(false)
+                                }) { Text("Tagesstart") }
+                                TextButton(onClick = {
+                                    AppPrefs.setLastDailyStart(context, personId, todayDay)
+                                    startTick++
+                                }) { Text("Heute nicht") }
+                            }
+                        }
                     }
                 }
                 Text(st.headline, style = MaterialTheme.typography.bodyLarge)
@@ -187,6 +214,10 @@ fun AssistantCard(vm: MainViewModel, onOpen: (tab: Int) -> Unit, onMood: () -> U
                     if (p.support != SupportLevel.None) {
                         TextButton(onClick = { onOpen(0) }) { Text("Unterstützung, wenn du sie brauchst") }
                     }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(shape = buttonShape(), onClick = { onOpenDailyStart(false) }, modifier = Modifier.weight(1f)) { FitText("Rückblick gestern", maxSize = 14.sp) }
+                    OutlinedButton(shape = buttonShape(), onClick = { onOpenDailyStart(true) }, modifier = Modifier.weight(1f)) { FitText("Tagesplan", maxSize = 14.sp) }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton(shape = buttonShape(), onClick = { onOpen(0) }, modifier = Modifier.weight(1f)) { FitText("Mehr", maxSize = 14.sp) }
