@@ -4,9 +4,14 @@ by Sunshine@R
 
 Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbezogenen Daten bleiben lokal auf dem Gerät.
 
-## Stand: v0.58.0
+## Stand: v0.59.0
 
 ### Funktionsübersicht
+
+**Barrierefreiheit**
+- Design „Hoher Kontrast“ (Schwarz/Weiß, kräftige Farben, deutliche Ränder, dunkel: Gelb auf Schwarz)
+- Größe von Knöpfen und Feldern (Normal, Größer, Sehr groß) zusätzlich zur Schriftgröße
+- Vorlesen mit der Sprachausgabe des Handys: Tagesplan, Dokumente, Anleitung; Geschwindigkeit einstellbar
 
 **Logo, Einspieler und Widget**
 - Eigenes Logo (Hand, Herz, Sonne) als App-Symbol (auch als einfarbiges Themensymbol ab Android 13), in der Kopfzeile, auf dem Sperrbildschirm und im Rundgang
@@ -15,7 +20,7 @@ Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbe
 
 **Heute (Tag · Woche · Monat)**
 - Tagesansicht: Kurz nachgefragt (offene Antworten), Wichtig und demnächst (dringend, überfällig, Termine heute zum Abhaken, nächste 3 Tage, Termine bis 7 Tage), Bald nachbestellen, Heute einnehmen (Abhaken im Zeitfenster, früher/später/vergessen/bewusst nicht gegeben), Aufgaben, Bemerkung zum Tag, Auswertung
-- Tagesstart: Rückblick auf gestern zum Ergänzen und Bestätigen, danach Tagesplan für heute (PDF teilen, drucken)
+- Tagesstart: Rückblick auf gestern zum Ergänzen und Bestätigen, danach Tagesplan für heute (PDF teilen, drucken, vorlesen) mit Trinkziel zum Abhaken je Glas und Zeilen für Messwerte
 - Jede Karte einklappbar mit Kurzinfo, Zustand wird gemerkt
 - Wochen- und Monatsübersicht: alles antippbar, bearbeiten, löschen, neu anlegen, Aufgaben und Einnahmen abhaken, Termin-Status eintragen, erledigte Aufgaben am Erledigungstag
 - Auswertung für Tag, Woche, Monat mit erledigten Aufgaben, Trinkmenge und Messwerten (lokal berechnet, nur Anhaltspunkte)

@@ -1,18 +1,19 @@
 # TODO
 
-Stand: v0.58.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.59.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
-- [ ] Punkte aus „Ideen und Optimierungen“ nach Wunsch vorziehen (Vorschlag: Trinkmenge und Werte im Tagesplan-PDF, Barrierefreiheit)
+- [ ] Beta: Uhr, Fitnessband, Waage oder Blutdruckgerät über Health Connect anbinden (Werte lesen, Quelle wählen, mit Bestätigung übernehmen)
 - [ ] Budgets: Beträge prüfen und anpassen, sobald die Pflegereform 2027 (Pflegeneuordnungsgesetz) beschlossen ist
 
 ## Ideen und Optimierungen
 
-- [ ] Trinkmenge und Werte im Tagesplan-PDF; Pflegetagebuch: Selbsteinschätzung je Bereich als Vorbereitung auf die Begutachtung
+- [ ] Pflegetagebuch: Selbsteinschätzung je Bereich als Vorbereitung auf die Begutachtung
 - [ ] Packungsfoto: Erkennung verbessern (Wirkstoff, Packungsbeilage), Barcode live mit der Kamera
 - [ ] Widget: „Eingenommen“ direkt im Widget (mit Rückfrage), zweite Größe mit Tagesübersicht
-- [ ] Barrierefreiheit: Hochkontrast-Design, Vorlesen, größere Bedienflächen
+- [ ] Barrierefreiheit: „Heute vorlesen“ direkt auf der Heute-Seite, Vorlesen für Schreiben und Medikamentenplan
+- [ ] Health Connect: eigene Werte der pflegenden Person (Schlaf, Schritte) freiwillig im Tages-Motivator, Abruf im Hintergrund
 - [ ] Mehrsprachigkeit für Betreuungskräfte (z. B. Polnisch, Rumänisch)
 - [ ] Motivator: Pausen-Erinnerung, Stimmungsverlauf in der Auswertung (nur für dich, nicht in geteilten Berichten), Ziel-Schritte als Aufgabe mit Frist übernehmen
 - [ ] KI direkt auf dem Handy: Gemini Nano über ML Kit (nur neuere Geräte, z. B. ab Pixel 9) oder ein eigenes kleines Modell in der App (z. B. Gemma, mehrere GB Download)
@@ -22,6 +23,7 @@ Stand: v0.58.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Datenbank prüfen, Beispiel-PDFs mit erfundenen Daten, Beispiel-Grafiken, Test-Benachrichtigungen). Die Datenbank-Umstellungen von Version 5 bis 26 prüft seit v0.54.0 bei jedem Bauen ein automatischer Test gegen das Schema (Tabellen, Spalten, Typen); auf dem Handy bleibt zu prüfen, dass die eigenen Daten nach dem Update vollständig da sind.
 
+- [ ] Tagesplan-PDF: Kästchen fürs Trinken und Zeilen für Werte auf Papier; Vorlesen im Tagesplan, bei Dokumenten und in der Anleitung (deutsche Stimme vorhanden?); Design „Hoher Kontrast“ hell und dunkel; „Größer“ und „Sehr groß“ auf allen Seiten (nichts abgeschnitten?)
 - [ ] Entlassbericht mit echtem Bericht: Medikation bei Entlassung richtig erkannt (nicht die bei Aufnahme), Kontrollen mit Datum, Übernehmen als Aufgabe und als Termin, KI-Auslesen
 - [ ] Widget: hinzufügen über die Einstellungen, Anzeige nach Abhaken (auch über die Benachrichtigung), „Offen seit“, Termine, Namen ausblenden, Antippen öffnet die App ohne Einspieler
 - [ ] Neues App-Symbol auf dem Startbildschirm (rund und bei Themensymbolen), Logo in der Kopfzeile; Einspieler beim Start: Bild füllt die Breite, Ton, „Ton aus“, Überspringen, Abschalten in den Einstellungen, kein Einspieler beim Öffnen aus einer Erinnerung, App-Sperre erst danach
@@ -57,6 +59,13 @@ Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Daten
 - [ ] Entscheiden: Aufbewahrung der Nachweise 3 Jahre oder länger (30-Jahres-Frist bei Gesundheitsschäden); zusätzlicher Nachweis beim App-Ersteller (Server) ja oder nein
 - [ ] Medizinprodukte-Recht (MDR) prüfen lassen, vor allem den KI-Gesamt-Check der Medikamente; Zweckbestimmung als Organisationshilfe klar festhalten
 - [ ] Impressum und Datenschutzerklärung für eine Veröffentlichung (z. B. Play Store), eigener Signaturschlüssel statt Test-Schlüssel
+
+## Version 0.59.0 (fertig)
+
+- [x] Tagesplan: Abschnitt „Trinken und Werte“ mit Trinkziel und einem Kästchen je Glas (200 ml), gestern getrunken, Zeilen zum Eintragen für jeden in 14 Tagen gemessenen Wert mit letztem Wert (Bildschirm und PDF)
+- [x] Barrierefreiheit (Einstellungen → Darstellung): Design „Hoher Kontrast“, Größe von Knöpfen und Feldern (Normal, Größer, Sehr groß), Vorlesen mit Geschwindigkeit und Probe
+- [x] „🔊 Vorlesen“ im Tagesplan, bei Dokumenten und in jedem Abschnitt der Anleitung; hört beim Verlassen der Seite auf
+- [x] Automatische Tests für den Tagesplan-Abschnitt
 
 ## Version 0.58.0 (fertig)
 
