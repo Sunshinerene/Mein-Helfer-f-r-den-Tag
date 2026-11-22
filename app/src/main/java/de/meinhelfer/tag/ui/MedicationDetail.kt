@@ -86,6 +86,8 @@ fun MedicationDetailDialog(
                 }
                 val facts = listOfNotNull(
                     med.times.takeIf { it.isNotBlank() }?.let { "Einnahme: ${it.replace(",", ", ")} Uhr" },
+                    med.doseSummary()?.let { "Menge: $it" },
+                    "Verbrauch: ca. ${de.meinhelfer.tag.summary.Amounts.withUnit(med.dailyUse, med.unit)} pro Tag".takeIf { med.unit != "Stück" && med.dailyUse > 0 },
                     med.stockText(today) + (days?.let { " (reicht ca. $it Tage)" } ?: ""),
                     med.pzn.takeIf { it.isNotBlank() }?.let { "PZN: $it" },
                     de.meinhelfer.tag.data.Duties.resolve(duties, med.doctorId, med.personId, de.meinhelfer.tag.data.Duties.REZEPT).let { r ->

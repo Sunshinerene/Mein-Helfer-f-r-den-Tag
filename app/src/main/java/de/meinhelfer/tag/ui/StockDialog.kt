@@ -1,5 +1,7 @@
 package de.meinhelfer.tag.ui
 
+import de.meinhelfer.tag.summary.Amounts
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -34,19 +36,22 @@ fun StockDialog(
     onSaved: () -> Unit = onDone,
     addPack: Boolean = false,
 ) {
-    val start = if (med.stockKnown) med.currentStock() else 0
+    val start = if (med.stockKnown) med.currentStock() else 0.0
+    val unit = med.unit
+    val fromDoses = de.meinhelfer.tag.summary.Doses.daily(med.timeList(), med.doseMap())
     var stock by remember {
         mutableStateOf(
             when {
-                addPack && med.packSize > 0 -> (start + med.packSize).toString()
-                med.stockKnown -> start.toString()
+                addPack && med.packSize > 0 -> Amounts.fmt(start + med.packSize)
+                med.stockKnown -> Amounts.fmt(start)
                 else -> ""
             },
         )
     }
-    var perDay by remember { mutableStateOf(med.dailyUse.toString()) }
-    var pack by remember { mutableStateOf(med.packSize.takeIf { it > 0 }?.toString() ?: "") }
-    val value = stock.trim().toIntOrNull()
+    var perDay by remember { mutableStateOf(Amounts.fmt(med.dailyUse)) }
+    var pack by remember { mutableStateOf(med.packSize.takeIf { it > 0 }?.let { Amounts.fmt(it) } ?: "") }
+    val value = Amounts.parse(stock)
+    fun clean(text: String) = text.filter { c -> c.isDigit() || c in ",." }.take(8)
     AlertDialog(
         onDismissRequest = onDone,
         title = { Text("Vorrat: " + med.name) },
@@ -54,22 +59,27 @@ fun StockDialog(
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 queueText?.let { Text(it, style = MaterialTheme.typography.labelMedium) }
                 if (med.dosage.isNotBlank()) Text(med.dosage, style = MaterialTheme.typography.bodySmall)
-                Text("Wie viele Stück (Tabletten, Kapseln, Pens …) sind jetzt noch da?", style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    if (unit == "Stück") "Wie viele Stück (Tabletten, Kapseln …) sind jetzt noch da?" else "Wie viel ist jetzt noch da, in $unit?",
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                if (unit == "IE") Text("Insulin: Pens oder Patronen × IE je Pen, z. B. 3 Pens zu 300 IE = 900 IE.", style = MaterialTheme.typography.bodySmall)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
                         value = stock,
-                        onValueChange = { stock = it.filter(Char::isDigit).take(5) },
-                        label = { Text("Vorrat") },
+                        onValueChange = { stock = clean(it) },
+                        label = { Text("Vorrat ($unit)") },
                         singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         modifier = Modifier.weight(1f),
                     )
                     OutlinedTextField(
                         value = perDay,
-                        onValueChange = { perDay = it.filter(Char::isDigit).take(3) },
-                        label = { Text("Pro Tag") },
+                        onValueChange = { perDay = clean(it) },
+                        label = { Text("Pro Tag ($unit)") },
+                        enabled = fromDoses == null,
                         singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         modifier = Modifier.weight(1f),
                     )
                 }
@@ -77,17 +87,17 @@ fun StockDialog(
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                     OutlinedTextField(
                         value = pack,
-                        onValueChange = { pack = it.filter(Char::isDigit).take(4) },
-                        label = { Text("Stück pro Packung") },
+                        onValueChange = { pack = clean(it) },
+                        label = { Text("Inhalt pro Packung ($unit)") },
                         singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         modifier = Modifier.weight(1f),
                     )
-                    val p = pack.toIntOrNull() ?: 0
+                    val p = Amounts.parse(pack) ?: 0.0
                     androidx.compose.material3.OutlinedButton(
                         shape = buttonShape(),
                         enabled = p > 0,
-                        onClick = { stock = ((stock.toIntOrNull() ?: 0) + p).toString() },
+                        onClick = { stock = Amounts.fmt((Amounts.parse(stock) ?: 0.0) + p) },
                     ) { Text("+ Packung") }
                 }
                 Text(
@@ -103,11 +113,11 @@ fun StockDialog(
                     val today = LocalDate.now().toEpochDay()
                     vm.update(
                         med.copy(
-                            stock = value ?: 0,
+                            stock = value ?: 0.0,
                             stockDay = today,
                             stockKnown = true,
-                            dailyUse = perDay.trim().toIntOrNull() ?: med.dailyUse,
-                            packSize = pack.toIntOrNull() ?: med.packSize,
+                            dailyUse = fromDoses ?: Amounts.parse(perDay) ?: med.dailyUse,
+                            packSize = Amounts.parse(pack) ?: med.packSize,
                         ),
                     )
                     onSaved()

@@ -77,7 +77,7 @@ object DayPlan {
         val intakes = meds.filter { day >= it.createdDay }
             .flatMap { m -> m.timeList().map { SummaryBuilder.normSlot(it) }.distinct().map { it to m } }
             .sortedBy { it.first }
-            .map { (time, m) -> PlanLine("$time Uhr – ${m.name}" + if (m.dosage.isNotBlank()) " (${m.dosage})" else "", m.notes.takeIf { it.isNotBlank() }) }
+            .map { (time, m) -> PlanLine("$time Uhr – " + m.intakeText(time), m.notes.takeIf { it.isNotBlank() }) }
         if (intakes.isNotEmpty()) out += PlanSection("Einnahmen heute", intakes)
 
         val appts = appointments.filter { dayOf(it.whenMillis, zone) == today && !Tageslage.skipped(it, checkins, zone) }.sortedBy { it.whenMillis }.map { a ->

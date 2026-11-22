@@ -50,6 +50,12 @@ import de.meinhelfer.tag.data.Doctor
 import de.meinhelfer.tag.data.Duties
 import de.meinhelfer.tag.data.Medication
 import de.meinhelfer.tag.reminder.ReminderScheduler
+import de.meinhelfer.tag.summary.Amounts
+import de.meinhelfer.tag.summary.DosageText
+import de.meinhelfer.tag.summary.Doses
+import de.meinhelfer.tag.summary.MedUnit
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.FilterChip
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -100,10 +106,14 @@ fun MedicationDialog(
     var dosage by remember { mutableStateOf(initial?.dosage ?: "") }
     var times by remember { mutableStateOf(parseTimes(initial?.times ?: "")) }
     // Angezeigt wird der aktuell errechnete Vorrat (gezaehlter Vorrat minus Verbrauch seit dem Zaehltag).
-    val initialStockText = initial?.takeIf { it.stockKnown }?.currentStock()?.toString() ?: ""
+    val initialStockText = initial?.takeIf { it.stockKnown }?.currentStock()?.let { Amounts.fmt(it) } ?: ""
     var stock by remember { mutableStateOf(initialStockText) }
-    var dailyUse by remember { mutableStateOf(initial?.dailyUse?.toString() ?: "") }
-    var packSize by remember { mutableStateOf(initial?.packSize?.takeIf { it > 0 }?.toString() ?: "") }
+    var dailyUse by remember { mutableStateOf(initial?.dailyUse?.let { Amounts.fmt(it) } ?: "") }
+    var packSize by remember { mutableStateOf(initial?.packSize?.takeIf { it > 0 }?.let { Amounts.fmt(it) } ?: "") }
+    // Einheit (Stück, ml, IE …) und Menge je Einnahmezeit ("08:00" -> "8")
+    var unit by remember { mutableStateOf(MedUnit.of(initial?.unit)) }
+    var unitTouched by remember { mutableStateOf(initial != null && initial.unit != "Stück") }
+    var doseTexts by remember { mutableStateOf(initial?.doseMap().orEmpty().mapValues { Amounts.fmt(it.value) }) }
     var notes by remember { mutableStateOf(initial?.notes ?: "") }
     var doctorId by remember { mutableStateOf<Long?>(initial?.doctorId) }
     var pharmacyId by remember { mutableStateOf<Long?>(initial?.pharmacyId) }
@@ -163,8 +173,9 @@ fun MedicationDialog(
             scan = result
             if (result != null) {
                 if (name.isBlank()) result.nameCandidates.firstOrNull()?.let { name = it }
-                if (stock.isBlank()) result.packSize?.let { stock = it.toString() }
-                if (packSize.isBlank()) result.packSize?.let { packSize = it.toString() }
+                if (!unitTouched) result.unit?.let { unit = it }
+                if (stock.isBlank() && (result.unit == null || result.unit == unit)) result.packSize?.let { stock = Amounts.fmt(it) }
+                if (packSize.isBlank() && (result.unit == null || result.unit == unit)) result.packSize?.let { packSize = Amounts.fmt(it) }
                 if (notes.isBlank()) result.strength?.let { notes = "Stärke: $it" }
                 if (pzn.isBlank()) result.pzn?.let { pzn = it }
             }
@@ -204,6 +215,9 @@ fun MedicationDialog(
             if (originalPhoto != null && photoName != originalPhoto) PhotoStore.delete(context, originalPhoto)
             val today = LocalDate.now().toEpochDay()
             val stockChanged = initial == null || stock.trim() != initialStockText
+            val keys = times.map { it.format(TIME_FORMAT) }
+            val doseValues = keys.mapNotNull { k -> doseTexts[k]?.let { Amounts.parse(it) }?.let { k to it } }.toMap()
+            val fromDoses = Doses.daily(keys, doseValues)
             onSave(
                 Medication(
                     id = initial?.id ?: 0,
@@ -211,10 +225,10 @@ fun MedicationDialog(
                     dosage = dosage.trim(),
                     times = times.joinToString(",") { it.format(TIME_FORMAT) },
                     // Nur bei geaendertem Vorrat neu zaehlen (Stichtag heute), sonst alte Zaehlung behalten.
-                    stock = if (stockChanged) stock.trim().toIntOrNull() ?: 0 else initial!!.stock,
+                    stock = if (stockChanged) Amounts.parse(stock) ?: 0.0 else initial!!.stock,
                     stockDay = if (stockChanged) today else initial!!.stockDay,
                     // Leeres Feld = Vorrat unbekannt (keine Nachbestell-Warnung)
-                    stockKnown = if (stockChanged) stock.trim().toIntOrNull() != null else initial!!.stockKnown,
+                    stockKnown = if (stockChanged) Amounts.parse(stock) != null else initial!!.stockKnown,
                     createdDay = initial?.createdDay ?: today,
                     personId = initial?.personId ?: 1,
                     doctorId = doctorId?.takeIf { id -> doctors.any { it.id == id } },
@@ -224,11 +238,13 @@ fun MedicationDialog(
                     descriptionSource = if (description.isBlank()) "" else descriptionSource,
                     // Einschaetzung bleibt nur, solange der Name gleich ist
                     rating = if (initial != null && initial.name == name.trim()) initial.rating else "",
-                    // Leer = Anzahl der Einnahmen pro Tag
-                    dailyUse = dailyUse.trim().toIntOrNull() ?: maxOf(1, times.size),
+                    // Aus den Mengen je Einnahme, sonst wie eingetragen, leer = Anzahl der Einnahmen pro Tag
+                    dailyUse = fromDoses ?: Amounts.parse(dailyUse) ?: maxOf(1, times.size).toDouble(),
+                    unit = unit.key,
+                    doses = Doses.format(doseValues),
                     notes = notes.trim(),
                     photoPath = photoName,
-                    packSize = packSize.trim().toIntOrNull()?.coerceIn(0, 9999) ?: 0,
+                    packSize = Amounts.parse(packSize)?.coerceIn(0.0, 99999.0) ?: 0.0,
                     // Herkunftsvermerk nur behalten, solange es dasselbe Bild ist
                     photoCredit = if (photoName != null && photoName == originalPhoto) initial?.photoCredit.orEmpty() else "",
                 ),
@@ -335,39 +351,92 @@ fun MedicationDialog(
             label = "Dosierung pro Einnahme",
             value = dosage,
             options = DOSAGE_PRESETS,
-            onValueChange = { dosage = it },
+            onValueChange = { text ->
+                dosage = text
+                // „5 ml“, „½ Tablette“, „8 IE“: Einheit und Menge je Einnahme gleich vorschlagen (bleibt änderbar)
+                DosageText.parse(text)?.let { (amount, u) ->
+                    if (!unitTouched) unit = u
+                    if (u == unit) {
+                        val keys = times.map { it.format(TIME_FORMAT) }
+                        if (keys.all { doseTexts[it].isNullOrBlank() }) doseTexts = doseTexts + keys.associateWith { Amounts.fmt(amount) }
+                    }
+                }
+            },
         )
-        TimesChooser(times) { times = it }
+        Text("Einheit für Menge, Vorrat und Verbrauch", style = MaterialTheme.typography.labelMedium)
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            MedUnit.entries.forEach { u ->
+                FilterChip(selected = unit == u, onClick = {
+                    unit = u
+                    unitTouched = true
+                }, label = { Text(u.key) })
+            }
+        }
+        Text(unit.examples + ". " + unit.hint, style = MaterialTheme.typography.bodySmall)
+        TimesChooser(times) { newTimes ->
+            // Neue Uhrzeit bekommt dieselbe Menge, wenn bisher alle gleich sind
+            val oldKeys = times.map { it.format(TIME_FORMAT) }
+            val same = oldKeys.mapNotNull { doseTexts[it]?.takeIf { v -> v.isNotBlank() } }.distinct()
+            times = newTimes
+            if (oldKeys.isNotEmpty() && same.size == 1 && oldKeys.all { !doseTexts[it].isNullOrBlank() }) {
+                doseTexts = doseTexts + newTimes.map { it.format(TIME_FORMAT) }.filter { doseTexts[it].isNullOrBlank() }.associateWith { same.first() }
+            }
+        }
+        val doseKeys = times.map { it.format(TIME_FORMAT) }
+        val doseValues = doseKeys.mapNotNull { k -> doseTexts[k]?.let { Amounts.parse(it) }?.let { k to it } }.toMap()
+        val fromDoses = Doses.daily(doseKeys, doseValues)
+        if (doseKeys.isNotEmpty()) {
+            Text("Menge je Einnahme in ${unit.key} (optional)", style = MaterialTheme.typography.labelMedium)
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                doseKeys.forEach { k ->
+                    val text = doseTexts[k].orEmpty()
+                    OutlinedTextField(
+                        value = text,
+                        onValueChange = { v -> doseTexts = doseTexts + (k to v.filter { c -> c.isDigit() || c in ",.½¼¾" }.take(6)) },
+                        label = { Text("$k Uhr", maxLines = 1) },
+                        isError = text.isNotBlank() && Amounts.parse(text) == null,
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = Modifier.width(112.dp),
+                    )
+                }
+            }
+        }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedTextField(
                 value = stock,
-                onValueChange = { stock = it },
-                label = { Text("Vorrat", maxLines = 1) },
+                onValueChange = { stock = it.filter { c -> c.isDigit() || c in ",." }.take(8) },
+                label = { Text("Vorrat (${unit.key})", maxLines = 1) },
                 placeholder = { Text("unbekannt", maxLines = 1) },
                 singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 modifier = Modifier.weight(1f),
             )
             OutlinedTextField(
-                value = dailyUse,
-                onValueChange = { dailyUse = it },
-                label = { Text("Pro Tag", maxLines = 1) },
+                value = if (fromDoses != null) Amounts.fmt(fromDoses) else dailyUse,
+                onValueChange = { dailyUse = it.filter { c -> c.isDigit() || c in ",.½¼¾" }.take(6) },
+                label = { Text("Pro Tag (${unit.key})", maxLines = 1) },
+                enabled = fromDoses == null,
                 singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 modifier = Modifier.weight(1f),
             )
         }
         Text(
-            "Vorrat in Stück (leer = unbekannt), „Pro Tag“ = Verbrauch pro Tag (leer = Anzahl der Einnahmen). Der Vorrat sinkt danach automatisch jeden Tag.",
+            if (fromDoses != null) {
+                "Verbrauch pro Tag aus den Mengen je Einnahme: ${Amounts.withUnit(fromDoses, unit.key)}. Vorrat leer = unbekannt. Der Vorrat sinkt danach automatisch jeden Tag."
+            } else {
+                "Vorrat in ${unit.key} (leer = unbekannt), „Pro Tag“ = Verbrauch pro Tag (leer = Anzahl der Einnahmen). Der Vorrat sinkt danach automatisch jeden Tag."
+            },
             style = MaterialTheme.typography.bodySmall,
         )
         OutlinedTextField(
             value = packSize,
-            onValueChange = { packSize = it.filter(Char::isDigit).take(4) },
-            label = { Text("Stück pro Packung (optional)") },
+            onValueChange = { packSize = it.filter { c -> c.isDigit() || c in ",." }.take(8) },
+            label = { Text("Inhalt pro Packung in ${unit.key} (optional)") },
             supportingText = { Text("Dann reicht später ein Tipp auf „Neue Packung“.") },
             singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             modifier = Modifier.fillMaxWidth(),
         )
         // Zustaendige Stellen fuer die Nachbestellung (aus den Kontakten)

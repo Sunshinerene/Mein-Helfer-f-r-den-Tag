@@ -4,7 +4,7 @@ by Sunshine@R
 
 Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbezogenen Daten bleiben lokal auf dem Gerät.
 
-## Stand: v0.65.0
+## Stand: v0.66.0
 
 ### Funktionsübersicht
 
@@ -55,6 +55,7 @@ Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbe
 
 **Medikamente**
 - Einnahmezeiten, Dosierung, Vorrat mit automatischem Verbrauch, Warnung bei knappem Vorrat
+- Einheit je Medikament: Stück, ml (Saft, Lösung), IE (Insulin), Tropfen, Hub (Spray) oder g; Kommazahlen (½ Tablette, 7,5 ml); Menge je Einnahmezeit (z. B. 8 IE morgens, 6 IE abends) ergibt den Verbrauch und steht bei Einnahmen, Erinnerung, Tagesplan und Medikamentenplan
 - Anlegen per Packungsfoto (Texterkennung auf dem Handy), PZN/Barcode
 - Fotos nachträglich: Kamera, Galerie, freie Bilder (Wikimedia Commons mit Lizenzangabe) oder Internetsuche; „Fotos ergänzen“ für alle ohne Bild
 - Medikamentenplan einlesen (aus Dokumenten per Text oder KI, oder Code auf dem Medikationsplan fotografieren); Hinweis automatisch bei leerer Liste, Stand des Plans wird gemerkt

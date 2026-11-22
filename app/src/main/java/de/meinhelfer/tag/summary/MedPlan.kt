@@ -5,7 +5,6 @@ import de.meinhelfer.tag.data.Medication
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
-import kotlin.math.ceil
 
 /** Ein Medikament aus einem Medikamentenplan. [amounts] = morgens, mittags, abends, zur Nacht ("" = keine Angabe). */
 data class PlanMed(
@@ -33,7 +32,20 @@ data class PlanMed(
 
     fun dosage(): String = listOf(strength, listOf(schemaText(), unit).filter { it.isNotBlank() }.joinToString(" ")).filter { it.isNotBlank() }.joinToString(" · ")
 
-    fun dailyUse(): Int = if (!hasSchema) 1 else ceil(amounts.sumOf { value(it) }).toInt().coerceAtLeast(0)
+    fun dailyUse(): Double = if (!hasSchema) 1.0 else amounts.sumOf { value(it) }.coerceAtLeast(0.0)
+
+    /** Einheit für Vorrat und Mengen (Stück, ml, IE …) aus der Spalte „Einheit“ bzw. der Darreichungsform; null = unbekannt. */
+    fun medUnit(): MedUnit? = MedUnit.fromText(unit) ?: when {
+        form.contains("Tropfen", true) -> MedUnit.Tropfen
+        form.contains("Spray", true) || form.contains("Aerosol", true) -> MedUnit.Hub
+        form.contains("Tabl", true) || form.contains("Kaps", true) || form.contains("Dragee", true) -> MedUnit.Stueck
+        else -> null
+    }
+
+    /** Mengen je Einnahmezeit wie in der App gespeichert, z. B. "08:00=1,18:00=0.5". */
+    fun doses(): String = if (!hasSchema) "" else Doses.format(
+        amounts.mapIndexedNotNull { i, a -> value(a).takeIf { it > 0 }?.let { MedPlans.SLOT_TIMES[i] to it } }.toMap(),
+    )
 
     fun noteText(): String = listOf(notes, reason.takeIf { it.isNotBlank() }?.let { "Grund: $it" }.orEmpty()).filter { it.isNotBlank() }.joinToString(" · ")
 }

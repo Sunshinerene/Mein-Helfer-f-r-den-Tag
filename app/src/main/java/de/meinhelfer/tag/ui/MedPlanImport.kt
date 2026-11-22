@@ -206,9 +206,11 @@ fun MedPlanReviewDialog(
                                 name = r.name.trim(),
                                 dosage = r.dosage.trim(),
                                 times = times,
-                                stock = 0,
+                                stock = 0.0,
                                 stockKnown = false,
                                 dailyUse = pm.dailyUse(),
+                                unit = pm.medUnit()?.key ?: "Stück",
+                                doses = pm.doses(),
                                 notes = pm.noteText(),
                                 pzn = pm.pzn,
                                 personId = personId,
@@ -220,6 +222,9 @@ fun MedPlanReviewDialog(
                                 dosage = r.dosage.trim(),
                                 times = if (times.isNotBlank()) times else e.times,
                                 dailyUse = if (pm.hasSchema) pm.dailyUse() else e.dailyUse,
+                                // Einheit nur übernehmen, wenn bisher keine eigene gewählt war; Mengen nur, wenn die Einheit passt
+                                unit = pm.medUnit()?.key?.takeIf { e.unit == "Stück" } ?: e.unit,
+                                doses = if (pm.hasSchema && (pm.medUnit() == null || pm.medUnit()?.key == (pm.medUnit()?.key?.takeIf { e.unit == "Stück" } ?: e.unit))) pm.doses() else e.doses,
                                 // Vorrat auf heute umrechnen, damit der neue Verbrauch nicht rueckwirkend zaehlt
                                 stock = e.currentStock(today),
                                 stockDay = today,

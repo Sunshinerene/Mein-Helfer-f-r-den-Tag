@@ -62,6 +62,7 @@ data class MedCheck(
                 val parts = listOfNotNull(
                     m.dosage.takeIf { it.isNotBlank() }?.let { "Dosierung: $it" },
                     m.timeList().takeIf { it.isNotEmpty() }?.let { "Einnahme: ${it.joinToString(", ")} Uhr" },
+                    m.doseSummary()?.let { "Menge: $it" },
                 )
                 appendLine("${i + 1}. ${m.name.trim()}" + if (parts.isNotEmpty()) " (${parts.joinToString(", ")})" else "")
             }

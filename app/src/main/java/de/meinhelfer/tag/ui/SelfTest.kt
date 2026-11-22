@@ -60,10 +60,15 @@ internal object DemoData {
         Responsibility(personId = 0, role = Duties.VERTRETUNG, contactId = 904, replacesId = 901, fromDay = today + 3, untilDay = today + 10),
     )
     val meds = listOf(
-        Medication(name = "Ramipril", dosage = "5 mg · 1-0-0-0", times = "08:00", personId = PID, stock = 40),
-        Medication(name = "Metformin", dosage = "500 mg · 1-0-1-0", times = "08:00,18:00", personId = PID, notes = "zum Essen", stock = 8, dailyUse = 2),
-        Medication(name = "Simvastatin", dosage = "20 mg", times = "22:00", personId = PID, stock = 60),
-        Medication(name = "ASS", dosage = "100 mg · 1-0-0-0", times = "08:00", personId = PID, notes = "Blutverdünner (TAH)", stock = 30),
+        Medication(name = "Ramipril", dosage = "5 mg · 1-0-0-0", times = "08:00", personId = PID, stock = 40.0),
+        Medication(name = "Metformin", dosage = "500 mg · 1-0-1-0", times = "08:00,18:00", personId = PID, notes = "zum Essen", stock = 8.0, dailyUse = 2.0),
+        Medication(name = "Simvastatin", dosage = "20 mg", times = "22:00", personId = PID, stock = 60.0),
+        Medication(name = "ASS", dosage = "100 mg · 1-0-0-0", times = "08:00", personId = PID, notes = "Blutverdünner (TAH)", stock = 30.0),
+        Medication(
+            name = "Insulin glargin (Pen)", dosage = "100 E/ml", times = "08:00,18:00", personId = PID, unit = "IE",
+            doses = "08:00=8,18:00=6", stock = 900.0, dailyUse = 14.0, packSize = 1500.0,
+        ),
+        Medication(name = "Lactulose Sirup", dosage = "10 ml", times = "08:00", personId = PID, unit = "ml", doses = "08:00=10", stock = 200.0, dailyUse = 10.0, packSize = 500.0),
     )
 
     private fun at(day: Long, hour: Int, minute: Int = 0) =

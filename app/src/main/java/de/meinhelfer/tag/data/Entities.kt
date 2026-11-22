@@ -40,10 +40,10 @@ data class Medication(
     val dosage: String = "",
     /** Einnahmezeiten, kommagetrennt, z. B. "08:00,20:00" */
     val times: String = "",
-    /** Aktueller Vorrat in Einheiten (Tabletten usw.) */
-    val stock: Int = 0,
-    /** Verbrauch pro Tag in Einheiten */
-    val dailyUse: Int = 1,
+    /** Aktueller Vorrat in [unit] (Stück, ml, IE …), Kommazahlen erlaubt. */
+    val stock: Double = 0.0,
+    /** Verbrauch pro Tag in [unit] */
+    val dailyUse: Double = 1.0,
     val notes: String = "",
     /** Dateiname des Packungsfotos im App-Ordner (nur lokal gespeichert), optional. */
     val photoPath: String? = null,
@@ -69,25 +69,52 @@ data class Medication(
     val photoCredit: String = "",
     /** false = Vorrat noch nicht eingetragen (z. B. nach dem Einlesen eines Plans): keine Nachbestell-Warnung. */
     val stockKnown: Boolean = true,
-    /** Stueck pro Packung (fuer "Neue Packung"), 0 = unbekannt. */
-    val packSize: Int = 0,
+    /** Inhalt pro Packung in [unit] (fuer "Neue Packung"), 0 = unbekannt. */
+    val packSize: Double = 0.0,
+    /** Einheit fuer Vorrat, Verbrauch und Menge je Einnahme: Stueck, ml, IE, Tropfen, Hub, g ([de.meinhelfer.tag.summary.MedUnit]). */
+    val unit: String = "Stück",
+    /** Menge je Einnahmezeit in [unit], z. B. "08:00=8,18:00=6"; leer = keine Angabe ([de.meinhelfer.tag.summary.Doses]). */
+    val doses: String = "",
 ) {
     fun timeList(): List<String> =
         times.split(",").map { it.trim() }.filter { it.isNotEmpty() }
 
     /** Aktueller Vorrat: gezaehlter Vorrat minus Verbrauch seit dem Zaehltag (nie unter 0). */
-    fun currentStock(today: Long = LocalDate.now().toEpochDay()): Int {
-        val used = (today - stockDay).coerceAtLeast(0) * dailyUse.coerceAtLeast(0)
-        return (stock - used).coerceIn(0L, Int.MAX_VALUE.toLong()).toInt()
+    fun currentStock(today: Long = LocalDate.now().toEpochDay()): Double {
+        val used = (today - stockDay).coerceAtLeast(0) * dailyUse.coerceAtLeast(0.0)
+        return (stock - used).coerceAtLeast(0.0)
     }
 
     /** Verbleibende Tage oder null, wenn nicht berechenbar. */
     fun daysLeft(today: Long = LocalDate.now().toEpochDay()): Int? =
-        if (stockKnown && dailyUse > 0) currentStock(today) / dailyUse else null
+        if (stockKnown && dailyUse > 0) kotlin.math.floor(currentStock(today) / dailyUse + 1e-9).toInt() else null
 
-    /** "Vorrat: 20 Stück" bzw. "Vorrat: unbekannt" */
+    /** "Vorrat: 20 Stück", "Vorrat: 77,5 ml" bzw. "Vorrat: unbekannt" */
     fun stockText(today: Long = LocalDate.now().toEpochDay()): String =
-        if (stockKnown) "Vorrat: ${currentStock(today)} Stück" else "Vorrat: unbekannt"
+        if (stockKnown) "Vorrat: " + stockAmountText(today) else "Vorrat: unbekannt"
+
+    /** "20 Stück", "1200 IE" */
+    fun stockAmountText(today: Long = LocalDate.now().toEpochDay()): String =
+        de.meinhelfer.tag.summary.Amounts.withUnit(currentStock(today), unit)
+
+    fun doseMap(): Map<String, Double> = de.meinhelfer.tag.summary.Doses.parse(doses)
+
+    /** Menge fuer die Einnahme um [slot], z. B. "8 IE"; bei 1 Stueck nichts (steht schon in der Dosierung). */
+    fun doseText(slot: String): String? {
+        val v = de.meinhelfer.tag.summary.Doses.at(doseMap(), slot) ?: return null
+        if (unit == "Stück" && v == 1.0) return null
+        return de.meinhelfer.tag.summary.Amounts.withUnit(v, unit)
+    }
+
+    /** Mengen fuer alle Einnahmen, z. B. "je 5 ml" oder "08:00 8 IE, 18:00 6 IE"; null ohne Angaben. */
+    fun doseSummary(): String? = de.meinhelfer.tag.summary.Doses.summary(timeList(), doseMap(), unit)
+
+    /** "Insulin (8 IE · Lantus 100 E/ml)" fuer eine Einnahme um [slot], ohne [slot] mit allen Mengen. */
+    fun intakeText(slot: String? = null): String {
+        val amount = if (slot != null) doseText(slot) else doseSummary()?.takeUnless { unit == "Stück" && it == "je 1 Stück" }
+        val extra = listOfNotNull(amount, dosage.takeIf { it.isNotBlank() }).joinToString(" · ")
+        return name + if (extra.isNotEmpty()) " ($extra)" else ""
+    }
 }
 
 @Entity

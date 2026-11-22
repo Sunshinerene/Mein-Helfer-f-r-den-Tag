@@ -140,8 +140,7 @@ fun TodayScreen(
                 val c = allMedChecks[Triple(m.id, d, time)]
                 val open = c == null || (!c.done && c.status.isEmpty())
                 if (open && intakePhase(d, time, todayDay, nowMinutes, window) == IntakePhase.Past) {
-                    val label = (if (d < todayDay) "Gestern " else "") + "$time Uhr – ${m.name}" +
-                        if (m.dosage.isNotBlank()) " (${m.dosage})" else ""
+                    val label = (if (d < todayDay) "Gestern " else "") + "$time Uhr – " + m.intakeText(time)
                     followUps += StatusTarget(
                         Checkin.MED, m.id, d, time, label,
                         "Wie war es mit dieser Einnahme? Deine Antwort hilft der Auswertung.", MED_PAST_OPTIONS, c,
@@ -221,7 +220,7 @@ fun TodayScreen(
                             val done = check?.done == true
                             val st = check?.status.orEmpty()
                             val phase = intakePhase(todayDay, time, todayDay, nowMinutes, window)
-                            val label = "$time Uhr – ${m.name}" + if (m.dosage.isNotBlank()) " (${m.dosage})" else ""
+                            val label = "$time Uhr – " + m.intakeText(time)
                             val slotMinutes = (parseSlot(time)?.let { it.hour * 60 + it.minute }) ?: 0
                             val sub: String?
                             val warn: Boolean

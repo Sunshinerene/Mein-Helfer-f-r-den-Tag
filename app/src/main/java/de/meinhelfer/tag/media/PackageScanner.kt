@@ -16,8 +16,10 @@ data class ScanResult(
     val nameCandidates: List<String>,
     /** Erkannte Staerke, z. B. "500 mg". */
     val strength: String?,
-    /** Erkannte Packungsgroesse, z. B. 20 (Tabletten). */
-    val packSize: Int?,
+    /** Erkannter Inhalt der Packung, z. B. 20 (Tabletten), 100 (ml) oder 1500 (IE bei 5 Pens zu 3 ml U100). */
+    val packSize: Double?,
+    /** Einheit dazu (Stück, ml, IE, Hub, g), falls erkannt. */
+    val unit: de.meinhelfer.tag.summary.MedUnit? = null,
     /** Erkannte PZN (nur mit gueltiger Pruefziffer), aus Barcode oder Text. */
     val pzn: String? = null,
 )
@@ -25,10 +27,6 @@ data class ScanResult(
 /** Liest Text von Medikamentenpackungen direkt auf dem Handy (kein Internet, keine Datenuebertragung). */
 object PackageScanner {
     private val STRENGTH = Regex("""\d+(?:[.,]\d+)?\s?(?:mg|µg|mcg|g|ml|IE)\b""", RegexOption.IGNORE_CASE)
-    private val PACK_SIZE = Regex(
-        """(\d{1,3})\s?(?:Tabletten|Filmtabletten|Tabl\.|Kapseln|Hartkapseln|Stück|Dragees|Beutel|Ampullen)""",
-        RegexOption.IGNORE_CASE,
-    )
 
     private val PZN_TEXT = Regex("""PZN\s*[:\-]?\s*(\d{8})""", RegexOption.IGNORE_CASE)
 
@@ -57,10 +55,12 @@ object PackageScanner {
             .take(6)
 
         val full = text.text
+        val pack = de.meinhelfer.tag.summary.PackText.parse(full.replace('\n', ' '))
         return ScanResult(
             nameCandidates = candidates,
             strength = STRENGTH.find(full)?.value?.trim(),
-            packSize = PACK_SIZE.find(full)?.groupValues?.get(1)?.toIntOrNull(),
+            packSize = pack?.amount,
+            unit = pack?.unit,
         )
     }
 

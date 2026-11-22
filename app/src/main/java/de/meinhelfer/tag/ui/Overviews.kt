@@ -375,7 +375,7 @@ internal fun IntakeRows(
         val st = c?.status.orEmpty()
         val done = c?.done == true
         val phase = intakePhase(epoch, time, todayDay, nowMinutes, window)
-        val label = "$time Uhr – ${m.name}" + if (m.dosage.isNotBlank()) " (${m.dosage})" else ""
+        val label = "$time Uhr – " + m.intakeText(time)
         val future = epoch > todayDay
         val sub = when {
             st.isNotEmpty() -> statusText(c)

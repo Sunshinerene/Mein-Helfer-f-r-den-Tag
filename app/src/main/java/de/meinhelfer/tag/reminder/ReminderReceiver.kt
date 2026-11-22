@@ -53,7 +53,7 @@ class ReminderReceiver : BroadcastReceiver() {
                     return
                 }
 
-                val text = med.name + if (med.dosage.isNotBlank()) " (${med.dosage})" else ""
+                val text = med.intakeText(time)
                 val notifId = "med:$id:$time".hashCode()
                 val taken = Intent(context, TakenReceiver::class.java).apply {
                     putExtra(TakenReceiver.EXTRA_MED, id)

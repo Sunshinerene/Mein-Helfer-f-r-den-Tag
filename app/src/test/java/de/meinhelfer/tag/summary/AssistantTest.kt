@@ -58,8 +58,8 @@ class AssistantTest {
             Todo(id = 3, personId = 1, text = "Schon dringend", dueDay = d, priority = 2),
         )
         val meds = listOf(
-            Medication(id = 1, name = "Ramipril", personId = 1, stock = 6, stockKnown = true, dailyUse = 2, stockDay = d, doctorId = 9),
-            Medication(id = 2, name = "Torasemid", personId = 1, stock = 100, stockKnown = true, dailyUse = 1, stockDay = d),
+            Medication(id = 1, name = "Ramipril", personId = 1, stock = 6.0, stockKnown = true, dailyUse = 2.0, stockDay = d, doctorId = 9),
+            Medication(id = 2, name = "Torasemid", personId = 1, stock = 100.0, stockKnown = true, dailyUse = 1.0, stockDay = d),
         )
         val doctors = listOf(Doctor(id = 9, name = "Dr. Müller"))
         val list = Assistant.proposals(persons.take(1), todos, meds, emptyList(), doctors, d, emptySet())

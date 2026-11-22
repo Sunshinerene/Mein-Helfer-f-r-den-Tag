@@ -1,6 +1,6 @@
 # TODO
 
-Stand: v0.65.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.66.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
@@ -9,6 +9,7 @@ Stand: v0.65.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Ideen und Optimierungen
 
+- [ ] Medikamente: beim Abhaken die tatsächlich gegebene Menge eintragen (z. B. Insulin nach Korrekturschema), Haltbarkeit nach Anbruch (Insulin, Augentropfen) mit Erinnerung
 - [ ] Pflegetagebuch: Selbsteinschätzung je Bereich als Vorbereitung auf die Begutachtung
 - [ ] Packungsfoto: Erkennung verbessern (Wirkstoff, Packungsbeilage), Barcode live mit der Kamera
 - [ ] Widget: „Eingenommen“ direkt im Widget (mit Rückfrage), zweite Größe mit Tagesübersicht
@@ -23,6 +24,7 @@ Stand: v0.65.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Datenbank prüfen, Beispiel-PDFs mit erfundenen Daten, Beispiel-Grafiken, Test-Benachrichtigungen). Die Datenbank-Umstellungen von Version 5 bis 26 prüft seit v0.54.0 bei jedem Bauen ein automatischer Test gegen das Schema (Tabellen, Spalten, Typen); auf dem Handy bleibt zu prüfen, dass die eigenen Daten nach dem Update vollständig da sind.
 
+- [ ] Medikamente mit Einheit (Datenbank 27): nach dem Update alle Medikamente mit Vorrat da? Insulin mit IE und Menge je Uhrzeit, Saft in ml, ½ Tablette; „Heute einnehmen“, Erinnerung, Tagesplan und Medikamentenplan-PDF zeigen die Menge; „Neue Packung“ und Vorrat-Fenster mit Komma; Packungsfoto mit ml oder Pens
 - [ ] Sammel-Import: mehrere Dateien, mehrere Fotos und „Ganzen Ordner laden“; stimmen die Vorschläge (Seite 1 und 2, Fotos kurz nacheinander)? Haken, „↑ nach oben“, „Dokument 2 von 5“, Überspringen, „Restliche verwerfen“; Einstellungen → Persönlicher Assistent
 - [ ] Berichte und Auswertung: jedes PDF einmal erzeugen und teilen; Budgets und Übergabe aus dem Profil; „Frag mich“ mit KI
 - [ ] Heute-Seite: „Heute einnehmen“ und Aufgaben springen nach oben, wenn etwas dran ist; Tagesstart-Angebot in Sunnys Karte; Stimme wählen (z. B. SherpaTTS mit Piper-Stimme) und Probe hören
@@ -72,6 +74,14 @@ Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Daten
 - [ ] Sammel-Import: Vorschläge mit echten Scans verfeinern (z. B. gleicher Absender und gleiches Datum als weiterer Hinweis)
 
 - [ ] Eigene KI-Stimme direkt in der App (nur falls SherpaTTS nicht reicht): sherpa-onnx mit Piper-Stimme Thorsten oder Kerstin (CC0) oder apptor-tiny-tts (Apache-2.0, 21 MB); macht die App 25–70 MB größer, Lizenzen der Bibliotheken prüfen
+
+## Version 0.66.0 (fertig)
+
+- [x] Medikamente mit Einheit: Stück, ml, IE (Insulin), Tropfen, Hub, g; Vorrat, Verbrauch und Packungsinhalt als Kommazahl (Datenbank 27, Tabelle wird beim Update umgebaut, alle Angaben bleiben)
+- [x] Menge je Einnahmezeit (z. B. 8 IE um 8 Uhr, 6 IE um 18 Uhr); Verbrauch pro Tag ergibt sich daraus; Vorschlag aus der Dosierung („5 ml“, „½ Tablette“)
+- [x] Menge erscheint bei „Heute einnehmen“, Rückfragen, Wochenübersicht, Erinnerung, Tagesplan, Medikamentenplan-PDF (Spalten morgens bis zur Nacht), Übergabe und Notfallblatt
+- [x] Medikamentenplan einlesen übernimmt Einheit und Mengen; Packungsfoto erkennt „100 ml“, „5 x 3 ml“ mit „100 Einheiten/ml“ (Insulin), Hübe und Stückzahl
+- [x] Automatische Tests: Einheiten und Mengen (MedUnitsTest), Umbau der Tabelle mit allen Daten (MigrationSchemaTest)
 
 ## Version 0.65.0 (fertig)
 

@@ -9,7 +9,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [Medication::class, Appointment::class, Doctor::class, Checkin::class, DayNote::class, Person::class, Todo::class, Document::class, ConsentRecord::class, MoodEntry::class, Goal::class, GoalStep::class, Responsibility::class, VitalEntry::class, CareLogEntry::class, BudgetEntry::class],
-    version = 26,
+    version = 27,
     // Das Schema wird beim Bauen exportiert; ein Test vergleicht es mit den Umstellungen (MigrationSchemaTest).
     exportSchema = true,
 )
@@ -317,12 +317,50 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /** Medikamente in Version 26 (ganze Zahlen), fuer den Umbau in Version 27 und den Test der Umstellungen. */
+        internal const val MEDICATION_V26_SQL =
+            "CREATE TABLE IF NOT EXISTS `Medication` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, " +
+                "`dosage` TEXT NOT NULL, `times` TEXT NOT NULL, `stock` INTEGER NOT NULL, `dailyUse` INTEGER NOT NULL, `notes` TEXT NOT NULL, " +
+                "`photoPath` TEXT, `createdDay` INTEGER NOT NULL, `stockDay` INTEGER NOT NULL, `personId` INTEGER NOT NULL, `doctorId` INTEGER, " +
+                "`pharmacyId` INTEGER, `pzn` TEXT NOT NULL, `description` TEXT NOT NULL, `descriptionSource` TEXT NOT NULL, `rating` TEXT NOT NULL, " +
+                "`photoCredit` TEXT NOT NULL, `stockKnown` INTEGER NOT NULL, `packSize` INTEGER NOT NULL)"
+
+        private const val MEDICATION_COLUMNS =
+            "`id`, `name`, `dosage`, `times`, `stock`, `dailyUse`, `notes`, `photoPath`, `createdDay`, `stockDay`, `personId`, `doctorId`, " +
+                "`pharmacyId`, `pzn`, `description`, `descriptionSource`, `rating`, `photoCredit`, `stockKnown`, `packSize`"
+
+        /**
+         * Version 27: Medikamente mit Einheit (Stueck, ml, IE, Tropfen, Hub, g) und Menge je Einnahme.
+         * Vorrat, Verbrauch und Packungsinhalt werden Kommazahlen (z. B. 7,5 ml am Tag oder eine halbe Tablette).
+         * SQLite kann den Typ einer Spalte nicht aendern, deshalb wird die Tabelle neu angelegt und alles uebernommen.
+         */
+        private val MIGRATION_26_27 = object : Migration(26, 27) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `Medication_new` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, " +
+                        "`dosage` TEXT NOT NULL, `times` TEXT NOT NULL, `stock` REAL NOT NULL, `dailyUse` REAL NOT NULL, `notes` TEXT NOT NULL, " +
+                        "`photoPath` TEXT, `createdDay` INTEGER NOT NULL, `stockDay` INTEGER NOT NULL, `personId` INTEGER NOT NULL, `doctorId` INTEGER, " +
+                        "`pharmacyId` INTEGER, `pzn` TEXT NOT NULL, `description` TEXT NOT NULL, `descriptionSource` TEXT NOT NULL, `rating` TEXT NOT NULL, " +
+                        "`photoCredit` TEXT NOT NULL, `stockKnown` INTEGER NOT NULL, `packSize` REAL NOT NULL, `unit` TEXT NOT NULL, `doses` TEXT NOT NULL)",
+                )
+                db.execSQL(
+                    "INSERT INTO `Medication_new` ($MEDICATION_COLUMNS, `unit`, `doses`) " +
+                        "SELECT $MEDICATION_COLUMNS, 'Stück', '' FROM `Medication`",
+                )
+                db.execSQL("DROP TABLE `Medication`")
+                db.execSQL("ALTER TABLE `Medication_new` RENAME TO `Medication`")
+            }
+        }
+
+        /** Tabellen, die eine Umstellung neu anlegt: Version nach der Umstellung → Tabelle → Fassung davor (fuer den Test). */
+        internal val REBUILT_BEFORE: Map<Int, Map<String, String>> = mapOf(27 to mapOf("Medication" to MEDICATION_V26_SQL))
+
         /** Alle Umstellungen in Reihenfolge (auch fuer den Test der Umstellungen). */
         internal val ALL_MIGRATIONS: Array<Migration> = arrayOf(
             MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9,
             MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16,
             MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23,
-            MIGRATION_23_24, MIGRATION_24_25, MIGRATION_25_26,
+            MIGRATION_23_24, MIGRATION_24_25, MIGRATION_25_26, MIGRATION_26_27,
         )
 
         fun get(context: Context): AppDatabase =

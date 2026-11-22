@@ -60,7 +60,19 @@ class MigrationSchemaTest {
     private val addRe = Regex("""^\s*ALTER TABLE `?(\w+)`? ADD COLUMN `?(\w+)`?""", RegexOption.IGNORE_CASE)
     private val updateRe = Regex("""^\s*UPDATE\s""", RegexOption.IGNORE_CASE)
 
+    private val insertRe = Regex("""^\s*INSERT INTO\s""", RegexOption.IGNORE_CASE)
+    private val dropRe = Regex("""^\s*DROP TABLE `?(\w+)`?""", RegexOption.IGNORE_CASE)
+    private val renameRe = Regex("""^\s*ALTER TABLE `?(\w+)`? RENAME TO `?(\w+)`?""", RegexOption.IGNORE_CASE)
+
     private fun simple(sql: String) = createRe.containsMatchIn(sql) || addRe.containsMatchIn(sql) || updateRe.containsMatchIn(sql)
+
+    /** Tabelle neu anlegen (neue Tabelle, Daten kopieren, alte loeschen, umbenennen): nur mit bekannter Fassung davor pruefbar. */
+    private fun rebuild(m: Migration, sql: String): Boolean {
+        val before = AppDatabase.REBUILT_BEFORE[m.endVersion] ?: return false
+        return simple(sql) || insertRe.containsMatchIn(sql) ||
+            dropRe.find(sql)?.let { it.groupValues[1] in before } == true ||
+            renameRe.find(sql)?.let { it.groupValues[2] in before } == true
+    }
 
     private fun columns(c: Connection, table: String): List<Col> =
         c.createStatement().use { st ->
@@ -89,7 +101,7 @@ class MigrationSchemaTest {
         val chain = mutableListOf<Migration>()
         for (m in migrations.reversed()) {
             val list = runCatching { statements(m) }.getOrNull() ?: break
-            if (!list.all { simple(it) }) break
+            if (!list.all { simple(it) || rebuild(m, it) }) break
             sqlOf[m] = list
             chain.add(0, m)
         }
@@ -104,9 +116,24 @@ class MigrationSchemaTest {
                 }
                 // Rueckwaerts: Zustand vor der ersten gepruefen Umstellung herstellen
                 chain.reversed().forEach { m ->
+                    val before = AppDatabase.REBUILT_BEFORE[m.endVersion].orEmpty()
+                    val renamed = sqlOf.getValue(m).mapNotNull { renameRe.find(it)?.groupValues?.get(1) }.toSet()
                     sqlOf.getValue(m).reversed().forEach { sql ->
-                        createRe.find(sql)?.let { exec(actual, "DROP TABLE `${it.groupValues[1]}`") }
-                        addRe.find(sql)?.let { exec(actual, "ALTER TABLE `${it.groupValues[1]}` DROP COLUMN `${it.groupValues[2]}`") }
+                        val rename = renameRe.find(sql)
+                        when {
+                            // Umgebaute Tabelle: wieder in die Fassung davor bringen
+                            rename != null -> {
+                                val table = rename.groupValues[2]
+                                exec(actual, "DROP TABLE `$table`")
+                                exec(actual, before.getValue(table))
+                            }
+                            createRe.find(sql)?.groupValues?.get(1)?.let { it in renamed } == true -> Unit
+                            insertRe.containsMatchIn(sql) || dropRe.containsMatchIn(sql) -> Unit
+                            else -> {
+                                createRe.find(sql)?.let { exec(actual, "DROP TABLE `${it.groupValues[1]}`") }
+                                addRe.find(sql)?.let { exec(actual, "ALTER TABLE `${it.groupValues[1]}` DROP COLUMN `${it.groupValues[2]}`") }
+                            }
+                        }
                     }
                 }
                 // Vorwaerts mit dem Code der App
@@ -122,5 +149,46 @@ class MigrationSchemaTest {
             }
         }
         println("Geprüft: Umstellungen ${chain.first().startVersion} → $version, ${tables.size} Tabellen")
+    }
+
+    /** Version 27: Medikamente werden umgebaut (Kommazahlen, Einheit); alle Angaben müssen erhalten bleiben. */
+    @Test
+    fun medicationRebuildKeepsData() {
+        val m = AppDatabase.ALL_MIGRATIONS.first { it.endVersion == 27 }
+        Class.forName("org.sqlite.JDBC")
+        DriverManager.getConnection("jdbc:sqlite::memory:").use { c ->
+            exec(c, AppDatabase.MEDICATION_V26_SQL)
+            exec(
+                c,
+                "INSERT INTO Medication (id, name, dosage, times, stock, dailyUse, notes, photoPath, createdDay, stockDay, personId, doctorId, " +
+                    "pharmacyId, pzn, description, descriptionSource, rating, photoCredit, stockKnown, packSize) VALUES " +
+                    "(7, 'Ramipril', '5 mg', '08:00', 40, 2, 'zum Essen', NULL, 100, 101, 3, 5, NULL, '12345678', '', '', '', '', 1, 50)",
+            )
+            statements(m).forEach { exec(c, it) }
+            c.createStatement().use { st ->
+                st.executeQuery("SELECT id, name, stock, dailyUse, packSize, unit, doses, personId, doctorId, stockDay FROM Medication").use { rs ->
+                    assertTrue(rs.next())
+                    assertEquals(7L, rs.getLong("id"))
+                    assertEquals("Ramipril", rs.getString("name"))
+                    assertEquals(40.0, rs.getDouble("stock"), 1e-9)
+                    assertEquals(2.0, rs.getDouble("dailyUse"), 1e-9)
+                    assertEquals(50.0, rs.getDouble("packSize"), 1e-9)
+                    assertEquals("Stück", rs.getString("unit"))
+                    assertEquals("", rs.getString("doses"))
+                    assertEquals(3L, rs.getLong("personId"))
+                    assertEquals(5L, rs.getLong("doctorId"))
+                    assertEquals(101L, rs.getLong("stockDay"))
+                }
+            }
+            // Neue Einträge bekommen weiter fortlaufende Nummern
+            exec(c, "INSERT INTO Medication (name, dosage, times, stock, dailyUse, notes, createdDay, stockDay, personId, pzn, description, descriptionSource, rating, photoCredit, stockKnown, packSize, unit, doses) VALUES ('Insulin', '', '22:00', 900.5, 14, '', 1, 1, 1, '', '', '', '', '', 1, 1500, 'IE', '22:00=14')")
+            c.createStatement().use { st ->
+                st.executeQuery("SELECT id, stock FROM Medication WHERE name = 'Insulin'").use { rs ->
+                    assertTrue(rs.next())
+                    assertTrue(rs.getLong("id") > 7)
+                    assertEquals(900.5, rs.getDouble("stock"), 1e-9)
+                }
+            }
+        }
     }
 }

@@ -701,7 +701,7 @@ private fun MedicationScreen(
             ItemCard(
                 title = m.name + if (m.dosage.isNotBlank()) " – ${m.dosage}" else "",
                 lines = listOfNotNull(
-                    m.times.takeIf { it.isNotBlank() }?.let { "Einnahme: ${it.replace(",", ", ")} Uhr" },
+                    m.times.takeIf { it.isNotBlank() }?.let { "Einnahme: ${it.replace(",", ", ")} Uhr" + (m.doseSummary()?.let { d -> " · $d" } ?: "") },
                     m.stockText() + (days?.let { " (ca. $it Tage)" } ?: ""),
                 ),
                 onClick = { detailId = m.id },

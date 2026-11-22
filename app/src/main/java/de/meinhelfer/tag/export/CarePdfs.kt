@@ -88,7 +88,7 @@ object CarePdfs {
             pdf.gap(4f)
             own.sortedBy { it.timeList().firstOrNull() ?: "99" }.forEach { m ->
                 val times = m.timeList().joinToString(", ")
-                pdf.text("• " + m.name + (if (m.dosage.isNotBlank()) " – ${m.dosage}" else "") + (if (times.isNotBlank()) " · $times Uhr" else ""), 10.5f)
+                pdf.text("• " + m.name + (if (m.dosage.isNotBlank()) " – ${m.dosage}" else "") + (if (times.isNotBlank()) " · $times Uhr" else "") + (m.doseSummary()?.let { " · $it" } ?: ""), 10.5f)
             }
         }
         if (contacts.isNotEmpty()) {
@@ -157,21 +157,39 @@ object CarePdfs {
 
     // ------------------------------------------------------------------ Medikamentenplan
 
-    /** Mengen fuer morgens, mittags, abends, zur Nacht: aus dem Schema der Dosierung, sonst aus den Einnahmezeiten. */
+    private fun slotIndex(h: Int): Int = when {
+        h < 11 -> 0
+        h < 15 -> 1
+        h < 21 -> 2
+        else -> 3
+    }
+
+    /**
+     * Mengen fuer morgens, mittags, abends, zur Nacht: aus den Mengen je Einnahme (z. B. 8 IE, 5 ml),
+     * sonst aus dem Schema der Dosierung, sonst aus den Einnahmezeiten.
+     */
     private fun slots(m: Medication): Pair<List<String>, String> {
+        val unitNote = if (m.unit != "Stück") listOf(m.dosage, "Mengen in ${m.unit}").filter { it.isNotBlank() }.joinToString(" · ") else m.dosage
+        val doses = m.doseMap()
+        if (doses.isNotEmpty()) {
+            val sums = DoubleArray(4)
+            val has = BooleanArray(4)
+            m.timeList().forEach { t ->
+                val h = runCatching { LocalTime.parse(t).hour }.getOrNull() ?: return@forEach
+                val d = de.meinhelfer.tag.summary.Doses.at(doses, t) ?: return@forEach
+                val i = slotIndex(h)
+                sums[i] += d
+                has[i] = true
+            }
+            if (has.any { it }) return List(4) { if (has[it]) de.meinhelfer.tag.summary.Amounts.fmt(sums[it]) else "0" } to unitNote
+        }
         MedPlans.schemaOf(m.dosage)?.let { (amounts, rest) -> return amounts.map { if (it.isBlank()) "0" else it } to rest }
         val result = MutableList(4) { "" }
         m.timeList().forEach { t ->
             val h = runCatching { LocalTime.parse(t).hour }.getOrNull() ?: return@forEach
-            val i = when {
-                h < 11 -> 0
-                h < 15 -> 1
-                h < 21 -> 2
-                else -> 3
-            }
-            result[i] = "1"
+            result[slotIndex(h)] = if (m.unit == "Stück") "1" else "×"
         }
-        return (if (result.all { it.isBlank() }) result else result.map { it.ifBlank { "0" } }) to m.dosage
+        return (if (result.all { it.isBlank() }) result else result.map { it.ifBlank { "0" } }) to unitNote
     }
 
     fun medPlan(
@@ -543,6 +561,7 @@ object CarePdfs {
                 val times = m.timeList().joinToString(", ")
                 pdf.text(
                     "• " + m.name + (if (m.dosage.isNotBlank()) " – ${m.dosage}" else "") + (if (times.isNotBlank()) " · $times Uhr" else "") +
+                        (m.doseSummary()?.let { " · $it" } ?: "") +
                         (if (m.notes.isNotBlank()) " · " + m.notes.trim().replace('\n', ' ') else ""),
                     10.5f,
                 )
