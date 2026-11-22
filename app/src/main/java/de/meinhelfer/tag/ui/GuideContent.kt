@@ -486,6 +486,10 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
                 "Nach dem Eintragen des Schlüssels kannst du „Verfügbare Modelle laden“ antippen. Dann zeigt das Feld „Modell“ eine Auswahlliste dieses Dienstes. Der Modellname ist sonst vorausgefüllt und lässt sich auch selbst eintippen.",
             ),
             GuideItem(
+                "KI-App auf dem Handy (Gemini, ChatGPT)",
+                "Installierte KI-Apps wie Gemini oder ChatGPT lassen sich von anderen Apps nicht direkt ansteuern. Deshalb gibt es bei jeder KI-Funktion „An KI-App teilen (z. B. Gemini)“: Die App zeigt dir den vorbereiteten Text (ohne Namen), du tippst auf „Teilen“ und wählst die KI-App. Die Antwort erscheint dann dort und nicht in Mein Helfer, sie wird also auch nicht automatisch übernommen. Das geht auch ganz ohne eingerichteten KI-Dienst. Am bequemsten bleibt ein kostenloser Gemini-Schlüssel mit deinem Google-Konto, dann kommt die Antwort direkt in die App. Gemini direkt auf dem Handy (Gemini Nano) können andere Apps bisher nur auf neueren Geräten nutzen, z. B. ab dem Pixel 9.",
+            ),
+            GuideItem(
                 "Eigene KI im Heimnetz",
                 "Unter „Im eigenen Heimnetz“ verbindest du die App mit einer KI auf deinem eigenen PC, z. B. Ollama oder LM Studio. Dann verlassen die Daten dein Netz nicht. Trag die Adresse des PCs ein, z. B. http://192.168.178.20:11434/v1 (Ollama) oder http://192.168.178.20:1234/v1 (LM Studio), lade die Modelle und tippe auf „Testen“. Der PC muss laufen, im selben WLAN sein und Anfragen aus dem Heimnetz annehmen (bei Ollama OLLAMA_HOST=0.0.0.0 bzw. „Expose to network“, bei LM Studio „Serve on Local Network“). Unverschlüsselt (http) verbindet die App nur mit Adressen im eigenen Netz, ins Internet nur mit https. Auf einem schwachen PC kann eine Antwort eine Weile dauern.",
             ),

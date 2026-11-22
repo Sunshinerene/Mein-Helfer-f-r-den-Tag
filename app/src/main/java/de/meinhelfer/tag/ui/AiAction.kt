@@ -1,5 +1,7 @@
 package de.meinhelfer.tag.ui
 
+import android.content.Context
+import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -59,9 +61,10 @@ fun AiActionButton(
     Column(modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
         if (!configured && !otherReady) {
             Text(
-                "KI nicht eingerichtet. Unter Einstellungen → KI und Internet kannst du sie einrichten (z. B. kostenlos mit Google Gemini).",
+                "KI nicht eingerichtet. Unter Einstellungen → KI und Internet kannst du sie einrichten (z. B. kostenlos mit Google Gemini). Oder teile den Text an eine KI-App auf deinem Handy.",
                 style = MaterialTheme.typography.bodySmall,
             )
+            AiShareButton(system, text = prompt)
             return@Column
         }
         if (!loading) {
@@ -84,6 +87,7 @@ fun AiActionButton(
                 OutlinedButton(shape = buttonShape(), onClick = { confirmText = prompt() }, modifier = Modifier.fillMaxWidth()) { Text(label) }
             }
         }
+        if (!loading) AiShareButton(system, text = prompt)
         error?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
         if (limitHit) {
             Text(
@@ -127,6 +131,58 @@ fun AiActionButton(
                 }) { Text("Senden") }
             },
             dismissButton = { TextButton(onClick = { confirmText = null }) { Text("Abbrechen") } },
+        )
+    }
+}
+
+/**
+ * Gibt den vorbereiteten Text (ohne Namen) ueber das Android-Teilen an eine KI-App weiter, z. B. Gemini oder ChatGPT.
+ * Die Antwort bleibt in der anderen App; die Vorgaben fuer JSON werden dafuer durch eine Bitte um lesbaren Text ersetzt.
+ */
+internal fun shareToAiApp(context: Context, system: String, text: String) {
+    val rules = system.split(Regex("(?<=[.!?])\\s+")).filterNot { it.contains("JSON", ignoreCase = true) }.joinToString(" ")
+    val body = buildString {
+        if (rules.isNotBlank()) {
+            appendLine(rules)
+            appendLine()
+        }
+        appendLine(text.trim())
+        appendLine()
+        append("Bitte antworte in einfachem, gut lesbarem Deutsch mit kurzen Abschnitten oder Stichpunkten, nicht als JSON. Ignoriere dafür die Formatvorgaben oben.")
+    }
+    val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, body)
+    try {
+        context.startActivity(Intent.createChooser(send, "An KI-App teilen"))
+    } catch (_: Exception) {
+    }
+}
+
+/** Kleiner Knopf: Text erst zeigen, dann an eine KI-App auf dem Handy teilen. Geht auch ohne eingerichteten KI-Dienst. */
+@Composable
+fun AiShareButton(system: String, label: String = "An KI-App teilen (z. B. Gemini)", text: () -> String) {
+    val context = LocalContext.current
+    var preview by remember { mutableStateOf<String?>(null) }
+    TextButton(onClick = { preview = text() }) { Text(label) }
+    preview?.let { t ->
+        AlertDialog(
+            onDismissRequest = { preview = null },
+            title = { Text("An KI-App teilen?") },
+            text = {
+                Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        "Dieser Text wird an die App übergeben, die du gleich auswählst (z. B. Gemini oder ChatGPT). Die Antwort erscheint dort, nicht hier; was die App mit dem Text macht, bestimmt ihr Anbieter.",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    Text(t, style = MaterialTheme.typography.bodyMedium)
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    preview = null
+                    shareToAiApp(context, system, t)
+                }) { Text("Teilen") }
+            },
+            dismissButton = { TextButton(onClick = { preview = null }) { Text("Abbrechen") } },
         )
     }
 }

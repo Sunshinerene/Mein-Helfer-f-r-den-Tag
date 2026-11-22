@@ -101,6 +101,7 @@ fun AiHintBox(
         } else if (configured) {
             OutlinedButton(shape = buttonShape(), onClick = { confirm = true }) { Text(buttonLabel) }
         }
+        if (!loading) AiShareButton(AiClient.SYSTEM_PROMPT) { promptText }
         error?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
         if (limitHit) {
             Text(

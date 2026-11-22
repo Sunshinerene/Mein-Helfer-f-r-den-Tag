@@ -279,6 +279,7 @@ fun MedOverviewScreen(
                                     Text(if (check == null) "Gesamt-Check per KI" else "Gesamt-Check erneuern")
                                 }
                             }
+                            if (!loading) AiShareButton(MedCheck.SYSTEM_PROMPT) { MedCheck.prompt(meds, if (withAge) age else null) }
                             error?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
                             if (limitHit) {
                                 Text(

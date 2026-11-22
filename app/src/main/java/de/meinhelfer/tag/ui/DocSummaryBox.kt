@@ -156,6 +156,7 @@ fun DocSummaryBox(
                 taskInfo?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
             }
         }
+        if (!loading && enoughText) AiShareButton(SUMMARY_SYSTEM, label = "Zusammenfassen mit KI-App (z. B. Gemini)") { promptText }
         error?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
         if (limitHit) {
             Text(

@@ -145,6 +145,7 @@ fun MedRatingBox(med: Medication, otherNames: List<String>, onUpdate: (Medicatio
                 Text(if (rating == null) "Einschätzung per KI holen" else "Neu einschätzen lassen")
             }
         }
+        if (!loading) AiShareButton(MedRating.SYSTEM_PROMPT) { promptText }
         error?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
         if (limitHit) {
             Text(

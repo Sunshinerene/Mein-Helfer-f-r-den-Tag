@@ -4,7 +4,7 @@ by Sunshine@R
 
 Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbezogenen Daten bleiben lokal auf dem Gerät.
 
-## Stand: v0.46.0
+## Stand: v0.47.0
 
 ### Funktionsübersicht
 
@@ -74,7 +74,7 @@ Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbe
 - Freigaben (Android): Benachrichtigungen, Ton, pünktliche Wecker, Akku, Updates – mit Status und Sprung in die Android-Einstellungen
 - App-Sperre, Bildschirmschutz, verschlüsselte Datenbank, Sicherung und Wiederherstellung
 - App zurücksetzen mit Warnung, Angebot zur Sicherung und Bestätigung per Bildschirmsperre
-- Medikamenten-Beschreibung, KI-Assistent mit 18 Diensten (u. a. Gemini, Groq, Mistral, OpenRouter, Cerebras, GitHub Models, OVHcloud und Scaleway in der EU, IONOS in Deutschland, OpenAI, Claude) oder eigenem Server im Heimnetz (Ollama, LM Studio) – freiwillig
+- Medikamenten-Beschreibung, KI-Assistent mit 18 Diensten (u. a. Gemini, Groq, Mistral, OpenRouter, Cerebras, GitHub Models, OVHcloud und Scaleway in der EU, IONOS in Deutschland, OpenAI, Claude) oder eigenem Server im Heimnetz (Ollama, LM Studio), alternativ Teilen an eine KI-App wie Gemini – freiwillig
 - Anleitung mit Suche, Rundgang, Feedback, Vorschau, App-Update über GitHub
 
 Alle personenbezogenen Daten bleiben verschlüsselt auf dem Handy. Nichts wird automatisch gesendet.

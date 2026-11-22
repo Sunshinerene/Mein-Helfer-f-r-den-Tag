@@ -1,6 +1,6 @@
 # TODO
 
-Stand: v0.46.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.47.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
@@ -25,6 +25,7 @@ Stand: v0.46.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 - [ ] Barrierefreiheit: Hochkontrast-Design, Vorlesen, größere Bedienflächen
 - [ ] Mehrsprachigkeit für Betreuungskräfte (z. B. Polnisch, Rumänisch)
 - [ ] Motivator: Pausen-Erinnerung, Stimmungsverlauf in der Auswertung (nur für dich, nicht in geteilten Berichten), Ziel-Schritte als Aufgabe mit Frist übernehmen
+- [ ] KI direkt auf dem Handy: Gemini Nano über ML Kit (nur neuere Geräte, z. B. ab Pixel 9) oder ein eigenes kleines Modell in der App (z. B. Gemma, mehrere GB Download)
 - [ ] Designs verfeinern (Schriftarten, weitere Varianten); Effekte: echte Unschärfe hinter Glas-Karten ab Android 12, Glanz auch auf Knöpfen
 
 ## Bitte auf dem Handy prüfen (bisher nicht getestet)
@@ -51,6 +52,10 @@ Stand: v0.46.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 - [ ] Entscheiden: Aufbewahrung der Nachweise 3 Jahre oder länger (30-Jahres-Frist bei Gesundheitsschäden); zusätzlicher Nachweis beim App-Ersteller (Server) ja oder nein
 - [ ] Medizinprodukte-Recht (MDR) prüfen lassen, vor allem den KI-Gesamt-Check der Medikamente; Zweckbestimmung als Organisationshilfe klar festhalten
 - [ ] Impressum und Datenschutzerklärung für eine Veröffentlichung (z. B. Play Store), eigener Signaturschlüssel statt Test-Schlüssel
+
+## Version 0.47.0 (fertig)
+
+- [x] „An KI-App teilen (z. B. Gemini)“ bei allen KI-Funktionen: vorbereiteten Text (ohne Namen) an eine KI-App auf dem Handy weitergeben, auch ohne eingerichteten Dienst
 
 ## Version 0.46.0 (fertig)
 
