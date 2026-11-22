@@ -103,7 +103,7 @@ fun MedRatingBox(med: Medication, otherNames: List<String>, onUpdate: (Medicatio
 
     val rating = remember(med.rating) { MedRating.fromStored(med.rating) }
     val configured = AiConfig.isConfigured(context)
-    val otherReady = AiProvider.entries.any { it != provider && AiConfig.apiKey(context, it).isNotBlank() }
+    val otherReady = AiProvider.entries.any { it != provider && AiConfig.isReady(context, it) }
     val medName = MedicationInfo.cleanName(med.name).ifBlank { med.name }
     val others = otherNames.map { MedicationInfo.cleanName(it).ifBlank { it } }.distinct()
     val promptText = MedRating.prompt(medName, others)

@@ -225,6 +225,7 @@ fun GoalEditorScreen(vm: MainViewModel, initial: Goal?, caregiver: CaregiverProf
                             label = "Weg vorschlagen",
                             note = "Enthalten sind Ziel, Art, Details, Wunschtermin, deine Rolle und ggf. der Pflegegrad, aber keine Namen.",
                             system = GoalAi.SYSTEM_PROMPT,
+                            maxTokens = 2500,
                             prompt = { GoalAi.pathPrompt(title, kind, details, targetDay, caregiver.roleValue?.label, careLevel, personId != 0L, today) },
                             onAnswer = { answer, _ ->
                                 val path = GoalAi.parsePath(answer)
@@ -408,6 +409,7 @@ fun GoalDetailScreen(vm: MainViewModel, goal: Goal, caregiver: CaregiverProfile,
                             label = if (check == null) "Weg einschätzen" else "Neu einschätzen",
                             note = "Enthalten sind Ziel, Art, Details, Termine und Stand der Schritte, deine Rolle und ggf. der Pflegegrad, aber keine Namen.",
                             system = GoalAi.SYSTEM_PROMPT,
+                            maxTokens = 2000,
                             prompt = { GoalAi.checkPrompt(goal, steps, caregiver.roleValue?.label, person?.careLevel, today) },
                             onAnswer = { answer, provider ->
                                 val parsed = GoalAi.parseCheck(answer, today, provider)

@@ -32,13 +32,22 @@ object AiClient {
         return bullets.ifEmpty { lines }
     }
 
-    suspend fun ask(context: Context, system: String, user: String): Result<String> = withContext(Dispatchers.IO) {
+    /** [maxTokens]: Platz fuer die Antwort (laengere Listen wie ein Medikamentenplan brauchen mehr). */
+    suspend fun ask(context: Context, system: String, user: String, maxTokens: Int = 1500): Result<String> = withContext(Dispatchers.IO) {
         val provider = AiConfig.provider(context)
         val key = AiConfig.apiKey(context, provider)
-        if (key.isBlank()) return@withContext Result.failure(IllegalStateException("Kein Schlüssel hinterlegt."))
+        if (!AiConfig.isReady(context, provider)) {
+            return@withContext Result.failure(
+                IllegalStateException(if (provider == AiProvider.LOCAL) "Keine gültige Adresse für den eigenen Server eingetragen." else "Kein Schlüssel hinterlegt."),
+            )
+        }
         val model = AiConfig.model(context, provider)
         try {
-            Result.success(call(provider, key, model, system, user))
+            Result.success(call(AiConfig.baseUrl(context, provider), provider, key, model, system, user, maxTokens))
+        } catch (e: java.net.ConnectException) {
+            Result.failure(IllegalStateException(if (provider == AiProvider.LOCAL) "Der eigene Server antwortet nicht. Läuft er, und ist das Handy im selben WLAN?" else "Keine Verbindung zum Dienst."))
+        } catch (e: java.net.SocketTimeoutException) {
+            Result.failure(IllegalStateException("Der Dienst hat zu lange gebraucht. Bitte nochmal versuchen oder ein kleineres Modell wählen."))
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -50,12 +59,13 @@ object AiClient {
     )
 
     /** Fragt beim Dienst die verfuegbaren Chat-Modelle ab (nur mit dem eigenen Schluessel, ohne Personendaten). */
-    suspend fun listModels(provider: AiProvider, key: String): Result<List<String>> = withContext(Dispatchers.IO) {
+    suspend fun listModels(context: Context, provider: AiProvider, key: String): Result<List<String>> = withContext(Dispatchers.IO) {
         runCatching {
-            val url = when (provider.kind) {
-                AiKind.GEMINI -> provider.baseUrl + "/models?pageSize=200"
-                AiKind.ANTHROPIC -> provider.baseUrl + "/models?limit=100"
-                AiKind.OPENAI_COMPAT -> provider.baseUrl + "/models"
+            val base = AiConfig.baseUrl(context, provider)
+            val url = provider.modelsUrl ?: when (provider.kind) {
+                AiKind.GEMINI -> "$base/models?pageSize=200"
+                AiKind.ANTHROPIC -> "$base/models?limit=100"
+                AiKind.OPENAI_COMPAT -> "$base/models"
             }
             val connection = URL(url).openConnection() as HttpURLConnection
             connection.requestMethod = "GET"
@@ -68,14 +78,15 @@ object AiClient {
                     connection.setRequestProperty("x-api-key", key)
                     connection.setRequestProperty("anthropic-version", "2023-06-01")
                 }
-                AiKind.OPENAI_COMPAT -> connection.setRequestProperty("Authorization", "Bearer $key")
+                AiKind.OPENAI_COMPAT -> if (key.isNotBlank()) connection.setRequestProperty("Authorization", "Bearer $key")
             }
             val code = connection.responseCode
             val text = (if (code in 200..299) connection.inputStream else connection.errorStream)
                 ?.bufferedReader()?.use { it.readText() }.orEmpty()
             if (code !in 200..299) throw IllegalStateException(errorMessage(code, text))
-            val json = JSONObject(text)
             val names = mutableListOf<String>()
+            // GitHub liefert eine Liste ohne "data"-Huelle
+            val json = if (text.trimStart().startsWith("[")) JSONObject().put("data", JSONArray(text)) else JSONObject(text)
             if (provider.kind == AiKind.GEMINI) {
                 val arr = json.optJSONArray("models") ?: JSONArray()
                 for (i in 0 until arr.length()) {
@@ -95,14 +106,15 @@ object AiClient {
         }
     }
 
-    private fun call(provider: AiProvider, key: String, model: String, system: String, user: String): String {
+    private fun call(base: String, provider: AiProvider, key: String, model: String, system: String, user: String, maxTokens: Int): String {
         val (url, headers, body) = when (provider.kind) {
             AiKind.OPENAI_COMPAT -> Triple(
-                provider.baseUrl + "/chat/completions",
-                mapOf("Authorization" to "Bearer $key"),
+                "$base/chat/completions",
+                if (key.isNotBlank()) mapOf("Authorization" to "Bearer $key") else emptyMap(),
                 JSONObject()
                     .put("model", model)
-                    .put("max_tokens", 600)
+                    // Neuere OpenAI-Modelle kennen nur noch max_completion_tokens
+                    .put(if (provider == AiProvider.OPENAI) "max_completion_tokens" else "max_tokens", maxTokens)
                     .put(
                         "messages",
                         JSONArray()
@@ -111,16 +123,16 @@ object AiClient {
                     ),
             )
             AiKind.ANTHROPIC -> Triple(
-                provider.baseUrl + "/messages",
+                "$base/messages",
                 mapOf("x-api-key" to key, "anthropic-version" to "2023-06-01"),
                 JSONObject()
                     .put("model", model)
-                    .put("max_tokens", 600)
+                    .put("max_tokens", maxTokens)
                     .put("system", system)
                     .put("messages", JSONArray().put(JSONObject().put("role", "user").put("content", user))),
             )
             AiKind.GEMINI -> Triple(
-                provider.baseUrl + "/models/$model:generateContent",
+                "$base/models/$model:generateContent",
                 mapOf("x-goog-api-key" to key),
                 JSONObject()
                     .put("systemInstruction", JSONObject().put("parts", JSONArray().put(JSONObject().put("text", system))))
@@ -136,7 +148,8 @@ object AiClient {
         val connection = URL(url).openConnection() as HttpURLConnection
         connection.requestMethod = "POST"
         connection.connectTimeout = 15000
-        connection.readTimeout = 60000
+        // Eigene Server auf dem PC brauchen teils laenger
+        connection.readTimeout = if (provider == AiProvider.LOCAL) 180000 else 90000
         connection.doOutput = true
         connection.setRequestProperty("Content-Type", "application/json")
         connection.setRequestProperty("User-Agent", "MeinHelfer-App")
@@ -154,13 +167,17 @@ object AiClient {
 
         val json = JSONObject(text)
         val answer = when (provider.kind) {
-            AiKind.OPENAI_COMPAT -> json.getJSONArray("choices").getJSONObject(0).getJSONObject("message").optString("content")
+            AiKind.OPENAI_COMPAT -> json.getJSONArray("choices").getJSONObject(0).getJSONObject("message").let { m ->
+                if (m.isNull("content")) "" else m.optString("content")
+            }
             AiKind.ANTHROPIC -> json.getJSONArray("content").getJSONObject(0).optString("text")
             AiKind.GEMINI -> json.getJSONArray("candidates").getJSONObject(0).getJSONObject("content")
                 .getJSONArray("parts").getJSONObject(0).optString("text")
         }
-        if (answer.isBlank()) throw IllegalStateException("Die KI hat nichts geantwortet.")
-        return answer.trim()
+        // Manche Modelle schreiben ihre Ueberlegungen in <think> ... </think> davor
+        val clean = answer.replace(Regex("(?s)<think>.*?</think>"), "").trim()
+        if (clean.isBlank()) throw IllegalStateException("Die KI hat nichts geantwortet. Bei Denk-Modellen hilft oft ein anderes Modell.")
+        return clean
     }
 
     private fun errorMessage(code: Int, body: String): String {

@@ -323,6 +323,7 @@ fun MedPlanImportBox(doc: Document, person: Person?, meds: List<Medication>, vm:
                 label = "Mit KI genauer auslesen",
                 note = "Gesendet wird der erkannte Text des Dokuments; Name, Geburtsdatum, Versichertennummer und Straße der Person werden vorher ersetzt.",
                 system = MedPlanAi.SYSTEM_PROMPT,
+                maxTokens = 4000,
                 prompt = { MedPlanAi.prompt(maskPersonal(doc.text, person)) },
                 onAnswer = { answer, _ ->
                     val parsed = MedPlanAi.parse(answer)

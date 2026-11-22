@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Unverschluesselte Verbindungen (http) sind nur fuer einen eigenen KI-Server im Heimnetz gedacht
+    (Ollama, LM Studio). Die App prueft vor jeder solchen Anfrage, dass die Adresse im eigenen Netz liegt
+    (AiConfig.isAllowedCustomUrl); alle anderen Adressen der App sind fest https.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

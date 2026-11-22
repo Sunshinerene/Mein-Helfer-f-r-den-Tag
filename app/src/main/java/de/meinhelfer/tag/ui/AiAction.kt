@@ -44,6 +44,7 @@ fun AiActionButton(
     onAnswer: (answer: String, provider: String) -> Boolean,
     modifier: Modifier = Modifier,
     filled: Boolean = false,
+    maxTokens: Int = 1500,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -53,7 +54,7 @@ fun AiActionButton(
     var limitHit by remember { mutableStateOf(false) }
     var provider by remember { mutableStateOf(AiConfig.provider(context)) }
     val configured = AiConfig.isConfigured(context)
-    val otherReady = AiProvider.entries.any { it != provider && AiConfig.apiKey(context, it).isNotBlank() }
+    val otherReady = AiProvider.entries.any { it != provider && AiConfig.isReady(context, it) }
 
     Column(modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
         if (!configured && !otherReady) {
@@ -111,7 +112,7 @@ fun AiActionButton(
                     limitHit = false
                     val used = provider
                     scope.launch {
-                        AiClient.ask(context, system, text)
+                        AiClient.ask(context, system, text, maxTokens)
                             .onSuccess { answer ->
                                 if (!onAnswer(answer, used.label.substringBefore(" ("))) {
                                     error = "Die Antwort der KI konnte nicht ausgewertet werden. Versuche es nochmal oder wähle ein anderes Modell."

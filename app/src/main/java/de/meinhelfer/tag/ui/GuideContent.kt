@@ -475,7 +475,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Einrichten",
-                "Einstellungen → KI-Assistent. Dienst wählen: kostenlos nutzbar sind Google Gemini, Groq, Mistral und OpenRouter (Modelle mit „:free“). Kostenpflichtig sind OpenAI, Anthropic (Claude) und DeepSeek. Dann den eigenen API-Schlüssel eintragen („Schlüssel besorgen“ öffnet die Seite des Anbieters) und „Testen“ antippen. Ein Abo bei ChatGPT oder Claude reicht nicht, es braucht den API-Schlüssel.",
+                "Einstellungen → KI-Assistent. Dienst wählen: kostenlos nutzbar (mit Mengengrenzen) sind Google Gemini, Groq, Mistral, OpenRouter (Modelle mit „:free“), Cerebras, SambaNova, GitHub Models, Hugging Face (kleines Monatsguthaben), Cohere (Test-Schlüssel), OVHcloud (EU, auch ganz ohne Schlüssel mit 2 Anfragen pro Minute) und Scaleway (EU, 1 Million Tokens). Kostenpflichtig nach Verbrauch sind OpenAI, Anthropic (Claude), xAI (Grok), Together AI, Nebius, IONOS (Server in Deutschland) und DeepSeek. Dann den eigenen API-Schlüssel eintragen („Schlüssel besorgen“ öffnet die Seite des Anbieters) und „Testen“ antippen. Mit „Verfügbare Modelle laden“ wählst du ein anderes Modell, falls das vorgeschlagene nicht mehr angeboten wird. Ein Abo bei ChatGPT oder Claude reicht nicht, es braucht den API-Schlüssel. Angaben zu kostenlosen Kontingenten ändern sich häufig; maßgeblich ist die Seite des Anbieters.",
             ),
             GuideItem(
                 "Einschätzung zu einem Medikament",
@@ -486,8 +486,12 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
                 "Nach dem Eintragen des Schlüssels kannst du „Verfügbare Modelle laden“ antippen. Dann zeigt das Feld „Modell“ eine Auswahlliste dieses Dienstes. Der Modellname ist sonst vorausgefüllt und lässt sich auch selbst eintippen.",
             ),
             GuideItem(
+                "Eigene KI im Heimnetz",
+                "Unter „Im eigenen Heimnetz“ verbindest du die App mit einer KI auf deinem eigenen PC, z. B. Ollama oder LM Studio. Dann verlassen die Daten dein Netz nicht. Trag die Adresse des PCs ein, z. B. http://192.168.178.20:11434/v1 (Ollama) oder http://192.168.178.20:1234/v1 (LM Studio), lade die Modelle und tippe auf „Testen“. Der PC muss laufen, im selben WLAN sein und Anfragen aus dem Heimnetz annehmen (bei Ollama OLLAMA_HOST=0.0.0.0 bzw. „Expose to network“, bei LM Studio „Serve on Local Network“). Unverschlüsselt (http) verbindet die App nur mit Adressen im eigenen Netz, ins Internet nur mit https. Auf einem schwachen PC kann eine Antwort eine Weile dauern.",
+            ),
+            GuideItem(
                 "Dienst schnell wechseln",
-                "Hast du für mehrere Dienste einen Schlüssel eingetragen (Haken ✓ in den Einstellungen), erscheint bei jedem KI-Hinweis eine Schnellwahl. Dort tippst du den Dienst an, der verwendet werden soll. Der gewählte Dienst bleibt gespeichert. Ein automatischer Wechsel passiert nie.",
+                "Hast du mehrere Dienste eingerichtet (Haken ✓ in den Einstellungen), erscheint bei jedem KI-Hinweis eine Schnellwahl. Dort tippst du den Dienst an, der verwendet werden soll. Der gewählte Dienst bleibt gespeichert. Ein automatischer Wechsel passiert nie.",
             ),
             GuideItem(
                 "Limit erreicht?",

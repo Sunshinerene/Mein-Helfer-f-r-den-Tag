@@ -1,6 +1,6 @@
 # TODO
 
-Stand: v0.43.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.44.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
@@ -41,6 +41,7 @@ Stand: v0.43.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 - [ ] Tages-Motivator: Stimmungs-Check zur richtigen Zeit (Zeitfenster, „Später“, Benachrichtigung), Vorhaben abhaken, Ziele mit Vorlagen und KI-Weg
 - [ ] Ausweis und Krankenkarte auslesen (Erkennung je nach Licht und Kartenversion), Foto wird gelöscht
 - [ ] Medikamentenplan übernehmen: Texterkennung bei Tabellen, Code oben rechts auf dem Plan, KI; Vorschlag nur bei neuerem Plan
+- [ ] Neue KI-Dienste (Cerebras, SambaNova, GitHub Models, Hugging Face, Cohere, OVHcloud, Scaleway, xAI, Together, Nebius, IONOS) und eigener Server (Ollama, LM Studio) im Heimnetz testen
 - [ ] Ecken und Effekte (Beta): alle Ansichten mit „Eckig“ und „Rund“, Aurora hell und dunkel, bewegter Hintergrund flüssig und akkuschonend
 
 ## Rechtliches vor einer Veröffentlichung
@@ -49,6 +50,12 @@ Stand: v0.43.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 - [ ] Entscheiden: Aufbewahrung der Nachweise 3 Jahre oder länger (30-Jahres-Frist bei Gesundheitsschäden); zusätzlicher Nachweis beim App-Ersteller (Server) ja oder nein
 - [ ] Medizinprodukte-Recht (MDR) prüfen lassen, vor allem den KI-Gesamt-Check der Medikamente; Zweckbestimmung als Organisationshilfe klar festhalten
 - [ ] Impressum und Datenschutzerklärung für eine Veröffentlichung (z. B. Play Store), eigener Signaturschlüssel statt Test-Schlüssel
+
+## Version 0.44.0 (fertig)
+
+- [x] Mehr KI-Dienste: kostenlos Cerebras, SambaNova, GitHub Models, Hugging Face, Cohere, OVHcloud (EU, auch ohne Schlüssel), Scaleway (EU); kostenpflichtig xAI (Grok), Together AI, Nebius, IONOS (Deutschland)
+- [x] Eigener KI-Server im Heimnetz (Ollama, LM Studio): Daten bleiben im eigenen Netz, http nur für Adressen im Heimnetz
+- [x] Mehr Platz für KI-Antworten (lange Medikamentenpläne und Ziel-Wege wurden sonst abgeschnitten), Denk-Modelle werden besser ausgewertet
 
 ## Version 0.43.0 (fertig)
 

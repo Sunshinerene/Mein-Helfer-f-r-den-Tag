@@ -39,7 +39,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun AiProviderSwitch(selected: AiProvider, onSelect: (AiProvider) -> Unit) {
     val context = LocalContext.current
-    val usable = AiProvider.entries.filter { AiConfig.apiKey(context, it).isNotBlank() }
+    val usable = AiProvider.entries.filter { AiConfig.isReady(context, it) }
     if (usable.isEmpty() || (usable.size < 2 && selected in usable)) return
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text("KI-Dienst wechseln", style = MaterialTheme.typography.labelMedium)
@@ -76,7 +76,7 @@ fun AiHintBox(
     val added = remember { mutableStateListOf<String>() }
 
     val configured = AiConfig.isConfigured(context)
-    val otherReady = AiProvider.entries.any { it != provider && AiConfig.apiKey(context, it).isNotBlank() }
+    val otherReady = AiProvider.entries.any { it != provider && AiConfig.isReady(context, it) }
 
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         if (!configured) {

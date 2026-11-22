@@ -560,16 +560,23 @@ private fun AiCard() {
     var loadingModels by remember { mutableStateOf(false) }
     var modelsMessage by remember { mutableStateOf<String?>(null) }
     val storageOk = remember { AiConfig.storageAvailable(context) }
+    var customUrl by remember { mutableStateOf(AiConfig.customUrl(context)) }
+    var keyless by remember { mutableStateOf(AiConfig.keylessEnabled(context, provider)) }
+    var tick by remember { mutableStateOf(0) }
+    val ready = remember(provider, key, customUrl, keyless, tick) { AiConfig.isReady(context, provider) }
 
     fun choose(p: AiProvider) {
         provider = p
         AiConfig.setProvider(context, p)
         key = AiConfig.apiKey(context, p)
         model = AiConfig.model(context, p)
+        keyless = AiConfig.keylessEnabled(context, p)
         testResult = null
         models = emptyList()
         modelsMessage = null
     }
+
+    fun mark(p: AiProvider): String = p.label + if (AiConfig.isReady(context, p)) " ✓" else ""
 
     HCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -589,18 +596,58 @@ private fun AiCard() {
             }
             Text("Kostenlos nutzbar", style = MaterialTheme.typography.labelLarge)
             androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                AiProvider.entries.filter { it.free }.forEach { p ->
-                    FilterChip(selected = provider == p, onClick = { choose(p) }, label = { Text(p.label + if (AiConfig.apiKey(context, p).isNotBlank()) " ✓" else "") })
+                AiProvider.entries.filter { it.free && it != AiProvider.LOCAL }.forEach { p ->
+                    FilterChip(selected = provider == p, onClick = { choose(p) }, label = { Text(mark(p)) })
                 }
+            }
+            Text("Im eigenen Heimnetz", style = MaterialTheme.typography.labelLarge)
+            androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(selected = provider == AiProvider.LOCAL, onClick = { choose(AiProvider.LOCAL) }, label = { Text(mark(AiProvider.LOCAL)) })
             }
             Text("Kostenpflichtig", style = MaterialTheme.typography.labelLarge)
             androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 AiProvider.entries.filter { !it.free }.forEach { p ->
-                    FilterChip(selected = provider == p, onClick = { choose(p) }, label = { Text(p.label + if (AiConfig.apiKey(context, p).isNotBlank()) " ✓" else "") })
+                    FilterChip(selected = provider == p, onClick = { choose(p) }, label = { Text(mark(p)) })
                 }
             }
             Text("Ein Haken ✓ zeigt, dass für diesen Dienst ein Schlüssel hinterlegt ist. Bei mehreren eingerichteten Diensten kannst du direkt in der App (bei den KI-Hinweisen) schnell wechseln.", style = MaterialTheme.typography.bodySmall)
             Text(provider.note, style = MaterialTheme.typography.bodySmall)
+            if (provider == AiProvider.LOCAL) {
+                OutlinedTextField(
+                    value = customUrl,
+                    onValueChange = {
+                        customUrl = it.trim()
+                        AiConfig.setCustomUrl(context, it)
+                        testResult = null
+                    },
+                    label = { Text("Adresse des Servers") },
+                    placeholder = { Text("http://192.168.178.20:11434/v1") },
+                    singleLine = true,
+                    isError = customUrl.isNotBlank() && !AiConfig.isAllowedCustomUrl(customUrl),
+                    supportingText = {
+                        Text(
+                            if (customUrl.isNotBlank() && !AiConfig.isAllowedCustomUrl(customUrl)) "Unverschlüsselt (http) geht nur im eigenen Netz, z. B. 192.168.x.x. Im Internet bitte https."
+                            else "Ollama: Port 11434, LM Studio: Port 1234, jeweils mit /v1 am Ende.",
+                        )
+                    },
+                    enabled = storageOk,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Text(
+                    "Der PC muss eingeschaltet und im selben WLAN sein. Ollama nimmt Anfragen aus dem Heimnetz erst an, wenn es dafür freigegeben ist (Einstellung „Expose to network“ bzw. OLLAMA_HOST=0.0.0.0), bei LM Studio „Serve on Local Network“ einschalten. Ein Schlüssel ist meist nicht nötig.",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+            if (provider == AiProvider.OVHCLOUD) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Switch(checked = keyless, onCheckedChange = {
+                        keyless = it
+                        AiConfig.setKeylessEnabled(context, provider, it)
+                        tick++
+                    })
+                    Text("Ohne Schlüssel nutzen (2 Anfragen pro Minute)", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                }
+            }
             OutlinedTextField(
                 value = key,
                 onValueChange = {
@@ -608,7 +655,7 @@ private fun AiCard() {
                     AiConfig.setApiKey(context, provider, it)
                     testResult = null
                 },
-                label = { Text("API-Schlüssel für ${provider.label}") },
+                label = { Text("API-Schlüssel für ${provider.label}" + if (!provider.keyRequired) " (optional)" else "") },
                 singleLine = true,
                 visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
                 enabled = storageOk,
@@ -640,12 +687,12 @@ private fun AiCard() {
                 )
             }
             OutlinedButton(shape = buttonShape(), 
-                enabled = key.isNotBlank() && !loadingModels,
+                enabled = ready && !loadingModels,
                 onClick = {
                     loadingModels = true
                     modelsMessage = null
                     scope.launch {
-                        AiClient.listModels(provider, key)
+                        AiClient.listModels(context, provider, key)
                             .onSuccess {
                                 models = it
                                 modelsMessage = if (it.isEmpty()) "Keine Modelle gefunden." else "${it.size} Modelle gefunden. Tippe auf das Feld „Modell“, um eines auszuwählen."
@@ -661,9 +708,11 @@ private fun AiCard() {
                 style = MaterialTheme.typography.bodySmall,
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                OutlinedButton(shape = buttonShape(), onClick = { openUrl(context, provider.keyUrl) }) { Text("Schlüssel besorgen") }
+                OutlinedButton(shape = buttonShape(), onClick = { openUrl(context, provider.keyUrl) }) {
+                    Text(if (provider == AiProvider.LOCAL) "Ollama laden" else "Schlüssel besorgen")
+                }
                 Button(shape = buttonShape(), 
-                    enabled = key.isNotBlank() && !testing,
+                    enabled = ready && !testing,
                     onClick = {
                         testing = true
                         testResult = null

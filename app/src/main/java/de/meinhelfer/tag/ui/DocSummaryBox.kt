@@ -101,7 +101,7 @@ fun DocSummaryBox(
     var taskInfo by remember { mutableStateOf<String?>(null) }
 
     val configured = AiConfig.isConfigured(context)
-    val otherReady = AiProvider.entries.any { it != provider && AiConfig.apiKey(context, it).isNotBlank() }
+    val otherReady = AiProvider.entries.any { it != provider && AiConfig.isReady(context, it) }
     val masked = remember(text, person) { maskPersonal(text.take(MAX_CHARS), person) }
     val promptText = "Text eines Dokuments (Namen und Nummern der betreuten Person sind durch Platzhalter ersetzt):\n\n$masked"
     val enoughText = text.trim().length >= 40

@@ -115,7 +115,7 @@ fun MedOverviewScreen(
     var provider by remember { mutableStateOf(AiConfig.provider(context)) }
     val added = remember { mutableStateListOf<String>() }
     val configured = AiConfig.isConfigured(context)
-    val otherReady = AiProvider.entries.any { it != provider && AiConfig.apiKey(context, it).isNotBlank() }
+    val otherReady = AiProvider.entries.any { it != provider && AiConfig.isReady(context, it) }
     val perDay = meds.sumOf { it.timeList().distinct().size }
     val hausarzt = matchDoctor("hausarzt", doctors)
     val apotheke = matchDoctor("apotheke", doctors)
@@ -371,7 +371,7 @@ fun MedOverviewScreen(
                     limitHit = false
                     val used = provider
                     scope.launch {
-                        AiClient.ask(context, MedCheck.SYSTEM_PROMPT, promptText)
+                        AiClient.ask(context, MedCheck.SYSTEM_PROMPT, promptText, 3000)
                             .onSuccess { answer ->
                                 val today = LocalDate.now().toEpochDay()
                                 val label = used.label.substringBefore(" (")
