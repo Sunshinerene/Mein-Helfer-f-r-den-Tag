@@ -52,6 +52,14 @@ object AppPrefs {
         prefs(context).edit().putFloat("vorlesen_tempo", rate).apply()
     }
 
+    /** Health Connect: Quellen (Paketnamen), deren Werte für diese Person übernommen werden sollen. */
+    fun healthSources(context: Context, personId: Long): Set<String> =
+        prefs(context).getStringSet("hc_quellen_$personId", emptySet()) ?: emptySet()
+
+    fun setHealthSources(context: Context, personId: Long, sources: Set<String>) {
+        prefs(context).edit().putStringSet("hc_quellen_$personId", sources).apply()
+    }
+
     private const val KEY_THEME = "design"
 
     /** "system", "light" oder "dark" */

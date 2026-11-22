@@ -391,6 +391,8 @@ fun VitalScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit) {
                 }
             }
 
+            jumpItem(vitalJumps, "⌚ Von Uhr oder Messgerät") { HealthImportCard(vm, person, vitals) }
+
             VitalKind.MEASURES.forEach { k ->
                 val list = vitals.filter { it.kind == k.key }
                 if (list.isEmpty()) return@forEach

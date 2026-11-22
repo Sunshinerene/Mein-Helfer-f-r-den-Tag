@@ -190,6 +190,23 @@ fun SettingsScreen(
                     item { FeedbackCard(context) }
                     item { SelfTestCard(vm) }
                 }
+                SettingsCategory.Beta -> {
+                    item {
+                        Text(
+                            "Neue Funktionen in Erprobung. Sie können sich noch ändern; Rückmeldungen dazu helfen sehr (Hilfe und Rückmeldung → Feedback).",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                    item { HealthConnectSettingsCard() }
+                    item {
+                        HCard(Modifier.fillMaxWidth()) {
+                            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Text("Weitere Beta-Funktionen", style = MaterialTheme.typography.titleMedium)
+                                Text("Design „Aurora“ und „Effekte“: Einstellungen → Darstellung.", style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                    }
+                }
                 SettingsCategory.App -> {
                     item {
                         UpdateCard(
@@ -223,6 +240,7 @@ private enum class SettingsCategory(val emoji: String, val title: String, val ke
     Sicherheit("🔒", "Sicherheit und Sicherung", "app-sperre sperre fingerabdruck gesicht pin sicherung backup wiederherstellen zurücksetzen reset löschen"),
     Internet("🤖", "KI und Internet", "ki assistent schlüssel api gemini openai chatgpt claude ollama groq mistral wikipedia beschreibung internet"),
     Hilfe("💬", "Hilfe und Rückmeldung", "anleitung rundgang hilfe feedback fehler wunsch rückmeldung selbsttest test prüfen beispiel pdf datenbank"),
+    Beta("🧪", "Beta-Funktionen", "beta uhr smartwatch fitnessband armband band waage blutdruckgerät health connect gesundheit verbinden fitbit garmin samsung withings omron aurora effekte"),
     App("ℹ️", "App und Updates", "update aktualisieren version neuigkeiten neu geplant über app"),
 }
 
@@ -256,6 +274,7 @@ private fun categorySummary(
     SettingsCategory.Internet ->
         if (AiConfig.isConfigured(context)) "KI: " + AiConfig.provider(context).label else "KI nicht eingerichtet · Medikamenten-Infos"
     SettingsCategory.Hilfe -> "Anleitung, Rundgang, Fehler oder Wunsch melden, Selbsttest"
+    SettingsCategory.Beta -> "Uhr, Fitnessband und Messgeräte (Health Connect)"
     SettingsCategory.App -> "Version " + UpdateChecker.installedVersion(context) +
         if (updateState is UpdateState.Available || updateState is UpdateState.Ready) " · Update verfügbar" else ""
 }

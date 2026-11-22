@@ -97,6 +97,22 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun deleteVital(item: de.meinhelfer.tag.data.VitalEntry) = viewModelScope.launch { db.vitalDao().delete(item) }
 
+    /** Werte aus Health Connect (nach Bestätigung) für die aktuelle Person speichern, mit Quelle als Notiz. */
+    fun importVitals(values: List<de.meinhelfer.tag.summary.HealthValue>, labels: Map<String, String>) = viewModelScope.launch {
+        val zone = java.time.ZoneId.systemDefault()
+        values.forEach { v ->
+            val day = java.time.Instant.ofEpochMilli(v.atMillis).atZone(zone).toLocalDate().toEpochDay()
+            val source = "aus " + (labels[v.source] ?: v.source) + " (Health Connect)"
+            db.vitalDao().insert(
+                de.meinhelfer.tag.data.VitalEntry(
+                    personId = _personId.value, atMillis = v.atMillis, day = day, kind = v.kind,
+                    value = v.value, value2 = v.value2, unit = v.unit,
+                    note = listOf(v.note, source).filter { it.isNotBlank() }.joinToString(" · "),
+                ),
+            )
+        }
+    }
+
     /** Selbsttest: Version, Pruefung der Datenbank und Anzahl der Eintraege je Tabelle. */
     suspend fun dbCheck(): List<String> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
         val out = mutableListOf<String>()
