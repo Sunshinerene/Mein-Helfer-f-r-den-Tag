@@ -23,7 +23,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Leiste unten und Schnellsprung",
-                "Die Leiste mit den sechs Bereichen ist auf jeder Seite zu sehen, auch in Einstellungen, Motivator oder Nachbestellung. Ein Tipp auf einen Bereich schließt die offene Seite und springt dorthin. Über der Leiste ist ein kleiner Griff („Bereiche“): Antippen oder die Leiste nach oben wischen öffnet „Springen zu“ mit den Abschnitten der aktuellen Seite, z. B. auf der Heute-Seite Aufgaben, Heute einnehmen oder Trinken und Werte, unter Medikamente und Kontakte jeder Eintrag, unter Termine jeder Termin. Ein Tipp scrollt direkt dorthin.",
+                "Die Leiste mit den sechs Bereichen ist auf jeder Seite zu sehen, auch in Einstellungen, Motivator oder Nachbestellung. Links darüber sitzt das Gesicht deines Assistenten (Beta): Ein Tipp öffnet Hinweise und Hilfe zur aktuellen Seite. Ein Tipp auf einen Bereich schließt die offene Seite und springt dorthin. Über der Leiste ist ein kleiner Griff („Bereiche“): Antippen oder die Leiste nach oben wischen öffnet „Springen zu“ mit den Abschnitten der aktuellen Seite, z. B. auf der Heute-Seite Aufgaben, Heute einnehmen oder Trinken und Werte, unter Medikamente und Kontakte jeder Eintrag, unter Termine jeder Termin. Ein Tipp scrollt direkt dorthin.",
             ),
             GuideItem(
                 "Oben rechts",
@@ -178,9 +178,21 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
     ),
     GuideSection(
         id = "motivator",
-        title = "Tages-Motivator",
-        summary = "Satz für den Tag, Vorhaben, Stimmungs-Check, Ziele Schritt für Schritt",
+        title = "Persönlicher Assistent und Tages-Motivator",
+        summary = "Dein Assistent (Beta): Als Nächstes, Terminvorbereitung, Vorschläge, Hilfe auf jeder Seite; Stimmung, Vorhaben, Ziele",
         items = listOf(
+            GuideItem(
+                "Persönlicher Assistent (Beta)",
+                "Der Assistent ist für dich als pflegende Person da, nicht für die gepflegte Person. Er steht oben auf der Heute-Seite mit seinem digitalen Gesicht und sieht alle betreuten Personen zusammen. Er sagt, was als Nächstes ansteht (Einnahmen, Termine, fällige Aufgaben; Überfälliges zuerst), bereitet Termine der nächsten 36 Stunden vor (Versichertenkarte, Medikamentenplan, Werte, hinterlegte Unterlagen, Stockwerk und Aufzug, Fragen notieren) und macht Vorschläge: eine bald fällige Aufgabe auf dringend setzen, eine länger überfällige neu planen oder bei knappem Vorrat eine Aufgabe „Rezept bestellen“ beim zuständigen Arzt anlegen (Vertretung beachtet). Jeder Vorschlag hat „Übernehmen“ und „Nein, danke“; ohne deinen Tipp ändert er nichts. Darunter bleibt alles vom Tages-Motivator: Satz für den Tag, Stimmung, Geschafft, Vorhaben, Ziele. „🔊 Vorlesen“ liest alles vor.",
+            ),
+            GuideItem(
+                "Name und Gesicht",
+                "Den Namen wählst du unter Einstellungen → Beta-Funktionen → „Persönlicher Assistent“: Sunny, Lumi, Elio, Hella, Mila, Frieda, Kompass oder ein eigener. Das Gesicht zeigt die Lage: freundlich, freut sich (vieles erledigt), aufmerksam (gleich steht etwas an oder etwas ist offen), sanft besorgt (nach einem schweren Tag im Stimmungs-Check), ruhig (abends) und es bewegt den Mund beim Vorlesen. Ohne Animationen (Einstellungen → Darstellung → Effekte) bleibt es still. Schaltest du den Assistenten aus, gibt es wieder den Tages-Motivator.",
+            ),
+            GuideItem(
+                "Hilfe auf jeder Seite",
+                "Unten links in der Leiste ist das Gesicht des Assistenten mit seinem Namen; ein roter Punkt heißt, es ist etwas offen oder er hat einen Vorschlag. Ein Tipp öffnet, was er zu dieser Seite sagt (z. B. unter Medikamente, was bald nachbestellt werden muss), seine Vorschläge, „So geht's hier“ mit den passenden Punkten der Anleitung und „Frag mich“: Du tippst eine Frage ein, etwa „Wie drucke ich den Medikamentenplan?“, und er sucht die Antwort in der Anleitung, ohne Internet.",
+            ),
             GuideItem(
                 "Was er macht",
                 "Der Tages-Motivator schaut auf deine letzten drei Tage und heute: Stimmung, erledigte Aufgaben, gegebene Einnahmen, begleitete Termine und deine Ziele. Daraus macht er einen Satz für den Tag, zeigt „Das hast du geschafft“ und schlägt kleine Vorhaben für heute vor, z. B. den nächsten Schritt eines Ziels, eine überfällige Aufgabe und etwas für dich selbst. Abhaken erledigt Schritte und Aufgaben direkt. Du findest ihn als Karte auf der Heute-Seite (Mehr → Heute, Stimmung, Ziele) und im Tagesstart. Alles wird auf deinem Handy berechnet.",

@@ -4,9 +4,16 @@ by Sunshine@R
 
 Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbezogenen Daten bleiben lokal auf dem Gerät.
 
-## Stand: v0.60.0
+## Stand: v0.61.0
 
 ### Funktionsübersicht
+
+**Persönlicher Assistent (Beta)**
+- Für die pflegende Person, mit wählbarem Namen (Start: Sunny) und digitalem Gesicht, das die Lage zeigt
+- Als Nächstes über alle Personen (gemeinsame Tageslage, auch fürs Widget), Vorbereitung auf Termine der nächsten 36 Stunden
+- Vorschläge mit Bestätigung: bald fällige Aufgabe auf dringend, Überfälliges neu planen, bei knappem Vorrat „Rezept bestellen“ beim Zuständigen
+- Gesicht in der Leiste unten auf jeder Seite: Hinweise zur Seite, „So geht's hier“, „Frag mich“ (Antwort aus der Anleitung, ohne Internet)
+- Enthält alles vom Tages-Motivator; ausgeschaltet gibt es wieder den Motivator
 
 **Barrierefreiheit**
 - Design „Hoher Kontrast“ (Schwarz/Weiß, kräftige Farben, deutliche Ränder, dunkel: Gelb auf Schwarz)

@@ -1,6 +1,6 @@
 # TODO
 
-Stand: v0.60.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.61.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
@@ -23,6 +23,7 @@ Stand: v0.60.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Datenbank prüfen, Beispiel-PDFs mit erfundenen Daten, Beispiel-Grafiken, Test-Benachrichtigungen). Die Datenbank-Umstellungen von Version 5 bis 26 prüft seit v0.54.0 bei jedem Bauen ein automatischer Test gegen das Schema (Tabellen, Spalten, Typen); auf dem Handy bleibt zu prüfen, dass die eigenen Daten nach dem Update vollständig da sind.
 
+- [ ] Assistent (Beta): Karte oben auf der Heute-Seite, Gesicht und Ausdrücke, Vorschläge übernehmen und ablehnen, Terminvorbereitung, Gesicht in der Leiste auf allen Seiten, „Frag mich“, Name ändern, ausschalten (Motivator kommt zurück); Hinweis auf neue Uhr-Werte in „Trinken und Werte“
 - [ ] Health Connect (Beta): Zugriff erlauben, Werte holen, Quellen wählen (z. B. Fitbit, Samsung Health, Garmin, Withings, Blutdruckgerät-App), Übernahme ohne Doppelte, Einstellungen → Beta-Funktionen
 - [ ] Tagesplan-PDF: Kästchen fürs Trinken und Zeilen für Werte auf Papier; Vorlesen im Tagesplan, bei Dokumenten und in der Anleitung (deutsche Stimme vorhanden?); Design „Hoher Kontrast“ hell und dunkel; „Größer“ und „Sehr groß“ auf allen Seiten (nichts abgeschnitten?)
 - [ ] Entlassbericht mit echtem Bericht: Medikation bei Entlassung richtig erkannt (nicht die bei Aufnahme), Kontrollen mit Datum, Übernehmen als Aufgabe und als Termin, KI-Auslesen
@@ -60,6 +61,23 @@ Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Daten
 - [ ] Entscheiden: Aufbewahrung der Nachweise 3 Jahre oder länger (30-Jahres-Frist bei Gesundheitsschäden); zusätzlicher Nachweis beim App-Ersteller (Server) ja oder nein
 - [ ] Medizinprodukte-Recht (MDR) prüfen lassen, vor allem den KI-Gesamt-Check der Medikamente; Zweckbestimmung als Organisationshilfe klar festhalten
 - [ ] Impressum und Datenschutzerklärung für eine Veröffentlichung (z. B. Play Store), eigener Signaturschlüssel statt Test-Schlüssel
+
+## Als Nächstes: Assistent (Plan aus der Prozess-Prüfung)
+
+- [ ] v0.62.0: Benachrichtigungen des Assistenten (Vorabend, vor dem Termin, Morgenüberblick, Abend), Ruhezeiten, Erinnerungsübersicht; Health-Connect-Quellen einer Person oder dir zuordnen; eigene Werte (Schlaf, Schritte, Ruhepuls) mit eigener Erlaubnis; Werte-PDF zum Arzttermin
+- [ ] v0.63.0: Heute-Seite und Tagesplan auf die gemeinsame Tageslage umstellen, Reihenfolge nach Dringlichkeit, Tagesstart über den Assistenten
+- [ ] v0.64.0: Liste „Berichte und Ausdrucke“, Budgets und Übergabe zur Person, „Frag den Assistenten“ auf Wunsch mit KI
+
+## Version 0.61.0 (fertig)
+
+- [x] Prozess-Prüfung aller Funktionen mit Plan (Dokument „Funktionen, Prozess-Prüfung und persönlicher Assistent“)
+- [x] Persönlicher Assistent (Beta) statt Tages-Motivator: Name wählbar (Sunny, Lumi, Elio, Hella, Mila, Frieda, Kompass oder eigener), digitales Gesicht mit sechs Ausdrücken, Karte oben auf der Heute-Seite
+- [x] Gemeinsame Tageslage (Einnahmen, Termine, fällige Aufgaben über alle Personen), vom Widget mitgenutzt
+- [x] Vorschläge mit „Übernehmen“ und „Nein, danke“: Priorität, neue Frist, Rezept bestellen beim Zuständigen (Vertretung beachtet)
+- [x] Terminvorbereitung für die nächsten 36 Stunden
+- [x] Gesicht in der Leiste unten: Hinweise zur Seite, Vorschläge, „So geht's hier“, „Frag mich“ (Anleitung ohne Internet)
+- [x] Hinweis auf neue Werte aus Health Connect in der Heute-Karte „Trinken und Werte“
+- [x] Automatische Tests für Tageslage, Vorschläge und Terminvorbereitung
 
 ## Version 0.60.0 (fertig)
 
