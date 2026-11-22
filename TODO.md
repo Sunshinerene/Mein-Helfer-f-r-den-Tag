@@ -1,6 +1,6 @@
 # TODO
 
-Stand: v0.56.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.56.1 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
@@ -55,6 +55,11 @@ Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Daten
 - [ ] Entscheiden: Aufbewahrung der Nachweise 3 Jahre oder länger (30-Jahres-Frist bei Gesundheitsschäden); zusätzlicher Nachweis beim App-Ersteller (Server) ja oder nein
 - [ ] Medizinprodukte-Recht (MDR) prüfen lassen, vor allem den KI-Gesamt-Check der Medikamente; Zweckbestimmung als Organisationshilfe klar festhalten
 - [ ] Impressum und Datenschutzerklärung für eine Veröffentlichung (z. B. Play Store), eigener Signaturschlüssel statt Test-Schlüssel
+
+## Version 0.56.1 (fertig)
+
+- [x] E-Mail: installierte E-Mail-Apps werden gezielt gesucht und angesprochen (bei mehreren mit Auswahl), sonst die Teilen-Auswahl des Handys; gilt für Aufgaben, Schreiben, Vorlagen, Nachbestellung und Fahrdienst
+- [x] E-Mail zur Aufgabe findet das Schreiben auch über den Titel in der Aufgabe und hängt es an; Hinweis, wenn es nicht unter Dokumente liegt
 
 ## Version 0.56.0 (fertig)
 

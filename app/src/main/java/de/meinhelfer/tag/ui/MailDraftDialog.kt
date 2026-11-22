@@ -179,16 +179,7 @@ fun MailDraftDialog(
         },
         confirmButton = {
             TextButton(onClick = {
-                val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:")).apply {
-                    recipient.email.takeIf { it.isNotBlank() }?.let { putExtra(Intent.EXTRA_EMAIL, arrayOf(it)) }
-                    putExtra(Intent.EXTRA_SUBJECT, subject)
-                    putExtra(Intent.EXTRA_TEXT, body)
-                }
-                try {
-                    context.startActivity(intent)
-                } catch (_: ActivityNotFoundException) {
-                    Toast.makeText(context, "Keine E-Mail-App gefunden. Nutze „Text kopieren“.", Toast.LENGTH_LONG).show()
-                }
+                openMailWithFiles(context, recipient.email, subject, body, emptyList())
             }) { Text("In E-Mail-App öffnen") }
         },
         dismissButton = { TextButton(onClick = onClose) { Text("Schließen") } },

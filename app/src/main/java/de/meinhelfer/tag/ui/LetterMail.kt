@@ -1,11 +1,6 @@
 package de.meinhelfer.tag.ui
 
-import android.content.ActivityNotFoundException
-import android.content.ClipData
 import android.content.Context
-import android.content.Intent
-import android.net.Uri
-import android.widget.Toast
 import de.meinhelfer.tag.data.Document
 import de.meinhelfer.tag.letters.SignedCopies
 import de.meinhelfer.tag.media.DocumentStore
@@ -24,37 +19,9 @@ internal fun letterMailText(subject: String, reference: String, body: String, si
         ).joinToString("\n\n")
     }
 
-/**
- * Oeffnet die E-Mail-App mit Empfaenger, Betreff und Text. Mit [attachment] wird die PDF angehaengt
- * (nur E-Mail-Apps werden angeboten). Gesendet wird erst in der E-Mail-App.
- */
-internal fun openLetterMail(context: Context, to: String?, subject: String, text: String, attachment: File?) {
-    val mailto = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:"))
-    val intent = if (attachment != null) {
-        val uri = DocumentStore.uriFor(context, attachment)
-        Intent(Intent.ACTION_SEND).apply {
-            type = "application/pdf"
-            putExtra(Intent.EXTRA_STREAM, uri)
-            clipData = ClipData.newRawUri("", uri)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            selector = mailto
-        }
-    } else {
-        mailto
-    }
-    intent.apply {
-        to?.takeIf { it.isNotBlank() }?.let { putExtra(Intent.EXTRA_EMAIL, arrayOf(it.trim())) }
-        putExtra(Intent.EXTRA_SUBJECT, subject)
-        putExtra(Intent.EXTRA_TEXT, text)
-    }
-    try {
-        context.startActivity(intent)
-    } catch (_: ActivityNotFoundException) {
-        Toast.makeText(context, "Keine E-Mail-App gefunden.", Toast.LENGTH_LONG).show()
-    } catch (_: SecurityException) {
-        Toast.makeText(context, "Die E-Mail-App konnte nicht geöffnet werden.", Toast.LENGTH_LONG).show()
-    }
-}
+/** Oeffnet eine E-Mail-App mit Empfaenger, Betreff und Text, auf Wunsch mit der PDF als Anhang. */
+internal fun openLetterMail(context: Context, to: String?, subject: String, text: String, attachment: File?) =
+    openMailWithFiles(context, to, subject, text, listOfNotNull(attachment))
 
 /** Ist das Dokument ein Entwurf aus „Schreiben und Vollmachten“? */
 internal fun isLetterDraft(d: Document): Boolean = d.title.contains(SignedCopies.DRAFT_MARK)

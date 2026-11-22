@@ -111,12 +111,7 @@ private fun sms(context: Context, phone: String, text: String) =
     )
 
 private fun mail(context: Context, email: String, subject: String, text: String) =
-    startSafe(
-        context,
-        Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:$email"))
-            .putExtra(Intent.EXTRA_SUBJECT, subject)
-            .putExtra(Intent.EXTRA_TEXT, text),
-    )
+    openMailWithFiles(context, email, subject, text, emptyList())
 
 private fun openUrl(context: Context, url: String) {
     val fixed = if (url.startsWith("http")) url else "https://$url"

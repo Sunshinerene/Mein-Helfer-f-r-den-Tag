@@ -43,45 +43,75 @@ import kotlinx.coroutines.launch
 import java.io.File
 
 /**
- * Oeffnet die E-Mail-App mit Empfaenger, Betreff, Text und beliebig vielen Anhaengen.
- * Angeboten werden nur E-Mail-Apps; gesendet wird erst dort.
+ * Oeffnet eine E-Mail-App mit Empfaenger, Betreff, Text und beliebig vielen Anhaengen. Gesendet wird erst dort.
+ *
+ * Vorgehen, weil sich Handys hier unterschiedlich verhalten: Die installierten E-Mail-Apps werden ueber "mailto:"
+ * gesucht und gezielt angesprochen (bei mehreren mit Auswahl). Findet sich keine oder klappt das nicht, oeffnet
+ * sich die normale Teilen-Auswahl des Handys, in der man selbst eine App waehlt.
  */
 internal fun openMailWithFiles(context: Context, to: String?, subject: String, text: String, files: List<File>) {
-    val mailto = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:"))
-    val intent = when {
-        files.isEmpty() -> mailto
-        files.size == 1 -> {
-            val uri = DocumentStore.uriFor(context, files[0])
-            Intent(Intent.ACTION_SEND).apply {
-                type = "*/*"
-                putExtra(Intent.EXTRA_STREAM, uri)
-                clipData = ClipData.newRawUri("", uri)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                selector = mailto
-            }
+    val uris = ArrayList(files.map { DocumentStore.uriFor(context, it) })
+    // Ohne Anhang: der klassische Weg ueber "mailto:" bietet nur E-Mail-Apps an
+    if (uris.isEmpty()) {
+        val mailto = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:")).apply {
+            to?.takeIf { it.isNotBlank() }?.let { putExtra(Intent.EXTRA_EMAIL, arrayOf(it.trim())) }
+            putExtra(Intent.EXTRA_SUBJECT, subject)
+            putExtra(Intent.EXTRA_TEXT, text)
         }
-        else -> {
-            val uris = ArrayList(files.map { DocumentStore.uriFor(context, it) })
-            Intent(Intent.ACTION_SEND_MULTIPLE).apply {
-                type = "*/*"
-                putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
-                clipData = ClipData.newRawUri("", uris[0]).also { c -> uris.drop(1).forEach { c.addItem(ClipData.Item(it)) } }
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                selector = mailto
-            }
+        try {
+            context.startActivity(mailto)
+            return
+        } catch (_: Exception) {
+            // weiter mit der Suche nach E-Mail-Apps
         }
     }
-    intent.apply {
+    fun base(): Intent = (if (uris.size > 1) Intent(Intent.ACTION_SEND_MULTIPLE) else Intent(Intent.ACTION_SEND)).apply {
+        type = if (uris.isEmpty()) "text/plain" else "*/*"
         to?.takeIf { it.isNotBlank() }?.let { putExtra(Intent.EXTRA_EMAIL, arrayOf(it.trim())) }
         putExtra(Intent.EXTRA_SUBJECT, subject)
         putExtra(Intent.EXTRA_TEXT, text)
+        when (uris.size) {
+            0 -> {}
+            1 -> putExtra(Intent.EXTRA_STREAM, uris[0])
+            else -> putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
+        }
+        if (uris.isNotEmpty()) {
+            clipData = ClipData.newRawUri("", uris[0]).also { c -> uris.drop(1).forEach { c.addItem(ClipData.Item(it)) } }
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+    }
+    val mailApps = runCatching {
+        val probe = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:"))
+        @Suppress("DEPRECATION")
+        context.packageManager.queryIntentActivities(probe, android.content.pm.PackageManager.MATCH_DEFAULT_ONLY)
+            .map { it.activityInfo.packageName }
+            .filter { it != context.packageName }
+            .distinct()
+    }.getOrDefault(emptyList())
+    // Grant fuer alle E-Mail-Apps, auch wenn sie ueber die Auswahl gestartet werden
+    if (uris.isNotEmpty()) {
+        mailApps.forEach { pkg -> uris.forEach { u -> runCatching { context.grantUriPermission(pkg, u, Intent.FLAG_GRANT_READ_URI_PERMISSION) } } }
     }
     try {
-        context.startActivity(intent)
-    } catch (_: ActivityNotFoundException) {
-        Toast.makeText(context, "Keine E-Mail-App gefunden.", Toast.LENGTH_LONG).show()
-    } catch (_: SecurityException) {
-        Toast.makeText(context, "Die E-Mail-App konnte nicht geöffnet werden.", Toast.LENGTH_LONG).show()
+        when {
+            mailApps.size == 1 -> context.startActivity(base().setPackage(mailApps[0]))
+            mailApps.size > 1 -> {
+                val chooser = Intent.createChooser(base().setPackage(mailApps[0]), "E-Mail-App wählen")
+                chooser.putExtra(Intent.EXTRA_INITIAL_INTENTS, mailApps.drop(1).map { base().setPackage(it) }.toTypedArray())
+                context.startActivity(chooser)
+            }
+            else -> {
+                Toast.makeText(context, "Keine E-Mail-App gefunden. Bitte in der Auswahl eine App wählen.", Toast.LENGTH_LONG).show()
+                context.startActivity(Intent.createChooser(base(), "Senden mit"))
+            }
+        }
+    } catch (_: Exception) {
+        // Letzter Weg: allgemeine Teilen-Auswahl
+        try {
+            context.startActivity(Intent.createChooser(base(), "Senden mit"))
+        } catch (_: Exception) {
+            Toast.makeText(context, "Es konnte keine App zum Senden geöffnet werden.", Toast.LENGTH_LONG).show()
+        }
     }
 }
 
@@ -119,7 +149,11 @@ internal fun TaskMailDialog(
     val scope = rememberCoroutineScope()
     val attachedIds = task.attachedIds()
     val linked = documents.filter { it.id in attachedIds }
+    // Schreiben: verknuepfter Entwurf, sonst der neueste Entwurf mit dem Titel aus der Aufgabe („Freies Schreiben“ …)
+    val quoted = Regex("„([^“]+)“").find(task.text)?.groupValues?.get(1)
     val letter = linked.firstOrNull { isLetterDraft(it) }
+        ?: quoted?.let { q -> documents.filter { isLetterDraft(it) && SignedCopies.baseTitle(it).equals(q, ignoreCase = true) }.maxByOrNull { it.id } }
+    val letterMissing = letter == null && quoted != null
     val initial = letter?.let { letterParts(it, caregiver.name) }
     var to by remember { mutableStateOf(doctor?.email.orEmpty()) }
     var subject by remember { mutableStateOf(initial?.first ?: task.text.lines().first().take(120)) }
@@ -128,12 +162,12 @@ internal fun TaskMailDialog(
             initial?.second ?: ("Sehr geehrte Damen und Herren,\n\n" + task.text.trim() + "\n\nMit freundlichen Grüßen\n" + signature(caregiver)).trimEnd(),
         )
     }
-    val selected = remember { mutableStateListOf<Long>().apply { addAll(linked.map { it.id }) } }
+    val selected = remember { mutableStateListOf<Long>().apply { addAll((linked.map { it.id } + listOfNotNull(letter?.id)).distinct()) } }
     var showOthers by remember { mutableStateOf(false) }
     var query by remember { mutableStateOf("") }
     var link by remember { mutableStateOf(true) }
     var busy by remember { mutableStateOf(false) }
-    val others = documents.filter { it.id !in attachedIds }
+    val others = documents.filter { it.id !in attachedIds && it.id != letter?.id }
         .filter { query.isBlank() || (it.title + " " + it.category).contains(query.trim(), ignoreCase = true) }
         .sortedByDescending { it.docDate ?: 0L }
 
@@ -151,7 +185,18 @@ internal fun TaskMailDialog(
                 if (onTopicMail != null && letter == null) {
                     TextButton(onClick = onTopicMail) { Text("Stattdessen Vorlage nach Thema (Rezept, Termin …)") }
                 }
+                if (letterMissing) {
+                    Text(
+                        "Das Schreiben „$quoted“ liegt nicht unter Dokumente. Erstelle es unter „Schreiben und Vollmachten“ neu und wähle dort „Als E-Mail senden“ oder „In Dokumente ablegen“, dann steht es hier zur Auswahl.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
                 Text("Anhänge (${selected.size})", style = MaterialTheme.typography.titleSmall)
+                if (letter != null && letter.id !in attachedIds) {
+                    Text("Das Schreiben", style = MaterialTheme.typography.labelLarge)
+                    DocCheck(letter, letter.id in selected) { if (letter.id in selected) selected.remove(letter.id) else selected.add(letter.id) }
+                }
                 if (linked.isNotEmpty()) {
                     Text("Mit der Aufgabe verknüpft", style = MaterialTheme.typography.labelLarge)
                     linked.forEach { d -> DocCheck(d, d.id in selected) { if (d.id in selected) selected.remove(d.id) else selected.add(d.id) } }

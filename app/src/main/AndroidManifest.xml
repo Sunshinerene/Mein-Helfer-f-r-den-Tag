@@ -18,6 +18,11 @@
         <intent>
             <action android:name="android.media.action.IMAGE_CAPTURE" />
         </intent>
+        <!-- E-Mail-Apps finden, um Schreiben und Unterlagen gezielt an eine E-Mail-App zu geben -->
+        <intent>
+            <action android:name="android.intent.action.SENDTO" />
+            <data android:scheme="mailto" />
+        </intent>
     </queries>
 
     <application

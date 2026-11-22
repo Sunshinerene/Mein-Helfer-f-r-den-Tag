@@ -246,24 +246,23 @@ fun ReorderScreen(
                                     }) { Text("Anrufen") }
                                 }
                                 TextButton(onClick = {
-                                    val mail = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:")).apply {
-                                        contact?.email?.takeIf { it.isNotBlank() }?.let { putExtra(Intent.EXTRA_EMAIL, arrayOf(it)) }
-                                        putExtra(Intent.EXTRA_SUBJECT, ReorderExport.mailSubject(name, byPharmacy))
-                                        putExtra(Intent.EXTRA_TEXT, ReorderExport.mailText(name, list, today, byPharmacy, caregiver))
-                                    }
-                                    startIntent(context, mail)
+                                    openMailWithFiles(
+                                        context,
+                                        contact?.email,
+                                        ReorderExport.mailSubject(name, byPharmacy),
+                                        ReorderExport.mailText(name, list, today, byPharmacy, caregiver),
+                                        emptyList(),
+                                    )
                                 }) { Text(if (contact?.email.isNullOrBlank()) "E-Mail (ohne Empfänger)" else "E-Mail mit Liste") }
                                 TextButton(onClick = {
                                     val file = createPdf(list)
-                                    val send = Intent(Intent.ACTION_SEND).apply {
-                                        type = "application/pdf"
-                                        contact?.email?.takeIf { it.isNotBlank() }?.let { putExtra(Intent.EXTRA_EMAIL, arrayOf(it)) }
-                                        putExtra(Intent.EXTRA_SUBJECT, ReorderExport.mailSubject(name, byPharmacy))
-                                        putExtra(Intent.EXTRA_TEXT, ReorderExport.mailText(name, list, today, byPharmacy, caregiver))
-                                        putExtra(Intent.EXTRA_STREAM, uriFor(context, file))
-                                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                    }
-                                    startIntent(context, Intent.createChooser(send, "PDF senden"))
+                                    openMailWithFiles(
+                                        context,
+                                        contact?.email,
+                                        ReorderExport.mailSubject(name, byPharmacy),
+                                        ReorderExport.mailText(name, list, today, byPharmacy, caregiver),
+                                        listOf(file),
+                                    )
                                 }) { Text("E-Mail mit PDF") }
                             }
                         }
