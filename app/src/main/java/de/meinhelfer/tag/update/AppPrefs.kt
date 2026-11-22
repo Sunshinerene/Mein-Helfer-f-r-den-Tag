@@ -365,6 +365,36 @@ object AppPrefs {
 
     private fun prefs(context: Context) = context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
 
+    /** Trinkziel der Person in ml pro Tag, 0 = ohne Ziel. */
+    fun drinkGoal(context: Context, personId: Long): Int =
+        prefs(context).getInt("trinkziel_$personId", de.meinhelfer.tag.summary.Vitals.DEFAULT_DRINK_GOAL)
+
+    fun setDrinkGoal(context: Context, personId: Long, ml: Int) {
+        prefs(context).edit().putInt("trinkziel_$personId", ml).apply()
+    }
+
+    /** Eigener Bereich fuer einen Messwert (z. B. vom Arzt genannt): min und max, jeweils optional. */
+    fun vitalRange(context: Context, personId: Long, kind: String): Pair<Double?, Double?>? {
+        val raw = prefs(context).getString("vitalbereich_${personId}_$kind", null) ?: return null
+        val parts = raw.split(";")
+        val min = parts.getOrNull(0)?.toDoubleOrNull()
+        val max = parts.getOrNull(1)?.toDoubleOrNull()
+        return if (min == null && max == null) null else min to max
+    }
+
+    fun setVitalRange(context: Context, personId: Long, kind: String, min: Double?, max: Double?) {
+        val e = prefs(context).edit()
+        if (min == null && max == null) e.remove("vitalbereich_${personId}_$kind") else e.putString("vitalbereich_${personId}_$kind", "${min ?: ""};${max ?: ""}")
+        e.apply()
+    }
+
+    /** Einheit fuer Blutzucker: "mg/dl" oder "mmol/l" */
+    fun sugarUnit(context: Context): String = prefs(context).getString("bz_einheit", "mg/dl") ?: "mg/dl"
+
+    fun setSugarUnit(context: Context, unit: String) {
+        prefs(context).edit().putString("bz_einheit", unit).apply()
+    }
+
     /** Erinnerung an die Sicherung alle so viele Tage, 0 = aus */
     fun backupReminderDays(context: Context): Int = prefs(context).getInt("sicherung_erinnern_tage", 30)
 

@@ -106,6 +106,10 @@ object SummaryBuilder {
         checkins: List<Checkin>,
         dayNotes: List<DayNote>,
         todos: List<de.meinhelfer.tag.data.Todo> = emptyList(),
+        vitals: List<de.meinhelfer.tag.data.VitalEntry> = emptyList(),
+        drinkGoal: Int = 0,
+        careLog: List<de.meinhelfer.tag.data.CareLogEntry> = emptyList(),
+        ranges: Map<String, Pair<Double?, Double?>> = emptyMap(),
     ): Summary {
         val zone = ZoneId.systemDefault()
         val nowMillis = System.currentTimeMillis()
@@ -376,7 +380,49 @@ object SummaryBuilder {
         }
         if (notable.isEmpty() && (planned > 0 || apptsInRange.isNotEmpty())) good += "Keine Auffälligkeiten festgestellt."
         if (doneTasks.isNotEmpty()) good += "${doneTasks.size} Aufgabe(n) erledigt."
-        if (planned == 0 && apptsInRange.isEmpty() && notes.isEmpty() && doneTasks.isEmpty()) {
+        // ---- Trinken und Messwerte (nur aus den eigenen Eintraegen, keine Bewertung)
+        val drinks = vitals.filter { it.kind == VitalKind.Trinken.key }.groupBy { it.day }.mapValues { (_, l) -> l.sumOf { it.value }.toInt() }
+        if (drinks.isNotEmpty()) {
+            val avg = drinks.values.sum() / drinks.size
+            overview += "Trinkmenge: im Schnitt $avg ml pro Tag (an ${drinks.size} Tag(en) eingetragen)"
+            if (drinkGoal > 0) {
+                // Der heutige Tag zaehlt erst am Abend mit
+                val low = drinks.filter { (d, ml) -> ml < drinkGoal && (d < today.toEpochDay() || now.hour >= 20) }
+                if (low.isEmpty()) {
+                    good += "Trinkziel ($drinkGoal ml) an allen eingetragenen Tagen erreicht."
+                } else {
+                    notable += "Trinkziel ($drinkGoal ml) an ${low.size} Tag(en) nicht erreicht: " +
+                        low.entries.sortedBy { it.key }.take(7).joinToString("; ") { LocalDate.ofEpochDay(it.key).format(DATE_ONLY) + " " + it.value + " ml" }
+                    advice += "Getränke sichtbar hinstellen und feste Trinkzeiten einplanen (z. B. zu jeder Mahlzeit ein Glas). Bei Herz- oder Nierenerkrankungen die Trinkmenge mit dem Arzt absprechen."
+                }
+            }
+        }
+        VitalKind.MEASURES.forEach { k ->
+            val list = vitals.filter { it.kind == k.key }
+            if (list.isEmpty()) return@forEach
+            val unit = list.last().unit.ifBlank { k.unit }
+            val same = list.filter { it.unit.ifBlank { k.unit } == unit }
+            val dec = if (k == VitalKind.Blutzucker && unit == "mmol/l") 1 else k.decimals
+            val avg = Vitals.number(same.map { it.value }.average(), dec) +
+                (same.mapNotNull { it.value2 }.takeIf { it.isNotEmpty() }?.let { "/" + Vitals.number(it.average(), dec) } ?: "")
+            val text = if (k == VitalKind.Gewicht && same.size >= 2) {
+                "Gewicht: von ${Vitals.valueText(same.first())} auf ${Vitals.valueText(same.last())}"
+            } else {
+                "${k.label}: ${list.size} Messung(en), im Schnitt $avg $unit"
+            }
+            overview += text
+            val outside = list.filter { Vitals.outside(it, ranges[k.key]) }
+            if (outside.isNotEmpty()) {
+                notable += "${k.label} ${outside.size}-mal außerhalb des eingetragenen Bereichs: " +
+                    outside.take(5).joinToString("; ") { LocalDate.ofEpochDay(it.day).format(DATE_ONLY) + " " + Vitals.valueText(it) }
+                advice += "Werte außerhalb des Bereichs beim nächsten Arztbesuch ansprechen, bei Beschwerden früher."
+            }
+        }
+        if (careLog.isNotEmpty()) {
+            overview += "Pflegetagebuch: ${careLog.size} Einträge an ${careLog.map { it.day }.distinct().size} Tag(en)"
+        }
+
+        if (planned == 0 && apptsInRange.isEmpty() && notes.isEmpty() && doneTasks.isEmpty() && vitals.isEmpty() && careLog.isEmpty()) {
             advice += "Einnahmen und Termine auf der Heute-Seite abhaken und Bemerkungen ergänzen – dann wird die Auswertung aussagekräftiger."
         }
 

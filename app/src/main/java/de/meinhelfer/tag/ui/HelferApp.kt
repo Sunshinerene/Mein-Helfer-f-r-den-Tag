@@ -127,6 +127,8 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
     var showMoodCheck by rememberSaveable { mutableStateOf(false) }
     var showMotivator by rememberSaveable { mutableStateOf(false) }
     var motivatorTab by rememberSaveable { mutableIntStateOf(0) }
+    var showVitals by rememberSaveable { mutableStateOf(false) }
+    var showDiary by rememberSaveable { mutableStateOf(false) }
     val appContext = LocalContext.current
     var caregiver by remember { mutableStateOf(AppPrefs.caregiver(appContext)) }
     // Beim ersten Start einmal den Rundgang anbieten
@@ -202,8 +204,10 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
         }
     }
 
-    BackHandler(enabled = showSettings || showSummary || showGuide || showTour || showReorder || showWegweiser || showLetters || showMedOverview || showDailyStart || showMoodCheck || showMotivator) {
+    BackHandler(enabled = showSettings || showSummary || showGuide || showTour || showReorder || showWegweiser || showLetters || showMedOverview || showDailyStart || showMoodCheck || showMotivator || showVitals || showDiary) {
         when {
+            showVitals -> showVitals = false
+            showDiary -> showDiary = false
             showMoodCheck -> showMoodCheck = false
             showDailyStart -> showDailyStart = false
             showMotivator -> showMotivator = false
@@ -240,6 +244,10 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
             startWithPlan = dailyPlanOnly,
             onDone = { showDailyStart = false },
         )
+    } else if (showVitals) {
+        VitalScreen(vm = vm, person = persons.firstOrNull { it.id == personId }, onBack = { showVitals = false })
+    } else if (showDiary) {
+        CareDiaryScreen(vm = vm, person = persons.firstOrNull { it.id == personId }, onBack = { showDiary = false })
     } else if (showMotivator) {
         MotivatorScreen(
             vm = vm,
@@ -383,6 +391,8 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
                                           settingsCategory = "Sicherheit"
                                           showSettings = true
                                       },
+                                      onOpenVitals = { showVitals = true },
+                                      onOpenDiary = { showDiary = true },
                                   )
                                   ViewPeriod.Woche -> WeekOverview(
                                       vm = vm,

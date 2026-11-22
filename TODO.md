@@ -1,15 +1,15 @@
 # TODO
 
-Stand: v0.52.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.53.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
-- [ ] Punkte aus „Ideen und Optimierungen“ nach Wunsch vorziehen (Vorschlag: Trink- und Vitalprotokoll, Pflegetagebuch, Budget-Übersicht, Übergabe-Bericht)
+- [ ] Punkte aus „Ideen und Optimierungen“ nach Wunsch vorziehen (Vorschlag: Budget-Übersicht, Übergabe-Bericht)
 
 ## Ideen und Optimierungen
 
-- [ ] Trink- und Vitalprotokoll (Trinkmenge, Blutdruck, Gewicht, Blutzucker) mit Verlauf in Auswertung und Tagesplan
-- [ ] Pflegetagebuch für die Begutachtung (Hilfebedarf je Lebensbereich), als PDF für Pflegegrad-Antrag oder Höherstufung
+- [ ] Trink-Erinnerung (z. B. alle 2 Stunden tagsüber, wenn unter Ziel), Trinkmenge und Werte im Tagesplan-PDF
+- [ ] Pflegetagebuch: Erinnerung abends, Selbsteinschätzung je Bereich als Vorbereitung auf die Begutachtung
 - [ ] Budget-Übersicht Entlastungsbetrag, Verhinderungs- und Kurzzeitpflege (verbraucht, übrig, Fristen)
 - [ ] Übergabe-Bericht als PDF für Vertretung, Urlaub oder Pflegedienst (Person, Medikamente, Termine, Kontakte, Besonderheiten)
 - [ ] Dokumente: Medikamente und Kontrolltermine aus dem erkannten Text vorschlagen (z. B. aus Entlassbericht), immer mit Bestätigung
@@ -42,6 +42,7 @@ Stand: v0.52.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 - [ ] Datenbank 23 (Packungsgröße), „Neue Packung“, Sicherungs-Erinnerung auf der Heute-Seite, PDFs von Notfallkarte (Karte für die Geldbörse richtig groß?) und Medikamentenplan
 - [ ] Aufgaben-Erinnerung (kommt pünktlich, nicht mehr nach „erledigt“), „In Kalender eintragen“ mit deiner Kalender-App, Zoom mit zwei Fingern im Betrachter, Text-Dokumente drucken, Plan-Code beim Hochladen, Zuordnung der unterschriebenen Fassung
 - [ ] Zuständigkeiten (Datenbank 24): Standard-Arzt und -Apotheke, „Standard“ im Medikament, Vertretung mit Zeitraum in Nachbestellung, Infos, Folgerezept und Medikamentenplan-PDF
+- [ ] Trinken und Werte, Pflegetagebuch (Datenbank 25): Schnelltasten, Werte eintragen, Verlauf, eigener Bereich, PDFs (Protokoll im Querformat, Tagebuch-Bericht), „Wie am Vortag“, Auswertung
 - [ ] Ecken und Effekte (Beta): alle Ansichten mit „Eckig“ und „Rund“, Aurora hell und dunkel, bewegter Hintergrund flüssig und akkuschonend
 
 ## Rechtliches vor einer Veröffentlichung
@@ -50,6 +51,12 @@ Stand: v0.52.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 - [ ] Entscheiden: Aufbewahrung der Nachweise 3 Jahre oder länger (30-Jahres-Frist bei Gesundheitsschäden); zusätzlicher Nachweis beim App-Ersteller (Server) ja oder nein
 - [ ] Medizinprodukte-Recht (MDR) prüfen lassen, vor allem den KI-Gesamt-Check der Medikamente; Zweckbestimmung als Organisationshilfe klar festhalten
 - [ ] Impressum und Datenschutzerklärung für eine Veröffentlichung (z. B. Play Store), eigener Signaturschlüssel statt Test-Schlüssel
+
+## Version 0.53.0 (fertig)
+
+- [x] Trink- und Vitalprotokoll: Trinkmenge mit Schnelltasten und Ziel (Richtwert DGE ab 65: 1300 ml, änderbar), Blutdruck mit Puls, Puls, Gewicht, Blutzucker (mg/dl oder mmol/l), Temperatur, Sauerstoff; Verlauf als Grafik, eigener Bereich je Wert, PDF für 7/14/30 Tage
+- [x] Pflegetagebuch nach den sechs Bereichen der Begutachtung: wobei, Art der Hilfe, wie oft, Minuten, nachts, Notiz; Tage blättern, „Wie am Vortag übernehmen“; PDF-Bericht mit Zusammenfassung je Bereich und allen Einträgen
+- [x] Auswertung nennt Trinkmenge, Messwerte, Werte außerhalb des eigenen Bereichs und Pflegetagebuch-Einträge
 
 ## Version 0.52.0 (fertig)
 

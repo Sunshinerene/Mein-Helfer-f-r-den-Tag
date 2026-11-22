@@ -4,7 +4,7 @@ by Sunshine@R
 
 Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbezogenen Daten bleiben lokal auf dem Gerät.
 
-## Stand: v0.52.0
+## Stand: v0.53.0
 
 ### Funktionsübersicht
 
@@ -13,7 +13,9 @@ Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbe
 - Tagesstart: Rückblick auf gestern zum Ergänzen und Bestätigen, danach Tagesplan für heute (PDF teilen, drucken)
 - Jede Karte einklappbar mit Kurzinfo, Zustand wird gemerkt
 - Wochen- und Monatsübersicht: alles antippbar, bearbeiten, löschen, neu anlegen, Aufgaben und Einnahmen abhaken, Termin-Status eintragen, erledigte Aufgaben am Erledigungstag
-- Auswertung für Tag, Woche, Monat mit erledigten Aufgaben (lokal berechnet, nur Anhaltspunkte)
+- Auswertung für Tag, Woche, Monat mit erledigten Aufgaben, Trinkmenge und Messwerten (lokal berechnet, nur Anhaltspunkte)
+- Trinken und Werte: Trinkmenge mit Schnelltasten und Ziel, Blutdruck, Puls, Gewicht, Blutzucker, Temperatur, Sauerstoff; Verlauf, eigener Bereich, PDF-Protokoll
+- Pflegetagebuch für die Begutachtung (sechs Bereiche, Art der Hilfe, wie oft, nachts), „wie am Vortag“, PDF-Bericht
 
 **Tages-Motivator**
 - Satz für den Tag, „Das hast du geschafft“ und Vorhaben aus den letzten drei Tagen (Schritte und Aufgaben direkt abhaken)

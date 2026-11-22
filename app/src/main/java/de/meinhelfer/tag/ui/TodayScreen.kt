@@ -97,6 +97,8 @@ fun TodayScreen(
     onOpenMotivator: (tab: Int) -> Unit = {},
     onOpenMood: () -> Unit = {},
     onOpenBackup: () -> Unit = {},
+    onOpenVitals: () -> Unit = {},
+    onOpenDiary: () -> Unit = {},
 ) {
     val motivatorOn by vm.motivatorOnToday.collectAsStateWithLifecycle()
     val zone = ZoneId.systemDefault()
@@ -406,6 +408,10 @@ fun TodayScreen(
             }
         }
         }
+
+        // ---- Trinken und Werte, Pflegetagebuch
+        item { VitalTodayCard(vm, person, todayDay, onOpen = onOpenVitals) }
+        item { CareDiaryTodayCard(vm, todayDay, onOpen = onOpenDiary) }
 
         // ---- Aufgaben
         item {

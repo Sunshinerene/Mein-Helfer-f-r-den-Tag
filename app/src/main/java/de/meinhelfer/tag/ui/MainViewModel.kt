@@ -65,6 +65,44 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val doctors: StateFlow<List<Doctor>> = db.doctorDao().all()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    /** Trinkmengen und Messwerte der aktuellen Person, neueste zuerst. */
+    val vitals: StateFlow<List<de.meinhelfer.tag.data.VitalEntry>> =
+        combine(db.vitalDao().all(), _personId) { list, id -> list.filter { it.personId == id } }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    /** Pflegetagebuch der aktuellen Person, neuester Tag zuerst. */
+    val careLog: StateFlow<List<de.meinhelfer.tag.data.CareLogEntry>> =
+        combine(db.careLogDao().all(), _personId) { list, id -> list.filter { it.personId == id } }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun addVital(kind: String, value: Double, value2: Double? = null, unit: String = "", note: String = "", atMillis: Long = System.currentTimeMillis()) =
+        viewModelScope.launch {
+            val day = java.time.Instant.ofEpochMilli(atMillis).atZone(java.time.ZoneId.systemDefault()).toLocalDate().toEpochDay()
+            db.vitalDao().insert(
+                de.meinhelfer.tag.data.VitalEntry(
+                    personId = _personId.value, atMillis = atMillis, day = day, kind = kind,
+                    value = value, value2 = value2, unit = unit, note = note.trim(),
+                ),
+            )
+        }
+
+    fun deleteVital(item: de.meinhelfer.tag.data.VitalEntry) = viewModelScope.launch { db.vitalDao().delete(item) }
+
+    fun saveCareLog(item: de.meinhelfer.tag.data.CareLogEntry) = viewModelScope.launch {
+        if (item.id == 0L) db.careLogDao().insert(item.copy(personId = _personId.value)) else db.careLogDao().update(item)
+    }
+
+    fun deleteCareLog(item: de.meinhelfer.tag.data.CareLogEntry) = viewModelScope.launch { db.careLogDao().delete(item) }
+
+    /** Alle Eintraege eines Tages auf einen anderen Tag uebernehmen ("wie gestern"). */
+    fun copyCareDay(fromDay: Long, toDay: Long) = viewModelScope.launch {
+        val pid = _personId.value
+        val now = System.currentTimeMillis()
+        db.careLogDao().range(pid, fromDay, fromDay).forEachIndexed { i, e ->
+            db.careLogDao().insert(e.copy(id = 0, day = toDay, atMillis = now + i))
+        }
+    }
+
     /** Zustaendigkeiten (Arzt fuer Rezepte, Apotheke) und Vertretungen, fuer alle Personen. */
     val duties: StateFlow<List<de.meinhelfer.tag.data.Responsibility>> = db.responsibilityDao().all()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -691,6 +729,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         db.dayNoteDao().deleteForPerson(person.id)
         db.todoDao().deleteForPerson(person.id)
         db.responsibilityDao().deleteForPerson(person.id)
+        db.vitalDao().deleteForPerson(person.id)
+        db.careLogDao().deleteForPerson(person.id)
         db.goalDao().deleteStepsForPerson(person.id)
         db.goalDao().deleteForPerson(person.id)
         db.personDao().delete(person)
@@ -714,6 +754,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             checkins = db.checkinDao().rangeList(start.toEpochDay(), end.toEpochDay()),
             dayNotes = db.dayNoteDao().rangeList(person, start.toEpochDay(), end.toEpochDay()),
             todos = db.todoDao().list().filter { it.personId == person },
+            vitals = db.vitalDao().range(person, start.toEpochDay(), end.toEpochDay()),
+            drinkGoal = AppPrefs.drinkGoal(getApplication(), person),
+            careLog = db.careLogDao().range(person, start.toEpochDay(), end.toEpochDay()),
+            ranges = de.meinhelfer.tag.summary.VitalKind.MEASURES.mapNotNull { k ->
+                AppPrefs.vitalRange(getApplication(), person, k.key)?.let { k.key to it }
+            }.toMap(),
         )
     }
 

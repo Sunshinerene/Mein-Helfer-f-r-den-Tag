@@ -8,6 +8,8 @@ import de.meinhelfer.tag.data.Doctor
 import de.meinhelfer.tag.data.Medication
 import de.meinhelfer.tag.data.Person
 import de.meinhelfer.tag.summary.MedPlans
+import de.meinhelfer.tag.summary.VitalKind
+import de.meinhelfer.tag.summary.Vitals
 import java.io.File
 import java.time.LocalDate
 import java.time.LocalTime
@@ -255,6 +257,196 @@ object CarePdfs {
         pdf.text(
             "Selbst erstellt aus den Angaben in der App. Das ist kein offizieller bundeseinheitlicher Medikationsplan; maßgeblich sind die Angaben von Arztpraxis und Apotheke. " +
                 "Bitte nach jeder Änderung neu ausdrucken und den alten Plan vernichten.",
+            8.5f,
+            gray = true,
+        )
+        return pdf.save(file)
+    }
+
+    // ------------------------------------------------------------------ Trink- und Vitalprotokoll
+
+    fun vitals(
+        context: Context,
+        person: Person?,
+        entries: List<de.meinhelfer.tag.data.VitalEntry>,
+        drinkGoal: Int,
+        ranges: Map<String, Pair<Double?, Double?>>,
+        fromDay: Long,
+        toDay: Long,
+    ): File {
+        val file = File(PdfPages.dir(context, "protokoll"), "Protokoll_${safe(person?.name ?: "")}_${LocalDate.now()}.pdf")
+        val kinds = VitalKind.entries.filter { k -> k == VitalKind.Trinken || entries.any { it.kind == k.key } }
+        val dayW = 70f
+        val time = DateTimeFormatter.ofPattern("HH:mm", Locale.GERMANY)
+        val zone = java.time.ZoneId.systemDefault()
+        fun header(p: PdfPages) {
+            p.text("Trink- und Vitalprotokoll", 17f, bold = true)
+            p.text(
+                listOfNotNull(
+                    person?.name,
+                    person?.birthDate?.let { "geb. " + LocalDate.ofEpochDay(it).format(DATE) },
+                    LocalDate.ofEpochDay(fromDay).format(DATE) + " bis " + LocalDate.ofEpochDay(toDay).format(DATE),
+                ).joinToString(" · "),
+                10.5f,
+            )
+            val extra = listOfNotNull(
+                drinkGoal.takeIf { it > 0 }?.let { "Trinkziel $it ml/Tag" },
+                ranges.entries.mapNotNull { (k, r) ->
+                    VitalKind.of(k)?.let { kind -> kind.label + " " + (r.first?.let { Vitals.number(it, kind.decimals) } ?: "…") + "–" + (r.second?.let { Vitals.number(it, kind.decimals) } ?: "…") }
+                }.takeIf { it.isNotEmpty() }?.joinToString(", ", prefix = "eigener Bereich: "),
+            ).joinToString(" · ")
+            if (extra.isNotBlank()) p.text(extra, 9f, gray = true)
+            p.gap(6f)
+            val colW = (p.width - dayW) / kinds.size
+            val top = p.y
+            p.fill(RectF(p.left, top, p.right, top + 22f), Color.rgb(232, 236, 240), radius = 2f)
+            p.draw(p.layout("Tag", p.paint(9f, bold = true), dayW.toInt()), p.left + 3f, top + 6f, advance = false)
+            kinds.forEachIndexed { i, k ->
+                p.draw(p.layout(k.label + " (" + (if (k == VitalKind.Blutzucker) entries.firstOrNull { it.kind == k.key }?.unit?.ifBlank { null } ?: k.unit else k.unit) + ")", p.paint(8.5f, bold = true), (colW - 6).toInt()), p.left + dayW + i * colW + 3f, top + 3f, advance = false)
+            }
+            p.y = top + 24f
+        }
+        val pdf = PdfPages(842, 595, margin = 34f, footer = "Trink- und Vitalprotokoll · Mein Helfer für den Tag", onNewPage = { header(it) })
+        pdf.newPage()
+        val grid = android.graphics.Paint().apply { color = Color.rgb(190, 190, 190); strokeWidth = 0.5f }
+        val colW = (pdf.width - dayW) / kinds.size
+        for (d in fromDay..toDay) {
+            val dayEntries = entries.filter { it.day == d }
+            if (dayEntries.isEmpty()) continue
+            val cells = kinds.map { k ->
+                val list = dayEntries.filter { it.kind == k.key }.sortedBy { it.atMillis }
+                if (k == VitalKind.Trinken) {
+                    val sum = list.sumOf { it.value }.toInt()
+                    if (sum == 0) "" else "$sum" + (if (drinkGoal > 0 && sum < drinkGoal) " ↓" else "")
+                } else {
+                    list.joinToString("\n") { e ->
+                        java.time.Instant.ofEpochMilli(e.atMillis).atZone(zone).format(time) + " " +
+                            Vitals.valueText(e).substringBeforeLast(' ') +
+                            (if (Vitals.outside(e, ranges[k.key])) " !" else "")
+                    }
+                }
+            }
+            val notes = dayEntries.filter { it.note.isNotBlank() }.joinToString("; ") { (VitalKind.of(it.kind)?.label ?: "") + ": " + it.note }
+            val layouts = cells.map { pdf.layout(it, pdf.paint(9f), (colW - 6).toInt()) }
+            val dayL = pdf.layout(LocalDate.ofEpochDay(d).format(DateTimeFormatter.ofPattern("EE dd.MM.", Locale.GERMANY)), pdf.paint(9f, bold = true), dayW.toInt())
+            val notesL = notes.takeIf { it.isNotBlank() }?.let { pdf.layout("Notiz: $it", pdf.paint(8f, gray = true), pdf.width - dayW.toInt() - 6) }
+            val rowH = maxOf(layouts.maxOfOrNull { it.height } ?: 0, dayL.height) + (notesL?.height ?: 0) + 8f
+            pdf.ensure(rowH)
+            val top = pdf.y
+            pdf.draw(dayL, pdf.left + 3f, top + 4f, advance = false)
+            layouts.forEachIndexed { i, l -> pdf.draw(l, pdf.left + dayW + i * colW + 3f, top + 4f, advance = false) }
+            notesL?.let { pdf.draw(it, pdf.left + dayW + 3f, top + 4f + (layouts.maxOfOrNull { l -> l.height } ?: 0), advance = false) }
+            pdf.y = top + rowH
+            pdf.canvas.drawLine(pdf.left, pdf.y, pdf.right, pdf.y, grid)
+        }
+        if (entries.isEmpty()) pdf.text("Keine Einträge im Zeitraum.", 11f)
+        pdf.gap(10f)
+        pdf.text(
+            "Selbst erfasst. ↓ = unter dem Trinkziel, ! = außerhalb des selbst eingetragenen Bereichs. Die App bewertet keine Werte; die Einschätzung bleibt Arzt oder Pflegefachkraft vorbehalten.",
+            8.5f,
+            gray = true,
+        )
+        return pdf.save(file)
+    }
+
+    // ------------------------------------------------------------------ Pflegetagebuch
+
+    fun careDiary(
+        context: Context,
+        person: Person?,
+        entries: List<de.meinhelfer.tag.data.CareLogEntry>,
+        fromDay: Long,
+        toDay: Long,
+        caregiver: CaregiverProfile,
+    ): File {
+        val areas = de.meinhelfer.tag.summary.CareAreas
+        val file = File(PdfPages.dir(context, "pflegetagebuch"), "Pflegetagebuch_${safe(person?.name ?: "")}_${LocalDate.now()}.pdf")
+        val pdf = PdfPages(595, 842, margin = 44f, footer = "Pflegetagebuch · Mein Helfer für den Tag")
+        pdf.newPage()
+        val days = entries.map { it.day }.distinct().size
+        pdf.text("Pflegetagebuch", 20f, bold = true)
+        pdf.text(
+            listOfNotNull(
+                person?.name,
+                person?.birthDate?.let { "geb. " + LocalDate.ofEpochDay(it).format(DATE) },
+                person?.careLevel?.takeIf { it in 1..5 }?.let { "derzeit Pflegegrad $it" },
+            ).joinToString(" · "),
+            11f,
+        )
+        pdf.text("Zeitraum " + LocalDate.ofEpochDay(fromDay).format(DATE) + " bis " + LocalDate.ofEpochDay(toDay).format(DATE) + " · an $days Tag(en) geführt", 10f)
+        if (caregiver.isSet && caregiver.name.isNotBlank()) {
+            pdf.text("Geführt von: " + listOfNotNull(caregiver.name, caregiver.relation.ifBlank { null }, caregiver.phone.ifBlank { null }).joinToString(", "), 10f, gray = true)
+        }
+        pdf.gap(10f)
+        if (entries.isEmpty()) {
+            pdf.text("Keine Einträge im Zeitraum.", 11f)
+            return pdf.save(file)
+        }
+
+        // Zusammenfassung je Bereich
+        pdf.text("Zusammenfassung nach Bereichen", 13f, bold = true)
+        pdf.gap(4f)
+        val stats = areas.stats(entries)
+        val cols = floatArrayOf(0f, 46f, 52f, 52f, 40f, 130f)
+        cols[0] = pdf.width - cols.drop(1).sum()
+        areas.ALL.forEach { area ->
+            val list = stats.filter { it.module == area.module }
+            if (list.isEmpty()) return@forEach
+            pdf.gap(6f)
+            pdf.ensure(60f)
+            pdf.text("${area.module}. ${area.title} (Gewichtung ${area.weight})", 11f, bold = true)
+            val heads = listOf("Wobei", "Tage", "× pro Tag", "Min./Tag", "nachts", "Art der Hilfe")
+            var x = pdf.left
+            val top = pdf.y + 2f
+            heads.forEachIndexed { i, h ->
+                pdf.draw(pdf.layout(h, pdf.paint(8f, bold = true, gray = true), (cols[i] - 4).toInt()), x, top, advance = false)
+                x += cols[i]
+            }
+            pdf.y = top + 12f
+            list.forEach { st ->
+                val cells = listOf(
+                    st.activity + (if (st.notes.isNotEmpty()) "\n" + st.notes.joinToString("; ") else ""),
+                    "${st.days} von $days",
+                    String.format(Locale.GERMANY, "%.1f", st.timesPerDay),
+                    if (st.minutesPerDay > 0) "${st.minutesPerDay}" else "–",
+                    if (st.nights > 0) "${st.nights} T." else "–",
+                    st.helps.joinToString(", "),
+                )
+                val ls = cells.mapIndexed { i, c -> pdf.layout(c, pdf.paint(if (i == 0) 9.5f else 9f), (cols[i] - 4).toInt()) }
+                val h = (ls.maxOf { it.height } + 5).toFloat()
+                pdf.ensure(h)
+                val t = pdf.y
+                var cx = pdf.left
+                ls.forEachIndexed { i, l ->
+                    pdf.draw(l, cx, t + 2f, advance = false)
+                    cx += cols[i]
+                }
+                pdf.y = t + h
+                pdf.rule(Color.rgb(215, 215, 215))
+            }
+        }
+
+        // Tag fuer Tag
+        pdf.gap(14f)
+        pdf.ensure(40f)
+        pdf.text("Einträge Tag für Tag", 13f, bold = true)
+        entries.groupBy { it.day }.toSortedMap().forEach { (d, list) ->
+            pdf.gap(6f)
+            pdf.ensure(30f)
+            pdf.text(LocalDate.ofEpochDay(d).format(DateTimeFormatter.ofPattern("EEEE, dd.MM.yyyy", Locale.GERMANY)), 10.5f, bold = true)
+            list.sortedWith(compareBy({ it.module }, { it.atMillis })).forEach { e ->
+                pdf.text(
+                    "• [${e.module}] " + de.meinhelfer.tag.ui.careLine(e) + (if (e.note.isNotBlank()) " – ${e.note}" else ""),
+                    9.5f,
+                    x = pdf.left + 8f,
+                    w = pdf.width - 8,
+                )
+            }
+        }
+        pdf.gap(12f)
+        pdf.text(
+            "Selbst geführtes Pflegetagebuch zur Vorbereitung der Begutachtung. Bewertet wird bei der Begutachtung, wie selbständig die Person ist; Minuten sind nur ein Anhaltspunkt. " +
+                "Den Pflegegrad legt die Pflegekasse fest.",
             8.5f,
             gray = true,
         )

@@ -28,7 +28,7 @@ object GoalTemplates {
             listOf(
                 TemplateStep("Antrag bei der Pflegekasse stellen", "Formlos per Telefon, E-Mail oder Brief bei der Pflegekasse (sitzt bei der Krankenkasse). Datum notieren: Leistungen gibt es frühestens ab dem Monat des Antrags.", 0),
                 TemplateStep("Pflegeberatung annehmen", "Nach dem Antrag bietet die Pflegekasse eine Pflegeberatung an. Auch ein Pflegestützpunkt hilft.", 10),
-                TemplateStep("Pflegetagebuch führen", "Ein bis zwei Wochen notieren, wobei Hilfe nötig ist (Waschen, Essen, Medikamente, Orientierung, nachts).", 14),
+                TemplateStep("Pflegetagebuch führen", "Ein bis zwei Wochen notieren, wobei Hilfe nötig ist (Waschen, Essen, Medikamente, Orientierung, nachts). In der App: Heute → Pflegetagebuch, mit PDF-Bericht.", 14),
                 TemplateStep("Unterlagen sammeln", "Arzt- und Entlassberichte, Medikamentenplan, Hilfsmittel, Liste der behandelnden Ärzte.", 14),
                 TemplateStep("Begutachtung vorbereiten", "Termin notieren, Pflegeperson dabei, Pflegetagebuch und Fragen bereitlegen, nichts schönreden.", 18),
                 TemplateStep("Begutachtung durch den Medizinischen Dienst", "Bei Privatversicherten kommt Medicproof.", 21),
@@ -40,7 +40,7 @@ object GoalTemplates {
         GoalTemplate(
             "Höherstufung des Pflegegrads", GoalKind.Antrag, true,
             listOf(
-                TemplateStep("Veränderungen festhalten", "Zwei Wochen Pflegetagebuch: Was ist schwieriger geworden, wo braucht es mehr Hilfe?", 14),
+                TemplateStep("Veränderungen festhalten", "Zwei Wochen Pflegetagebuch (Heute → Pflegetagebuch): Was ist schwieriger geworden, wo braucht es mehr Hilfe?", 14),
                 TemplateStep("Ärztliche Berichte zur Verschlechterung sammeln", "Arztbriefe, Entlassberichte, neue Diagnosen oder Hilfsmittel.", 14),
                 TemplateStep("Antrag auf Höherstufung stellen", "Formlos bei der Pflegekasse, Datum notieren.", 16),
                 TemplateStep("Begutachtung vorbereiten", "Pflegeperson dabei, Pflegetagebuch bereitlegen.", 25),

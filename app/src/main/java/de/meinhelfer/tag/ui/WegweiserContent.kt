@@ -29,7 +29,7 @@ val WEGWEISER_SECTIONS: List<BenefitSection> = listOf(
             ),
             Benefit(
                 "Begutachtung vorbereiten",
-                "Hilfreich sind ein Pflegetagebuch über ein bis zwei Wochen (was geht allein, wobei braucht es Hilfe), Arztberichte und eine aktuelle Medikamentenliste. Diese App kann die Medikamentenliste als PDF erzeugen (Nachbestellung). Am besten ist eine vertraute Person beim Termin dabei.",
+                "Hilfreich sind ein Pflegetagebuch über ein bis zwei Wochen (was geht allein, wobei braucht es Hilfe), Arztberichte und eine aktuelle Medikamentenliste. Diese App hat ein Pflegetagebuch mit PDF-Bericht (Heute → Pflegetagebuch) und erzeugt den Medikamentenplan als PDF (Medikamente → Überblick & Check). Am besten ist eine vertraute Person beim Termin dabei.",
                 todo = "Unterlagen für die Begutachtung zusammenstellen (Pflegetagebuch, Arztberichte, Medikamentenliste)",
             ),
             Benefit(
