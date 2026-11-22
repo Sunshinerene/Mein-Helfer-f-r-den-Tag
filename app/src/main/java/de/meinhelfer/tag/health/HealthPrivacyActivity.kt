@@ -47,6 +47,7 @@ class HealthPrivacyActivity : ComponentActivity() {
 /** Erklärung zur Nutzung von Health Connect (auch in der Anleitung). */
 internal val HEALTH_PRIVACY_TEXT = listOf(
     "Die App liest auf deinen Wunsch Messwerte aus Health Connect: Blutdruck, Puls (Einzelmessungen und Ruhepuls), Gewicht, Blutzucker, Körpertemperatur, Sauerstoffsättigung und Trinkmenge. Andere Daten (z. B. Schritte, Schlaf, Standort) liest sie nicht.",
+    "Nur wenn du es beim persönlichen Assistenten einschaltest: deinen eigenen Schlaf, deine Schritte und deinen Ruhepuls. Diese Werte werden nur gelesen, nicht gespeichert, und nur für Hinweise an dich genutzt (z. B. nach einer kurzen Nacht eine Pause einplanen).",
     "Wozu: Werte von Uhr, Fitnessband, Waage oder Blutdruckgerät müssen nicht abgetippt werden. Sie landen im Bereich „Trinken und Werte“ der betreuten Person, die du beim Übernehmen auswählst.",
     "Was passiert: Gelesen wird nur, wenn du in der App auf „Werte holen“ tippst. Du siehst vorher jeden Wert mit Quelle und wählst aus, was übernommen wird. Die Werte bleiben verschlüsselt auf dem Handy. Die App schreibt nichts in Health Connect und sendet die Werte an niemanden.",
     "Die Rechte kannst du jederzeit in Health Connect zurücknehmen (Android-Einstellungen → Sicherheit und Datenschutz → Datenschutzeinstellungen → Health Connect). Schon übernommene Werte löschst du in der App.",

@@ -164,6 +164,7 @@ fun SettingsScreen(
                     item { WidgetCard() }
                 }
                 SettingsCategory.Erinnerungen -> {
+                    item { ReminderOverviewCard(vm) }
                     item { PermissionsCard() }
                     item { IntakeCard() }
                     item { CareReminderCard() }
@@ -236,7 +237,7 @@ private enum class SettingsCategory(val emoji: String, val title: String, val ke
     Profil("👤", "Meine Daten und Zustimmung", "name adresse telefon rolle ausweis angehörige pflegedienst zustimmung nutzungsbedingungen widerruf nachweis"),
     Darstellung("🎨", "Darstellung", "hell dunkel design farben schrift schriftgröße größe ecken effekte glas aurora liquid animation glanz transparenz einspieler video intro start logo ton barrierefreiheit kontrast vorlesen sprachausgabe bedienflächen größer zoom sehen"),
     Startseite("🏠", "Heute-Seite, Motivator und Widget", "heute karten notfallkarte tagesstart motivator stimmung smiley ziele widget startbildschirm"),
-    Erinnerungen("🔔", "Erinnerungen und Freigaben", "benachrichtigung freigabe freigaben wecker alarm akku einnahme zeitfenster ton erinnerung trinken tagebuch pflegetagebuch"),
+    Erinnerungen("🔔", "Erinnerungen und Freigaben", "benachrichtigung freigabe freigaben wecker alarm akku einnahme zeitfenster ton erinnerung trinken tagebuch pflegetagebuch ruhezeit nacht übersicht assistent morgen abend"),
     Dokumente("📄", "Dokumente", "betrachter viewer pdf drucken öffnen dokument"),
     Sicherheit("🔒", "Sicherheit und Sicherung", "app-sperre sperre fingerabdruck gesicht pin sicherung backup wiederherstellen zurücksetzen reset löschen"),
     Internet("🤖", "KI und Internet", "ki assistent schlüssel api gemini openai chatgpt claude ollama groq mistral wikipedia beschreibung internet"),
@@ -269,7 +270,7 @@ private fun categorySummary(
     }
     SettingsCategory.Startseite ->
         "Motivator " + (if (vm.motivatorOnToday.value) "an" else "aus") + " · Stimmungs-Check: " + vm.moodMode.value.label
-    SettingsCategory.Erinnerungen -> "Freigaben, Einnahme-Zeitfenster, Trinken und Pflegetagebuch"
+    SettingsCategory.Erinnerungen -> "Übersicht, Ruhezeit, Freigaben, Einnahme-Zeitfenster, Trinken und Pflegetagebuch"
     SettingsCategory.Dokumente -> if (AppPrefs.internalViewer(context)) "Öffnen im eingebauten Betrachter" else "Öffnen mit einer anderen App"
     SettingsCategory.Sicherheit -> "App-Sperre " + (if (AppPrefs.lockEnabled(context)) "an" else "aus") + " · Sicherung, Zurücksetzen"
     SettingsCategory.Internet ->

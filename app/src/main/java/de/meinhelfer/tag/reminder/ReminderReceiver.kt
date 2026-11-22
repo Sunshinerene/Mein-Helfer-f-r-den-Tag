@@ -111,6 +111,7 @@ class ReminderReceiver : BroadcastReceiver() {
                 val today = java.time.LocalDate.now().toEpochDay()
                 val entered = db.moodDao().since(today).any { it.atMillis >= start }
                 if (entered) return
+                if (de.meinhelfer.tag.update.AppPrefs.isQuietNow(context)) return
                 Notifications.show(
                     context,
                     "mood".hashCode(),
@@ -126,6 +127,7 @@ class ReminderReceiver : BroadcastReceiver() {
                 val index = id.toInt()
                 if (index !in hours.indices) return
                 ReminderScheduler.scheduleDrinkAt(context, index, hours[index])
+                if (de.meinhelfer.tag.update.AppPrefs.isQuietNow(context)) return
                 val today = java.time.LocalDate.now().toEpochDay()
                 val hour = java.time.LocalTime.now().hour
                 val all = db.vitalDao().all().first()
@@ -173,6 +175,51 @@ class ReminderReceiver : BroadcastReceiver() {
                 }
             }
 
+            ReminderScheduler.TYPE_ASSIST -> {
+                ReminderScheduler.scheduleAssistant(context)
+                if (!de.meinhelfer.tag.update.AppPrefs.assistantEnabled(context)) return
+                if (de.meinhelfer.tag.update.AppPrefs.isQuietNow(context)) return
+                val name = de.meinhelfer.tag.update.AppPrefs.assistantName(context)
+                val now = java.time.LocalDateTime.now()
+                val today = now.toLocalDate().toEpochDay()
+                val zone = java.time.ZoneId.systemDefault()
+                val meds = db.medicationDao().list()
+                val appointments = db.appointmentDao().list()
+                val todos = db.todoDao().list()
+                val checkins = db.checkinDao().rangeList(today - 1, today + 2)
+                val doctors = db.doctorDao().all().first()
+                val vitals = db.vitalDao().all().first()
+                val multi = persons.size > 1
+                val measured = persons.associate { p -> p.id to vitals.any { it.personId == p.id && it.kind != "trinken" && it.day >= today - 14 } }
+                val line = de.meinhelfer.tag.summary.Tageslage.dayLine(persons, meds, checkins, appointments, todos, now, zone)
+                val preps = de.meinhelfer.tag.summary.Assistant.preps(persons, appointments, checkins, meds, doctors, measured, now, zone)
+                fun dayOf(millis: Long) = java.time.Instant.ofEpochMilli(millis).atZone(zone).toLocalDate().toEpochDay()
+                val (title, text) = if (id == 0L) {
+                    val proposals = de.meinhelfer.tag.summary.Assistant.proposals(
+                        persons, todos, meds, db.responsibilityDao().list(), doctors, today, de.meinhelfer.tag.update.AppPrefs.assistantDismissed(context),
+                    ).size
+                    de.meinhelfer.tag.summary.AssistantBrief.morning(name, line, preps.filter { dayOf(it.appointment.whenMillis) == today }, proposals, multi)
+                } else {
+                    val done = checkins.count { it.day == today && it.done } +
+                        todos.count { it.done && it.doneMillis != null && dayOf(it.doneMillis) == today }
+                    val careLog = db.careLogDao().all().first()
+                    // Tagebuch nur fuer Personen, fuer die es in den letzten 30 Tagen gefuehrt wurde
+                    val diaryMissing = persons.filter { p ->
+                        careLog.any { it.personId == p.id && it.day >= today - 30 } && careLog.none { it.personId == p.id && it.day == today }
+                    }.map { it.name }
+                    de.meinhelfer.tag.summary.AssistantBrief.evening(
+                        name, done, line, preps.filter { dayOf(it.appointment.whenMillis) == today + 1 }, diaryMissing, multi,
+                    )
+                }
+                Notifications.show(
+                    context,
+                    "assist:$id".hashCode(),
+                    title,
+                    text,
+                    channel = Notifications.CHANNEL_ASSISTANT,
+                )
+            }
+
             ReminderScheduler.TYPE_TODO -> {
                 val todo = db.todoDao().byId(id) ?: return
                 val at = todo.remindAt ?: return
@@ -200,11 +247,26 @@ class ReminderReceiver : BroadcastReceiver() {
                 val text = appointment.title +
                     " um $whenText Uhr" +
                     if (appointment.place.isNotBlank()) ", ${appointment.place}" else ""
+                // Mit Assistent: kurze Checkliste, was mit soll
+                val assistant = de.meinhelfer.tag.update.AppPrefs.assistantEnabled(context)
+                val addon = if (assistant) {
+                    runCatching {
+                        val now = java.time.LocalDateTime.now()
+                        val today = java.time.LocalDate.now().toEpochDay()
+                        val vitals = db.vitalDao().all().first()
+                        val measured = mapOf(appointment.personId to vitals.any { it.personId == appointment.personId && it.kind != "trinken" && it.day >= today - 14 })
+                        val prep = de.meinhelfer.tag.summary.Assistant.preps(
+                            persons, listOf(appointment), emptyList(), db.medicationDao().list(), db.doctorDao().all().first(), measured, now.minusMinutes(1),
+                        ).firstOrNull()
+                        de.meinhelfer.tag.summary.AssistantBrief.appointmentAddon(prep)
+                    }.getOrDefault("")
+                } else ""
+                val name = if (assistant) de.meinhelfer.tag.update.AppPrefs.assistantName(context) + ": " else ""
                 Notifications.show(
                     context,
                     "appt:$id".hashCode(),
-                    "Termin${forPerson(appointment.personId)} in ${ReminderScheduler.leadText(appointment.reminderMinutes)}",
-                    text,
+                    name + "Termin${forPerson(appointment.personId)} in ${ReminderScheduler.leadText(appointment.reminderMinutes)}",
+                    text + addon,
                     personId = appointment.personId,
                 )
             }

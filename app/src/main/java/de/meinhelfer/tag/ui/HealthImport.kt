@@ -63,6 +63,7 @@ private fun kindsText(granted: Set<String>): String {
     val names = listOf(
         "BLOOD_PRESSURE" to "Blutdruck", "HEART_RATE" to "Puls", "WEIGHT" to "Gewicht", "BLOOD_GLUCOSE" to "Blutzucker",
         "BODY_TEMPERATURE" to "Temperatur", "OXYGEN_SATURATION" to "Sauerstoff", "HYDRATION" to "Trinkmenge",
+        "SLEEP" to "Schlaf (für dich)", "STEPS" to "Schritte (für dich)",
     )
     return names.filter { (key, _) -> granted.any { it.endsWith("READ_$key") } }.joinToString(", ") { it.second }
 }
@@ -249,8 +250,10 @@ internal fun HealthImportDialog(
     onDismiss: () -> Unit,
 ) {
     val context = LocalContext.current
-    val bySource = remember(values) { values.groupBy { it.source } }
-    val labels = remember(bySource) { bySource.keys.associateWith { HealthConnectReader.label(context, it) } }
+    var ownSources by remember { mutableStateOf(AppPrefs.healthOwnSources(context)) }
+    val allBySource = remember(values) { values.groupBy { it.source } }
+    val bySource = allBySource.filterKeys { it !in ownSources }
+    val labels = remember(allBySource) { allBySource.keys.associateWith { HealthConnectReader.label(context, it) } }
     var selected by remember {
         val remembered = AppPrefs.healthSources(context, personId).filter { it in bySource.keys }.toSet()
         mutableStateOf(if (remembered.isNotEmpty()) remembered else if (bySource.size == 1) bySource.keys else emptySet())
@@ -268,6 +271,14 @@ internal fun HealthImportDialog(
                         "Trägst du selbst eine Uhr, stehen deine eigenen Werte auch in Health Connect.",
                     style = MaterialTheme.typography.bodySmall,
                 )
+                val hidden = allBySource.keys.filter { it in ownSources }
+                if (hidden.isNotEmpty()) {
+                    Text(
+                        "Ausgeblendet, weil sie zu dir gehören: " + hidden.joinToString(", ") { labels[it] ?: it } +
+                            ". Ändern unter Einstellungen → Beta-Funktionen.",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
                 bySource.forEach { (src, list) ->
                     HorizontalDivider()
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -280,6 +291,11 @@ internal fun HealthImportDialog(
                             )
                         }
                     }
+                    TextButton(onClick = {
+                        ownSources = ownSources + src
+                        AppPrefs.setHealthOwnSources(context, ownSources)
+                        selected = selected - src
+                    }) { Text("Das ist mein eigenes Gerät") }
                     if (src in selected) {
                         list.take(4).forEach { v ->
                             val k = VitalKind.of(v.kind)
@@ -319,6 +335,7 @@ fun HealthConnectSettingsCard() {
     val available = remember { HealthConnectReader.available(context) }
     val state = remember { HealthState() }
     var why by remember { mutableStateOf(false) }
+    var ownSources by remember { mutableStateOf(AppPrefs.healthOwnSources(context)) }
     LaunchedEffect(available) { if (available) state.granted = HealthConnectReader.granted(context) }
     val launcher = rememberLauncherForActivityResult(PermissionController.createRequestPermissionResultContract()) {
         scope.launch { state.granted = HealthConnectReader.granted(context) }
@@ -356,9 +373,22 @@ fun HealthConnectSettingsCard() {
                     }) { Text("Health Connect öffnen") }
                 }
             }
+            if (ownSources.isNotEmpty()) {
+                Text("Deine eigenen Geräte (nur für deinen Assistenten, nie bei der gepflegten Person):", style = MaterialTheme.typography.labelLarge)
+                ownSources.forEach { src ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(HealthConnectReader.label(context, src), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                        TextButton(onClick = {
+                            ownSources = ownSources - src
+                            AppPrefs.setHealthOwnSources(context, ownSources)
+                        }) { Text("Entfernen") }
+                    }
+                }
+            }
             TextButton(onClick = { why = true }) { Text("Was wird gelesen?") }
             Text(
-                "Übernehmen: Heute → „Trinken und Werte“ → „⌚ Von Uhr oder Messgerät“. Gelesen wird nur auf Tippen, gespeichert nur nach Bestätigung.",
+                "Übernehmen: Heute → „Trinken und Werte“ → „⌚ Von Uhr oder Messgerät“. Gelesen wird nur auf Tippen, gespeichert nur nach Bestätigung. " +
+                    "Deine eigenen Werte (Schlaf, Schritte, Ruhepuls) nutzt nur dein Assistent, einschalten unter „Persönlicher Assistent“.",
                 style = MaterialTheme.typography.bodySmall,
             )
         }

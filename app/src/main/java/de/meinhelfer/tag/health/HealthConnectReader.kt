@@ -13,11 +13,14 @@ import androidx.health.connect.client.records.HydrationRecord
 import androidx.health.connect.client.records.OxygenSaturationRecord
 import androidx.health.connect.client.records.Record
 import androidx.health.connect.client.records.RestingHeartRateRecord
+import androidx.health.connect.client.records.SleepSessionRecord
+import androidx.health.connect.client.records.StepsRecord
 import androidx.health.connect.client.records.WeightRecord
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
 import de.meinhelfer.tag.summary.HealthValue
 import de.meinhelfer.tag.summary.HealthValues
+import de.meinhelfer.tag.summary.OwnHealth
 import java.time.Instant
 import kotlin.reflect.KClass
 
@@ -39,6 +42,13 @@ object HealthConnectReader {
 
     /** Leserechte für Blutdruck, Puls, Ruhepuls, Gewicht, Blutzucker, Temperatur, Sauerstoff und Trinkmenge. */
     val PERMISSIONS: Set<String> = TYPES.map { HealthPermission.getReadPermission(it) }.toSet()
+
+    /** Für den Assistenten: deine eigenen Werte (Schlaf, Schritte, Ruhepuls). */
+    val OWN_PERMISSIONS: Set<String> = setOf(
+        HealthPermission.getReadPermission(SleepSessionRecord::class),
+        HealthPermission.getReadPermission(StepsRecord::class),
+        HealthPermission.getReadPermission(RestingHeartRateRecord::class),
+    )
 
     /** Health Connect ist da (ab Android 14 eingebaut, davor als App). */
     fun available(context: Context): Boolean =
@@ -123,5 +133,56 @@ object HealthConnectReader {
             out += HealthValue("trinken", r.volume.inMilliliters, null, "ml", r.startTime.toEpochMilli(), r.metadata.dataOrigin.packageName)
         }
         return out.filter { HealthValues.plausible(it) }.sortedByDescending { it.atMillis }
+    }
+
+    /**
+     * Deine eigenen Werte für den Assistenten: Schlaf der letzten Nacht, Schritte heute, Ruhepuls (aktuell und Schnitt).
+     * Nur Quellen aus [own] (falls gesetzt), nie Quellen aus [exclude] (Geräte der gepflegten Personen).
+     * Mehrere Quellen für dasselbe (Handy und Uhr) werden nicht addiert: es zählt die Quelle mit dem höchsten Wert.
+     */
+    suspend fun readOwn(context: Context, own: Set<String>, exclude: Set<String>): OwnHealth {
+        val client = HealthConnectClient.getOrCreate(context)
+        val granted = client.permissionController.getGrantedPermissions()
+        val zone = java.time.ZoneId.systemDefault()
+        val now = Instant.now()
+        val today = java.time.LocalDate.now(zone)
+        fun ok(pkg: String) = pkg !in exclude && (own.isEmpty() || pkg in own)
+
+        suspend fun <T : Record> all(type: KClass<T>, from: Instant): List<T> {
+            if (HealthPermission.getReadPermission(type) !in granted) return emptyList()
+            return client.readRecords(ReadRecordsRequest(type, TimeRangeFilter.between(from, now), pageSize = 1000)).records
+        }
+
+        val sleepFrom = today.minusDays(1).atTime(12, 0).atZone(zone).toInstant()
+        val sleep = all(SleepSessionRecord::class, sleepFrom)
+            .filter { ok(it.metadata.dataOrigin.packageName) && it.endTime.isAfter(today.minusDays(1).atTime(18, 0).atZone(zone).toInstant()) }
+            .groupBy { it.metadata.dataOrigin.packageName }
+            .mapValues { (_, list) ->
+                list.sumOf { s ->
+                    val total = java.time.Duration.between(s.startTime, s.endTime).toMinutes()
+                    val awake = s.stages.filter { it.stage == SleepSessionRecord.STAGE_TYPE_AWAKE }
+                        .sumOf { java.time.Duration.between(it.startTime, it.endTime).toMinutes() }
+                    (total - awake).coerceAtLeast(0)
+                }
+            }.values.maxOrNull()?.toInt()
+
+        val steps = all(StepsRecord::class, today.atStartOfDay(zone).toInstant())
+            .filter { ok(it.metadata.dataOrigin.packageName) }
+            .groupBy { it.metadata.dataOrigin.packageName }
+            .mapValues { (_, list) -> list.sumOf { it.count } }
+            .values.maxOrNull()
+
+        val resting = all(RestingHeartRateRecord::class, today.minusDays(8).atStartOfDay(zone).toInstant())
+            .filter { ok(it.metadata.dataOrigin.packageName) }
+            .sortedBy { it.time }
+        val latest = resting.lastOrNull()
+        val latestDay = latest?.time?.atZone(zone)?.toLocalDate()
+        val before = resting.filter { it.time.atZone(zone).toLocalDate() != latestDay }.map { it.beatsPerMinute }
+        return OwnHealth(
+            sleepMinutes = sleep?.takeIf { it > 0 },
+            stepsToday = steps,
+            restingNow = latest?.beatsPerMinute?.toInt(),
+            restingAvg = if (before.size >= 3) before.average().toInt() else null,
+        )
     }
 }

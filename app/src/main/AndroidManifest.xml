@@ -23,6 +23,9 @@
     <uses-permission android:name="android.permission.health.READ_BODY_TEMPERATURE" />
     <uses-permission android:name="android.permission.health.READ_OXYGEN_SATURATION" />
     <uses-permission android:name="android.permission.health.READ_HYDRATION" />
+    <!-- Nur für deine eigenen Werte beim Assistenten (Beta, eigener Schalter) -->
+    <uses-permission android:name="android.permission.health.READ_SLEEP" />
+    <uses-permission android:name="android.permission.health.READ_STEPS" />
 
     <queries>
         <!-- Health Connect als App (bis Android 13) -->

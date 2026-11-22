@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.meinhelfer.tag.summary.Assistant
 import de.meinhelfer.tag.summary.Expression
@@ -37,6 +38,8 @@ import de.meinhelfer.tag.summary.Proposal
 import de.meinhelfer.tag.summary.SupportLevel
 import de.meinhelfer.tag.summary.Tageslage
 import de.meinhelfer.tag.summary.VitalKind
+import de.meinhelfer.tag.summary.AssistantBrief
+import de.meinhelfer.tag.update.AppPrefs
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -126,6 +129,9 @@ fun AssistantCard(vm: MainViewModel, onOpen: (tab: Int) -> Unit, onMood: () -> U
     val st = rememberAssistantState(vm)
     val plan by vm.motivator.collectAsStateWithLifecycle()
     val speaking by Speech.speaking.collectAsState()
+    val ownHealth by vm.ownHealth.collectAsStateWithLifecycle()
+    androidx.compose.runtime.LaunchedEffect(Unit) { vm.refreshOwnHealth() }
+    val selfHints = AssistantBrief.selfHints(ownHealth, java.time.LocalTime.now().hour)
     val p = plan
     Foldable(
         key = "assistent",
@@ -156,6 +162,7 @@ fun AssistantCard(vm: MainViewModel, onOpen: (tab: Int) -> Unit, onMood: () -> U
                         Text("Ich sehe dafür nichts vorzubereiten.", style = MaterialTheme.typography.bodySmall)
                     } else {
                         prep.hints.forEach { Text("• $it", style = MaterialTheme.typography.bodySmall) }
+                        PrepPdfButtons(vm, prep.appointment.personId)
                     }
                 }
                 if (st.proposals.isNotEmpty()) {
@@ -167,6 +174,7 @@ fun AssistantCard(vm: MainViewModel, onOpen: (tab: Int) -> Unit, onMood: () -> U
                     HorizontalDivider()
                     Text("Für dich", style = MaterialTheme.typography.labelLarge)
                     Text(p.sentence, style = MaterialTheme.typography.bodyLarge, fontStyle = FontStyle.Italic)
+                    selfHints.forEach { Text("⌚ $it", style = MaterialTheme.typography.bodyMedium) }
                     p.impulse?.let { Text("Dein Impuls (KI): $it", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary) }
                     MoodStrip(p)
                     TextButton(onClick = onMood) { Text(if (p.moodToday) "Stimmung nochmal eintragen" else "Wie geht es dir? Stimmung eintragen") }
@@ -188,6 +196,53 @@ fun AssistantCard(vm: MainViewModel, onOpen: (tab: Int) -> Unit, onMood: () -> U
                     speech(st, p?.greeting, p?.sentence)
                 }
             }
+        }
+    }
+}
+
+/** Unterlagen für den Termin gleich als PDF teilen: Medikamentenplan und Werte der letzten 14 Tage. */
+@Composable
+private fun PrepPdfButtons(vm: MainViewModel, personId: Long) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    val persons by vm.persons.collectAsStateWithLifecycle()
+    val meds by vm.allMedications.collectAsStateWithLifecycle()
+    val doctors by vm.doctors.collectAsStateWithLifecycle()
+    val duties by vm.duties.collectAsStateWithLifecycle()
+    val vitals by vm.allVitals.collectAsStateWithLifecycle()
+    val today by vm.today.collectAsStateWithLifecycle()
+    val person = persons.firstOrNull { it.id == personId }
+    val mine = meds.filter { it.personId == personId }
+    val values = vitals.filter { it.personId == personId && it.day > today - 14 }
+    if (mine.isEmpty() && values.none { it.kind != VitalKind.Trinken.key }) return
+    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        if (mine.isNotEmpty()) {
+            TextButton(onClick = {
+                scope.launch {
+                    runCatching {
+                        val f = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                            de.meinhelfer.tag.export.CarePdfs.medPlan(context, person, mine, doctors, AppPrefs.caregiver(context), duties)
+                        }
+                        sharePdfFile(context, f, "Medikamentenplan teilen")
+                    }
+                }
+            }) { Text("Medikamentenplan") }
+        }
+        if (values.any { it.kind != VitalKind.Trinken.key }) {
+            TextButton(onClick = {
+                scope.launch {
+                    runCatching {
+                        val f = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                            de.meinhelfer.tag.export.CarePdfs.vitals(
+                                context, person, values, AppPrefs.drinkGoal(context, personId),
+                                VitalKind.MEASURES.mapNotNull { k -> AppPrefs.vitalRange(context, personId, k.key)?.let { k.key to it } }.toMap(),
+                                today - 13, today,
+                            )
+                        }
+                        sharePdfFile(context, f, "Werte teilen")
+                    }
+                }
+            }) { Text("Werte (14 Tage)") }
         }
     }
 }
@@ -384,9 +439,16 @@ fun AssistantDockFace(vm: MainViewModel) {
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun AssistantSettingsCard(vm: MainViewModel) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     val on by vm.assistantOn.collectAsStateWithLifecycle()
     val name by vm.assistantName.collectAsStateWithLifecycle()
     var own by remember { mutableStateOf("") }
+    var morning by remember { mutableStateOf(AppPrefs.assistantMorning(context)) }
+    var evening by remember { mutableStateOf(AppPrefs.assistantEvening(context)) }
+    var ownValues by remember { mutableStateOf(AppPrefs.assistantOwnHealth(context)) }
+    val ownLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.health.connect.client.PermissionController.createRequestPermissionResultContract(),
+    ) { vm.refreshOwnHealth(force = true) }
     HCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -406,6 +468,54 @@ fun AssistantSettingsCard(vm: MainViewModel) {
                     FilterChip(selected = n == name, onClick = { vm.setAssistantName(n) }, label = { Text(n) })
                 }
             }
+            HorizontalDivider()
+            Text("Benachrichtigungen von $name", style = MaterialTheme.typography.labelLarge)
+            OptionalTimeRow(
+                label = "Morgenüberblick",
+                hint = "Was heute ansteht und was für Termine bereitliegen sollte",
+                minute = morning,
+                default = 7 * 60 + 30,
+            ) {
+                morning = it
+                AppPrefs.setAssistantMorning(context, it)
+                de.meinhelfer.tag.reminder.ReminderScheduler.scheduleAssistant(context)
+            }
+            OptionalTimeRow(
+                label = "Abend",
+                hint = "Was geschafft ist, was offen bleibt, was du für morgen bereitlegen kannst",
+                minute = evening,
+                default = 20 * 60,
+            ) {
+                evening = it
+                AppPrefs.setAssistantEvening(context, it)
+                de.meinhelfer.tag.reminder.ReminderScheduler.scheduleAssistant(context)
+            }
+            Text(
+                "Bei Terminerinnerungen hängt $name eine kurze Checkliste an (z. B. Versichertenkarte, Medikamentenplan). Die Ruhezeit stellst du unter Erinnerungen ein.",
+                style = MaterialTheme.typography.bodySmall,
+            )
+            HorizontalDivider()
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("Meine eigenen Werte nutzen", style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        "Schlaf, Schritte und Ruhepuls von deiner Uhr (Health Connect) für Hinweise nur für dich. Wird nur gelesen, nicht gespeichert.",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+                Switch(checked = ownValues, onCheckedChange = {
+                    ownValues = it
+                    AppPrefs.setAssistantOwnHealth(context, it)
+                    if (it && de.meinhelfer.tag.health.HealthConnectReader.available(context)) {
+                        ownLauncher.launch(de.meinhelfer.tag.health.HealthConnectReader.OWN_PERMISSIONS)
+                    }
+                    vm.refreshOwnHealth(force = true)
+                })
+            }
+            if (ownValues && !de.meinhelfer.tag.health.HealthConnectReader.available(context)) {
+                Text("Health Connect ist auf diesem Handy nicht verfügbar.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+            }
+            HorizontalDivider()
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
                     value = own,
@@ -418,6 +528,107 @@ fun AssistantSettingsCard(vm: MainViewModel) {
                     vm.setAssistantName(own)
                     own = ""
                 }) { Text("Übernehmen") }
+            }
+        }
+    }
+}
+
+/** Uhrzeit mit Schalter (aus = -1). */
+@Composable
+internal fun OptionalTimeRow(label: String, hint: String, minute: Int, default: Int, onChange: (Int) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(label + if (minute >= 0) " um ${AssistantBrief.hm(minute)} Uhr" else " (aus)", style = MaterialTheme.typography.bodyLarge)
+                Text(hint, style = MaterialTheme.typography.bodySmall)
+            }
+            Switch(checked = minute >= 0, onCheckedChange = { onChange(if (it) default else -1) })
+        }
+        if (minute >= 0) {
+            TimePickerField(
+                label = "Uhrzeit",
+                time = java.time.LocalTime.of(minute / 60, minute % 60),
+                onChange = { t -> onChange(t.hour * 60 + t.minute) },
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
+}
+
+/** Einstellungen → Erinnerungen: alle Erinnerungen auf einen Blick, dazu die Ruhezeit. */
+@Composable
+fun ReminderOverviewCard(vm: MainViewModel) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val meds by vm.allMedications.collectAsStateWithLifecycle()
+    val todos by vm.allTodos.collectAsStateWithLifecycle()
+    val assistant by vm.assistantOn.collectAsStateWithLifecycle()
+    val name by vm.assistantName.collectAsStateWithLifecycle()
+    var quietOn by remember { mutableStateOf(AppPrefs.quietEnabled(context)) }
+    var from by remember { mutableStateOf(AppPrefs.quietFrom(context)) }
+    var to by remember { mutableStateOf(AppPrefs.quietTo(context)) }
+    fun save() = AppPrefs.setQuiet(context, quietOn, from, to)
+    val slots = meds.sumOf { it.timeList().size }
+    val planned = todos.count { !it.done && !it.archived && (it.remindAt ?: 0L) > System.currentTimeMillis() }
+    val drink = AppPrefs.drinkReminder(context)
+    val diary = AppPrefs.diaryReminder(context)
+    val morning = AppPrefs.assistantMorning(context)
+    val evening = AppPrefs.assistantEvening(context)
+    fun quietHit(m: Int) = quietOn && m >= 0 && AssistantBrief.inQuiet(m, from, to)
+    val rows = listOf(
+        "💊 Medikamente" to "$slots Einnahmezeiten, immer (auch in der Ruhezeit)" +
+            if (AppPrefs.followupNotify(context)) "; Nachfrage nach ${AppPrefs.intakeWindow(context)} Min., wenn nicht abgehakt" else "",
+        "📅 Termine" to "je Termin einstellbar, immer" + if (assistant) "; mit Checkliste von $name" else "",
+        "✅ Aufgaben" to if (planned == 0) "keine Erinnerung geplant (beim Bearbeiten einer Aufgabe einstellbar)" else "$planned geplant",
+        "🙂 Stimmungs-Check" to if (AppPrefs.moodNotify(context)) "an (Häufigkeit unter Heute-Seite, Motivator und Widget)" else "aus",
+        "💧 Trinken" to when (drink) { 2 -> "alle 2 Stunden (10–18 Uhr)"; 3 -> "alle 3 Stunden (10–19 Uhr)"; else -> "aus" },
+        "📓 Pflegetagebuch" to if (diary >= 0) "um ${AssistantBrief.hm(diary)} Uhr" else "aus",
+        "🌅 $name morgens" to if (!assistant) "Assistent aus" else if (morning >= 0) "um ${AssistantBrief.hm(morning)} Uhr" + (if (quietHit(morning)) " – liegt in der Ruhezeit!" else "") else "aus",
+        "🌙 $name abends" to if (!assistant) "Assistent aus" else if (evening >= 0) "um ${AssistantBrief.hm(evening)} Uhr" + (if (quietHit(evening)) " – liegt in der Ruhezeit!" else "") else "aus",
+    )
+    HCard(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text("Alle Erinnerungen auf einen Blick", style = MaterialTheme.typography.titleMedium)
+            rows.forEach { (label, value) ->
+                Column {
+                    Text(label, style = MaterialTheme.typography.bodyLarge)
+                    Text(value, style = MaterialTheme.typography.bodySmall, color = if (value.endsWith("!")) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+            HorizontalDivider()
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("Ruhezeit", style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        "In dieser Zeit melden sich Trinken, Stimmungs-Check und $name nicht. Medikamente, Termine, Aufgaben und das Pflegetagebuch kommen immer.",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+                Switch(checked = quietOn, onCheckedChange = {
+                    quietOn = it
+                    save()
+                })
+            }
+            if (quietOn) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TimePickerField(
+                        label = "Von",
+                        time = java.time.LocalTime.of(from / 60, from % 60),
+                        onChange = { t ->
+                            from = t.hour * 60 + t.minute
+                            save()
+                        },
+                        modifier = Modifier.weight(1f),
+                    )
+                    TimePickerField(
+                        label = "Bis",
+                        time = java.time.LocalTime.of(to / 60, to % 60),
+                        onChange = { t ->
+                            to = t.hour * 60 + t.minute
+                            save()
+                        },
+                        modifier = Modifier.weight(1f),
+                    )
+                }
             }
         }
     }

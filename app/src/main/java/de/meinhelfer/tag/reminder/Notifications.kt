@@ -19,6 +19,7 @@ object Notifications {
     private const val CHANNEL_UPDATES = "updates"
     const val CHANNEL_MOOD = "stimmung"
     const val CHANNEL_CARE = "pflege"
+    const val CHANNEL_ASSISTANT = "assistent"
 
     fun ensureChannels(context: Context) {
         if (Build.VERSION.SDK_INT >= 26) {
@@ -39,6 +40,12 @@ object Notifications {
                 nm.createNotificationChannel(
                     NotificationChannel(CHANNEL_CARE, "Trinken und Pflegetagebuch", NotificationManager.IMPORTANCE_DEFAULT)
                         .apply { description = "Erinnerung ans Trinken und ans Pflegetagebuch" },
+                )
+            }
+            if (nm.getNotificationChannel(CHANNEL_ASSISTANT) == null) {
+                nm.createNotificationChannel(
+                    NotificationChannel(CHANNEL_ASSISTANT, "Dein Assistent", NotificationManager.IMPORTANCE_DEFAULT)
+                        .apply { description = "Morgenüberblick und Abend mit Vorbereitung für morgen" },
                 )
             }
             if (nm.getNotificationChannel(CHANNEL_UPDATES) == null) {

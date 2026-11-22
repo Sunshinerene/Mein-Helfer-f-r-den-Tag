@@ -29,6 +29,7 @@ object ReminderScheduler {
     const val TYPE_TODO = "todo"
     const val TYPE_DRINK = "trinken"
     const val TYPE_DIARY = "tagebuch"
+    const val TYPE_ASSIST = "assistent"
 
     /** Uhrzeiten der Trink-Erinnerung je Abstand */
     fun drinkHours(interval: Int): List<Int> = when (interval) {
@@ -66,6 +67,7 @@ object ReminderScheduler {
         scheduleMood(app)
         scheduleDrink(app)
         scheduleDiary(app)
+        scheduleAssistant(app)
     }
 
     /**
@@ -228,6 +230,18 @@ object ReminderScheduler {
         val m = de.meinhelfer.tag.update.AppPrefs.diaryReminder(app)
         if (m < 0) return
         setInexact(app, "diary".hashCode(), nextAt(m / 60, m % 60), TYPE_DIARY, 0L)
+    }
+
+    /** Morgenüberblick (id 0) und Abend (id 1) des Assistenten, nur wenn er an ist und die Zeit gesetzt ist. */
+    fun scheduleAssistant(context: Context) {
+        val app = context.applicationContext
+        cancel(app, "assist:0".hashCode())
+        cancel(app, "assist:1".hashCode())
+        if (!de.meinhelfer.tag.update.AppPrefs.assistantEnabled(app)) return
+        val morning = de.meinhelfer.tag.update.AppPrefs.assistantMorning(app)
+        val evening = de.meinhelfer.tag.update.AppPrefs.assistantEvening(app)
+        if (morning >= 0) setInexact(app, "assist:0".hashCode(), nextAt(morning / 60, morning % 60), TYPE_ASSIST, 0L)
+        if (evening >= 0) setInexact(app, "assist:1".hashCode(), nextAt(evening / 60, evening % 60), TYPE_ASSIST, 1L)
     }
 
     /** Erinnerung an eine Aufgabe (nur offene mit Erinnerungszeit in der Zukunft). */

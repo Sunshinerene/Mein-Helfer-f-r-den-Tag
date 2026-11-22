@@ -392,6 +392,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun setAssistantOn(on: Boolean) {
         _assistantOn.value = on
         AppPrefs.setAssistantEnabled(getApplication(), on)
+        ReminderScheduler.scheduleAssistant(getApplication())
     }
 
     fun setAssistantName(name: String) {
@@ -410,6 +411,30 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     val allVitals: StateFlow<List<de.meinhelfer.tag.data.VitalEntry>> = db.vitalDao().all()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    private val _ownHealth = MutableStateFlow<de.meinhelfer.tag.summary.OwnHealth?>(null)
+
+    /** Deine eigenen Werte aus Health Connect (nur gelesen, nicht gespeichert), wenn eingeschaltet. */
+    val ownHealth: StateFlow<de.meinhelfer.tag.summary.OwnHealth?> = _ownHealth
+    private var ownHealthAt = 0L
+
+    /** Eigene Werte neu lesen (höchstens alle 10 Minuten, außer [force]). */
+    fun refreshOwnHealth(force: Boolean = false) = viewModelScope.launch {
+        val app = getApplication<Application>()
+        if (!AppPrefs.assistantOwnHealth(app) || !_assistantOn.value) {
+            _ownHealth.value = null
+            return@launch
+        }
+        if (!force && System.currentTimeMillis() - ownHealthAt < 10 * 60_000L && _ownHealth.value != null) return@launch
+        val h = de.meinhelfer.tag.health.HealthConnectReader
+        if (!h.available(app) || h.granted(app).none { it in h.OWN_PERMISSIONS }) return@launch
+        val persons = db.personDao().list()
+        val exclude = persons.flatMap { AppPrefs.healthSources(app, it.id) }.toSet()
+        _ownHealth.value = runCatching {
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { h.readOwn(app, AppPrefs.healthOwnSources(app), exclude) }
+        }.getOrNull()
+        ownHealthAt = System.currentTimeMillis()
+    }
 
     /** Vorschlag ablehnen: für diesen Anlass nicht mehr zeigen. */
     fun dismissProposal(key: String) {

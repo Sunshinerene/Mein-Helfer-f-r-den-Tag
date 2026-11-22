@@ -83,6 +83,52 @@ object AppPrefs {
         prefs(context).edit().putStringSet("assistent_nein", all).apply()
     }
 
+    /** Morgenüberblick des Assistenten (Minute des Tages, -1 = aus). */
+    fun assistantMorning(context: Context): Int = prefs(context).getInt("assistent_morgen", 7 * 60 + 30)
+
+    fun setAssistantMorning(context: Context, minute: Int) {
+        prefs(context).edit().putInt("assistent_morgen", minute).apply()
+    }
+
+    /** Abendrückblick des Assistenten mit Vorbereitung für morgen (Minute des Tages, -1 = aus). */
+    fun assistantEvening(context: Context): Int = prefs(context).getInt("assistent_abend", 20 * 60)
+
+    fun setAssistantEvening(context: Context, minute: Int) {
+        prefs(context).edit().putInt("assistent_abend", minute).apply()
+    }
+
+    /** Ruhezeit für Trinken, Stimmung und Assistent (Medikamente und Termine kommen immer). */
+    fun quietEnabled(context: Context): Boolean = prefs(context).getBoolean("ruhezeit_an", true)
+
+    fun quietFrom(context: Context): Int = prefs(context).getInt("ruhezeit_von", 22 * 60)
+
+    fun quietTo(context: Context): Int = prefs(context).getInt("ruhezeit_bis", 7 * 60)
+
+    fun setQuiet(context: Context, on: Boolean, from: Int, to: Int) {
+        prefs(context).edit().putBoolean("ruhezeit_an", on).putInt("ruhezeit_von", from).putInt("ruhezeit_bis", to).apply()
+    }
+
+    /** Gerade Ruhezeit? */
+    fun isQuietNow(context: Context): Boolean {
+        if (!quietEnabled(context)) return false
+        val t = java.time.LocalTime.now()
+        return de.meinhelfer.tag.summary.AssistantBrief.inQuiet(t.hour * 60 + t.minute, quietFrom(context), quietTo(context))
+    }
+
+    /** Health Connect: Quellen, die zu dir selbst gehören (deine Uhr), nicht zur gepflegten Person. */
+    fun healthOwnSources(context: Context): Set<String> = prefs(context).getStringSet("hc_eigene_quellen", emptySet()) ?: emptySet()
+
+    fun setHealthOwnSources(context: Context, sources: Set<String>) {
+        prefs(context).edit().putStringSet("hc_eigene_quellen", sources).apply()
+    }
+
+    /** Der Assistent darf deine eigenen Werte (Schlaf, Schritte, Ruhepuls) lesen. */
+    fun assistantOwnHealth(context: Context): Boolean = prefs(context).getBoolean("assistent_eigene_werte", false)
+
+    fun setAssistantOwnHealth(context: Context, on: Boolean) {
+        prefs(context).edit().putBoolean("assistent_eigene_werte", on).apply()
+    }
+
     private const val KEY_THEME = "design"
 
     /** "system", "light" oder "dark" */
