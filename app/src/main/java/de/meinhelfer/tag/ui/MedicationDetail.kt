@@ -85,7 +85,7 @@ fun MedicationDetailDialog(
                 }
                 val facts = listOfNotNull(
                     med.times.takeIf { it.isNotBlank() }?.let { "Einnahme: ${it.replace(",", ", ")} Uhr" },
-                    "Vorrat: ${med.currentStock(today)} Stück" + (days?.let { " (reicht ca. $it Tage)" } ?: ""),
+                    med.stockText(today) + (days?.let { " (reicht ca. $it Tage)" } ?: ""),
                     med.pzn.takeIf { it.isNotBlank() }?.let { "PZN: $it" },
                     doctors.firstOrNull { it.id == med.doctorId }?.let { "Arzt: ${doctorLabel(it)}" },
                     doctors.firstOrNull { it.id == med.pharmacyId }?.let { "Apotheke: ${doctorLabel(it)}" },

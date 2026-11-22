@@ -177,7 +177,7 @@ fun ReorderScreen(
                                         style = MaterialTheme.typography.bodyMedium,
                                     )
                                     Text(
-                                        "Vorrat ${m.currentStock(today)} Stück" + (days?.let { ", reicht ca. $it Tage" } ?: ""),
+                                        m.stockText(today) + (days?.let { ", reicht ca. $it Tage" } ?: ""),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = if (low) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
                                     )

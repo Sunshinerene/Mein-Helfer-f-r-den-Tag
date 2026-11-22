@@ -67,6 +67,8 @@ data class Medication(
     val rating: String = "",
     /** Herkunft des Fotos, wenn es aus dem Internet stammt (Urheber, Lizenz, Quelle), sonst leer. */
     val photoCredit: String = "",
+    /** false = Vorrat noch nicht eingetragen (z. B. nach dem Einlesen eines Plans): keine Nachbestell-Warnung. */
+    val stockKnown: Boolean = true,
 ) {
     fun timeList(): List<String> =
         times.split(",").map { it.trim() }.filter { it.isNotEmpty() }
@@ -79,7 +81,11 @@ data class Medication(
 
     /** Verbleibende Tage oder null, wenn nicht berechenbar. */
     fun daysLeft(today: Long = LocalDate.now().toEpochDay()): Int? =
-        if (dailyUse > 0) currentStock(today) / dailyUse else null
+        if (stockKnown && dailyUse > 0) currentStock(today) / dailyUse else null
+
+    /** "Vorrat: 20 Stück" bzw. "Vorrat: unbekannt" */
+    fun stockText(today: Long = LocalDate.now().toEpochDay()): String =
+        if (stockKnown) "Vorrat: ${currentStock(today)} Stück" else "Vorrat: unbekannt"
 }
 
 @Entity

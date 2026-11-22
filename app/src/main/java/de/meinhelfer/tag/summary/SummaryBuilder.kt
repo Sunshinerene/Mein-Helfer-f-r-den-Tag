@@ -368,8 +368,11 @@ object SummaryBuilder {
         }
         if (lowStock.isNotEmpty()) {
             advice += "Rezept bzw. Nachbestellung rechtzeitig anfragen: ${lowStock.joinToString(", ") { it.name }}."
-        } else if (meds.any { it.dailyUse > 0 }) {
+        } else if (meds.any { it.dailyUse > 0 } && meds.all { it.stockKnown }) {
             good += "Vorrat reicht bei allen Medikamenten für mehr als 7 Tage."
+        }
+        meds.filter { !it.stockKnown }.takeIf { it.isNotEmpty() }?.let { unknown ->
+            advice += "Vorrat noch nicht eingetragen: ${unknown.joinToString(", ") { it.name }}."
         }
         if (notable.isEmpty() && (planned > 0 || apptsInRange.isNotEmpty())) good += "Keine Auffälligkeiten festgestellt."
         if (doneTasks.isNotEmpty()) good += "${doneTasks.size} Aufgabe(n) erledigt."

@@ -97,7 +97,7 @@ fun MedicationDialog(
     var dosage by remember { mutableStateOf(initial?.dosage ?: "") }
     var times by remember { mutableStateOf(parseTimes(initial?.times ?: "")) }
     // Angezeigt wird der aktuell errechnete Vorrat (gezaehlter Vorrat minus Verbrauch seit dem Zaehltag).
-    val initialStockText = initial?.currentStock()?.toString() ?: ""
+    val initialStockText = initial?.takeIf { it.stockKnown }?.currentStock()?.toString() ?: ""
     var stock by remember { mutableStateOf(initialStockText) }
     var dailyUse by remember { mutableStateOf(initial?.dailyUse?.toString() ?: "") }
     var notes by remember { mutableStateOf(initial?.notes ?: "") }
@@ -208,6 +208,8 @@ fun MedicationDialog(
                     // Nur bei geaendertem Vorrat neu zaehlen (Stichtag heute), sonst alte Zaehlung behalten.
                     stock = if (stockChanged) stock.trim().toIntOrNull() ?: 0 else initial!!.stock,
                     stockDay = if (stockChanged) today else initial!!.stockDay,
+                    // Leeres Feld = Vorrat unbekannt (keine Nachbestell-Warnung)
+                    stockKnown = if (stockChanged) stock.trim().toIntOrNull() != null else initial!!.stockKnown,
                     createdDay = initial?.createdDay ?: today,
                     personId = initial?.personId ?: 1,
                     doctorId = doctorId?.takeIf { id -> doctors.any { it.id == id } },
@@ -335,6 +337,7 @@ fun MedicationDialog(
                 value = stock,
                 onValueChange = { stock = it },
                 label = { Text("Vorrat", maxLines = 1) },
+                placeholder = { Text("unbekannt", maxLines = 1) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.weight(1f),

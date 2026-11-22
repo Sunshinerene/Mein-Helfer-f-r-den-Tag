@@ -184,7 +184,7 @@ fun MedPlanReviewDialog(
                     }
                 }
                 Text(
-                    "Den Vorrat trägst du danach beim Medikament ein, sonst erscheint „Bald nachbestellen“. Maßgeblich ist immer der Plan von Arztpraxis oder Apotheke.",
+                    "Neue Medikamente bekommen „Vorrat: unbekannt“, bis du ihn einträgst (dann gibt es auch keine Nachbestell-Warnung). Maßgeblich ist immer der Plan von Arztpraxis oder Apotheke.",
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
@@ -206,6 +206,7 @@ fun MedPlanReviewDialog(
                                 dosage = r.dosage.trim(),
                                 times = times,
                                 stock = 0,
+                                stockKnown = false,
                                 dailyUse = pm.dailyUse(),
                                 notes = pm.noteText(),
                                 pzn = pm.pzn,

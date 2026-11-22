@@ -58,7 +58,7 @@ object ReorderExport {
                     (if (m.pzn.isNotBlank()) "\nPZN ${m.pzn}" else ""),
                 intake = m.times.split(",").map { it.trim() }.filter { it.isNotEmpty() }.joinToString(", ")
                     .let { if (it.isBlank()) "" else "$it Uhr" },
-                stock = "${m.currentStock(today)} Stück" + (days?.let { ", ca. $it Tage" } ?: ""),
+                stock = (if (m.stockKnown) "${m.currentStock(today)} Stück" else "unbekannt") + (days?.let { ", ca. $it Tage" } ?: ""),
                 doctor = doctorName(doctors, m.doctorId),
                 pharmacy = doctorName(doctors, m.pharmacyId),
             )

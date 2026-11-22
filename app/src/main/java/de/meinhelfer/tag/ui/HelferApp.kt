@@ -499,6 +499,10 @@ private fun MedicationScreen(
     var photoQueue by remember { mutableStateOf<List<Long>?>(null) }
     var queueIndex by remember { mutableIntStateOf(0) }
     val withoutPhoto = items.filter { it.photoPath == null }
+    var stockFor by remember { mutableStateOf<Long?>(null) }
+    var stockQueue by remember { mutableStateOf<List<Long>?>(null) }
+    var stockIndex by remember { mutableIntStateOf(0) }
+    val unknownStock = items.filter { !it.stockKnown }
 
     val lowCount = lowStockMeds(items).size
     Column(Modifier.fillMaxSize()) {
@@ -515,14 +519,21 @@ private fun MedicationScreen(
                     FitText(if (lowCount > 0) "Nachbestellen ($lowCount)" else "Nachbestellen", maxSize = 14.sp)
                 }
             }
-            if (withoutPhoto.isNotEmpty()) {
-                TextButton(
-                    onClick = {
-                        queueIndex = 0
-                        photoQueue = withoutPhoto.map { it.id }
-                    },
-                    modifier = Modifier.padding(start = 8.dp),
-                ) { Text("📷 Fotos ergänzen (${withoutPhoto.size} ohne Bild)") }
+            if (withoutPhoto.isNotEmpty() || unknownStock.isNotEmpty()) {
+                FlowRow(Modifier.padding(start = 8.dp)) {
+                    if (unknownStock.isNotEmpty()) {
+                        TextButton(onClick = {
+                            stockIndex = 0
+                            stockQueue = unknownStock.map { it.id }
+                        }) { Text("📦 Vorrat eintragen (${unknownStock.size})") }
+                    }
+                    if (withoutPhoto.isNotEmpty()) {
+                        TextButton(onClick = {
+                            queueIndex = 0
+                            photoQueue = withoutPhoto.map { it.id }
+                        }) { Text("📷 Fotos ergänzen (${withoutPhoto.size})") }
+                    }
+                }
             }
         }
         ListScreen(
@@ -536,7 +547,7 @@ private fun MedicationScreen(
                 title = m.name + if (m.dosage.isNotBlank()) " – ${m.dosage}" else "",
                 lines = listOfNotNull(
                     m.times.takeIf { it.isNotBlank() }?.let { "Einnahme: ${it.replace(",", ", ")} Uhr" },
-                    "Vorrat: ${m.currentStock()} Stück" + (days?.let { " (ca. $it Tage)" } ?: ""),
+                    m.stockText() + (days?.let { " (ca. $it Tage)" } ?: ""),
                 ),
                 onClick = { detailId = m.id },
                 onDelete = { vm.delete(m) },
@@ -550,9 +561,15 @@ private fun MedicationScreen(
                         color = MaterialTheme.colorScheme.error,
                     )
                 }
+                if (!m.stockKnown) {
+                    Text("Vorrat noch nicht eingetragen", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.tertiary)
+                }
                 FlowRow {
                     TextButton(onClick = { detailId = m.id }, contentPadding = PaddingValues(horizontal = 8.dp)) { Text("Infos") }
                     TextButton(onClick = { editItem = m }, contentPadding = PaddingValues(horizontal = 8.dp)) { Text("Bearbeiten") }
+                    TextButton(onClick = { stockFor = m.id }, contentPadding = PaddingValues(horizontal = 8.dp)) {
+                        Text(if (m.stockKnown) "Vorrat" else "Vorrat eintragen")
+                    }
                 }
             }
         }
@@ -580,6 +597,30 @@ private fun MedicationScreen(
     photoFor?.let { id ->
         items.firstOrNull { it.id == id }?.let { m ->
             key(m.id) { MedPhotoDialog(m, vm, onDone = { photoFor = null }) }
+        }
+    }
+    stockFor?.let { id ->
+        items.firstOrNull { it.id == id }?.let { m ->
+            key(m.id) { StockDialog(m, vm, onDone = { stockFor = null }) }
+        }
+    }
+    stockQueue?.let { queue ->
+        val current = queue.drop(stockIndex).firstNotNullOfOrNull { id -> items.firstOrNull { it.id == id } }
+        if (current == null) {
+            LaunchedEffect(Unit) { stockQueue = null }
+        } else {
+            val pos = queue.indexOf(current.id)
+            val next = { if (pos + 1 < queue.size) stockIndex = pos + 1 else stockQueue = null }
+            key(current.id) {
+                StockDialog(
+                    med = current,
+                    vm = vm,
+                    onDone = { stockQueue = null },
+                    queueText = "${pos + 1} von ${queue.size}",
+                    onSkip = next,
+                    onSaved = next,
+                )
+            }
         }
     }
     photoQueue?.let { queue ->

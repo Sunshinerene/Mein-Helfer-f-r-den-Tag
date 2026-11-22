@@ -1,11 +1,10 @@
 # TODO
 
-Stand: v0.48.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.49.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
 - [ ] Code des Medikationsplans auch beim Hochladen automatisch lesen; Namen zu PZN ohne Datenbank sind nicht möglich
-- [ ] Vorrat nach dem Einlesen eines Plans: „unbekannt“ statt 0, damit nicht alles als „nachbestellen“ erscheint
 - [ ] Medikamentenplan als PDF zum Mitnehmen (alle Medikamente mit Dosierung, Zeiten, Hinweisen; angelehnt an den bundeseinheitlichen Medikationsplan)
 - [ ] Vorrat: Knopf „Neue Packung“ (+ Packungsgröße), Packungsgröße beim Medikament merken
 - [ ] Aufgaben mit Erinnerung zur Frist (Benachrichtigung) und „In Kalender eintragen“
@@ -46,6 +45,7 @@ Stand: v0.48.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 - [ ] Neue KI-Dienste (Cerebras, SambaNova, GitHub Models, Hugging Face, Cohere, OVHcloud, Scaleway, xAI, Together, Nebius, IONOS) und eigener Server (Ollama, LM Studio) im Heimnetz testen
 - [ ] Einstellungen: Übersicht, Bereiche, Suche und Zurück-Taste
 - [ ] Fotos zu Medikamenten: Kamera, Galerie, freie Bilder (Wikimedia), Internetsuche, „Fotos ergänzen“ nacheinander; Datenbank 21
+- [ ] Vorrat „unbekannt“: Umstellung auf Datenbank 22 (bisheriger Vorrat 0 gilt als unbekannt), Schnelleingabe und „Vorrat eintragen“ nacheinander
 - [ ] Ecken und Effekte (Beta): alle Ansichten mit „Eckig“ und „Rund“, Aurora hell und dunkel, bewegter Hintergrund flüssig und akkuschonend
 
 ## Rechtliches vor einer Veröffentlichung
@@ -54,6 +54,11 @@ Stand: v0.48.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 - [ ] Entscheiden: Aufbewahrung der Nachweise 3 Jahre oder länger (30-Jahres-Frist bei Gesundheitsschäden); zusätzlicher Nachweis beim App-Ersteller (Server) ja oder nein
 - [ ] Medizinprodukte-Recht (MDR) prüfen lassen, vor allem den KI-Gesamt-Check der Medikamente; Zweckbestimmung als Organisationshilfe klar festhalten
 - [ ] Impressum und Datenschutzerklärung für eine Veröffentlichung (z. B. Play Store), eigener Signaturschlüssel statt Test-Schlüssel
+
+## Version 0.49.0 (fertig)
+
+- [x] Vorrat „unbekannt“: nach dem Einlesen eines Plans und bei leerem Feld; keine Nachbestell-Warnung, bis der Vorrat eingetragen ist; bisheriger Vorrat 0 wird beim Update zu „unbekannt“
+- [x] Schnelleingabe „Vorrat“ an jeder Karte und „📦 Vorrat eintragen“ für alle mit unbekanntem Vorrat nacheinander; Tagesbericht nennt fehlende Vorräte
 
 ## Version 0.48.0 (fertig)
 
