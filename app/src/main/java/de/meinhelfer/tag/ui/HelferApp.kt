@@ -381,7 +381,17 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("Mein Helfer für den Tag") },
+                    title = {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            AppLogo(34.dp)
+                            Text(
+                                "Mein Helfer für den Tag",
+                                style = MaterialTheme.typography.titleMedium,
+                                maxLines = 2,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                            )
+                        }
+                    },
                     actions = {
                         IconButton(onClick = { showNotruf = true }) {
                             Icon(

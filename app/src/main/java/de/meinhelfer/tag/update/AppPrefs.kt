@@ -17,6 +17,20 @@ object AppPrefs {
         prefs(context).edit().putLong(KEY_PERSON, id).apply()
     }
 
+    /** Einspieler (kurzes Video) beim Start der App zeigen. */
+    fun introEnabled(context: Context): Boolean = prefs(context).getBoolean("einspieler", true)
+
+    fun setIntroEnabled(context: Context, on: Boolean) {
+        prefs(context).edit().putBoolean("einspieler", on).apply()
+    }
+
+    /** Einspieler mit Ton abspielen. */
+    fun introSound(context: Context): Boolean = prefs(context).getBoolean("einspieler_ton", true)
+
+    fun setIntroSound(context: Context, on: Boolean) {
+        prefs(context).edit().putBoolean("einspieler_ton", on).apply()
+    }
+
     private const val KEY_THEME = "design"
 
     /** "system", "light" oder "dark" */

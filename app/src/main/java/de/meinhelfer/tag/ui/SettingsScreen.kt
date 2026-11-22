@@ -155,6 +155,7 @@ fun SettingsScreen(
                 SettingsCategory.Darstellung -> {
                     item { ThemeCard(vm) }
                     item { EffectsCard(vm) }
+                    item { IntroCard() }
                 }
                 SettingsCategory.Startseite -> {
                     item { HomeCardsCard() }
@@ -213,7 +214,7 @@ fun SettingsScreen(
 /** Kategorien der Einstellungen; [keywords] fuer die Suche. */
 private enum class SettingsCategory(val emoji: String, val title: String, val keywords: String) {
     Profil("👤", "Meine Daten und Zustimmung", "name adresse telefon rolle ausweis angehörige pflegedienst zustimmung nutzungsbedingungen widerruf nachweis"),
-    Darstellung("🎨", "Darstellung", "hell dunkel design farben schrift schriftgröße größe ecken effekte glas aurora liquid animation glanz transparenz"),
+    Darstellung("🎨", "Darstellung", "hell dunkel design farben schrift schriftgröße größe ecken effekte glas aurora liquid animation glanz transparenz einspieler video intro start logo ton"),
     Startseite("🏠", "Heute-Seite und Motivator", "heute karten notfallkarte tagesstart motivator stimmung smiley ziele"),
     Erinnerungen("🔔", "Erinnerungen und Freigaben", "benachrichtigung freigabe freigaben wecker alarm akku einnahme zeitfenster ton erinnerung trinken tagebuch pflegetagebuch"),
     Dokumente("📄", "Dokumente", "betrachter viewer pdf drucken öffnen dokument"),
@@ -242,7 +243,8 @@ private fun categorySummary(
         }
         val font = listOf(0.85f to "Klein", 1f to "Normal", 1.15f to "Groß", 1.3f to "Sehr groß", 1.5f to "Riesig")
             .minByOrNull { kotlin.math.abs(it.first - vm.fontFactor.value) }?.second ?: "Normal"
-        "${vm.designStyle.value.label} · $mode · Schrift $font · Ecken ${vm.cornerStyle.value.label}"
+        "${vm.designStyle.value.label} · $mode · Schrift $font · Ecken ${vm.cornerStyle.value.label} · Einspieler " +
+            if (AppPrefs.introEnabled(context)) "an" else "aus"
     }
     SettingsCategory.Startseite ->
         "Motivator " + (if (vm.motivatorOnToday.value) "an" else "aus") + " · Stimmungs-Check: " + vm.moodMode.value.label
@@ -931,6 +933,49 @@ private fun ViewerCard() {
                 style = MaterialTheme.typography.bodySmall,
             )
         }
+    }
+}
+
+/** Einspieler beim Start: an/aus, Ton, jetzt ansehen. */
+@Composable
+private fun IntroCard() {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var on by remember { mutableStateOf(AppPrefs.introEnabled(context)) }
+    var sound by remember { mutableStateOf(AppPrefs.introSound(context)) }
+    var preview by remember { mutableStateOf(false) }
+    HCard(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                AppLogo(44.dp)
+                Text("Einspieler beim Start", style = MaterialTheme.typography.titleMedium)
+            }
+            Text(
+                "Kurzes Video (10 Sekunden) mit dem Logo, wenn die App geöffnet wird. Tippen oder „Überspringen“ beendet es sofort. " +
+                    "Beim Öffnen aus einer Erinnerung oder vom Widget wird es nicht gezeigt.",
+                style = MaterialTheme.typography.bodySmall,
+            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Einspieler zeigen", Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+                Switch(checked = on, onCheckedChange = {
+                    on = it
+                    AppPrefs.setIntroEnabled(context, it)
+                })
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Mit Ton (Lautstärke wie bei Medien)", Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+                Switch(checked = sound, onCheckedChange = {
+                    sound = it
+                    AppPrefs.setIntroSound(context, it)
+                })
+            }
+            OutlinedButton(shape = buttonShape(), onClick = { preview = true }) { Text("▶ Jetzt ansehen") }
+        }
+    }
+    if (preview) {
+        IntroPreviewDialog(onClose = {
+            preview = false
+            sound = AppPrefs.introSound(context)
+        })
     }
 }
 

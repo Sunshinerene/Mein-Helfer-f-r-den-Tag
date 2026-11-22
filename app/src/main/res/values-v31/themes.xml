@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Startbild ab Android 12: dunkles Petrol wie im Logo und im Einspieler -->
+    <style name="Theme.MeinHelfer" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowSplashScreenBackground">@color/intro_background</item>
+    </style>
+</resources>

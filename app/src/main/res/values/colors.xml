@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dunkles Petrol aus dem Logo -->
+    <color name="ic_launcher_background">#FF07304A</color>
+    <color name="intro_background">#FF0A0F1C</color>
+</resources>

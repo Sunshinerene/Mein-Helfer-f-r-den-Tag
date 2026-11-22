@@ -32,8 +32,7 @@ fun LockScreen(dark: Boolean, onUnlock: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            AppLogo()
-            Text("Mein Helfer für den Tag", style = MaterialTheme.typography.titleLarge)
+            AppLogoFull(220.dp)
             Text(
                 "Die App ist gesperrt. Entsperre mit Fingerabdruck, Gesicht oder der PIN deines Handys.",
                 style = MaterialTheme.typography.bodyMedium,

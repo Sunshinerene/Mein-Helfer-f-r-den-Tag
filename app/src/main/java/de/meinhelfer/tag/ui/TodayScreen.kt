@@ -468,12 +468,17 @@ fun TodayScreen(
             }
         }
         jumpItem(jumps, null) {
-            Text(
-                "Mein Helfer für den Tag · by $AUTHOR",
-                style = MaterialTheme.typography.labelSmall,
-                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-            )
+            Row(
+                Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                AppLogo(28.dp)
+                Text(
+                    "  Mein Helfer für den Tag · by $AUTHOR",
+                    style = MaterialTheme.typography.labelSmall,
+                )
+            }
         }
     }
 

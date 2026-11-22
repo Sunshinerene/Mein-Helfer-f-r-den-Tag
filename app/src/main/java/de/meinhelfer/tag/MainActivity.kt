@@ -36,6 +36,7 @@ import de.meinhelfer.tag.ui.HelferTheme
 import de.meinhelfer.tag.ui.MainViewModel
 import androidx.core.content.ContextCompat
 import de.meinhelfer.tag.ui.HelferApp
+import de.meinhelfer.tag.ui.IntroScreen
 import de.meinhelfer.tag.update.AppPrefs
 import de.meinhelfer.tag.update.UpdateWorker
 
@@ -61,6 +62,9 @@ class MainActivity : FragmentActivity() {
     /** Aus einer Benachrichtigung gewuenschte Seite (null = nichts zu tun). */
     private var pendingScreen by mutableStateOf<String?>(null)
 
+    /** Einspieler (Video) beim Start zeigen; endet von selbst oder per Tippen. */
+    private var showIntro by mutableStateOf(false)
+
     /** Gesperrt, solange die Abfrage (Fingerabdruck, Gesicht, PIN) nicht bestanden ist. */
     private var locked by mutableStateOf(false)
     private var stoppedAt = 0L
@@ -85,6 +89,8 @@ class MainActivity : FragmentActivity() {
         if (savedInstanceState == null) {
             intent?.getLongExtra(EXTRA_PERSON, -1L)?.takeIf { it > 0 }?.let { pendingPerson = it }
             pendingScreen = intent?.getStringExtra(EXTRA_SCREEN)
+            // Nur beim normalen Öffnen, nicht aus einer Erinnerung oder vom Widget heraus
+            showIntro = AppPrefs.introEnabled(this) && pendingPerson == null && pendingScreen == null
         }
 
         // Beim Start gesperrt, wenn die App-Sperre an ist
@@ -154,10 +160,15 @@ class MainActivity : FragmentActivity() {
             CompositionLocalProvider(LocalDensity provides scaled) {
                 HelferTheme(style = style, dark = dark, tweak = tweaks[style], corners = corners, effects = effects) {
                     Box {
-                        HelferApp(vm)
-                        if (locked) {
-                            LockScreen(dark = dark, onUnlock = { askUnlock() })
-                            LaunchedEffect(Unit) { askUnlock() }
+                        if (showIntro) {
+                            // Erst nach dem Einspieler die App (und ggf. die Sperre) zeigen
+                            IntroScreen(onDone = { showIntro = false })
+                        } else {
+                            HelferApp(vm)
+                            if (locked) {
+                                LockScreen(dark = dark, onUnlock = { askUnlock() })
+                                LaunchedEffect(Unit) { askUnlock() }
+                            }
                         }
                     }
                 }

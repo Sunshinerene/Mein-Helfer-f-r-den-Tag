@@ -332,9 +332,7 @@ private fun MockCheckRow(checked: Boolean, text: String, warn: String? = null) {
 @Composable
 private fun MockWelcome() {
     Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        AppLogo(88.dp)
-        Text("Mein Helfer für den Tag", style = MaterialTheme.typography.titleMedium)
-        Text("by $AUTHOR", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+        AppLogoFull(180.dp)
         MockTabs(selected = 0)
     }
 }

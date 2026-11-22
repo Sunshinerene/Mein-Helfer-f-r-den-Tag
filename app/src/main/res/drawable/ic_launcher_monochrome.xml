@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Einfarbiges Symbol fuer Android-Designs mit Themensymbolen: Sonne mit Herz -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:pathData="M80.0,54.0L86.0,54.0M72.4,72.4L76.6,76.6M54.0,80.0L54.0,86.0M35.6,72.4L31.4,76.6M28.0,54.0L22.0,54.0M35.6,35.6L31.4,31.4M54.0,28.0L54.0,22.0M72.4,35.6L76.6,31.4"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="4"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M54,33.5 a20.5,20.5 0 1,0 0,41 a20.5,20.5 0 1,0 0,-41 z"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="3.5" />
+    <group
+        android:scaleX="1.15"
+        android:scaleY="1.15"
+        android:translateX="40.2"
+        android:translateY="40.3">
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M12,21.35l-1.45,-1.32C5.4,15.36 2,12.28 2,8.5 2,5.42 4.42,3 7.5,3c1.74,0 3.41,0.81 4.5,2.09C13.09,3.81 14.76,3,16.5,3 19.58,3 22,5.42 22,8.5c0,3.78 -3.4,6.86 -8.55,11.54L12,21.35z" />
+    </group>
+</vector>

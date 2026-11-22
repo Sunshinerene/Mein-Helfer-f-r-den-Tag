@@ -1,16 +1,13 @@
 package de.meinhelfer.tag.ui
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -19,19 +16,24 @@ import de.meinhelfer.tag.R
 /** Name des Urhebers, wird in der App an mehreren Stellen gezeigt. */
 const val AUTHOR = "Sunshine@R"
 
-/** App-Logo: Sonne mit Herz auf warmem Verlauf (gleiche Grafik wie das Startbild-Symbol). */
+/** App-Logo als Zeichen ohne Schrift (Hand, Herz, Sonne) – gleiche Grafik wie das App-Symbol. */
 @Composable
-fun AppLogo(size: Dp = 72.dp) {
-    Box(
-        Modifier
-            .size(size)
-            .clip(RoundedCornerShape(size * 0.22f))
-            .background(Brush.linearGradient(listOf(Color(0xFFFFB300), Color(0xFFF57C00)))),
-    ) {
-        Image(
-            painter = painterResource(R.drawable.ic_launcher_foreground),
-            contentDescription = "Logo von Mein Helfer für den Tag",
-            modifier = Modifier.fillMaxSize(),
-        )
-    }
+fun AppLogo(size: Dp = 72.dp, modifier: Modifier = Modifier) {
+    Image(
+        painter = painterResource(R.drawable.logo_mark),
+        contentDescription = "Logo von Mein Helfer für den Tag",
+        contentScale = ContentScale.Crop,
+        modifier = modifier.size(size).clip(RoundedCornerShape(size * 0.22f)),
+    )
+}
+
+/** Vollständiges Logo mit Schriftzug „Mein Helfer für den Tag · by Sunshine@R“. */
+@Composable
+fun AppLogoFull(width: Dp = 220.dp, modifier: Modifier = Modifier) {
+    Image(
+        painter = painterResource(R.drawable.logo_full),
+        contentDescription = "Logo: Mein Helfer für den Tag, by $AUTHOR",
+        contentScale = ContentScale.Fit,
+        modifier = modifier.width(width),
+    )
 }
