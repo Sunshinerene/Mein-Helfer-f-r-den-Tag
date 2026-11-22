@@ -107,7 +107,7 @@ private val TOUR_PAGES = listOf(
     TourPage(
         title = "Dein Assistent",
         text = "Dein persönlicher Assistent (Beta) ist für dich da: Er sagt, was als Nächstes ansteht, bereitet Termine vor und schlägt vor, was dringend ist oder nachbestellt werden muss. Dazu ein Satz für den Tag, was du geschafft hast, kleine Vorhaben und der Stimmungs-Check. Ziele gehst du Schritt für Schritt an.",
-        tips = listOf("Das Gesicht unten links in der Leiste hilft auf jeder Seite, auch mit „Frag mich“.", "Name wählen oder ausschalten: Einstellungen → Beta-Funktionen.", "Wie oft nach der Stimmung gefragt wird, stellst du unter Einstellungen → Heute-Seite, Motivator und Widget ein.", "Für Ziele gibt es Vorlagen, z. B. „Pflegegrad beantragen“. Auf Wunsch schlägt die KI einen Weg vor."),
+        tips = listOf("Das Gesicht unten links in der Leiste hilft auf jeder Seite, auch mit „Frag mich“.", "Morgens und abends meldet er sich kurz, vor Terminen mit Checkliste; in der Ruhezeit nicht.", "Name wählen oder ausschalten: Einstellungen → Beta-Funktionen.", "Wie oft nach der Stimmung gefragt wird, stellst du unter Einstellungen → Heute-Seite, Motivator und Widget ein.", "Für Ziele gibt es Vorlagen, z. B. „Pflegegrad beantragen“. Auf Wunsch schlägt die KI einen Weg vor."),
         mock = { MockMotivator() },
     ),
     TourPage(

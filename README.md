@@ -4,7 +4,7 @@ by Sunshine@R
 
 Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbezogenen Daten bleiben lokal auf dem Gerät.
 
-## Stand: v0.61.0
+## Stand: v0.62.0
 
 ### Funktionsübersicht
 
@@ -14,11 +14,16 @@ Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbe
 - Vorschläge mit Bestätigung: bald fällige Aufgabe auf dringend, Überfälliges neu planen, bei knappem Vorrat „Rezept bestellen“ beim Zuständigen
 - Gesicht in der Leiste unten auf jeder Seite: Hinweise zur Seite, „So geht's hier“, „Frag mich“ (Antwort aus der Anleitung, ohne Internet)
 - Enthält alles vom Tages-Motivator; ausgeschaltet gibt es wieder den Motivator
+- Meldet sich morgens (Überblick) und abends (Rückblick, Vorbereitung für morgen, Pflegetagebuch), Checkliste an Terminerinnerungen, Medikamentenplan und Werte zum Termin als PDF
+- Auf Wunsch deine eigenen Werte (Schlaf, Schritte, Ruhepuls) aus Health Connect für Hinweise nur an dich; eigene Geräte werden nie bei der gepflegten Person eingetragen
 
 **Barrierefreiheit**
 - Design „Hoher Kontrast“ (Schwarz/Weiß, kräftige Farben, deutliche Ränder, dunkel: Gelb auf Schwarz)
 - Größe von Knöpfen und Feldern (Normal, Größer, Sehr groß) zusätzlich zur Schriftgröße
 - Vorlesen mit der Sprachausgabe des Handys: Tagesplan, Dokumente, Anleitung; Geschwindigkeit einstellbar
+
+**Erinnerungen**
+- Übersicht aller Erinnerungen und Ruhezeit (Trinken, Stimmung, Assistent schweigen; Medikamente, Termine, Aufgaben, Tagebuch immer)
 
 **Logo, Einspieler und Widget**
 - Eigenes Logo (Hand, Herz, Sonne) als App-Symbol (auch als einfarbiges Themensymbol ab Android 13), in der Kopfzeile, auf dem Sperrbildschirm und im Rundgang

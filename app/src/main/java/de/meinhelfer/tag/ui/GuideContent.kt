@@ -190,6 +190,14 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
                 "Den Namen wählst du unter Einstellungen → Beta-Funktionen → „Persönlicher Assistent“: Sunny, Lumi, Elio, Hella, Mila, Frieda, Kompass oder ein eigener. Das Gesicht zeigt die Lage: freundlich, freut sich (vieles erledigt), aufmerksam (gleich steht etwas an oder etwas ist offen), sanft besorgt (nach einem schweren Tag im Stimmungs-Check), ruhig (abends) und es bewegt den Mund beim Vorlesen. Ohne Animationen (Einstellungen → Darstellung → Effekte) bleibt es still. Schaltest du den Assistenten aus, gibt es wieder den Tages-Motivator.",
             ),
             GuideItem(
+                "Morgens, abends und vor Terminen",
+                "Der Assistent meldet sich morgens (Standard 7:30 Uhr) mit einem Überblick: was heute ansteht, was für heutige Termine bereitliegen sollte und ob er Vorschläge hat. Abends (Standard 20:00 Uhr) sagt er, was geschafft ist, was offen bleibt, was du für Termine morgen schon heute bereitlegen kannst und ob das Pflegetagebuch noch fehlt. An Terminerinnerungen hängt er eine kurze Checkliste (z. B. Versichertenkarte, Medikamentenplan). In seiner Karte kannst du Medikamentenplan und Werte der letzten 14 Tage für den Termin gleich als PDF teilen. Zeiten ein- und ausschalten: Einstellungen → Beta-Funktionen → „Persönlicher Assistent“. In der Ruhezeit meldet er sich nicht.",
+            ),
+            GuideItem(
+                "Deine eigenen Werte",
+                "Trägst du selbst eine Uhr, kann der Assistent deinen Schlaf der letzten Nacht, deine Schritte und deinen Ruhepuls aus Health Connect lesen (Einstellungen → Beta-Funktionen → „Meine eigenen Werte nutzen“, dann die Rechte erlauben). Daraus macht er sanfte Hinweise nur für dich, z. B. nach einer kurzen Nacht: nur das Nötigste und eine Pause einplanen. Die Werte werden nur gelesen, nicht gespeichert, und nie bei der gepflegten Person eingetragen. Geräte, die dir gehören, markierst du beim Übernehmen von Werten mit „Das ist mein eigenes Gerät“; sie erscheinen dann nicht mehr bei der gepflegten Person. Geräte, die du einer Person zugeordnet hast, nutzt der Assistent nie für dich. Keine Bewertung im medizinischen Sinn.",
+            ),
+            GuideItem(
                 "Hilfe auf jeder Seite",
                 "Unten links in der Leiste ist das Gesicht des Assistenten mit seinem Namen; ein roter Punkt heißt, es ist etwas offen oder er hat einen Vorschlag. Ein Tipp öffnet, was er zu dieser Seite sagt (z. B. unter Medikamente, was bald nachbestellt werden muss), seine Vorschläge, „So geht's hier“ mit den passenden Punkten der Anleitung und „Frag mich“: Du tippst eine Frage ein, etwa „Wie drucke ich den Medikamentenplan?“, und er sucht die Antwort in der Anleitung, ohne Internet.",
             ),
@@ -579,6 +587,10 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             GuideItem(
                 "Trinken und Pflegetagebuch",
                 "Einstellungen → Erinnerungen und Freigaben → „Trinken und Pflegetagebuch“: „Ans Trinken erinnern“ (Aus, alle 2 Stunden um 10, 12, 14, 16 und 18 Uhr, alle 3 Stunden um 10, 13, 16 und 19 Uhr; nur wenn bis dahin weniger getrunken wurde als geplant) und „Abends ans Pflegetagebuch erinnern“ mit Uhrzeit (nur wenn heute noch nichts eingetragen ist). Ein Tipp auf die Benachrichtigung öffnet die passende Seite bei der richtigen Person. Diese Erinnerungen kommen ungefähr zur Uhrzeit, nicht auf die Minute genau.",
+            ),
+            GuideItem(
+                "Übersicht und Ruhezeit",
+                "Einstellungen → Erinnerungen zeigt oben alle Erinnerungen auf einen Blick: Medikamente, Nachfrage, Termine, Aufgaben, Stimmungs-Check, Trinken, Pflegetagebuch und den Assistenten morgens und abends. Darunter stellst du die Ruhezeit ein (Standard 22:00 bis 7:00 Uhr): Dann melden sich Trinken, Stimmungs-Check und der Assistent nicht. Medikamente, Termine, Aufgaben und das Pflegetagebuch kommen immer. Liegt eine Zeit des Assistenten in der Ruhezeit, steht dort ein Hinweis.",
             ),
             GuideItem(
                 "Widget auf dem Startbildschirm",

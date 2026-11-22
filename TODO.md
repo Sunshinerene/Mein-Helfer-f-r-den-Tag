@@ -1,6 +1,6 @@
 # TODO
 
-Stand: v0.61.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.62.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
@@ -23,6 +23,7 @@ Stand: v0.61.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Datenbank prüfen, Beispiel-PDFs mit erfundenen Daten, Beispiel-Grafiken, Test-Benachrichtigungen). Die Datenbank-Umstellungen von Version 5 bis 26 prüft seit v0.54.0 bei jedem Bauen ein automatischer Test gegen das Schema (Tabellen, Spalten, Typen); auf dem Handy bleibt zu prüfen, dass die eigenen Daten nach dem Update vollständig da sind.
 
+- [ ] Assistent morgens und abends (kommt die Benachrichtigung, passt der Text?), Checkliste an der Terminerinnerung, PDF-Knöpfe in der Vorbereitung, Ruhezeit (Trinken/Stimmung schweigen, Medikamente kommen), Erinnerungsübersicht, eigene Werte (Schlaf, Schritte, Ruhepuls) und „Das ist mein eigenes Gerät“
 - [ ] Assistent (Beta): Karte oben auf der Heute-Seite, Gesicht und Ausdrücke, Vorschläge übernehmen und ablehnen, Terminvorbereitung, Gesicht in der Leiste auf allen Seiten, „Frag mich“, Name ändern, ausschalten (Motivator kommt zurück); Hinweis auf neue Uhr-Werte in „Trinken und Werte“
 - [ ] Health Connect (Beta): Zugriff erlauben, Werte holen, Quellen wählen (z. B. Fitbit, Samsung Health, Garmin, Withings, Blutdruckgerät-App), Übernahme ohne Doppelte, Einstellungen → Beta-Funktionen
 - [ ] Tagesplan-PDF: Kästchen fürs Trinken und Zeilen für Werte auf Papier; Vorlesen im Tagesplan, bei Dokumenten und in der Anleitung (deutsche Stimme vorhanden?); Design „Hoher Kontrast“ hell und dunkel; „Größer“ und „Sehr groß“ auf allen Seiten (nichts abgeschnitten?)
@@ -64,9 +65,17 @@ Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Daten
 
 ## Als Nächstes: Assistent (Plan aus der Prozess-Prüfung)
 
-- [ ] v0.62.0: Benachrichtigungen des Assistenten (Vorabend, vor dem Termin, Morgenüberblick, Abend), Ruhezeiten, Erinnerungsübersicht; Health-Connect-Quellen einer Person oder dir zuordnen; eigene Werte (Schlaf, Schritte, Ruhepuls) mit eigener Erlaubnis; Werte-PDF zum Arzttermin
+- [ ] Vorlesen mit besserer Stimme prüfen: (1) Stimme der Sprachausgabe in der App wählbar machen (z. B. höherwertige deutsche Stimmen der Google-Sprachausgabe); (2) KI-Stimme direkt auf dem Handy ohne Internet (z. B. Piper-Stimmen über sherpa-onnx, deutsche Stimmen vorhanden) – App-Größe durch das Stimmmodell und Lizenz prüfen; (3) Online-Stimmen nur mit Zustimmung, weil der Text das Handy verlässt
 - [ ] v0.63.0: Heute-Seite und Tagesplan auf die gemeinsame Tageslage umstellen, Reihenfolge nach Dringlichkeit, Tagesstart über den Assistenten
 - [ ] v0.64.0: Liste „Berichte und Ausdrucke“, Budgets und Übergabe zur Person, „Frag den Assistenten“ auf Wunsch mit KI
+
+## Version 0.62.0 (fertig)
+
+- [x] Assistent meldet sich morgens (Überblick, Vorbereitung für heutige Termine, Vorschläge) und abends (geschafft, offen, für morgen bereitlegen, Pflegetagebuch); Zeiten wählbar, eigener Benachrichtigungskanal
+- [x] Terminerinnerung mit Checkliste vom Assistenten; Medikamentenplan und Werte (14 Tage) direkt aus der Terminvorbereitung als PDF
+- [x] Ruhezeit (Standard 22–7 Uhr) für Trinken, Stimmungs-Check und Assistent; Erinnerungsübersicht in den Einstellungen mit Hinweis, wenn eine Zeit in der Ruhezeit liegt
+- [x] Health Connect: eigene Geräte markieren (nie bei der gepflegten Person); eigene Werte Schlaf, Schritte, Ruhepuls mit eigenem Schalter und Rechten, nur gelesen, Hinweise in „Für dich“
+- [x] Automatische Tests für Ruhezeit, Morgen- und Abendtext, Checkliste und Hinweise zu eigenen Werten
 
 ## Version 0.61.0 (fertig)
 
