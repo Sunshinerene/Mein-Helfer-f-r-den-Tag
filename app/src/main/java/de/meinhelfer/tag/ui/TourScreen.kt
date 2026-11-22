@@ -173,7 +173,7 @@ private val TOUR_PAGES = listOf(
     TourPage(
         title = "Sicher und privat",
         text = "Deine Daten bleiben verschlüsselt auf deinem Handy, ohne Konto und ohne Cloud. Ins Internet geht die App nur, wenn du etwas anforderst, z. B. Updates, Meldungen, Umkreissuche oder die KI. Eine App-Sperre und eine verschlüsselte Sicherung findest du in den Einstellungen.",
-        tips = listOf("Lege regelmäßig eine Sicherung an und bewahre sie außerhalb des Handys auf. Die App erinnert dich daran (einstellbar).", "Anleitung: Info-Symbol oben. Einstellungen: Zahnrad oben, nach Bereichen sortiert und durchsuchbar.", "Aussehen nach Geschmack: Design, Ecken, Schriftgröße und Effekte (Beta) in den Einstellungen."),
+        tips = listOf("Lege regelmäßig eine Sicherung an und bewahre sie außerhalb des Handys auf. Die App erinnert dich daran (einstellbar).", "Anleitung: Info-Symbol oben. Einstellungen: Zahnrad oben, nach Bereichen sortiert und durchsuchbar.", "Aussehen nach Geschmack: Design, Ecken, Schriftgröße und Effekte (Beta) in den Einstellungen.", "Den Einspieler beim Start schaltest du unter Einstellungen → Darstellung ab."),
         mock = { MockPrivacy() },
     ),
 )

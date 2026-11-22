@@ -697,14 +697,14 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Die Bereiche",
-                "Meine Daten und Zustimmung (wer du bist, Adresse, Nutzungsbedingungen und Nachweis). Darstellung (hell/dunkel, Schriftgröße, Design mit eigenen Farben, Ecken, Effekte). Heute-Seite und Motivator (Notfallkarte, Tagesstart, Motivator-Karte, Stimmungs-Check). Erinnerungen und Freigaben (Android-Freigaben, Einnahmen abhaken). Dokumente (Betrachter in der App oder andere App). Sicherheit und Sicherung (App-Sperre, Sicherung, Wiederherstellung, Zurücksetzen). KI und Internet (KI-Assistent, Medikamenten-Beschreibung; freiwillig). Hilfe und Rückmeldung (Anleitung, Rundgang, Feedback). App und Updates (Version, Updates, Neuigkeiten und Pläne, Infos zur App).",
+                "Meine Daten und Zustimmung (wer du bist, Adresse, Nutzungsbedingungen und Nachweis). Darstellung (hell/dunkel, Schriftgröße, Design mit eigenen Farben, Ecken, Effekte, Einspieler beim Start). Heute-Seite und Motivator (Notfallkarte, Tagesstart, Motivator-Karte, Stimmungs-Check). Erinnerungen und Freigaben (Android-Freigaben, Einnahmen abhaken). Dokumente (Betrachter in der App oder andere App). Sicherheit und Sicherung (App-Sperre, Sicherung, Wiederherstellung, Zurücksetzen). KI und Internet (KI-Assistent, Medikamenten-Beschreibung; freiwillig). Hilfe und Rückmeldung (Anleitung, Rundgang, Feedback). App und Updates (Version, Updates, Neuigkeiten und Pläne, Infos zur App).",
             ),
         ),
     ),
     GuideSection(
         id = "updates",
         title = "Updates, Darstellung und Feedback",
-        summary = "App aktualisieren, Schrift, Design, Ecken und Effekte, Notfallkarte, Feedback",
+        summary = "App aktualisieren, Schrift, Design, Ecken und Effekte, Logo und Einspieler, Notfallkarte, Feedback",
         items = listOf(
             GuideItem(
                 "Selbsttest",
@@ -717,6 +717,10 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             GuideItem(
                 "Darstellung",
                 "In den Einstellungen wählst du, ob die App wie das Handy, immer hell oder immer dunkel aussehen soll. Die Schriftgröße der ganzen App stellst du von „Klein“ bis „Riesig“ ein (zusätzlich zur Schriftgröße des Handys). Außerdem gibt es sieben Designs zur Auswahl: Schlicht, Minimalistisch, Glas, Liquid, Sonnig, Natur und Aurora (Beta, leuchtende Farbverläufe mit Glas-Karten und Leuchtrand). Die Vorschau zeigt die Farben, ausprobieren kannst du jedes mit einem Tipp. Mit „Farben anpassen“ änderst du die drei Farben des gewählten Designs selbst: Hauptfarbe, Zweitfarbe und Hintergrund (bei Glas und Liquid die beiden Hintergrundfarben). Du siehst die Änderung sofort, „Standard“ und „Alles zurücksetzen“ stellen das Original wieder her. Unter „Ecken“ legst du einheitlich für Karten, Knöpfe, Eingabefelder und Fenster fest, wie die Ecken aussehen: eckig, dezent eckig, dezent rund oder rund („Wie im Design“ nimmt die Ecken des gewählten Designs).",
+            ),
+            GuideItem(
+                "Logo und Einspieler",
+                "Das Logo (Hand, Herz und Sonne) ist das App-Symbol auf dem Startbildschirm und steht oben in der Kopfzeile, auf dem Sperrbildschirm und im Rundgang. Beim Öffnen der App läuft ein kurzer Einspieler (10 Sekunden). Tippen, „Überspringen“ oder die Zurück-Taste beenden ihn sofort, „Ton aus“ schaltet den Ton ab (wird gemerkt). Unter Einstellungen → Darstellung → „Einspieler beim Start“ schaltest du ihn ganz ab, stellst den Ton ein oder siehst ihn dir mit „Jetzt ansehen“ an. Beim Öffnen aus einer Erinnerung kommt kein Einspieler. Ist die App-Sperre an, fragt die App nach dem Einspieler nach dem Entsperren. Mit Ton spielt er in der Lautstärke für Medien; Musik aus anderen Apps wird kurz leiser, ohne Ton läuft sie weiter.",
             ),
             GuideItem(
                 "Effekte (Beta)",

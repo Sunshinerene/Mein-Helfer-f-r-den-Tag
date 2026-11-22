@@ -951,7 +951,7 @@ private fun IntroCard() {
             }
             Text(
                 "Kurzes Video (10 Sekunden) mit dem Logo, wenn die App geöffnet wird. Tippen oder „Überspringen“ beendet es sofort. " +
-                    "Beim Öffnen aus einer Erinnerung oder vom Widget wird es nicht gezeigt.",
+                    "Beim Öffnen aus einer Erinnerung wird es nicht gezeigt.",
                 style = MaterialTheme.typography.bodySmall,
             )
             Row(verticalAlignment = Alignment.CenterVertically) {

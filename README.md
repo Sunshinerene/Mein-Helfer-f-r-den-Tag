@@ -4,9 +4,13 @@ by Sunshine@R
 
 Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbezogenen Daten bleiben lokal auf dem Gerät.
 
-## Stand: v0.56.1
+## Stand: v0.57.0
 
 ### Funktionsübersicht
+
+**Logo und Einspieler**
+- Eigenes Logo (Hand, Herz, Sonne) als App-Symbol (auch als einfarbiges Themensymbol ab Android 13), in der Kopfzeile, auf dem Sperrbildschirm und im Rundgang
+- Kurzer Einspieler (10 Sekunden) beim Start: Tippen oder „Überspringen“ beendet ihn, Ton ein/aus, in den Einstellungen abschaltbar
 
 **Heute (Tag · Woche · Monat)**
 - Tagesansicht: Kurz nachgefragt (offene Antworten), Wichtig und demnächst (dringend, überfällig, Termine heute zum Abhaken, nächste 3 Tage, Termine bis 7 Tage), Bald nachbestellen, Heute einnehmen (Abhaken im Zeitfenster, früher/später/vergessen/bewusst nicht gegeben), Aufgaben, Bemerkung zum Tag, Auswertung

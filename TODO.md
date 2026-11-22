@@ -1,6 +1,6 @@
 # TODO
 
-Stand: v0.56.1 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.57.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
@@ -23,6 +23,7 @@ Stand: v0.56.1 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Datenbank prüfen, Beispiel-PDFs mit erfundenen Daten, Beispiel-Grafiken, Test-Benachrichtigungen). Die Datenbank-Umstellungen von Version 5 bis 26 prüft seit v0.54.0 bei jedem Bauen ein automatischer Test gegen das Schema (Tabellen, Spalten, Typen); auf dem Handy bleibt zu prüfen, dass die eigenen Daten nach dem Update vollständig da sind.
 
+- [ ] Neues App-Symbol auf dem Startbildschirm (rund und bei Themensymbolen), Logo in der Kopfzeile; Einspieler beim Start: Bild füllt die Breite, Ton, „Ton aus“, Überspringen, Abschalten in den Einstellungen, kein Einspieler beim Öffnen aus einer Erinnerung, App-Sperre erst danach
 - [ ] Nach den Updates: alte Daten vollständig da (Selbsttest → „Datenbank prüfen“ zeigt die Anzahl je Bereich), Wiederherstellen einer Sicherung
 - [ ] Wiederkehrende Termine: Anlegen, „nur diesen“ und „alle folgenden“ ändern und löschen, Erinnerungen
 - [ ] Tagesstart: erscheint einmal am Tag, Rückblick bestätigen, Tagesplan-PDF teilen und drucken
@@ -55,6 +56,12 @@ Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Daten
 - [ ] Entscheiden: Aufbewahrung der Nachweise 3 Jahre oder länger (30-Jahres-Frist bei Gesundheitsschäden); zusätzlicher Nachweis beim App-Ersteller (Server) ja oder nein
 - [ ] Medizinprodukte-Recht (MDR) prüfen lassen, vor allem den KI-Gesamt-Check der Medikamente; Zweckbestimmung als Organisationshilfe klar festhalten
 - [ ] Impressum und Datenschutzerklärung für eine Veröffentlichung (z. B. Play Store), eigener Signaturschlüssel statt Test-Schlüssel
+
+## Version 0.57.0 (fertig)
+
+- [x] Logo von Sunshine@R als App-Symbol (anpassbares Symbol mit Hintergrund, einfarbige Fassung für Themensymbole) und in der App: Kopfzeile, Sperrbildschirm, Rundgang, Einstellungen, Ende der Heute-Seite
+- [x] Einspieler beim Start (Video auf 0,8 MB verkleinert): Tippen, „Überspringen“ oder Zurück beendet ihn; „Ton aus“ wird gemerkt; ohne Ton läuft Musik anderer Apps weiter; nicht beim Öffnen aus einer Erinnerung; Einstellungen → Darstellung → „Einspieler beim Start“ (an/aus, Ton, Jetzt ansehen)
+- [x] Startbild ab Android 12 in dunklem Petrol passend zum Einspieler
 
 ## Version 0.56.1 (fertig)
 
