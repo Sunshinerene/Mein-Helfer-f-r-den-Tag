@@ -153,7 +153,7 @@ fun AssistantCard(vm: MainViewModel, onOpen: (tab: Int) -> Unit, onMood: () -> U
                     AssistantFace(st.expression, size = 60.dp, speaking = speaking == "assistent", description = "Gesicht von ${st.name}")
                     Column(Modifier.weight(1f)) {
                         Text(p?.greeting ?: "Hallo", style = MaterialTheme.typography.titleMedium)
-                        Text("Ich bin ${st.name}, dein Assistent (Beta).", style = MaterialTheme.typography.bodySmall)
+                        Text("Ich bin ${st.name}, dein persönlicher Assistent.", style = MaterialTheme.typography.bodySmall)
                     }
                 }
                 if (offerStart) {
@@ -490,7 +490,7 @@ fun AssistantDockFace(vm: MainViewModel) {
     }
 }
 
-// ---------------------------------------------------------------- Einstellungen → Beta-Funktionen
+// ---------------------------------------------------------------- Einstellungen → Persönlicher Assistent
 
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
@@ -509,7 +509,7 @@ fun AssistantSettingsCard(vm: MainViewModel) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 AssistantFace(Expression.Friendly, size = 44.dp)
-                Text("Persönlicher Assistent (Beta)", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                Text("Persönlicher Assistent", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
                 Switch(checked = on, onCheckedChange = { vm.setAssistantOn(it) })
             }
             Text(
@@ -523,6 +523,19 @@ fun AssistantSettingsCard(vm: MainViewModel) {
                 Assistant.NAME_SUGGESTIONS.forEach { n ->
                     FilterChip(selected = n == name, onClick = { vm.setAssistantName(n) }, label = { Text(n) })
                 }
+            }
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = own,
+                    onValueChange = { own = it.take(24) },
+                    label = { Text("Eigener Name") },
+                    singleLine = true,
+                    modifier = Modifier.weight(1f),
+                )
+                OutlinedButton(shape = buttonShape(), enabled = own.isNotBlank(), onClick = {
+                    vm.setAssistantName(own)
+                    own = ""
+                }) { Text("Übernehmen") }
             }
             HorizontalDivider()
             Text("Benachrichtigungen von $name", style = MaterialTheme.typography.labelLarge)
@@ -553,7 +566,7 @@ fun AssistantSettingsCard(vm: MainViewModel) {
             HorizontalDivider()
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text("Meine eigenen Werte nutzen", style = MaterialTheme.typography.bodyLarge)
+                    Text("Meine eigenen Werte nutzen (Beta)", style = MaterialTheme.typography.bodyLarge)
                     Text(
                         "Schlaf, Schritte und Ruhepuls von deiner Uhr (Health Connect) für Hinweise nur für dich. Wird nur gelesen, nicht gespeichert.",
                         style = MaterialTheme.typography.bodySmall,
@@ -570,20 +583,6 @@ fun AssistantSettingsCard(vm: MainViewModel) {
             }
             if (ownValues && !de.meinhelfer.tag.health.HealthConnectReader.available(context)) {
                 Text("Health Connect ist auf diesem Handy nicht verfügbar.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
-            }
-            HorizontalDivider()
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = own,
-                    onValueChange = { own = it.take(24) },
-                    label = { Text("Eigener Name") },
-                    singleLine = true,
-                    modifier = Modifier.weight(1f),
-                )
-                OutlinedButton(shape = buttonShape(), enabled = own.isNotBlank(), onClick = {
-                    vm.setAssistantName(own)
-                    own = ""
-                }) { Text("Übernehmen") }
             }
         }
     }

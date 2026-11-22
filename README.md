@@ -4,12 +4,12 @@ by Sunshine@R
 
 Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbezogenen Daten bleiben lokal auf dem Gerät.
 
-## Stand: v0.64.0
+## Stand: v0.65.0
 
 ### Funktionsübersicht
 
-**Persönlicher Assistent (Beta)**
-- Für die pflegende Person, mit wählbarem Namen (Start: Sunny) und digitalem Gesicht, das die Lage zeigt
+**Persönlicher Assistent**
+- Fester Teil der App (eigener Bereich in den Einstellungen), für die pflegende Person, mit wählbarem Namen (Start: Sunny) und digitalem Gesicht, das die Lage zeigt
 - Als Nächstes über alle Personen (gemeinsame Tageslage, auch fürs Widget), Vorbereitung auf Termine der nächsten 36 Stunden
 - Vorschläge mit Bestätigung: bald fällige Aufgabe auf dringend, Überfälliges neu planen, bei knappem Vorrat „Rezept bestellen“ beim Zuständigen
 - Tagesstart über den Assistenten (Rückblick und Tagesplan in seiner Karte); Heute-Seite ordnet nach Dringlichkeit, gemeinsame Regeln mit Widget und Tagesplan
@@ -79,6 +79,7 @@ Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbe
 
 **Dokumente**
 - Fotografieren (mehrseitig) oder Datei laden, verschlüsselt gespeichert, Text wird gelesen
+- Sammel-Import: mehrere Dateien, mehrere Fotos oder ein ganzer Ordner auf einmal (bis 30); die App schlägt vor, welche Seiten zusammengehören (Dateiname, Seitenzahlen im Text, Aufnahmezeit), du entscheidest, dann jedes Dokument nacheinander wie gewohnt
 - Kategorien (u. a. Krankenhaus / Entlassbericht) mit gewichteter Erkennung, Suche, Filter (Jahr, Arzt), Zusammenfassung (selbst oder per KI)
 - Eingebauter Betrachter (PDF, Fotos, Text) mit Zoom (zwei Finger), Drucken (auch Text), Teilen, „Andere App“ (einstellbar)
 - Code des Medikationsplans wird beim Hochladen gelesen

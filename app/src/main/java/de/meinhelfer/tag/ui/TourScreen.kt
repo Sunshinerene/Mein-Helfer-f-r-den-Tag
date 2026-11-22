@@ -106,8 +106,8 @@ private val TOUR_PAGES = listOf(
     ),
     TourPage(
         title = "Dein Assistent",
-        text = "Dein persönlicher Assistent (Beta) ist für dich da: Er sagt, was als Nächstes ansteht, bereitet Termine vor und schlägt vor, was dringend ist oder nachbestellt werden muss. Dazu ein Satz für den Tag, was du geschafft hast, kleine Vorhaben und der Stimmungs-Check. Ziele gehst du Schritt für Schritt an.",
-        tips = listOf("Das Gesicht unten links in der Leiste hilft auf jeder Seite, auch mit „Frag mich“.", "Morgens und abends meldet er sich kurz, vor Terminen mit Checkliste; in der Ruhezeit nicht.", "Name wählen oder ausschalten: Einstellungen → Beta-Funktionen.", "Wie oft nach der Stimmung gefragt wird, stellst du unter Einstellungen → Heute-Seite, Motivator und Widget ein.", "Für Ziele gibt es Vorlagen, z. B. „Pflegegrad beantragen“. Auf Wunsch schlägt die KI einen Weg vor."),
+        text = "Dein persönlicher Assistent ist für dich da: Er sagt, was als Nächstes ansteht, bereitet Termine vor und schlägt vor, was dringend ist oder nachbestellt werden muss. Dazu ein Satz für den Tag, was du geschafft hast, kleine Vorhaben und der Stimmungs-Check. Ziele gehst du Schritt für Schritt an.",
+        tips = listOf("Das Gesicht unten links in der Leiste hilft auf jeder Seite, auch mit „Frag mich“.", "Morgens und abends meldet er sich kurz, vor Terminen mit Checkliste; in der Ruhezeit nicht.", "Name wählen oder ausschalten: Einstellungen → Persönlicher Assistent.", "Wie oft nach der Stimmung gefragt wird, stellst du unter Einstellungen → Heute-Seite, Motivator und Widget ein.", "Für Ziele gibt es Vorlagen, z. B. „Pflegegrad beantragen“. Auf Wunsch schlägt die KI einen Weg vor."),
         mock = { MockMotivator() },
     ),
     TourPage(
@@ -149,7 +149,7 @@ private val TOUR_PAGES = listOf(
     TourPage(
         title = "Dokumente und Schreiben",
         text = "Befunde, Berichte und Bescheide fotografieren oder laden. Die App liest den Text, schlägt Kategorie, Datum und Arzt vor und legt alles verschlüsselt ab. Öffnen, drucken und teilen geht direkt in der App. Für Anträge und Vollmachten gibt es Vorlagen als PDF.",
-        tips = listOf("Die Suche findet auch Wörter im Text, z. B. ein Medikament.", "Schreiben gehen als PDF, per Post oder als E-Mail.", "Unterschriebene Schreiben ordnet die App beim Einscannen dem Entwurf zu.", "Entlassbericht: Die App schlägt Medikamente bei Entlassung und Kontrolltermine vor, übernommen wird nur, was du bestätigst."),
+        tips = listOf("Die Suche findet auch Wörter im Text, z. B. ein Medikament.", "Mehrere Dateien oder einen ganzen Ordner auf einmal laden: Die App schlägt vor, welche Seiten zusammengehören, du entscheidest.", "Schreiben gehen als PDF, per Post oder als E-Mail.", "Unterschriebene Schreiben ordnet die App beim Einscannen dem Entwurf zu.", "Entlassbericht: Die App schlägt Medikamente bei Entlassung und Kontrolltermine vor, übernommen wird nur, was du bestätigst."),
         mock = { MockDocuments() },
     ),
     TourPage(

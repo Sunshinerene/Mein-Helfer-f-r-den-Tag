@@ -1,6 +1,6 @@
 # TODO
 
-Stand: v0.64.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.65.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
@@ -23,10 +23,11 @@ Stand: v0.64.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Datenbank prüfen, Beispiel-PDFs mit erfundenen Daten, Beispiel-Grafiken, Test-Benachrichtigungen). Die Datenbank-Umstellungen von Version 5 bis 26 prüft seit v0.54.0 bei jedem Bauen ein automatischer Test gegen das Schema (Tabellen, Spalten, Typen); auf dem Handy bleibt zu prüfen, dass die eigenen Daten nach dem Update vollständig da sind.
 
+- [ ] Sammel-Import: mehrere Dateien, mehrere Fotos und „Ganzen Ordner laden“; stimmen die Vorschläge (Seite 1 und 2, Fotos kurz nacheinander)? Haken, „↑ nach oben“, „Dokument 2 von 5“, Überspringen, „Restliche verwerfen“; Einstellungen → Persönlicher Assistent
 - [ ] Berichte und Auswertung: jedes PDF einmal erzeugen und teilen; Budgets und Übergabe aus dem Profil; „Frag mich“ mit KI
 - [ ] Heute-Seite: „Heute einnehmen“ und Aufgaben springen nach oben, wenn etwas dran ist; Tagesstart-Angebot in Sunnys Karte; Stimme wählen (z. B. SherpaTTS mit Piper-Stimme) und Probe hören
 - [ ] Assistent morgens und abends (kommt die Benachrichtigung, passt der Text?), Checkliste an der Terminerinnerung, PDF-Knöpfe in der Vorbereitung, Ruhezeit (Trinken/Stimmung schweigen, Medikamente kommen), Erinnerungsübersicht, eigene Werte (Schlaf, Schritte, Ruhepuls) und „Das ist mein eigenes Gerät“
-- [ ] Assistent (Beta): Karte oben auf der Heute-Seite, Gesicht und Ausdrücke, Vorschläge übernehmen und ablehnen, Terminvorbereitung, Gesicht in der Leiste auf allen Seiten, „Frag mich“, Name ändern, ausschalten (Motivator kommt zurück); Hinweis auf neue Uhr-Werte in „Trinken und Werte“
+- [ ] Assistent: Karte oben auf der Heute-Seite, Gesicht und Ausdrücke, Vorschläge übernehmen und ablehnen, Terminvorbereitung, Gesicht in der Leiste auf allen Seiten, „Frag mich“, Name ändern, ausschalten (Motivator kommt zurück); Hinweis auf neue Uhr-Werte in „Trinken und Werte“
 - [ ] Health Connect (Beta): Zugriff erlauben, Werte holen, Quellen wählen (z. B. Fitbit, Samsung Health, Garmin, Withings, Blutdruckgerät-App), Übernahme ohne Doppelte, Einstellungen → Beta-Funktionen
 - [ ] Tagesplan-PDF: Kästchen fürs Trinken und Zeilen für Werte auf Papier; Vorlesen im Tagesplan, bei Dokumenten und in der Anleitung (deutsche Stimme vorhanden?); Design „Hoher Kontrast“ hell und dunkel; „Größer“ und „Sehr groß“ auf allen Seiten (nichts abgeschnitten?)
 - [ ] Entlassbericht mit echtem Bericht: Medikation bei Entlassung richtig erkannt (nicht die bei Aufnahme), Kontrollen mit Datum, Übernehmen als Aufgabe und als Termin, KI-Auslesen
@@ -65,11 +66,20 @@ Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Daten
 - [ ] Medizinprodukte-Recht (MDR) prüfen lassen, vor allem den KI-Gesamt-Check der Medikamente; Zweckbestimmung als Organisationshilfe klar festhalten
 - [ ] Impressum und Datenschutzerklärung für eine Veröffentlichung (z. B. Play Store), eigener Signaturschlüssel statt Test-Schlüssel
 
-## Als Nächstes: Assistent (Plan aus der Prozess-Prüfung, Schritte 1–4 erledigt)
+## Als Nächstes: Assistent (Plan aus der Prozess-Prüfung erledigt, fest in der App)
 
-- [ ] Rückmeldungen aus dem Test einarbeiten; danach den Assistenten aus der Beta fest übernehmen
+- [ ] Rückmeldungen aus dem Alltag einarbeiten
+- [ ] Sammel-Import: Vorschläge mit echten Scans verfeinern (z. B. gleicher Absender und gleiches Datum als weiterer Hinweis)
 
 - [ ] Eigene KI-Stimme direkt in der App (nur falls SherpaTTS nicht reicht): sherpa-onnx mit Piper-Stimme Thorsten oder Kerstin (CC0) oder apptor-tiny-tts (Apache-2.0, 21 MB); macht die App 25–70 MB größer, Lizenzen der Bibliotheken prüfen
+
+## Version 0.65.0 (fertig)
+
+- [x] Persönlicher Assistent fest übernommen: kein Beta mehr, eigener Bereich „Persönlicher Assistent“ in den Einstellungen (eigene Werte über Health Connect bleiben Beta)
+- [x] Sammel-Import bei Dokumenten: mehrere Dateien, mehrere Fotos aus der Galerie oder ein ganzer Ordner (bis 30 auf einmal); alles wird zuerst auf dem Handy gelesen
+- [x] Vorschlag, was zusammengehört: Seitenangaben im Dateinamen, Seitenzahlen im Text („Seite 2 von 3“), Fotos kurz nacheinander; Gegenhinweise („Seite 1“, neue Anrede, „Seite 3 von 3“); der Assistent fragt mit Gesicht und Namen
+- [x] Im Dialog: „Alle einzeln“, „Vorschlag“, „Alles ein Dokument“, Haken je Datei, Reihenfolge ändern; danach jedes Dokument nacheinander mit dem gewohnten Ablauf („Dokument 2 von 5“, Überspringen, Restliche verwerfen)
+- [x] Automatischer Test für die Vorschläge (DocGroupingTest)
 
 ## Version 0.64.0 (fertig)
 

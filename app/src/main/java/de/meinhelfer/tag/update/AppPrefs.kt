@@ -60,7 +60,7 @@ object AppPrefs {
         prefs(context).edit().putStringSet("hc_quellen_$personId", sources).apply()
     }
 
-    /** Persönlicher Assistent (Beta) statt Tages-Motivator. */
+    /** Persönlicher Assistent statt Tages-Motivator (Standard an). */
     fun assistantEnabled(context: Context): Boolean = prefs(context).getBoolean("assistent_an", true)
 
     fun setAssistantEnabled(context: Context, on: Boolean) {

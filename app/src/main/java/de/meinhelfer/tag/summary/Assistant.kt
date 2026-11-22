@@ -34,7 +34,7 @@ data class Proposal(
 data class AppointmentPrep(val appointment: Appointment, val personName: String, val whenText: String, val hints: List<String>)
 
 /**
- * Persönlicher Assistent (Beta): für die pflegende Person. Rechnet auf dem Handy, schlägt vor und erklärt;
+ * Persönlicher Assistent: für die pflegende Person. Rechnet auf dem Handy, schlägt vor und erklärt;
  * ändert nichts ohne Bestätigung. Nutzt die gemeinsame [Tageslage].
  */
 object Assistant {

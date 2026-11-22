@@ -152,6 +152,15 @@ fun SettingsScreen(
                     item { CaregiverCard(caregiver, onEditCaregiver) }
                     item { ConsentCard(onRevoked = onConsentRevoked) }
                 }
+                SettingsCategory.Assistent -> {
+                    item { AssistantSettingsCard(vm) }
+                    item {
+                        Text(
+                            "Wann Erinnerungen und Hinweise kommen und die Ruhezeit: Einstellungen → Erinnerungen und Freigaben. Ist der Assistent aus, zeigt die Heute-Seite wieder den Tages-Motivator.",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                }
                 SettingsCategory.Darstellung -> {
                     item { ThemeCard(vm) }
                     item { AccessibilityCard(vm) }
@@ -198,7 +207,6 @@ fun SettingsScreen(
                             style = MaterialTheme.typography.bodySmall,
                         )
                     }
-                    item { AssistantSettingsCard(vm) }
                     item { HealthConnectSettingsCard() }
                     item {
                         HCard(Modifier.fillMaxWidth()) {
@@ -235,6 +243,7 @@ fun SettingsScreen(
 /** Kategorien der Einstellungen; [keywords] fuer die Suche. */
 private enum class SettingsCategory(val emoji: String, val title: String, val keywords: String) {
     Profil("👤", "Meine Daten und Zustimmung", "name adresse telefon rolle ausweis angehörige pflegedienst zustimmung nutzungsbedingungen widerruf nachweis"),
+    Assistent("🌞", "Persönlicher Assistent", "assistent sunny name gesicht persönlich morgen abend überblick morgenüberblick vorschläge checkliste termin eigene werte schlaf schritte ruhepuls motivator helfer"),
     Darstellung("🎨", "Darstellung", "hell dunkel design farben schrift schriftgröße größe ecken effekte glas aurora liquid animation glanz transparenz einspieler video intro start logo ton barrierefreiheit kontrast vorlesen sprachausgabe bedienflächen größer zoom sehen"),
     Startseite("🏠", "Heute-Seite, Motivator und Widget", "heute karten notfallkarte tagesstart motivator stimmung smiley ziele widget startbildschirm"),
     Erinnerungen("🔔", "Erinnerungen und Freigaben", "benachrichtigung freigabe freigaben wecker alarm akku einnahme zeitfenster ton erinnerung trinken tagebuch pflegetagebuch ruhezeit nacht übersicht assistent morgen abend"),
@@ -242,7 +251,7 @@ private enum class SettingsCategory(val emoji: String, val title: String, val ke
     Sicherheit("🔒", "Sicherheit und Sicherung", "app-sperre sperre fingerabdruck gesicht pin sicherung backup wiederherstellen zurücksetzen reset löschen"),
     Internet("🤖", "KI und Internet", "ki assistent schlüssel api gemini openai chatgpt claude ollama groq mistral wikipedia beschreibung internet"),
     Hilfe("💬", "Hilfe und Rückmeldung", "anleitung rundgang hilfe feedback fehler wunsch rückmeldung selbsttest test prüfen beispiel pdf datenbank"),
-    Beta("🧪", "Beta-Funktionen", "beta assistent sunny name gesicht motivator persönlich uhr smartwatch fitnessband armband band waage blutdruckgerät health connect gesundheit verbinden fitbit garmin samsung withings omron aurora effekte"),
+    Beta("🧪", "Beta-Funktionen", "beta uhr smartwatch fitnessband armband band waage blutdruckgerät health connect gesundheit verbinden fitbit garmin samsung withings omron aurora effekte"),
     App("ℹ️", "App und Updates", "update aktualisieren version neuigkeiten neu geplant über app"),
 }
 
@@ -276,7 +285,9 @@ private fun categorySummary(
     SettingsCategory.Internet ->
         if (AiConfig.isConfigured(context)) "KI: " + AiConfig.provider(context).label else "KI nicht eingerichtet · Medikamenten-Infos"
     SettingsCategory.Hilfe -> "Anleitung, Rundgang, Fehler oder Wunsch melden, Selbsttest"
-    SettingsCategory.Beta -> "Persönlicher Assistent, Uhr, Fitnessband und Messgeräte (Health Connect)"
+    SettingsCategory.Assistent ->
+        vm.assistantName.value + " · " + (if (vm.assistantOn.value) "an" else "aus (Tages-Motivator)")
+    SettingsCategory.Beta -> "Uhr, Fitnessband und Messgeräte (Health Connect), Aurora und Effekte"
     SettingsCategory.App -> "Version " + UpdateChecker.installedVersion(context) +
         if (updateState is UpdateState.Available || updateState is UpdateState.Ready) " · Update verfügbar" else ""
 }

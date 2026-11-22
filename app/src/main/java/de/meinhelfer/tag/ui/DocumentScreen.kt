@@ -55,6 +55,13 @@ import de.meinhelfer.tag.media.DocumentAnalyzer
 import de.meinhelfer.tag.media.DocumentReader
 import de.meinhelfer.tag.media.DocumentStore
 import de.meinhelfer.tag.media.PendingDoc
+import de.meinhelfer.tag.media.BatchSource
+import de.meinhelfer.tag.media.PickedFile
+import de.meinhelfer.tag.summary.BatchFile
+import de.meinhelfer.tag.summary.BatchPlan
+import de.meinhelfer.tag.summary.DocGrouping
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import de.meinhelfer.tag.update.AppPrefs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -103,6 +110,27 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?
     var showAddPage by remember { mutableStateOf(false) }
     var detailId by remember { mutableStateOf<Long?>(null) }
     var editItem by remember { mutableStateOf<Document?>(null) }
+    // Neuer Entwurf = neuer Dialog (sonst behielte er Titel und Vorschläge des vorigen)
+    var draftSerial by remember { mutableIntStateOf(0) }
+    var progress by remember { mutableStateOf<String?>(null) }
+    val assistantOn by vm.assistantOn.collectAsStateWithLifecycle()
+    val assistantName by vm.assistantName.collectAsStateWithLifecycle()
+
+    // Sammel-Import: mehrere Dateien oder ein Ordner. Erst alle lesen, dann fragen, was zusammengehört, dann nacheinander speichern.
+    var batchDocs by remember { mutableStateOf<List<PendingDoc>>(emptyList()) }
+    var batchFiles by remember { mutableStateOf<List<BatchFile>>(emptyList()) }
+    var batchPlan by remember { mutableStateOf<BatchPlan?>(null) }
+    var batchSkipped by remember { mutableIntStateOf(0) }
+    var queue by remember { mutableStateOf<List<List<PendingDoc>>>(emptyList()) }
+    var batchTotal by remember { mutableIntStateOf(0) }
+    var batchPos by remember { mutableIntStateOf(0) }
+    var batchSaved by remember { mutableIntStateOf(0) }
+    var batchOpenLater by remember { mutableStateOf<Long?>(null) }
+
+    fun setDraft(next: PendingDoc?) {
+        draft = next
+        if (next != null) draftSerial++
+    }
 
     fun startDraft(block: suspend () -> PendingDoc?) {
         scope.launch {
@@ -112,7 +140,129 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?
             if (result == null) {
                 Toast.makeText(context, "Das Dokument konnte nicht gelesen werden.", Toast.LENGTH_SHORT).show()
             } else {
-                draft = result
+                setDraft(result)
+            }
+        }
+    }
+
+    fun finishBatch() {
+        if (batchTotal > 0) {
+            Toast.makeText(context, "Fertig: $batchSaved von $batchTotal Dokument(en) gespeichert.", Toast.LENGTH_LONG).show()
+        }
+        batchTotal = 0
+        batchPos = 0
+        batchSaved = 0
+        batchOpenLater?.let { detailId = it }
+        batchOpenLater = null
+    }
+
+    // Nächstes Dokument aus der Warteschlange; zusammengehörige Dateien werden vorher zu einem Dokument
+    fun nextFromQueue() {
+        val q = queue
+        if (q.isEmpty()) {
+            setDraft(null)
+            finishBatch()
+            return
+        }
+        val group = q.first()
+        queue = q.drop(1)
+        batchPos += 1
+        if (group.size == 1) {
+            setDraft(group.first())
+            return
+        }
+        scope.launch {
+            working = true
+            progress = "Seiten werden zu einem Dokument zusammengefügt …"
+            val name = DocGrouping.baseTitle(group.first().displayName)
+            val merged = runCatching { DocumentReader.merge(context, group, name) }.getOrNull()
+            working = false
+            progress = null
+            if (merged == null) {
+                Toast.makeText(context, "Zusammenfügen hat nicht geklappt. Die Dateien kommen einzeln.", Toast.LENGTH_LONG).show()
+                queue = group.drop(1).map { listOf(it) } + queue
+                batchTotal += group.size - 1
+                setDraft(group.first())
+            } else {
+                setDraft(merged)
+            }
+        }
+    }
+
+    fun cancelBatch() {
+        draft?.let { DocumentStore.discard(it) }
+        queue.flatten().forEach { DocumentStore.discard(it) }
+        queue = emptyList()
+        setDraft(null)
+        finishBatch()
+    }
+
+    // Alle ausgewählten Dateien lesen (Text erkennen), dann den Dialog „einzeln oder zusammen?“ zeigen
+    fun startBatch(picked: List<PickedFile>, skipped: Int) {
+        val chosen = picked.sortedWith { a, b -> DocGrouping.naturalOrder.compare(a.name, b.name) }.take(DocGrouping.MAX_FILES)
+        if (picked.size > chosen.size) {
+            Toast.makeText(
+                context,
+                "Es werden die ersten ${DocGrouping.MAX_FILES} Dateien geladen, den Rest bitte in einem zweiten Durchgang.",
+                Toast.LENGTH_LONG,
+            ).show()
+        }
+        scope.launch {
+            working = true
+            val docs = mutableListOf<PendingDoc>()
+            val files = mutableListOf<BatchFile>()
+            var failed = 0
+            chosen.forEachIndexed { i, p ->
+                progress = "Datei ${i + 1} von ${chosen.size}: ${p.name}"
+                val doc = runCatching { DocumentReader.fromUri(context, p.uri) }.getOrNull()
+                if (doc == null) {
+                    failed++
+                } else {
+                    docs.add(doc)
+                    files.add(
+                        BatchFile(
+                            name = if (p.name == "Dokument") "${doc.displayName}.${doc.ext}" else p.name,
+                            mergeable = doc.kind == DocKind.IMAGES || doc.kind == DocKind.PDF,
+                            isPhoto = doc.kind == DocKind.IMAGES,
+                            time = p.time,
+                            text = doc.text,
+                        ),
+                    )
+                }
+            }
+            working = false
+            progress = null
+            if (failed > 0) {
+                Toast.makeText(context, "$failed Datei(en) konnten nicht gelesen werden.", Toast.LENGTH_LONG).show()
+            }
+            when (docs.size) {
+                0 -> Unit
+                1 -> setDraft(docs.first())
+                else -> {
+                    batchDocs = docs
+                    batchFiles = files
+                    batchSkipped = skipped
+                    batchPlan = DocGrouping.suggest(files)
+                }
+            }
+        }
+    }
+
+    fun startFolder(tree: Uri) {
+        scope.launch {
+            working = true
+            progress = "Ordner wird durchgesehen …"
+            val listed = runCatching { BatchSource.listFolder(context, tree) }.getOrNull()
+            working = false
+            progress = null
+            when {
+                listed == null -> Toast.makeText(context, "Der Ordner konnte nicht gelesen werden.", Toast.LENGTH_LONG).show()
+                listed.first.isEmpty() -> Toast.makeText(
+                    context,
+                    "Im Ordner sind keine passenden Dateien (PDF, Foto, Text, Word).",
+                    Toast.LENGTH_LONG,
+                ).show()
+                else -> startBatch(listed.first, listed.second)
             }
         }
     }
@@ -134,10 +284,15 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?
         }
         addingPage = false
     }
-    // Mehrere Fotos oder Dateien (PDF, Bild) werden zu einem Dokument zusammengefuegt, ggf. an den offenen Entwurf.
+    // Weitere Seiten: Fotos oder Dateien (PDF, Bild) werden an den offenen Entwurf angehaengt.
+    // Neue Dokumente: eine Datei wie bisher, mehrere als Sammel-Import (einzeln oder zusammen?).
     fun handleUris(uris: List<Uri>) {
         val base = if (appendMode) draft else null
         appendMode = false
+        if (base == null && uris.size > 1) {
+            scope.launch { startBatch(BatchSource.describe(context, uris), 0) }
+            return
+        }
         scope.launch {
             working = true
             val result = runCatching { DocumentReader.fromUris(context, uris, base) }.getOrNull()
@@ -146,7 +301,7 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?
             if (pending == null) {
                 Toast.makeText(context, "Das Dokument konnte nicht gelesen werden.", Toast.LENGTH_SHORT).show()
             } else {
-                draft = pending
+                if (base == null) setDraft(pending) else draft = pending
                 if (result.second > 0) {
                     Toast.makeText(
                         context,
@@ -162,6 +317,9 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?
     }
     val fileLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
         if (uris.isNotEmpty()) handleUris(uris) else appendMode = false
+    }
+    val folderLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { tree ->
+        if (tree != null) startFolder(tree)
     }
 
     fun launchCamera(forNewPage: Boolean) {
@@ -281,14 +439,23 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?
                     OutlinedButton(shape = buttonShape(), onClick = {
                         showSource = false
                         galleryLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-                    }, modifier = Modifier.fillMaxWidth()) { Text("Foto(s) aus der Galerie (mehrere = ein Dokument)") }
+                    }, modifier = Modifier.fillMaxWidth()) { Text("Foto(s) aus der Galerie") }
                     OutlinedButton(shape = buttonShape(), onClick = {
                         showSource = false
                         fileLauncher.launch(arrayOf("application/pdf", "image/*", "text/plain", "*/*"))
                     }, modifier = Modifier.fillMaxWidth()) { Text("Datei(en) laden (PDF, Bild, Word, Text …)") }
+                    OutlinedButton(shape = buttonShape(), onClick = {
+                        showSource = false
+                        try {
+                            folderLauncher.launch(null)
+                        } catch (_: ActivityNotFoundException) {
+                            Toast.makeText(context, "Auf diesem Handy lässt sich kein Ordner auswählen.", Toast.LENGTH_SHORT).show()
+                        }
+                    }, modifier = Modifier.fillMaxWidth()) { Text("Ganzen Ordner laden") }
                     Text(
-                        "Besteht ein Dokument aus mehreren Seiten, wähle sie zusammen aus oder füge nach dem Einlesen weitere Seiten hinzu. Sie bleiben ein Dokument. " +
-                            "Der Text wird direkt auf dem Handy gelesen. Das Dokument wird verschlüsselt in der App gespeichert und nirgends hin gesendet.",
+                        "Mehrere Dateien oder ein Ordner: Die App liest alle, schlägt vor, welche zusammengehören (z. B. Seite 1 und 2), " +
+                            "und du entscheidest: einzeln oder zusammen. Seiten lassen sich auch nach dem Einlesen hinzufügen. " +
+                            "Der Text wird direkt auf dem Handy gelesen. Dokumente werden verschlüsselt in der App gespeichert und nirgends hin gesendet.",
                         style = MaterialTheme.typography.bodySmall,
                     )
                 }
@@ -329,20 +496,49 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?
     if (working) {
         AlertDialog(
             onDismissRequest = {},
-            title = { Text("Dokument wird gelesen") },
+            title = { Text(if (progress != null) "Bitte einen Moment" else "Dokument wird gelesen") },
             text = {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 2.dp)
-                    Text("Erkenne Text …")
+                    Text(progress ?: "Erkenne Text …")
                 }
             },
             confirmButton = {},
         )
     }
 
+    batchPlan?.let { plan ->
+        BatchImportDialog(
+            files = batchFiles,
+            plan = plan,
+            assistantName = if (assistantOn) assistantName else null,
+            skipped = batchSkipped,
+            onConfirm = { groups ->
+                val docs = batchDocs
+                queue = groups.map { g -> g.map { docs[it] } }
+                batchTotal = groups.size
+                batchPos = 0
+                batchSaved = 0
+                batchPlan = null
+                batchDocs = emptyList()
+                batchFiles = emptyList()
+                nextFromQueue()
+            },
+            onCancel = {
+                batchDocs.forEach { DocumentStore.discard(it) }
+                batchPlan = null
+                batchDocs = emptyList()
+                batchFiles = emptyList()
+            },
+        )
+    }
+
     draft?.let { pending ->
+        key(draftSerial) {
             DocumentDialog(
                 pending = pending,
+                batchInfo = if (batchTotal > 0) "Dokument $batchPos von $batchTotal" else null,
+                onStopBatch = if (batchTotal > 0 && queue.isNotEmpty()) ({ cancelBatch() }) else null,
                 initial = null,
                 doctors = doctors,
                 categoryOptions = categoryOptions,
@@ -358,7 +554,7 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?
                 },
                 onDismiss = {
                     DocumentStore.discard(pending)
-                    draft = null
+                    if (batchTotal > 0) nextFromQueue() else draft = null
                 },
                 drafts = items,
                 onLinkDraft = { vm.markDraftSigned(it) },
@@ -368,9 +564,17 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?
                             val (name, mime) = DocumentStore.commit(context, pending)
                             val saved = doc.copy(fileName = name, mimeType = mime)
                             val newId = vm.addDocumentNow(saved)
-                            draft = null
                             // Entlassbericht oder Medikamentenplan: gleich öffnen, damit die Vorschläge zu sehen sind
-                            if (isDischargeDoc(saved) || MedPlans.isPlanDocument(saved)) detailId = newId
+                            // (beim Sammel-Import erst am Ende, sonst lägen zwei Fenster übereinander)
+                            val openIt = isDischargeDoc(saved) || MedPlans.isPlanDocument(saved)
+                            if (batchTotal > 0) {
+                                batchSaved += 1
+                                if (openIt && batchOpenLater == null) batchOpenLater = newId
+                                nextFromQueue()
+                            } else {
+                                draft = null
+                                if (openIt) detailId = newId
+                            }
                         } catch (_: Exception) {
                             Toast.makeText(context, "Speichern hat nicht geklappt.", Toast.LENGTH_LONG).show()
                         }
@@ -378,6 +582,7 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?
                 },
             )
         }
+    }
 
     items.firstOrNull { it.id == detailId }?.let { doc ->
         DocumentDetailDialog(
@@ -428,6 +633,8 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?
 private fun DocumentDialog(
     pending: PendingDoc?,
     initial: Document?,
+    batchInfo: String? = null,
+    onStopBatch: (() -> Unit)? = null,
     doctors: List<Doctor>,
     categoryOptions: List<String>,
     person: Person?,
@@ -470,10 +677,17 @@ private fun DocumentDialog(
     }
 
     AlertDialog(
-        onDismissRequest = onDismiss,
+        // Beim Sammel-Import nicht versehentlich durch Tippen daneben überspringen
+        onDismissRequest = { if (batchInfo == null) onDismiss() },
         title = { Text(if (initial == null) "Dokument speichern" else "Dokument bearbeiten") },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (batchInfo != null) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(batchInfo, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.weight(1f))
+                        if (onStopBatch != null) TextButton(onClick = onStopBatch) { Text("Restliche verwerfen") }
+                    }
+                }
                 if (pending != null) {
                     val pages = if (pending.kind == DocKind.IMAGES) " · ${pending.files.size} Seite(n)" else ""
                     Text(
@@ -645,7 +859,7 @@ private fun DocumentDialog(
                 },
             ) { Text("Speichern") }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Abbrechen") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(if (batchInfo != null) "Überspringen" else "Abbrechen") } },
     )
 }
 

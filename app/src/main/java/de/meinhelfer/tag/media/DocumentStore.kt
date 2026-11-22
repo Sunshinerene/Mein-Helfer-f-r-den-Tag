@@ -285,6 +285,46 @@ object DocumentReader {
         )
     }
 
+    /**
+     * Mehrere schon gelesene Teile (Fotos, PDFs) eines Sammel-Imports zu einem Dokument zusammenfügen.
+     * Der erkannte Text bleibt erhalten, nichts wird neu gelesen. PDFs werden dafür in Seitenbilder zerlegt.
+     * Null, wenn ein PDF nicht zerlegt werden kann; dann bleiben alle Teile unverändert.
+     */
+    suspend fun merge(context: Context, parts: List<PendingDoc>, displayName: String): PendingDoc? {
+        if (parts.size == 1) return parts.first()
+        if (parts.any { it.kind != DocKind.IMAGES && it.kind != DocKind.PDF }) return null
+        val rendered = mutableMapOf<Int, List<File>>()
+        parts.forEachIndexed { i, part ->
+            if (part.kind == DocKind.PDF) {
+                val pages = pdfToImages(context, part.files.first())
+                if (pages.isEmpty()) {
+                    rendered.values.flatten().forEach { it.delete() }
+                    return null
+                }
+                rendered[i] = pages
+            }
+        }
+        val images = mutableListOf<File>()
+        parts.forEachIndexed { i, part ->
+            if (part.kind == DocKind.PDF) {
+                part.files.forEach { it.delete() }
+                images.addAll(rendered[i].orEmpty())
+            } else {
+                images.addAll(part.files)
+            }
+        }
+        images.drop(MAX_PAGES).forEach { it.delete() }
+        return PendingDoc(
+            files = images.take(MAX_PAGES),
+            kind = DocKind.IMAGES,
+            mime = "image/jpeg",
+            ext = "jpg",
+            text = parts.map { it.text }.filter { it.isNotBlank() }.joinToString("\n\n"),
+            displayName = displayName,
+            planCode = parts.firstOrNull { it.planCode.isNotBlank() }?.planCode.orEmpty(),
+        )
+    }
+
     /** Letzte Seite eines mehrseitigen Foto-Dokuments entfernen. Der Text wird aus den restlichen Seiten neu gelesen. */
     suspend fun removeLastPage(pending: PendingDoc): PendingDoc {
         if (pending.kind != DocKind.IMAGES || pending.files.size < 2) return pending

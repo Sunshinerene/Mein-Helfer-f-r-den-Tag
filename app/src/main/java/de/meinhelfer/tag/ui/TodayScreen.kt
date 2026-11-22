@@ -329,7 +329,7 @@ fun TodayScreen(
             }
         }
 
-        // Persoenlicher Assistent (Beta) ganz oben, statt des Tages-Motivators
+        // Persoenlicher Assistent ganz oben, statt des Tages-Motivators
         if (assistantOn) {
             jumpItem(jumps, assistantName) {
                 AssistantCard(vm, onOpen = onOpenMotivator, onMood = onOpenMood, onOpenDailyStart = onOpenDailyStart)

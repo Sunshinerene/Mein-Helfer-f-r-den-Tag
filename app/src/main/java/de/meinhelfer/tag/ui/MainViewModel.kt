@@ -379,7 +379,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         db.todoDao().update(t.copy(done = done, doneMillis = if (done) System.currentTimeMillis() else null, archived = false))
     }
 
-    // ---- Persoenlicher Assistent (Beta): sieht alle betreuten Personen zusammen
+    // ---- Persoenlicher Assistent: sieht alle betreuten Personen zusammen
     private val _assistantOn = MutableStateFlow(AppPrefs.assistantEnabled(app))
     val assistantOn: StateFlow<Boolean> = _assistantOn
 
