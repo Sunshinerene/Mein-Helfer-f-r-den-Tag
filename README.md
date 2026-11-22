@@ -4,7 +4,7 @@ by Sunshine@R
 
 Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbezogenen Daten bleiben lokal auf dem Gerät.
 
-## Stand: v0.41.0
+## Stand: v0.42.0
 
 ### Funktionsübersicht
 
@@ -14,6 +14,11 @@ Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbe
 - Jede Karte einklappbar mit Kurzinfo, Zustand wird gemerkt
 - Wochen- und Monatsübersicht: alles antippbar, bearbeiten, löschen, neu anlegen, Aufgaben und Einnahmen abhaken, Termin-Status eintragen, erledigte Aufgaben am Erledigungstag
 - Auswertung für Tag, Woche, Monat mit erledigten Aufgaben (lokal berechnet, nur Anhaltspunkte)
+
+**Tages-Motivator**
+- Satz für den Tag, „Das hast du geschafft“ und Vorhaben aus den letzten drei Tagen (Schritte und Aufgaben direkt abhaken)
+- Stimmungs-Check mit Smileys (aus, bei jedem Öffnen, 1–3× täglich, optional Benachrichtigung), Verlauf, Unterstützungs-Hinweise
+- Ziele Schritt für Schritt mit Vorlagen (z. B. Pflegegrad beantragen), laufender Einschätzung und optional KI-Weg und KI-Impuls
 
 **Medikamente**
 - Einnahmezeiten, Dosierung, Vorrat mit automatischem Verbrauch, Warnung bei knappem Vorrat
@@ -51,7 +56,7 @@ Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbe
 - Wegweiser Leistungen je Pflegegrad mit Links und „Als Aufgabe merken“
 
 **Personen und eigene Daten**
-- Mehrere betreute Personen mit Profil (Pflegegrad, Krankenkasse, Adresse, Stockwerk, Wichtiges)
+- Mehrere betreute Personen mit Profil (Pflegegrad, Krankenkasse, Adresse, Telefon, Stockwerk, Wichtiges)
 - Eigene Daten und Rolle für E-Mails und Schreiben
 
 **Erinnerungen**
@@ -63,6 +68,7 @@ Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbe
 
 **Einstellungen**
 - Meine Daten mit Adresse (für Schreiben, Vollmachten, Notfallkarte)
+- Ausweis und Krankenkarte fotografieren und auf dem Handy auslesen (Foto wird sofort gelöscht)
 - Darstellung (hell/dunkel, 7 Designs inkl. Aurora, eigene Farben, Schriftgröße, einheitliche Ecken), Effekte (Beta: Glas, Leuchtrand, bewegter Hintergrund, Animationen, Glanz), Heute-Seite, Einnahme-Zeitfenster, Dokument-Betrachter
 - Freigaben (Android): Benachrichtigungen, Ton, pünktliche Wecker, Akku, Updates – mit Status und Sprung in die Android-Einstellungen
 - App-Sperre, Bildschirmschutz, verschlüsselte Datenbank, Sicherung und Wiederherstellung

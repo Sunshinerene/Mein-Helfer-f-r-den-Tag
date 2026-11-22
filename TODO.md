@@ -1,9 +1,10 @@
 # TODO
 
-Stand: v0.41.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.42.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
+- [ ] Medikamentenplan aus einem Dokument übernehmen: Medikamente mit Dosierung und Einnahmezeiten vorschlagen, nur wenn der Plan neuer ist als der letzte Stand (Datum der letzten Plan-Änderung merken); Bilder höchstens aus frei nutzbaren Quellen
 - [ ] Medikamentenplan als PDF zum Mitnehmen (alle Medikamente mit Dosierung, Zeiten, Hinweisen; angelehnt an den bundeseinheitlichen Medikationsplan)
 - [ ] Vorrat: Knopf „Neue Packung“ (+ Packungsgröße), Packungsgröße beim Medikament merken
 - [ ] Aufgaben mit Erinnerung zur Frist (Benachrichtigung) und „In Kalender eintragen“
@@ -23,7 +24,7 @@ Stand: v0.41.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 - [ ] Startbildschirm-Widget: nächste Einnahme und nächster Termin
 - [ ] Barrierefreiheit: Hochkontrast-Design, Vorlesen, größere Bedienflächen
 - [ ] Mehrsprachigkeit für Betreuungskräfte (z. B. Polnisch, Rumänisch)
-- [ ] Tages-Motivator (Idee, Richtung noch offen): Satz für den Tag und kleiner Impuls je Rolle im Tagesstart; „Das hast du geschafft“ aus echten Daten (erledigte Aufgaben, gegebene Einnahmen, Termine); optional Stimmungs-Check mit sanften Entlastungs-Hinweisen; optional Pausen-Erinnerung
+- [ ] Motivator: Pausen-Erinnerung, Stimmungsverlauf in der Auswertung (nur für dich, nicht in geteilten Berichten), Ziel-Schritte als Aufgabe mit Frist übernehmen
 - [ ] Designs verfeinern (Schriftarten, weitere Varianten); Effekte: echte Unschärfe hinter Glas-Karten ab Android 12, Glanz auch auf Knöpfen
 
 ## Bitte auf dem Handy prüfen (bisher nicht getestet)
@@ -37,6 +38,8 @@ Stand: v0.41.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 - [ ] Umkreissuche und Fahrdienst-Suche (OpenStreetMap)
 - [ ] Benachrichtigung antippen öffnet die richtige Person
 - [ ] App zurücksetzen (am besten erst mit Testdaten und vorheriger Sicherung)
+- [ ] Tages-Motivator: Stimmungs-Check zur richtigen Zeit (Zeitfenster, „Später“, Benachrichtigung), Vorhaben abhaken, Ziele mit Vorlagen und KI-Weg
+- [ ] Ausweis und Krankenkarte auslesen (Erkennung je nach Licht und Kartenversion), Foto wird gelöscht
 - [ ] Ecken und Effekte (Beta): alle Ansichten mit „Eckig“ und „Rund“, Aurora hell und dunkel, bewegter Hintergrund flüssig und akkuschonend
 
 ## Rechtliches vor einer Veröffentlichung
@@ -45,6 +48,14 @@ Stand: v0.41.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 - [ ] Entscheiden: Aufbewahrung der Nachweise 3 Jahre oder länger (30-Jahres-Frist bei Gesundheitsschäden); zusätzlicher Nachweis beim App-Ersteller (Server) ja oder nein
 - [ ] Medizinprodukte-Recht (MDR) prüfen lassen, vor allem den KI-Gesamt-Check der Medikamente; Zweckbestimmung als Organisationshilfe klar festhalten
 - [ ] Impressum und Datenschutzerklärung für eine Veröffentlichung (z. B. Play Store), eigener Signaturschlüssel statt Test-Schlüssel
+
+## Version 0.42.0 (fertig)
+
+- [x] Tages-Motivator: Satz für den Tag, „Das hast du geschafft“ und Vorhaben aus den letzten drei Tagen, Tipps je nach Stimmung, Unterstützung bei schlechter Stimmung
+- [x] Stimmungs-Check mit Smileys, Stichworten und Notiz: aus, bei jedem Öffnen, 1×, 2× oder 3× täglich, optional mit Benachrichtigung; Verlauf über 14 Tage
+- [x] Ziele Schritt für Schritt (Antrag, Gesundheit, Alltag, Entlastung) mit Vorlagen, laufender Einschätzung und optional KI-Weg, KI-Einschätzung und persönlichem KI-Impuls
+- [x] Telefonnummer bei der betreuten Person
+- [x] Ausweis und Krankenkarte fotografieren und auf dem Handy auslesen (Foto wird sofort gelöscht), manuelle Eingabe bleibt
 
 ## Version 0.41.0 (fertig)
 

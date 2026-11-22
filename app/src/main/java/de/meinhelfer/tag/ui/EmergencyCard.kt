@@ -57,6 +57,7 @@ internal fun emergencyText(
         if (withInsuranceNumber && p.insuranceNumber.isNotBlank()) append("Versichertennummer: ").append(p.insuranceNumber).append('\n')
         val addr = listOf(p.street, listOf(p.zip, p.city).filter { it.isNotBlank() }.joinToString(" ")).filter { it.isNotBlank() }.joinToString(", ")
         if (addr.isNotBlank()) append("Adresse: ").append(addr).append('\n')
+        if (p.phone.isNotBlank()) append("Telefon: ").append(p.phone).append('\n')
         accessSummary(p.floor, p.elevator, p.access).takeIf { it.isNotBlank() }?.let {
             append("Zugang: ").append(it).append('\n')
         }

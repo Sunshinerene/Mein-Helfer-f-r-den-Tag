@@ -225,9 +225,10 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
-        /** Version 20: Stimmung, Ziele und Schritte (Tages-Motivator). */
+        /** Version 20: Stimmung, Ziele und Schritte (Tages-Motivator), Telefonnummer der Person. */
         private val MIGRATION_19_20 = object : Migration(19, 20) {
             override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE Person ADD COLUMN phone TEXT NOT NULL DEFAULT ''")
                 db.execSQL(
                     "CREATE TABLE IF NOT EXISTS `MoodEntry` (" +
                         "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `atMillis` INTEGER NOT NULL, `day` INTEGER NOT NULL, " +

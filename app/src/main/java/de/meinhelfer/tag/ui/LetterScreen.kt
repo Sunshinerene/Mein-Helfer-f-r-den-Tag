@@ -161,6 +161,7 @@ internal fun LetterScreen(
             if (proxy && caregiver.name.isNotBlank()) add("Ansprechperson: " + caregiver.name)
             if (proxy && caregiver.address.isNotBlank()) add(caregiver.address)
             if (caregiver.phone.isNotBlank()) add("Tel.: " + caregiver.phone)
+            else person?.phone?.takeIf { it.isNotBlank() }?.let { add("Tel.: $it") }
         }
         senderText = lines.joinToString("\n")
         pdf = null

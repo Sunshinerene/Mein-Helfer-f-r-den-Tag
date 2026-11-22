@@ -28,6 +28,8 @@ data class Person(
     val elevator: Int = 0,
     /** Hinweise zum Zugang (Klingel, Treppen, Hof ...). */
     val access: String = "",
+    /** Telefonnummer der Person (Festnetz oder Handy), optional. */
+    val phone: String = "",
 )
 
 /** Medikament mit Einnahmezeiten und Vorrat (fuer die Nachbestell-Warnung). */

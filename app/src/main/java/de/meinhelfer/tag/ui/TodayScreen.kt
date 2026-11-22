@@ -545,6 +545,18 @@ private fun ProfileCard(person: Person?, todayDay: Long, onEdit: () -> Unit, onW
             Text(person.name, style = MaterialTheme.typography.titleMedium)
             if (head.isNotEmpty()) Text(head, style = MaterialTheme.typography.bodyMedium)
             if (person.insurer.isNotBlank()) Text("Krankenkasse: ${person.insurer}", style = MaterialTheme.typography.bodyMedium)
+            if (person.phone.isNotBlank()) {
+                val ctx = androidx.compose.ui.platform.LocalContext.current
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Telefon: ${person.phone}", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                    TextButton(onClick = {
+                        try {
+                            ctx.startActivity(android.content.Intent(android.content.Intent.ACTION_DIAL, android.net.Uri.parse("tel:" + person.phone.filter { it.isDigit() || it == '+' })))
+                        } catch (_: Exception) {
+                        }
+                    }) { Text("Anrufen") }
+                }
+            }
             if (person.important.isNotBlank()) {
                 Text("Wichtig: ${person.important}", style = MaterialTheme.typography.bodyMedium, maxLines = 4)
             }

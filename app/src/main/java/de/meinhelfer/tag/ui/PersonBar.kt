@@ -143,11 +143,24 @@ fun PersonDialog(initial: Person?, onDismiss: () -> Unit, onSave: (Person) -> Un
     var floor by remember { mutableStateOf(initial?.floor ?: "") }
     var elevator by remember { mutableStateOf(initial?.elevator ?: 0) }
     var access by remember { mutableStateOf(initial?.access ?: "") }
+    var phone by remember { mutableStateOf(initial?.phone ?: "") }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(if (initial == null) "Neue Person" else "Profil bearbeiten") },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                CardScanButtons(
+                    kinds = listOf(de.meinhelfer.tag.media.CardKind.Ausweis, de.meinhelfer.tag.media.CardKind.Gesundheitskarte),
+                    otherPerson = true,
+                ) { d ->
+                    d.givenNames?.let { name = it }
+                    d.birthDate?.let { birth = it }
+                    d.street?.let { street = it }
+                    d.zip?.let { zip = it }
+                    d.city?.let { city = it }
+                    d.insurer?.let { insurer = it }
+                    d.insuranceNumber?.let { insuranceNumber = it }
+                }
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
@@ -156,6 +169,14 @@ fun PersonDialog(initial: Person?, onDismiss: () -> Unit, onSave: (Person) -> Un
                     modifier = Modifier.fillMaxWidth(),
                 )
                 DatePickerField(label = "Geburtsdatum (optional)", date = birth, onChange = { birth = it })
+                OutlinedTextField(
+                    value = phone,
+                    onValueChange = { phone = it.take(40) },
+                    label = { Text("Telefon (optional)") },
+                    singleLine = true,
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Phone),
+                    modifier = Modifier.fillMaxWidth(),
+                )
                 if (birth != null) {
                     TextButton(onClick = { birth = null }) { Text("Geburtsdatum entfernen") }
                 }
@@ -243,6 +264,7 @@ fun PersonDialog(initial: Person?, onDismiss: () -> Unit, onSave: (Person) -> Un
                             floor = floor.trim(),
                             elevator = elevator,
                             access = access.trim(),
+                            phone = phone.trim(),
                         ),
                     )
                 },

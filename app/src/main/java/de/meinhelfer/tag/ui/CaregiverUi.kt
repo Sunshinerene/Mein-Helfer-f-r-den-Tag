@@ -70,6 +70,12 @@ fun CaregiverDialog(initial: CaregiverProfile, onDismiss: () -> Unit, onSave: (C
                         Text(r.label, style = MaterialTheme.typography.bodyMedium)
                     }
                 }
+                CardScanButtons(kinds = listOf(de.meinhelfer.tag.media.CardKind.Ausweis), otherPerson = false) { d ->
+                    d.givenNames?.let { name = it }
+                    d.street?.let { street = it }
+                    d.zip?.let { zip = it }
+                    d.city?.let { city = it }
+                }
                 OutlinedTextField(
                     value = name, onValueChange = { name = it },
                     label = { Text("Dein Name") }, singleLine = true, modifier = Modifier.fillMaxWidth(),

@@ -59,7 +59,7 @@ private val TOUR_PAGES = listOf(
     TourPage(
         title = "Wer du bist",
         text = "Unter Einstellungen → Meine Daten stehen dein Name, deine Rolle (z. B. Angehörige/r, Pflegedienst, Betreuer/in) und auf Wunsch deine Adresse. Damit unterschreibt die App vorbereitete E-Mails und zeigt passende Tipps. Deine Zustimmung zu den Nutzungsbedingungen gilt für genau diese Person.",
-        tips = listOf("Änderst du Name oder Rolle, bestätigst du die Nutzungsbedingungen neu.", "Die App ersetzt keinen Arzt und keine Apotheke. Im Notfall immer 112."),
+        tips = listOf("Änderst du Name oder Rolle, bestätigst du die Nutzungsbedingungen neu.", "Name und Adresse lassen sich auch vom Ausweis auslesen; das Foto wird danach sofort gelöscht.", "Die App ersetzt keinen Arzt und keine Apotheke. Im Notfall immer 112."),
         mock = { MockConsent() },
     ),
     TourPage(
@@ -103,6 +103,12 @@ private val TOUR_PAGES = listOf(
         text = "Beim ersten Öffnen am Tag kommt zuerst der Rückblick auf gestern: Was fehlt noch, wie lief es? Du ergänzt und bestätigst. Danach folgt der Tagesplan für heute, den du als PDF teilen oder drucken kannst.",
         tips = listOf("Oben auf der Heute-Seite jederzeit über „Rückblick gestern“ und „Tagesplan“.", "Abschaltbar unter Einstellungen → Heute-Seite."),
         mock = { MockDailyStart() },
+    ),
+    TourPage(
+        title = "Tages-Motivator",
+        text = "Ein Satz für den Tag, was du in den letzten Tagen geschafft hast und kleine Vorhaben für heute. Der kurze Stimmungs-Check mit Smileys hilft dabei. Ziele, etwa einen Antrag oder etwas für deine Gesundheit, gehst du Schritt für Schritt an; der Motivator schätzt deinen Weg ein.",
+        tips = listOf("Wie oft nach der Stimmung gefragt wird, stellst du unter Einstellungen → Tages-Motivator ein.", "Für Ziele gibt es Vorlagen, z. B. „Pflegegrad beantragen“. Auf Wunsch schlägt die KI einen Weg vor."),
+        mock = { MockMotivator() },
     ),
     TourPage(
         title = "Tag, Woche, Monat",
@@ -548,6 +554,22 @@ private fun MockDailyStart() {
             MockButton("Als PDF teilen")
             MockButton("Drucken")
         }
+    }
+}
+
+@Composable
+private fun MockMotivator() {
+    MockCard {
+        Text("Wie geht es dir gerade?", style = MaterialTheme.typography.titleSmall)
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+            listOf("😄", "🙂", "😐", "😕", "😢").forEach { Text(it, style = MaterialTheme.typography.headlineSmall) }
+        }
+    }
+    MockCard {
+        Text("Kleine Schritte bringen dich auch ans Ziel.", style = MaterialTheme.typography.bodyMedium)
+        Text("Geschafft: 4 Aufgaben erledigt · 12 Einnahmen gegeben", style = MaterialTheme.typography.bodySmall)
+        MockCheckRow(true, "„Pflegegrad beantragen“: Antrag stellen")
+        MockCheckRow(false, "Eine kleine Pause zwischendurch einplanen")
     }
 }
 

@@ -182,7 +182,10 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
 
     // Entschluesselte Dokument-Kopien vom letzten Mal aufraeumen
     LaunchedEffect(Unit) {
-        withContext(Dispatchers.IO) { DocumentStore.clearTemp(appContext) }
+        withContext(Dispatchers.IO) {
+            DocumentStore.clearTemp(appContext)
+            de.meinhelfer.tag.media.CardScanner.clear(appContext)
+        }
     }
 
     // Jede Minute: Uhrzeit und Datum aktualisieren (ueberfaellige Einnahmen, Tageswechsel)

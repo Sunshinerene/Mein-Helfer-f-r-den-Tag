@@ -79,6 +79,7 @@ private fun buildRequest(
     sb.append("Abholung: ").append(pickup)
     if (pickupAccess.isNotBlank()) sb.append(" (").append(pickupAccess).append(')')
     sb.append('\n')
+    person?.phone?.takeIf { it.isNotBlank() }?.let { sb.append("Telefon vor Ort: ").append(it).append('\n') }
     sb.append("Ziel: ").append(target)
     doctor?.let { sb.append(" (").append(it.name).append(')') }
     if (targetAccess.isNotBlank()) sb.append(" (").append(targetAccess).append(')')

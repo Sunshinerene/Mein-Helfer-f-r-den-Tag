@@ -7,4 +7,6 @@
     <files-path name="exports" path="exports/" />
     <!-- Entschluesselte Kopien von Dokumenten zum Oeffnen/Teilen (werden beim App-Start geloescht) -->
     <cache-path name="docs" path="docs/" />
+    <!-- Fotos von Ausweis und Gesundheitskarte nur zum Auslesen (werden sofort danach geloescht) -->
+    <cache-path name="scan" path="scan/" />
 </paths>

@@ -42,7 +42,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
         items = listOf(
             GuideItem(
                 "Meine Daten",
-                "Unter Einstellungen → Meine Daten (und beim ersten Start) trägst du ein, wer du bist: pflegende/r Angehörige/r, Pflegekraft vom Pflegedienst, Betreuungs- oder Haushaltskraft, Betreuer/in oder Bevollmächtigte/r, Nachbar/in oder Ehrenamt, du selbst oder etwas anderes. Dazu kommen Name, ggf. Beziehung (z. B. Sohn) oder Pflegedienst, Telefon, E-Mail und deine Adresse. Die Adresse steht dann bei Bedarf unter E-Mails und Schreiben, in der Vollmacht und Schweigepflicht-Entbindung (als Adresse der bevollmächtigten Person) und auf der Notfallkarte bei der Ansprechperson. Das bleibt nur auf deinem Handy und wird nie automatisch gesendet. Name und Rolle stammen aus deiner Zustimmung zu den Nutzungsbedingungen. Änderst du sie hier, musst du die Nutzungsbedingungen neu bestätigen.",
+                "Unter Einstellungen → Meine Daten (und beim ersten Start) trägst du ein, wer du bist: pflegende/r Angehörige/r, Pflegekraft vom Pflegedienst, Betreuungs- oder Haushaltskraft, Betreuer/in oder Bevollmächtigte/r, Nachbar/in oder Ehrenamt, du selbst oder etwas anderes. Dazu kommen Name, ggf. Beziehung (z. B. Sohn) oder Pflegedienst, Telefon, E-Mail und deine Adresse. Name und Adresse kannst du mit „Ausweis fotografieren“ auch auslesen lassen (siehe Personen). Die Adresse steht dann bei Bedarf unter E-Mails und Schreiben, in der Vollmacht und Schweigepflicht-Entbindung (als Adresse der bevollmächtigten Person) und auf der Notfallkarte bei der Ansprechperson. Das bleibt nur auf deinem Handy und wird nie automatisch gesendet. Name und Rolle stammen aus deiner Zustimmung zu den Nutzungsbedingungen. Änderst du sie hier, musst du die Nutzungsbedingungen neu bestätigen.",
             ),
             GuideItem(
                 "Vorbereitete E-Mails",
@@ -67,6 +67,14 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
         title = "Personen",
         summary = "Für wen gilt was – mehrere Personen betreuen",
         items = listOf(
+            GuideItem(
+                "Ausweis und Krankenkarte auslesen",
+                "Im Profil der Person gibt es „Ausweis fotografieren“ und „Krankenkarte fotografieren“, unter Meine Daten „Ausweis fotografieren“. Die Texterkennung liest direkt auf dem Handy, ohne Internet: beim Ausweis Name und Geburtsdatum (Vorderseite) und Anschrift (Rückseite), bei der Krankenkarte am besten von der Rückseite Name, Geburtsdatum, Versichertennummer und Kasse. Danach prüfst du die erkannten Angaben, hakst an, was übernommen werden soll, und kannst eine weitere Seite fotografieren. Das Foto wird sofort nach dem Auslesen gelöscht; gespeichert wird nur, was du übernimmst und mit „Speichern“ sicherst. Eintragen von Hand geht weiterhin. Die Karte einer anderen Person bitte nur mit deren Einverständnis fotografieren.",
+            ),
+            GuideItem(
+                "Telefonnummer der Person",
+                "Im Profil trägst du optional die Telefonnummer der betreuten Person ein. Sie steht im Profil auf der Heute-Seite (mit „Anrufen“), auf der Notfallkarte und als „Telefon vor Ort“ in Fahrdienst-Anfragen.",
+            ),
             GuideItem(
                 "Stockwerk und Aufzug",
                 "Im Profil der Person (Name antippen, Bearbeiten) trägst du Stockwerk, Aufzug (ja / nein) und Hinweise zum Zugang ein (Klingel, Treppen, Hof). Das wird bei jeder Fahrdienst-Anfrage als Abholort angegeben, steht bei „Was sage ich?“ im Notruf-Fenster, in der Notfallkarte und in Hausbesuch-E-Mails.",
@@ -149,6 +157,37 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             GuideItem(
                 "Termine abhaken",
                 "Die Termine von heute und der nächsten 7 Tage stehen in „Wichtig und demnächst“. Ein Tipp aufs Kästchen fragt, wie es lief. Mit „Notiz“ schreibst du etwas dazu.",
+            ),
+        ),
+    ),
+    GuideSection(
+        id = "motivator",
+        title = "Tages-Motivator",
+        summary = "Satz für den Tag, Vorhaben, Stimmungs-Check, Ziele Schritt für Schritt",
+        items = listOf(
+            GuideItem(
+                "Was er macht",
+                "Der Tages-Motivator schaut auf deine letzten drei Tage und heute: Stimmung, erledigte Aufgaben, gegebene Einnahmen, begleitete Termine und deine Ziele. Daraus macht er einen Satz für den Tag, zeigt „Das hast du geschafft“ und schlägt kleine Vorhaben für heute vor, z. B. den nächsten Schritt eines Ziels, eine überfällige Aufgabe und etwas für dich selbst. Abhaken erledigt Schritte und Aufgaben direkt. Du findest ihn als Karte auf der Heute-Seite (Mehr → Heute, Stimmung, Ziele) und im Tagesstart. Alles wird auf deinem Handy berechnet.",
+            ),
+            GuideItem(
+                "Stimmungs-Check",
+                "Mit einem Tipp auf einen Smiley (sehr gut bis schlecht) hältst du fest, wie es dir geht, auf Wunsch mit Stichworten (z. B. erschöpft, gestresst, zufrieden) und einer Notiz. Unter Einstellungen → Tages-Motivator wählst du, wie oft gefragt wird: aus, bei jedem Öffnen (höchstens alle 30 Minuten), 1×, 2× oder 3× täglich (morgens, mittags, abends; nachts nie). „Später“ gilt für das jeweilige Zeitfenster. Auf Wunsch erinnert eine Benachrichtigung, aber nur, wenn im Zeitfenster noch nichts eingetragen ist. Unter Mehr → Stimmung siehst du die letzten 14 Tage und kannst Einträge löschen. Die Stimmung bestimmt mit, welche Sätze, Vorhaben und Tipps der Motivator zeigt.",
+            ),
+            GuideItem(
+                "Wenn es dir nicht gut geht",
+                "Bei schlechter Stimmung oder Erschöpfung zeigt der Motivator sanftere Sätze und Hinweise zur Unterstützung: für Angehörige das Pflegetelefon des Bundes (030 20179131, Mo–Do 9–18 Uhr), Pflegeberatung bei der Pflegekasse oder im Pflegestützpunkt und Entlastungsangebote, für Pflegekräfte den Austausch im Team. Geht es dir sehr schlecht, steht die Telefonseelsorge dabei (0800 111 0 111, 0800 111 0 222 oder 116 123, kostenfrei und rund um die Uhr). Im Notfall 112. Der Motivator ist eine Alltagshilfe und ersetzt keine ärztliche oder psychologische Hilfe.",
+            ),
+            GuideItem(
+                "Ziele Schritt für Schritt",
+                "Unter Mehr → Ziele legst du ein Ziel an: z. B. einen Antrag (Pflegegrad, Höherstufung, Hilfsmittel, Schwerbehindertenausweis), Entlastung (Entlastungsbetrag, Auszeit), Alltag (Wohnung anpassen) oder deine Gesundheit (mehr Bewegung, eigener Check-up). Vorlagen bringen passende Schritte mit Terminen mit; Abläufe und Fristen können je nach Kasse und Bundesland abweichen. Du wählst, für wen das Ziel ist, und optional einen Wunschtermin. Schritte hakst du ab, verschiebst, bearbeitest (mit Notiz, z. B. Aktenzeichen) oder ergänzt. Sind alle erledigt, markierst du das Ziel als erreicht. Ziele lassen sich auch pausieren.",
+            ),
+            GuideItem(
+                "Einschätzung des Wegs",
+                "Der Motivator prüft jedes aktive Ziel laufend auf deinem Handy: im Plan, schneller oder hinterher (gemessen an Wunschtermin, Fristen der Schritte und letztem Fortschritt), und gibt dazu einen Tipp. Ziele, die hinterherhinken, stehen auch bei den Tipps.",
+            ),
+            GuideItem(
+                "Mit KI (freiwillig)",
+                "Ist ein KI-Dienst eingerichtet, kann die KI dir einen Weg zum Ziel vorschlagen (Schritte mit Terminen, Einschätzung, Tipps), deinen Weg einschätzen (Stand, nächster Schritt, fehlende Schritte zum Übernehmen) und einen persönlichen Impuls für den Tag formulieren. Vor dem Senden siehst du immer den genauen Text, Namen sind nicht enthalten. Beim Impuls gehen deine Stimmung der letzten Tage, Stichworte und die Titel deiner Ziele mit. Alles nur als Anhaltspunkt; bei Gesundheitszielen gehört die ärztliche Abklärung dazu.",
             ),
         ),
     ),
@@ -606,7 +645,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Allgemein",
-                "Meine Daten (wer du bist, für E-Mails und Zustimmung), Freigaben (Android) für zuverlässige Erinnerungen, Darstellung (hell/dunkel, Schriftgröße, Design, Ecken, eigene Farben), Effekte (Beta), Heute-Seite (Notfallkarte einblenden, Tagesstart automatisch), Einnahmen abhaken (Zeitfenster und Nachfrage) und Dokumente ansehen (Betrachter in der App oder andere App).",
+                "Meine Daten (wer du bist, für E-Mails und Zustimmung), Freigaben (Android) für zuverlässige Erinnerungen, Darstellung (hell/dunkel, Schriftgröße, Design, Ecken, eigene Farben), Effekte (Beta), Heute-Seite (Notfallkarte einblenden, Tagesstart automatisch), Tages-Motivator (Karte, Tagesstart, Stimmungs-Check und Erinnerung), Einnahmen abhaken (Zeitfenster und Nachfrage) und Dokumente ansehen (Betrachter in der App oder andere App).",
             ),
             GuideItem(
                 "Daten und Sicherheit",
