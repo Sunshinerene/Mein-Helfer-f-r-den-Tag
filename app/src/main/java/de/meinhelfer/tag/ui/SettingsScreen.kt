@@ -197,6 +197,7 @@ fun SettingsScreen(
                             style = MaterialTheme.typography.bodySmall,
                         )
                     }
+                    item { AssistantSettingsCard(vm) }
                     item { HealthConnectSettingsCard() }
                     item {
                         HCard(Modifier.fillMaxWidth()) {
@@ -240,7 +241,7 @@ private enum class SettingsCategory(val emoji: String, val title: String, val ke
     Sicherheit("🔒", "Sicherheit und Sicherung", "app-sperre sperre fingerabdruck gesicht pin sicherung backup wiederherstellen zurücksetzen reset löschen"),
     Internet("🤖", "KI und Internet", "ki assistent schlüssel api gemini openai chatgpt claude ollama groq mistral wikipedia beschreibung internet"),
     Hilfe("💬", "Hilfe und Rückmeldung", "anleitung rundgang hilfe feedback fehler wunsch rückmeldung selbsttest test prüfen beispiel pdf datenbank"),
-    Beta("🧪", "Beta-Funktionen", "beta uhr smartwatch fitnessband armband band waage blutdruckgerät health connect gesundheit verbinden fitbit garmin samsung withings omron aurora effekte"),
+    Beta("🧪", "Beta-Funktionen", "beta assistent sunny name gesicht motivator persönlich uhr smartwatch fitnessband armband band waage blutdruckgerät health connect gesundheit verbinden fitbit garmin samsung withings omron aurora effekte"),
     App("ℹ️", "App und Updates", "update aktualisieren version neuigkeiten neu geplant über app"),
 }
 
@@ -274,7 +275,7 @@ private fun categorySummary(
     SettingsCategory.Internet ->
         if (AiConfig.isConfigured(context)) "KI: " + AiConfig.provider(context).label else "KI nicht eingerichtet · Medikamenten-Infos"
     SettingsCategory.Hilfe -> "Anleitung, Rundgang, Fehler oder Wunsch melden, Selbsttest"
-    SettingsCategory.Beta -> "Uhr, Fitnessband und Messgeräte (Health Connect)"
+    SettingsCategory.Beta -> "Persönlicher Assistent, Uhr, Fitnessband und Messgeräte (Health Connect)"
     SettingsCategory.App -> "Version " + UpdateChecker.installedVersion(context) +
         if (updateState is UpdateState.Available || updateState is UpdateState.Ready) " · Update verfügbar" else ""
 }

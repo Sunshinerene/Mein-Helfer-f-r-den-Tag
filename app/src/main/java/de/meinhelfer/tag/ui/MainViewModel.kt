@@ -379,6 +379,75 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         db.todoDao().update(t.copy(done = done, doneMillis = if (done) System.currentTimeMillis() else null, archived = false))
     }
 
+    // ---- Persoenlicher Assistent (Beta): sieht alle betreuten Personen zusammen
+    private val _assistantOn = MutableStateFlow(AppPrefs.assistantEnabled(app))
+    val assistantOn: StateFlow<Boolean> = _assistantOn
+
+    private val _assistantName = MutableStateFlow(AppPrefs.assistantName(app))
+    val assistantName: StateFlow<String> = _assistantName
+
+    private val _assistantDismissed = MutableStateFlow(AppPrefs.assistantDismissed(app))
+    val assistantDismissed: StateFlow<Set<String>> = _assistantDismissed
+
+    fun setAssistantOn(on: Boolean) {
+        _assistantOn.value = on
+        AppPrefs.setAssistantEnabled(getApplication(), on)
+    }
+
+    fun setAssistantName(name: String) {
+        AppPrefs.setAssistantName(getApplication(), name)
+        _assistantName.value = AppPrefs.assistantName(getApplication())
+    }
+
+    val allMedications: StateFlow<List<Medication>> = db.medicationDao().all()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val allAppointments: StateFlow<List<Appointment>> = db.appointmentDao().all()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val allTodos: StateFlow<List<Todo>> = db.todoDao().everything()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val allVitals: StateFlow<List<de.meinhelfer.tag.data.VitalEntry>> = db.vitalDao().all()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    /** Vorschlag ablehnen: für diesen Anlass nicht mehr zeigen. */
+    fun dismissProposal(key: String) {
+        AppPrefs.addAssistantDismissed(getApplication(), key)
+        _assistantDismissed.value = AppPrefs.assistantDismissed(getApplication())
+    }
+
+    /** Vorschlag übernehmen (nur nach Tipp auf den Knopf). */
+    fun applyProposal(p: de.meinhelfer.tag.summary.Proposal) = viewModelScope.launch {
+        when (val a = p.action) {
+            is de.meinhelfer.tag.summary.ProposalAction.RaisePriority -> {
+                val t = db.todoDao().byId(a.todoId) ?: return@launch
+                db.todoDao().update(t.copy(priority = 2))
+            }
+            is de.meinhelfer.tag.summary.ProposalAction.Postpone -> {
+                val t = db.todoDao().byId(a.todoId) ?: return@launch
+                val moved = t.copy(dueDay = a.newDueDay)
+                db.todoDao().update(moved)
+                ReminderScheduler.scheduleTodo(getApplication(), moved)
+            }
+            is de.meinhelfer.tag.summary.ProposalAction.ReorderTask -> {
+                val today = LocalDate.now().toEpochDay()
+                db.todoDao().insert(
+                    Todo(
+                        personId = a.personId,
+                        text = a.text,
+                        createdMillis = System.currentTimeMillis(),
+                        doctorId = a.doctorId,
+                        priority = if (a.dueDay <= today) 2 else 1,
+                        dueDay = a.dueDay,
+                    ),
+                )
+            }
+        }
+        // Erledigt: nicht noch einmal vorschlagen
+        dismissProposal(p.key)
+    }
+
     /** Schritt aus dem Motivator heraus abhaken bzw. wieder oeffnen. */
     fun toggleStepById(id: Long) = viewModelScope.launch {
         val s = goalSteps.value.firstOrNull { it.id == id } ?: return@launch

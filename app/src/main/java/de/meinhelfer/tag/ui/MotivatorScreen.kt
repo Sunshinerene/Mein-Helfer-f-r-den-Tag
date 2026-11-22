@@ -241,7 +241,11 @@ fun MotivatorScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Tages-Motivator") },
+                title = {
+                    val assistant by vm.assistantOn.collectAsStateWithLifecycle()
+                    val name by vm.assistantName.collectAsStateWithLifecycle()
+                    Text(if (assistant) "$name · für dich" else "Tages-Motivator")
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Zurück") }
                 },

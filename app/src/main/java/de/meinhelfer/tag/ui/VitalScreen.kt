@@ -97,6 +97,7 @@ fun VitalTodayCard(vm: MainViewModel, person: Person?, todayDay: Long, onOpen: (
         HCard(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Trinken und Werte", style = MaterialTheme.typography.titleMedium)
+                HealthNewValuesHint(vm, person, vitals)
                 Text("💧 Heute getrunken: $drunk ml" + if (goal > 0) " von $goal ml" else "", style = MaterialTheme.typography.bodyLarge)
                 if (goal > 0) LinearProgressIndicator(progress = { (drunk.toFloat() / goal).coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {

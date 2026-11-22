@@ -177,6 +177,54 @@ fun HealthImportCard(vm: MainViewModel, person: Person?, vitals: List<VitalEntry
     if (why) HealthWhyDialog { why = false }
 }
 
+/**
+ * Auf der Heute-Karte „Trinken und Werte“: Beim Öffnen ein kurzer Blick in Health Connect (letzte 3 Tage, nur die für diese
+ * Person gewählten Quellen). Gibt es neue Werte, erscheint ein Hinweis; übernommen wird erst nach der Vorschau.
+ */
+@Composable
+fun HealthNewValuesHint(vm: MainViewModel, person: Person?, vitals: List<VitalEntry>) {
+    val context = LocalContext.current
+    val pid = person?.id ?: return
+    var fresh by remember(pid) { mutableStateOf<List<HealthValue>>(emptyList()) }
+    var show by remember { mutableStateOf(false) }
+    LaunchedEffect(pid, vitals.size) {
+        val sources = AppPrefs.healthSources(context, pid)
+        if (sources.isEmpty() || !HealthConnectReader.available(context)) return@LaunchedEffect
+        if (HealthConnectReader.granted(context).isEmpty()) return@LaunchedEffect
+        val now = Instant.now()
+        val list = runCatching {
+            withContext(Dispatchers.IO) {
+                HealthConnectReader.read(context, now.minus(3, ChronoUnit.DAYS), now, AppPrefs.sugarUnit(context) == "mmol/l")
+            }
+        }.getOrDefault(emptyList())
+        fresh = HealthValues.newOnes(list.filter { it.source in sources }, vitals.filter { it.personId == pid })
+    }
+    if (fresh.isEmpty()) return
+    val labels = remember(fresh) { fresh.map { it.source }.distinct().joinToString(", ") { HealthConnectReader.label(context, it) } }
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            "⌚ ${fresh.size} neue " + (if (fresh.size == 1) "Wert" else "Werte") + " von $labels",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.weight(1f),
+        )
+        TextButton(onClick = { show = true }) { Text("Ansehen") }
+    }
+    if (show) {
+        HealthImportDialog(
+            values = fresh,
+            personId = pid,
+            personName = person.name,
+            onImport = { chosen, l ->
+                vm.importVitals(chosen, l)
+                show = false
+                fresh = emptyList()
+            },
+            onDismiss = { show = false },
+        )
+    }
+}
+
 @Composable
 private fun HealthWhyDialog(onClose: () -> Unit) {
     AlertDialog(
@@ -193,7 +241,7 @@ private fun HealthWhyDialog(onClose: () -> Unit) {
 
 /** Vorschau: Quellen auswählen (z. B. nur das Blutdruckgerät, nicht die eigene Uhr), dann übernehmen. */
 @Composable
-private fun HealthImportDialog(
+internal fun HealthImportDialog(
     values: List<HealthValue>,
     personId: Long,
     personName: String?,

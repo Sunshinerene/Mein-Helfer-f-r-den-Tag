@@ -103,6 +103,8 @@ fun TodayScreen(
     onOpenHandover: () -> Unit = {},
 ) {
     val motivatorOn by vm.motivatorOnToday.collectAsStateWithLifecycle()
+    val assistantOn by vm.assistantOn.collectAsStateWithLifecycle()
+    val assistantName by vm.assistantName.collectAsStateWithLifecycle()
     val zone = ZoneId.systemDefault()
     val today = LocalDate.ofEpochDay(todayDay)
     val nowTime = Instant.ofEpochMilli(nowMillis).atZone(zone).toLocalTime()
@@ -217,6 +219,10 @@ fun TodayScreen(
             }
         }
 
+        // Persoenlicher Assistent (Beta) ganz oben, statt des Tages-Motivators
+        if (assistantOn) {
+            jumpItem(jumps, assistantName) { AssistantCard(vm, onOpen = onOpenMotivator, onMood = onOpenMood) }
+        }
         jumpItem(jumps, "Profil") {
             if (person != null) {
                 Foldable(
@@ -227,7 +233,7 @@ fun TodayScreen(
             }
         }
 
-        if (motivatorOn) {
+        if (motivatorOn && !assistantOn) {
             jumpItem(jumps, "Tages-Motivator") { MotivatorCard(vm, onOpen = onOpenMotivator, onMood = onOpenMood) }
         }
         jumpItem(jumps, null) { BackupReminderCard(onOpenBackup) }

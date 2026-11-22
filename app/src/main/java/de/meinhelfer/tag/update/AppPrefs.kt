@@ -60,6 +60,29 @@ object AppPrefs {
         prefs(context).edit().putStringSet("hc_quellen_$personId", sources).apply()
     }
 
+    /** Persönlicher Assistent (Beta) statt Tages-Motivator. */
+    fun assistantEnabled(context: Context): Boolean = prefs(context).getBoolean("assistent_an", true)
+
+    fun setAssistantEnabled(context: Context, on: Boolean) {
+        prefs(context).edit().putBoolean("assistent_an", on).apply()
+    }
+
+    /** Name des Assistenten (frei wählbar). */
+    fun assistantName(context: Context): String =
+        prefs(context).getString("assistent_name", null)?.takeIf { it.isNotBlank() } ?: de.meinhelfer.tag.summary.Assistant.DEFAULT_NAME
+
+    fun setAssistantName(context: Context, name: String) {
+        prefs(context).edit().putString("assistent_name", name.trim().take(24)).apply()
+    }
+
+    /** Vorschläge des Assistenten, die mit „Nein“ ausgeblendet wurden (Schlüssel enthalten den Anlass). */
+    fun assistantDismissed(context: Context): Set<String> = prefs(context).getStringSet("assistent_nein", emptySet()) ?: emptySet()
+
+    fun addAssistantDismissed(context: Context, key: String) {
+        val all = (assistantDismissed(context) + key).toList().takeLast(300).toSet()
+        prefs(context).edit().putStringSet("assistent_nein", all).apply()
+    }
+
     private const val KEY_THEME = "design"
 
     /** "system", "light" oder "dark" */

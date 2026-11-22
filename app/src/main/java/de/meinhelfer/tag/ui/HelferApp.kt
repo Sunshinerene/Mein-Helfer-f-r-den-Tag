@@ -268,11 +268,51 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
         TourScreen(onClose = { showTour = false })
     } else {
     androidx.compose.runtime.CompositionLocalProvider(LocalJumps provides jumpRegistry) {
+    // Welche Seite gerade zu sehen ist (fuer den Assistenten: Hilfe und Hinweise zur Seite)
+    val pageKey = when {
+        showMoodCheck || showMotivator -> "assistent"
+        showDailyStart -> "tagesstart"
+        showVitals -> "werte"
+        showDiary -> "tagebuch"
+        showBudget -> "budgets"
+        showHandover -> "uebergabe"
+        showGuide -> "anleitung"
+        showSettings -> "einstellungen"
+        showWegweiser -> "wegweiser"
+        showLetters -> "schreiben"
+        showMedOverview -> "medikamentenplan"
+        showReorder -> "nachbestellung"
+        showSummary -> "auswertung"
+        else -> when (tab) {
+            Tab.Heute -> "heute"
+            Tab.Medikamente -> "medikamente"
+            Tab.Termine -> "termine"
+            Tab.Dokumente -> "dokumente"
+            Tab.Aerzte -> "kontakte"
+            Tab.Infos -> "infos"
+        }
+    }
+    val assistantOn by vm.assistantOn.collectAsStateWithLifecycle()
+
     // Die Leiste unten ist auf allen Seiten sichtbar; nach oben wischen zeigt die Bereiche der Seite
     Scaffold(
         containerColor = androidx.compose.ui.graphics.Color.Transparent,
         bottomBar = {
-            DockBar(tabIndex) { i ->
+            DockBar(
+                selected = tabIndex,
+                vm = vm,
+                page = pageKey,
+                assistantOn = assistantOn,
+                onOpenGuide = {
+                    closeOverlays()
+                    showGuide = true
+                },
+                onOpenAssistant = {
+                    closeOverlays()
+                    motivatorTab = 0
+                    showMotivator = true
+                },
+            ) { i ->
                 closeOverlays()
                 tabIndex = i
             }
@@ -1098,9 +1138,18 @@ private fun launch(context: Context, intent: Intent) {
 /** Reiter-Leiste fuer alle Seiten. Nach oben wischen oder den Griff antippen zeigt die Bereiche der aktuellen Seite. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun DockBar(selected: Int, onSelect: (Int) -> Unit) {
+private fun DockBar(
+    selected: Int,
+    vm: MainViewModel,
+    page: String,
+    assistantOn: Boolean,
+    onOpenGuide: () -> Unit,
+    onOpenAssistant: () -> Unit,
+    onSelect: (Int) -> Unit,
+) {
     val registry = LocalJumps.current
     var sheet by remember { mutableStateOf(false) }
+    var helper by remember { mutableStateOf(false) }
     val scope = androidx.compose.runtime.rememberCoroutineScope()
     Column(
         Modifier.pointerInput(Unit) {
@@ -1129,22 +1178,34 @@ private fun DockBar(selected: Int, onSelect: (Int) -> Unit) {
             color = androidx.compose.material3.NavigationBarDefaults.containerColor,
             modifier = Modifier.fillMaxWidth().clickable { sheet = true },
         ) {
-            Row(
-                Modifier.fillMaxWidth().padding(top = 6.dp, bottom = 1.dp),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Box(
-                    Modifier
-                        .width(36.dp)
-                        .height(4.dp)
-                        .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f), androidx.compose.foundation.shape.RoundedCornerShape(2.dp)),
-                )
-                Text(
-                    "  Bereiche",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+            Box(Modifier.fillMaxWidth().padding(top = 4.dp, bottom = 1.dp)) {
+                if (assistantOn) {
+                    // Gesicht des Assistenten: Hinweise und Hilfe zu dieser Seite
+                    Box(
+                        Modifier
+                            .align(Alignment.CenterStart)
+                            .padding(start = 10.dp)
+                            .clickable { helper = true }
+                            .padding(horizontal = 4.dp, vertical = 2.dp),
+                    ) { AssistantDockFace(vm) }
+                }
+                Row(
+                    Modifier.align(Alignment.Center).padding(vertical = 4.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(
+                        Modifier
+                            .width(36.dp)
+                            .height(4.dp)
+                            .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f), androidx.compose.foundation.shape.RoundedCornerShape(2.dp)),
+                    )
+                    Text(
+                        "  Bereiche",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
         }
         NavigationBar {
@@ -1157,6 +1218,22 @@ private fun DockBar(selected: Int, onSelect: (Int) -> Unit) {
                     label = { FitText(t.label, maxSize = 12.sp, shared = navLabelSize) },
                 )
             }
+        }
+    }
+    if (helper) {
+        androidx.compose.material3.ModalBottomSheet(onDismissRequest = { helper = false }) {
+            AssistantSheetContent(
+                vm = vm,
+                page = page,
+                onOpenGuide = {
+                    helper = false
+                    onOpenGuide()
+                },
+                onOpenAssistant = {
+                    helper = false
+                    onOpenAssistant()
+                },
+            )
         }
     }
     if (sheet) {
