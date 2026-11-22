@@ -18,6 +18,7 @@ object Notifications {
     const val CHANNEL_REMINDERS = "erinnerungen"
     private const val CHANNEL_UPDATES = "updates"
     const val CHANNEL_MOOD = "stimmung"
+    const val CHANNEL_CARE = "pflege"
 
     fun ensureChannels(context: Context) {
         if (Build.VERSION.SDK_INT >= 26) {
@@ -32,6 +33,12 @@ object Notifications {
                 nm.createNotificationChannel(
                     NotificationChannel(CHANNEL_MOOD, "Stimmungs-Check", NotificationManager.IMPORTANCE_DEFAULT)
                         .apply { description = "Kurze Frage, wie es dir geht (Tages-Motivator)" },
+                )
+            }
+            if (nm.getNotificationChannel(CHANNEL_CARE) == null) {
+                nm.createNotificationChannel(
+                    NotificationChannel(CHANNEL_CARE, "Trinken und Pflegetagebuch", NotificationManager.IMPORTANCE_DEFAULT)
+                        .apply { description = "Erinnerung ans Trinken und ans Pflegetagebuch" },
                 )
             }
             if (nm.getNotificationChannel(CHANNEL_UPDATES) == null) {
@@ -53,6 +60,7 @@ object Notifications {
         actions: List<Pair<String, PendingIntent>> = emptyList(),
         personId: Long? = null,
         channel: String? = null,
+        screen: String? = null,
     ) {
         if (Build.VERSION.SDK_INT >= 33 &&
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
@@ -64,6 +72,7 @@ object Notifications {
         val openIntent = Intent(context, MainActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
             if (personId != null) putExtra(MainActivity.EXTRA_PERSON, personId)
+            if (screen != null) putExtra(MainActivity.EXTRA_SCREEN, screen)
         }
         val open = PendingIntent.getActivity(
             context,

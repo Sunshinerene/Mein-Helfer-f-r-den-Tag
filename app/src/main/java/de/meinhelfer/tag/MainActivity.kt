@@ -43,6 +43,9 @@ class MainActivity : FragmentActivity() {
     companion object {
         /** Person, die beim Oeffnen aus einer Benachrichtigung ausgewaehlt werden soll. */
         const val EXTRA_PERSON = "person"
+
+        /** Seite, die aus einer Benachrichtigung geoeffnet werden soll, z. B. "trinken" oder "tagebuch". */
+        const val EXTRA_SCREEN = "seite"
     }
 
     /** Aus einer Benachrichtigung gewuenschte Person (null = nichts zu tun). */
@@ -52,7 +55,11 @@ class MainActivity : FragmentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         pendingPerson = intent.getLongExtra(EXTRA_PERSON, -1L).takeIf { it > 0 }
+        pendingScreen = intent.getStringExtra(EXTRA_SCREEN)
     }
+
+    /** Aus einer Benachrichtigung gewuenschte Seite (null = nichts zu tun). */
+    private var pendingScreen by mutableStateOf<String?>(null)
 
     /** Gesperrt, solange die Abfrage (Fingerabdruck, Gesicht, PIN) nicht bestanden ist. */
     private var locked by mutableStateOf(false)
@@ -77,6 +84,7 @@ class MainActivity : FragmentActivity() {
         super.onCreate(savedInstanceState)
         if (savedInstanceState == null) {
             intent?.getLongExtra(EXTRA_PERSON, -1L)?.takeIf { it > 0 }?.let { pendingPerson = it }
+            pendingScreen = intent?.getStringExtra(EXTRA_SCREEN)
         }
 
         // Beim Start gesperrt, wenn die App-Sperre an ist
@@ -120,6 +128,13 @@ class MainActivity : FragmentActivity() {
                 if (wanted != null) {
                     vm.selectPersonIfExists(wanted)
                     pendingPerson = null
+                }
+            }
+            val wantedScreen = pendingScreen
+            LaunchedEffect(wantedScreen) {
+                if (wantedScreen != null) {
+                    vm.requestScreen(wantedScreen)
+                    pendingScreen = null
                 }
             }
             val dark = when (mode) {

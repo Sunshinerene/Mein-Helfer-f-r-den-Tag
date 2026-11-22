@@ -388,6 +388,20 @@ object AppPrefs {
         e.apply()
     }
 
+    /** Trink-Erinnerung: 0 = aus, sonst alle 2 oder 3 Stunden tagsueber. */
+    fun drinkReminder(context: Context): Int = prefs(context).getInt("trink_erinnerung", 0)
+
+    fun setDrinkReminder(context: Context, hours: Int) {
+        prefs(context).edit().putInt("trink_erinnerung", hours).apply()
+    }
+
+    /** Abendliche Erinnerung ans Pflegetagebuch: Minuten nach Mitternacht, -1 = aus. */
+    fun diaryReminder(context: Context): Int = prefs(context).getInt("tagebuch_erinnerung", -1)
+
+    fun setDiaryReminder(context: Context, minuteOfDay: Int) {
+        prefs(context).edit().putInt("tagebuch_erinnerung", minuteOfDay).apply()
+    }
+
     /** Einheit fuer Blutzucker: "mg/dl" oder "mmol/l" */
     fun sugarUnit(context: Context): String = prefs(context).getString("bz_einheit", "mg/dl") ?: "mg/dl"
 

@@ -129,6 +129,14 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
     var motivatorTab by rememberSaveable { mutableIntStateOf(0) }
     var showVitals by rememberSaveable { mutableStateOf(false) }
     var showDiary by rememberSaveable { mutableStateOf(false) }
+    val openScreen by vm.openScreen.collectAsStateWithLifecycle()
+    LaunchedEffect(openScreen) {
+        when (openScreen) {
+            "trinken" -> showVitals = true
+            "tagebuch" -> showDiary = true
+        }
+        if (openScreen != null) vm.requestScreen(null)
+    }
     val appContext = LocalContext.current
     var caregiver by remember { mutableStateOf(AppPrefs.caregiver(appContext)) }
     // Beim ersten Start einmal den Rundgang anbieten

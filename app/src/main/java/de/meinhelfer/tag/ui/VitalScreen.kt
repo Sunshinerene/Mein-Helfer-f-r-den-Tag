@@ -368,6 +368,7 @@ fun VitalScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit) {
                             Text(if (goal > 0) "Trinkziel: $goal ml pro Tag" else "Kein Trinkziel", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
                             TextButton(onClick = { editGoal = true }) { Text("Ändern") }
                         }
+                        DrinkReminderSetting()
                     }
                 }
             }

@@ -7,6 +7,7 @@ import android.content.Intent
 import de.meinhelfer.tag.data.AppDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -115,6 +116,59 @@ class ReminderReceiver : BroadcastReceiver() {
                     "Tippe kurz auf einen Smiley. Das bleibt nur auf deinem Handy und hilft dem Tages-Motivator.",
                     channel = Notifications.CHANNEL_MOOD,
                 )
+            }
+
+            ReminderScheduler.TYPE_DRINK -> {
+                val interval = de.meinhelfer.tag.update.AppPrefs.drinkReminder(context)
+                val hours = ReminderScheduler.drinkHours(interval)
+                val index = id.toInt()
+                if (index !in hours.indices) return
+                ReminderScheduler.scheduleDrinkAt(context, index, hours[index])
+                val today = java.time.LocalDate.now().toEpochDay()
+                val hour = java.time.LocalTime.now().hour
+                val all = db.vitalDao().all().first()
+                persons.forEach { p ->
+                    val goal = de.meinhelfer.tag.update.AppPrefs.drinkGoal(context, p.id)
+                    if (goal <= 0) return@forEach
+                    val mine = all.filter { it.personId == p.id && it.kind == de.meinhelfer.tag.summary.VitalKind.Trinken.key }
+                    // Nur, wenn das Trinkprotokoll fuer die Person in letzter Zeit genutzt wird
+                    if (mine.none { it.day >= today - 7 }) return@forEach
+                    val drunk = mine.filter { it.day == today }.sumOf { it.value }.toInt()
+                    // Bis zu dieser Uhrzeit geplanter Anteil (Tag von 8 bis 20 Uhr)
+                    val expected = goal * ((hour - 8).coerceIn(0, 12)) / 12
+                    if (drunk >= expected) return@forEach
+                    Notifications.show(
+                        context,
+                        "drink:${p.id}".hashCode(),
+                        "Zeit für ein Getränk" + forPerson(p.id),
+                        "Bisher $drunk von $goal ml. Ein Glas Wasser oder eine Tasse Tee? Antippen zum Eintragen.",
+                        personId = p.id,
+                        channel = Notifications.CHANNEL_CARE,
+                        screen = "trinken",
+                    )
+                }
+            }
+
+            ReminderScheduler.TYPE_DIARY -> {
+                ReminderScheduler.scheduleDiary(context)
+                if (de.meinhelfer.tag.update.AppPrefs.diaryReminder(context) < 0) return
+                val today = java.time.LocalDate.now().toEpochDay()
+                val all = db.careLogDao().all().first()
+                // Personen, fuer die das Tagebuch gefuehrt wird; sonst die gerade gewaehlte Person
+                val used = persons.filter { p -> all.any { it.personId == p.id && it.day >= today - 30 } }
+                    .ifEmpty { persons.filter { it.id == de.meinhelfer.tag.update.AppPrefs.currentPerson(context) } }
+                used.forEach { p ->
+                    if (all.any { it.personId == p.id && it.day == today }) return@forEach
+                    Notifications.show(
+                        context,
+                        "diary:${p.id}".hashCode(),
+                        "Pflegetagebuch" + forPerson(p.id),
+                        "Heute ist noch nichts eingetragen. Kurz festhalten, wobei geholfen wurde? Mit „Wie am Vortag“ geht es schnell.",
+                        personId = p.id,
+                        channel = Notifications.CHANNEL_CARE,
+                        screen = "tagebuch",
+                    )
+                }
             }
 
             ReminderScheduler.TYPE_TODO -> {

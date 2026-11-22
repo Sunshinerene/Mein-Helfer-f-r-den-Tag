@@ -27,6 +27,15 @@ object ReminderScheduler {
     const val EXTRA_DAY = "day"
     const val TYPE_MOOD = "mood"
     const val TYPE_TODO = "todo"
+    const val TYPE_DRINK = "trinken"
+    const val TYPE_DIARY = "tagebuch"
+
+    /** Uhrzeiten der Trink-Erinnerung je Abstand */
+    fun drinkHours(interval: Int): List<Int> = when (interval) {
+        2 -> listOf(10, 12, 14, 16, 18)
+        3 -> listOf(10, 13, 16, 19)
+        else -> emptyList()
+    }
 
     /** "30 Minuten", "1 Stunde", "2 Stunden", "1 Tag" */
     fun leadText(minutes: Int): String = when {
@@ -55,6 +64,8 @@ object ReminderScheduler {
         db.appointmentDao().list().forEach { scheduleAppointment(app, it) }
         db.todoDao().list().forEach { scheduleTodo(app, it) }
         scheduleMood(app)
+        scheduleDrink(app)
+        scheduleDiary(app)
     }
 
     /**
@@ -172,6 +183,51 @@ object ReminderScheduler {
             id = appointment.id,
             time = null,
         )
+    }
+
+    private fun cancel(context: Context, requestCode: Int) {
+        val pending = PendingIntent.getBroadcast(
+            context, requestCode, Intent(context, ReminderReceiver::class.java),
+            PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE,
+        ) ?: return
+        context.getSystemService(AlarmManager::class.java).cancel(pending)
+        pending.cancel()
+    }
+
+    private fun nextAt(hour: Int, minute: Int): Long = Calendar.getInstance().apply {
+        set(Calendar.HOUR_OF_DAY, hour)
+        set(Calendar.MINUTE, minute)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+        if (timeInMillis <= System.currentTimeMillis() + 1000) add(Calendar.DAY_OF_YEAR, 1)
+    }.timeInMillis
+
+    private fun setInexact(context: Context, requestCode: Int, triggerAt: Long, type: String, id: Long) {
+        val intent = Intent(context, ReminderReceiver::class.java).apply {
+            putExtra(EXTRA_TYPE, type)
+            putExtra(EXTRA_ID, id)
+        }
+        val pending = PendingIntent.getBroadcast(context, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        context.getSystemService(AlarmManager::class.java).setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pending)
+    }
+
+    /** Trink-Erinnerungen tagsueber (nur wenn eingeschaltet). Der Receiver meldet sich nur, wenn weniger getrunken wurde als bis dahin geplant. */
+    fun scheduleDrink(context: Context) {
+        val app = context.applicationContext
+        for (i in 0..5) cancel(app, "drink:$i".hashCode())
+        drinkHours(de.meinhelfer.tag.update.AppPrefs.drinkReminder(app)).forEachIndexed { i, h -> scheduleDrinkAt(app, i, h) }
+    }
+
+    fun scheduleDrinkAt(context: Context, index: Int, hour: Int) =
+        setInexact(context, "drink:$index".hashCode(), nextAt(hour, 0), TYPE_DRINK, index.toLong())
+
+    /** Abendliche Erinnerung ans Pflegetagebuch (nur wenn eingeschaltet). */
+    fun scheduleDiary(context: Context) {
+        val app = context.applicationContext
+        cancel(app, "diary".hashCode())
+        val m = de.meinhelfer.tag.update.AppPrefs.diaryReminder(app)
+        if (m < 0) return
+        setInexact(app, "diary".hashCode(), nextAt(m / 60, m % 60), TYPE_DIARY, 0L)
     }
 
     /** Erinnerung an eine Aufgabe (nur offene mit Erinnerungszeit in der Zukunft). */

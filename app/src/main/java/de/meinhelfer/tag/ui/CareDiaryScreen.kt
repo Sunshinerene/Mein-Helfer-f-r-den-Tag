@@ -297,6 +297,11 @@ fun CareDiaryScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit) {
                 }
             }
             item {
+                HCard(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(16.dp)) { DiaryReminderSetting() }
+                }
+            }
+            item {
                 Text(
                     "Selbst geführt, ersetzt keine Begutachtung. Den Pflegegrad legt die Pflegekasse nach der Begutachtung fest. Alles bleibt auf dem Handy, bis du die PDF teilst.",
                     style = MaterialTheme.typography.bodySmall,

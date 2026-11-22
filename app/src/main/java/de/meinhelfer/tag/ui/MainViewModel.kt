@@ -65,6 +65,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val doctors: StateFlow<List<Doctor>> = db.doctorDao().all()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    /** Aus einer Benachrichtigung gewuenschte Seite ("trinken", "tagebuch"), wird von der Oberflaeche abgeholt. */
+    private val _openScreen = MutableStateFlow<String?>(null)
+    val openScreen: StateFlow<String?> = _openScreen
+
+    fun requestScreen(screen: String?) {
+        _openScreen.value = screen
+    }
+
     /** Trinkmengen und Messwerte der aktuellen Person, neueste zuerst. */
     val vitals: StateFlow<List<de.meinhelfer.tag.data.VitalEntry>> =
         combine(db.vitalDao().all(), _personId) { list, id -> list.filter { it.personId == id } }
