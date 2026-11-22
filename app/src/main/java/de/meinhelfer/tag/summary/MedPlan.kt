@@ -86,6 +86,15 @@ object MedPlans {
         LocalDate.of(year, m.toInt(), d.toInt())
     }.getOrNull()
 
+    /** Schema aus einer Dosierung wie "47,5 mg · 1-0-1-0 Stk.": Mengen (morgens, mittags, abends, Nacht) und der Rest. */
+    fun schemaOf(dosage: String): Pair<List<String>, String>? {
+        val m = SCHEMA.find(dosage) ?: return null
+        val amounts = (1..4).map { m.groupValues.getOrNull(it).orEmpty().trim() }
+        val rest = (dosage.substring(0, m.range.first) + " " + dosage.substring(m.range.last + 1))
+            .replace("·", " ").replace(Regex("\\bStk\\.?"), "").replace(Regex("\\s{2,}"), " ").trim().trim(',', '-', '·')
+        return amounts to rest
+    }
+
     /** Sieht der Text nach einem Medikamentenplan aus? */
     fun looksLikePlan(text: String): Boolean {
         val t = text.lowercase()

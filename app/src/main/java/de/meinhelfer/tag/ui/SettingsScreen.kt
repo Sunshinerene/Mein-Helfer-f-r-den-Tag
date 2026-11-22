@@ -71,6 +71,7 @@ fun SettingsScreen(
     caregiver: de.meinhelfer.tag.data.CaregiverProfile = de.meinhelfer.tag.data.CaregiverProfile(),
     onEditCaregiver: () -> Unit = {},
     onConsentRevoked: () -> Unit = {},
+    initialCategory: String? = null,
 ) {
     val context = LocalContext.current
     val updateState by vm.updateState.collectAsStateWithLifecycle()
@@ -86,7 +87,7 @@ fun SettingsScreen(
         }
     }
 
-    var categoryKey by rememberSaveable { mutableStateOf<String?>(null) }
+    var categoryKey by rememberSaveable { mutableStateOf(initialCategory) }
     var query by rememberSaveable { mutableStateOf("") }
     val category = SettingsCategory.entries.firstOrNull { it.name == categoryKey }
     androidx.activity.compose.BackHandler(enabled = category != null) { categoryKey = null }

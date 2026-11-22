@@ -4,7 +4,7 @@ by Sunshine@R
 
 Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbezogenen Daten bleiben lokal auf dem Gerät.
 
-## Stand: v0.49.0
+## Stand: v0.50.0
 
 ### Funktionsübersicht
 
@@ -28,6 +28,8 @@ Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbe
 - Beschreibung aus Wikipedia und KI-Einschätzung (nur Anhaltspunkt)
 - Überblick aller Medikamente mit Gesamtbild; KI-Gesamt-Check: wie die Medikamente zusammenpassen (Gering/Beachten/Wichtig), Einnahmezeiten, Fragen an Arzt/Apotheke
 - Nachbestellung: Liste, Anruf, E-Mail an Arzt oder Apotheke, PDF drucken
+- „Neue Packung“ mit gemerkter Packungsgröße
+- Medikamentenplan als PDF (Querformat, morgens/mittags/abends/zur Nacht; kein offizieller Medikationsplan)
 
 **Termine**
 - Kommende zuerst, vergangene eingeklappt; Beginn und Ende, Erinnerung pro Termin
@@ -51,7 +53,7 @@ Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbe
 
 **Notruf und Hilfe** (rotes Telefon oben)
 - 112, 116 117, 110, „Was sage ich?“ mit Adresse/Stockwerk, eigene Kontakte, Hilfe in der Nähe, Giftnotruf, Telefonseelsorge
-- Notfallkarte (Medikamente, Kontakte, Wichtiges) zum Zeigen, Kopieren, Teilen
+- Notfallkarte (Medikamente, Kontakte, Wichtiges) zum Zeigen, Kopieren, Teilen, als PDF mit Karte für die Geldbörse
 
 **Infos und Wegweiser**
 - Aktuelle Pflegethemen, Meldungssuche, eigene Themen, Favoriten, Tipps passend zur eigenen Rolle
@@ -73,7 +75,7 @@ Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbe
 - Ausweis und Krankenkarte fotografieren und auf dem Handy auslesen (Foto wird sofort gelöscht)
 - Darstellung (hell/dunkel, 7 Designs inkl. Aurora, eigene Farben, Schriftgröße, einheitliche Ecken), Effekte (Beta: Glas, Leuchtrand, bewegter Hintergrund, Animationen, Glanz), Heute-Seite, Einnahme-Zeitfenster, Dokument-Betrachter
 - Freigaben (Android): Benachrichtigungen, Ton, pünktliche Wecker, Akku, Updates – mit Status und Sprung in die Android-Einstellungen
-- App-Sperre, Bildschirmschutz, verschlüsselte Datenbank, Sicherung und Wiederherstellung
+- App-Sperre, Bildschirmschutz, verschlüsselte Datenbank, Sicherung und Wiederherstellung, Erinnerung an die Sicherung
 - App zurücksetzen mit Warnung, Angebot zur Sicherung und Bestätigung per Bildschirmsperre
 - Medikamenten-Beschreibung, KI-Assistent mit 18 Diensten (u. a. Gemini, Groq, Mistral, OpenRouter, Cerebras, GitHub Models, OVHcloud und Scaleway in der EU, IONOS in Deutschland, OpenAI, Claude) oder eigenem Server im Heimnetz (Ollama, LM Studio), alternativ Teilen an eine KI-App wie Gemini – freiwillig
 - Anleitung mit Suche, Rundgang, Feedback, Vorschau, App-Update über GitHub

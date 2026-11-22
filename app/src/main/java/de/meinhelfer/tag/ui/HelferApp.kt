@@ -111,6 +111,7 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
     var tabIndex by rememberSaveable { mutableIntStateOf(0) }
     var periodIndex by rememberSaveable { mutableIntStateOf(0) }
     var showSettings by rememberSaveable { mutableStateOf(false) }
+    var settingsCategory by rememberSaveable { mutableStateOf<String?>(null) }
     var showSummary by rememberSaveable { mutableStateOf(false) }
     var showGuide by rememberSaveable { mutableStateOf(false) }
     var showReorder by rememberSaveable { mutableStateOf(false) }
@@ -251,11 +252,15 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
     } else if (showSettings) {
         SettingsScreen(
             vm = vm,
+            initialCategory = settingsCategory,
             onConsentRevoked = {
                 showSettings = false
                 consentCheck++
             },
-            onBack = { showSettings = false },
+            onBack = {
+                showSettings = false
+                settingsCategory = null
+            },
             onOpenGuide = { showGuide = true },
             onStartTour = { showTour = true },
             caregiver = caregiver,
@@ -372,6 +377,10 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
                                           showMotivator = true
                                       },
                                       onOpenMood = { showMoodCheck = true },
+                                      onOpenBackup = {
+                                          settingsCategory = "Sicherheit"
+                                          showSettings = true
+                                      },
                                   )
                                   ViewPeriod.Woche -> WeekOverview(
                                       vm = vm,
@@ -500,6 +509,7 @@ private fun MedicationScreen(
     var queueIndex by remember { mutableIntStateOf(0) }
     val withoutPhoto = items.filter { it.photoPath == null }
     var stockFor by remember { mutableStateOf<Long?>(null) }
+    var packFor by remember { mutableStateOf<Long?>(null) }
     var stockQueue by remember { mutableStateOf<List<Long>?>(null) }
     var stockIndex by remember { mutableIntStateOf(0) }
     val unknownStock = items.filter { !it.stockKnown }
@@ -570,6 +580,11 @@ private fun MedicationScreen(
                     TextButton(onClick = { stockFor = m.id }, contentPadding = PaddingValues(horizontal = 8.dp)) {
                         Text(if (m.stockKnown) "Vorrat" else "Vorrat eintragen")
                     }
+                    if (m.packSize > 0) {
+                        TextButton(onClick = { packFor = m.id }, contentPadding = PaddingValues(horizontal = 8.dp)) {
+                            Text("Neue Packung")
+                        }
+                    }
                 }
             }
         }
@@ -602,6 +617,11 @@ private fun MedicationScreen(
     stockFor?.let { id ->
         items.firstOrNull { it.id == id }?.let { m ->
             key(m.id) { StockDialog(m, vm, onDone = { stockFor = null }) }
+        }
+    }
+    packFor?.let { id ->
+        items.firstOrNull { it.id == id }?.let { m ->
+            key(m.id) { StockDialog(m, vm, onDone = { packFor = null }, addPack = true) }
         }
     }
     stockQueue?.let { queue ->

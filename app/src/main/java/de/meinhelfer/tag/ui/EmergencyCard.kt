@@ -34,6 +34,7 @@ import de.meinhelfer.tag.data.CaregiverProfile
 import de.meinhelfer.tag.data.Doctor
 import de.meinhelfer.tag.data.Medication
 import de.meinhelfer.tag.data.Person
+import de.meinhelfer.tag.export.CarePdfs
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -139,8 +140,16 @@ fun EmergencyDialog(
                         }
                     }) { Text("Teilen") }
                 }
+                Text("Zum Ausdrucken (Kühlschrank, Geldbörse):", style = MaterialTheme.typography.labelLarge)
+                PdfButtons(shareLabel = "Als PDF teilen", chooserTitle = "Notfallkarte teilen") { ctx ->
+                    CarePdfs.emergency(ctx, person, meds, doctors, caregiver, withNumber)
+                }
                 Text(
-                    "Die Karte entsteht nur aus deinen Angaben in der App und bleibt auf dem Handy. Geteilt wird nur, wenn du „Teilen“ antippst. Die Notruf-Taste öffnet nur die Telefon-App.",
+                    "Die PDF hat eine ganze Seite für den Kühlschrank und unten eine Karte im Scheckkartenformat zum Ausschneiden und Falten.",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                Text(
+                    "Die Karte entsteht nur aus deinen Angaben in der App und bleibt auf dem Handy. Geteilt wird nur, wenn du „Teilen“ oder „Als PDF teilen“ antippst. Die Notruf-Taste öffnet nur die Telefon-App.",
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(top = 4.dp),
                 )

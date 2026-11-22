@@ -69,6 +69,8 @@ data class Medication(
     val photoCredit: String = "",
     /** false = Vorrat noch nicht eingetragen (z. B. nach dem Einlesen eines Plans): keine Nachbestell-Warnung. */
     val stockKnown: Boolean = true,
+    /** Stueck pro Packung (fuer "Neue Packung"), 0 = unbekannt. */
+    val packSize: Int = 0,
 ) {
     fun timeList(): List<String> =
         times.split(",").map { it.trim() }.filter { it.isNotEmpty() }
@@ -206,6 +208,8 @@ data class Todo(
     val rating: Int = 0,
     /** Aus der Liste ausgeblendet, bleibt aber im Verlauf, in der Auswertung und in der Suche. */
     val archived: Boolean = false,
+    /** Erinnerung per Benachrichtigung (Zeitpunkt in Millisekunden), null = keine. */
+    val remindAt: Long? = null,
 )
 
 /** Dokument (Arztbericht, Befund, Bescheid ...). Die Datei liegt verschluesselt im App-Ordner, der erkannte Text in der Datenbank. */
@@ -227,4 +231,6 @@ data class Document(
     val createdMillis: Long = System.currentTimeMillis(),
     /** Zusammenfassung in einfacher Sprache (per KI erstellt oder selbst geschrieben), optional. */
     val summary: String = "",
+    /** Inhalt des Codes eines Medikationsplans (Data Matrix), beim Hochladen erkannt, sonst leer. */
+    val planCode: String = "",
 )

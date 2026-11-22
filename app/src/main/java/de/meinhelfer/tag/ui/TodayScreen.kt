@@ -96,6 +96,7 @@ fun TodayScreen(
     onOpenDailyStart: (planOnly: Boolean) -> Unit = {},
     onOpenMotivator: (tab: Int) -> Unit = {},
     onOpenMood: () -> Unit = {},
+    onOpenBackup: () -> Unit = {},
 ) {
     val motivatorOn by vm.motivatorOnToday.collectAsStateWithLifecycle()
     val zone = ZoneId.systemDefault()
@@ -221,6 +222,7 @@ fun TodayScreen(
         if (motivatorOn) {
             item { MotivatorCard(vm, onOpen = onOpenMotivator, onMood = onOpenMood) }
         }
+        item { BackupReminderCard(onOpenBackup) }
 
         // ---- Rueckfragen
         if (followUps.isNotEmpty()) {
@@ -655,4 +657,38 @@ private fun NoteDialog(
         confirmButton = { TextButton(onClick = { onSave(text) }) { Text("Speichern") } },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Abbrechen") } },
     )
+}
+
+/** Hinweis, wenn die letzte Sicherung zu lange her ist (Einstellung unter Sicherheit und Sicherung). */
+@Composable
+private fun BackupReminderCard(onOpenBackup: () -> Unit) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var tick by remember { mutableStateOf(0) }
+    val due = remember(tick) { AppPrefs.backupDue(context) }
+    if (!due) return
+    val last = AppPrefs.lastBackup(context)
+    HCard(
+        Modifier.fillMaxWidth(),
+        colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+    ) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text("Zeit für eine Sicherung", style = MaterialTheme.typography.titleSmall)
+            Text(
+                if (last > 0) {
+                    val days = ((System.currentTimeMillis() - last) / (24L * 60 * 60 * 1000)).toInt()
+                    "Die letzte Sicherung ist $days Tage her. Eine aktuelle Sicherung schützt deine Einträge, falls das Handy verloren geht oder kaputtgeht."
+                } else {
+                    "Es gibt noch keine Sicherung. Mit einer Sicherung kannst du alles auf einem neuen Handy wiederherstellen."
+                },
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                androidx.compose.material3.Button(shape = buttonShape(), onClick = onOpenBackup) { Text("Jetzt sichern") }
+                TextButton(onClick = {
+                    AppPrefs.setBackupSnoozeUntil(context, System.currentTimeMillis() + 7L * 24 * 60 * 60 * 1000)
+                    tick++
+                }) { Text("In einer Woche") }
+            }
+        }
+    }
 }

@@ -201,6 +201,10 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
                 "Im Reiter „Medikamente“ oben „Überblick & Check“ antippen. Dort siehst du alle Medikamente mit ihrer Einschätzung (Wirkstärke, Nebenwirkungen, Wechselwirkungen) und das Gesamtbild: Anzahl, Einnahmen pro Tag und Hinweise zu deinen Ansprüchen (Medikationsplan vom Hausarzt ab 3 dauerhaft verordneten Medikamenten, kostenlose erweiterte Medikationsberatung in der Apotheke ab 5). Mit „Gesamt-Check per KI“ (freiwillig, KI muss eingerichtet sein) schätzt die KI alle Medikamente zusammen ein: welche Paare sich beeinflussen können (Gering, Beachten, Wichtig), Hinweise zu Einnahmezeiten, ein Gesamtbild und Fragen für Arzt oder Apotheke. Vorher siehst du genau, was gesendet wird: nur Medikamente mit Dosierung und Zeiten, ohne Namen der Person, das Alter nur auf Wunsch. Fragen lassen sich als Aufgabe merken, der Überblick lässt sich teilen, z. B. für den Arztbesuch. Ändert sich der Plan, weist die App darauf hin. Alles nur Anhaltspunkte: nie eigenmächtig absetzen oder ändern, sondern prüfen lassen.",
             ),
             GuideItem(
+                "Medikamentenplan als PDF",
+                "In „Überblick & Check“ steht die Karte „Medikamentenplan als PDF“. „Als PDF teilen“ oder „Drucken“ erstellt eine Tabelle im Querformat, angelehnt an den Medikationsplan vom Arzt: Medikament, Stärke und Form, morgens, mittags, abends, zur Nacht und Hinweise, oben Person, Arzt und Stand. Die Mengen stammen aus dem Schema der Dosierung (z. B. „1-0-1-0“), sonst aus den Einnahmezeiten. Das ist kein offizieller bundeseinheitlicher Medikationsplan; maßgeblich sind Arztpraxis und Apotheke. Nach jeder Änderung neu ausdrucken.",
+            ),
+            GuideItem(
                 "Fotos zu den Medikamenten",
                 "Hat ein Medikament noch kein Bild, steht in der Liste ein Kästchen „📷 Foto“; Antippen (oder in den Infos „Foto hinzufügen“) öffnet die Auswahl: Packung fotografieren, aus der Galerie wählen, freie Bilder von Wikimedia Commons suchen (mit Urheber und Lizenz, gesendet wird nur der Name) oder im Internet nach Packungsbildern suchen. Bei der Internetsuche öffnet sich der Browser: Bild dort speichern und dann „Aus der Galerie wählen“; solche Bilder sind meist geschützt, also nur für dich verwenden. Nach dem Einlesen eines Plans hilft „Fotos ergänzen“ unter Medikamente: Die App geht alle Medikamente ohne Bild nacheinander durch, „Überspringen“ lässt eins aus. Fotos bleiben nur in der App.",
             ),
@@ -226,7 +230,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Vorrat und „Pro Tag“",
-                "Vorrat = Stückzahl, die du jetzt hast. „Pro Tag“ = Verbrauch pro Tag (leer lassen = Anzahl der Einnahmen). Der Vorrat sinkt danach automatisch jeden Tag. Neue Packung gekauft? Bei der Karte auf „Vorrat“ tippen (oder das Medikament bearbeiten) und den neuen Vorrat eintragen, dann beginnt die Zählung ab heute neu. Bleibt das Feld leer, heißt es „Vorrat: unbekannt“: Dann rechnet die App nichts aus und warnt nicht vor dem Nachbestellen. Mit „📦 Vorrat eintragen“ oben unter Medikamente gehst du alle mit unbekanntem Vorrat nacheinander durch.",
+                "Vorrat = Stückzahl, die du jetzt hast. „Pro Tag“ = Verbrauch pro Tag (leer lassen = Anzahl der Einnahmen). Der Vorrat sinkt danach automatisch jeden Tag. Neue Packung gekauft? Trägst du beim Medikament „Stück pro Packung“ ein (beim Anlegen, Bearbeiten oder im Vorrat-Fenster), steht an der Karte der Knopf „Neue Packung“: ein Tipp zählt eine Packung zum jetzigen Vorrat dazu. Sonst bei der Karte auf „Vorrat“ tippen und den neuen Vorrat eintragen (dort hilft „+ Packung“). Die Zählung beginnt dann ab heute neu. Bleibt das Feld leer, heißt es „Vorrat: unbekannt“: Dann rechnet die App nichts aus und warnt nicht vor dem Nachbestellen. Mit „📦 Vorrat eintragen“ oben unter Medikamente gehst du alle mit unbekanntem Vorrat nacheinander durch.",
             ),
             GuideItem(
                 "Dosierung und Notizen",
@@ -642,7 +646,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Passwort und Aufbewahrung",
-                "Das Passwort kennt nur du. Wenn du es vergisst, kann niemand die Sicherung öffnen, auch die App nicht. Bewahre Datei und Passwort getrennt auf, am besten außerhalb des Handys. Sichere regelmäßig, z. B. nach größeren Änderungen oder einmal im Monat. Unter der Überschrift steht, wann die letzte Sicherung war.",
+                "Das Passwort kennt nur du. Wenn du es vergisst, kann niemand die Sicherung öffnen, auch die App nicht. Bewahre Datei und Passwort getrennt auf, am besten außerhalb des Handys. Sichere regelmäßig, z. B. nach größeren Änderungen oder einmal im Monat. Unter der Überschrift steht, wann die letzte Sicherung war. Unter „An Sicherung erinnern“ wählst du Aus, alle 2 Wochen oder monatlich (Standard). Ist es so weit, erscheint auf der Heute-Seite die Karte „Zeit für eine Sicherung“ mit „Jetzt sichern“ oder „In einer Woche“.",
             ),
             GuideItem(
                 "App zurücksetzen",
@@ -684,7 +688,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Notfallkarte",
-                "Die Notfallkarte öffnest du immer über das rote Telefon oben („Notfallkarte zeigen“). Unter Einstellungen → Heute-Seite und Motivator → „Heute-Seite“ kannst du sie zusätzlich als Karte auf der Heute-Seite einblenden. Sie zeigt Name, Geburtsdatum, Pflegegrad, Wichtiges, Medikamente, Kontakte und deine Ansprechdaten auf einen Blick, mit Notruf-Taste (öffnet nur die Telefon-App), zum Kopieren oder Teilen. Die Versichertennummer zeigst du nur auf Wunsch.",
+                "Die Notfallkarte öffnest du immer über das rote Telefon oben („Notfallkarte zeigen“). Unter Einstellungen → Heute-Seite und Motivator → „Heute-Seite“ kannst du sie zusätzlich als Karte auf der Heute-Seite einblenden. Sie zeigt Name, Geburtsdatum, Pflegegrad, Wichtiges, Medikamente, Kontakte und deine Ansprechdaten auf einen Blick, mit Notruf-Taste (öffnet nur die Telefon-App), zum Kopieren oder Teilen. Die Versichertennummer zeigst du nur auf Wunsch. Mit „Als PDF teilen“ oder „Drucken“ bekommst du eine ganze Seite für den Kühlschrank und unten eine Karte im Scheckkartenformat für die Geldbörse (ausschneiden, in der Mitte falten). Die PDF entsteht auf dem Handy und wird nur geteilt, wenn du es auswählst.",
             ),
             GuideItem(
                 "Feedback",

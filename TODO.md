@@ -1,17 +1,13 @@
 # TODO
 
-Stand: v0.49.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.50.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
 - [ ] Code des Medikationsplans auch beim Hochladen automatisch lesen; Namen zu PZN ohne Datenbank sind nicht möglich
-- [ ] Medikamentenplan als PDF zum Mitnehmen (alle Medikamente mit Dosierung, Zeiten, Hinweisen; angelehnt an den bundeseinheitlichen Medikationsplan)
-- [ ] Vorrat: Knopf „Neue Packung“ (+ Packungsgröße), Packungsgröße beim Medikament merken
 - [ ] Aufgaben mit Erinnerung zur Frist (Benachrichtigung) und „In Kalender eintragen“
 - [ ] Dokumenten-Betrachter: Zoom mit zwei Fingern, Text-Dokumente drucken
-- [ ] Notfallkarte als PDF (zum Ausdrucken für Kühlschrank oder Geldbörse)
 - [ ] Vorlagen erweitern (Kündigung Pflegedienst, Antrag Schwerbehindertenausweis, Widerruf), eingescannte unterschriebene Fassung automatisch dem Entwurf zuordnen
-- [ ] Erinnerung an regelmäßige Sicherung (z. B. monatlich), Hinweis wenn lange keine Sicherung
 
 ## Ideen und Optimierungen
 
@@ -46,6 +42,7 @@ Stand: v0.49.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 - [ ] Einstellungen: Übersicht, Bereiche, Suche und Zurück-Taste
 - [ ] Fotos zu Medikamenten: Kamera, Galerie, freie Bilder (Wikimedia), Internetsuche, „Fotos ergänzen“ nacheinander; Datenbank 21
 - [ ] Vorrat „unbekannt“: Umstellung auf Datenbank 22 (bisheriger Vorrat 0 gilt als unbekannt), Schnelleingabe und „Vorrat eintragen“ nacheinander
+- [ ] Datenbank 23 (Packungsgröße), „Neue Packung“, Sicherungs-Erinnerung auf der Heute-Seite, PDFs von Notfallkarte (Karte für die Geldbörse richtig groß?) und Medikamentenplan
 - [ ] Ecken und Effekte (Beta): alle Ansichten mit „Eckig“ und „Rund“, Aurora hell und dunkel, bewegter Hintergrund flüssig und akkuschonend
 
 ## Rechtliches vor einer Veröffentlichung
@@ -54,6 +51,13 @@ Stand: v0.49.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 - [ ] Entscheiden: Aufbewahrung der Nachweise 3 Jahre oder länger (30-Jahres-Frist bei Gesundheitsschäden); zusätzlicher Nachweis beim App-Ersteller (Server) ja oder nein
 - [ ] Medizinprodukte-Recht (MDR) prüfen lassen, vor allem den KI-Gesamt-Check der Medikamente; Zweckbestimmung als Organisationshilfe klar festhalten
 - [ ] Impressum und Datenschutzerklärung für eine Veröffentlichung (z. B. Play Store), eigener Signaturschlüssel statt Test-Schlüssel
+
+## Version 0.50.0 (fertig)
+
+- [x] Vorrat: „Stück pro Packung“ beim Medikament, Knopf „Neue Packung“ an der Karte und „+ Packung“ im Vorrat-Fenster
+- [x] Erinnerung an die Sicherung (aus, alle 2 Wochen, monatlich) als Karte auf der Heute-Seite mit „Jetzt sichern“ und „In einer Woche“
+- [x] Notfallkarte als PDF: Seite für den Kühlschrank und Karte im Scheckkartenformat zum Ausschneiden und Falten; teilen und drucken
+- [x] Medikamentenplan als PDF im Querformat (morgens, mittags, abends, zur Nacht, Hinweise), angelehnt an den Medikationsplan; teilen und drucken
 
 ## Version 0.49.0 (fertig)
 

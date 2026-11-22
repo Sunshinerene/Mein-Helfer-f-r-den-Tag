@@ -89,7 +89,7 @@ private val TOUR_PAGES = listOf(
     TourPage(
         title = "Medikamente im Überblick",
         text = "„Überblick & Check“ zeigt alle Medikamente mit Einschätzung. Der freiwillige KI-Gesamt-Check zeigt, welche Medikamente sich beeinflussen können (Gering, Beachten, Wichtig), gibt Hinweise zu Einnahmezeiten und sammelt Fragen für Arzt oder Apotheke.",
-        tips = listOf("Nur Anhaltspunkte: nie eigenmächtig absetzen oder ändern.", "Ab 5 Medikamenten gibt es in der Apotheke eine kostenlose Medikationsberatung."),
+        tips = listOf("Nur Anhaltspunkte: nie eigenmächtig absetzen oder ändern.", "Ab 5 Medikamenten gibt es in der Apotheke eine kostenlose Medikationsberatung.", "Den Medikamentenplan gibt es dort auch als PDF zum Ausdrucken."),
         mock = { MockMedCheck() },
     ),
     TourPage(
@@ -137,7 +137,7 @@ private val TOUR_PAGES = listOf(
     TourPage(
         title = "Notruf und Notfallkarte",
         text = "Das rote Telefon oben ist von überall erreichbar: 112, 116 117, 110, „Was sage ich?“ mit Adresse und Stockwerk, deine Kontakte und die Notfallkarte mit Medikamenten und Wichtigem für den Rettungsdienst.",
-        tips = listOf("„Wählen“ öffnet nur die Telefon-App, angerufen wird erst dort.", "Bei Lebensgefahr immer zuerst 112."),
+        tips = listOf("„Wählen“ öffnet nur die Telefon-App, angerufen wird erst dort.", "Die Notfallkarte gibt es als PDF für Kühlschrank und Geldbörse.", "Bei Lebensgefahr immer zuerst 112."),
         mock = { MockNotruf() },
     ),
     TourPage(
@@ -155,7 +155,7 @@ private val TOUR_PAGES = listOf(
     TourPage(
         title = "Sicher und privat",
         text = "Deine Daten bleiben verschlüsselt auf deinem Handy, ohne Konto und ohne Cloud. Ins Internet geht die App nur, wenn du etwas anforderst, z. B. Updates, Meldungen, Umkreissuche oder die KI. Eine App-Sperre und eine verschlüsselte Sicherung findest du in den Einstellungen.",
-        tips = listOf("Lege regelmäßig eine Sicherung an und bewahre sie außerhalb des Handys auf.", "Anleitung: Info-Symbol oben. Einstellungen: Zahnrad oben, nach Bereichen sortiert und durchsuchbar.", "Aussehen nach Geschmack: Design, Ecken, Schriftgröße und Effekte (Beta) in den Einstellungen."),
+        tips = listOf("Lege regelmäßig eine Sicherung an und bewahre sie außerhalb des Handys auf. Die App erinnert dich daran (einstellbar).", "Anleitung: Info-Symbol oben. Einstellungen: Zahnrad oben, nach Bereichen sortiert und durchsuchbar.", "Aussehen nach Geschmack: Design, Ecken, Schriftgröße und Effekte (Beta) in den Einstellungen."),
         mock = { MockPrivacy() },
     ),
 )

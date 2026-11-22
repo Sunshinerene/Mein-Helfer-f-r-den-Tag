@@ -32,9 +32,20 @@ fun StockDialog(
     queueText: String? = null,
     onSkip: (() -> Unit)? = null,
     onSaved: () -> Unit = onDone,
+    addPack: Boolean = false,
 ) {
-    var stock by remember { mutableStateOf(if (med.stockKnown) med.currentStock().toString() else "") }
+    val start = if (med.stockKnown) med.currentStock() else 0
+    var stock by remember {
+        mutableStateOf(
+            when {
+                addPack && med.packSize > 0 -> (start + med.packSize).toString()
+                med.stockKnown -> start.toString()
+                else -> ""
+            },
+        )
+    }
     var perDay by remember { mutableStateOf(med.dailyUse.toString()) }
+    var pack by remember { mutableStateOf(med.packSize.takeIf { it > 0 }?.toString() ?: "") }
     val value = stock.trim().toIntOrNull()
     AlertDialog(
         onDismissRequest = onDone,
@@ -62,8 +73,25 @@ fun StockDialog(
                         modifier = Modifier.weight(1f),
                     )
                 }
+                if (addPack) Text("Eine neue Packung ist schon dazugezählt. Bitte kurz prüfen und speichern.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    OutlinedTextField(
+                        value = pack,
+                        onValueChange = { pack = it.filter(Char::isDigit).take(4) },
+                        label = { Text("Stück pro Packung") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f),
+                    )
+                    val p = pack.toIntOrNull() ?: 0
+                    androidx.compose.material3.OutlinedButton(
+                        shape = buttonShape(),
+                        enabled = p > 0,
+                        onClick = { stock = ((stock.toIntOrNull() ?: 0) + p).toString() },
+                    ) { Text("+ Packung") }
+                }
                 Text(
-                    "Ab heute zieht die App den Verbrauch pro Tag ab und erinnert rechtzeitig ans Nachbestellen.",
+                    "„+ Packung“ zählt eine neue Packung dazu. Ab heute zieht die App den Verbrauch pro Tag ab und erinnert rechtzeitig ans Nachbestellen.",
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
@@ -79,6 +107,7 @@ fun StockDialog(
                             stockDay = today,
                             stockKnown = true,
                             dailyUse = perDay.trim().toIntOrNull() ?: med.dailyUse,
+                            packSize = pack.toIntOrNull() ?: med.packSize,
                         ),
                     )
                     onSaved()

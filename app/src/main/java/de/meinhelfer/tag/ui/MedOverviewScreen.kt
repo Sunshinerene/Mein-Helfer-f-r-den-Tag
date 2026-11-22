@@ -56,6 +56,7 @@ import de.meinhelfer.tag.ai.MedCheck
 import de.meinhelfer.tag.ai.MedCheckItem
 import de.meinhelfer.tag.ai.MedRating
 import de.meinhelfer.tag.data.Doctor
+import de.meinhelfer.tag.export.CarePdfs
 import de.meinhelfer.tag.data.Medication
 import de.meinhelfer.tag.data.Person
 import de.meinhelfer.tag.info.MedicationInfo
@@ -194,6 +195,26 @@ fun MedOverviewScreen(
                                 }) { Text("Aufgabe: Apotheke") }
                             }
                         }
+                    }
+                }
+            }
+
+            // ---- Plan zum Ausdrucken
+            item {
+                HCard(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text("Medikamentenplan als PDF", style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            "Tabelle im Querformat mit morgens, mittags, abends und zur Nacht – angelehnt an den Medikationsplan vom Arzt. Gut für Kühlschrank, Pflegedienst oder Vertretung.",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                        PdfButtons(shareLabel = "Als PDF teilen", chooserTitle = "Medikamentenplan teilen") { ctx ->
+                            CarePdfs.medPlan(ctx, person, meds, doctors, AppPrefs.caregiver(ctx))
+                        }
+                        Text(
+                            "Kein offizieller bundeseinheitlicher Medikationsplan. Maßgeblich sind die Angaben von Arztpraxis und Apotheke.",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
                     }
                 }
             }

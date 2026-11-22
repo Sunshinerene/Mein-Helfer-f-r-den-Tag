@@ -131,6 +131,20 @@ internal fun BackupCard() {
                 if (lastBackup > 0) "Letzte Sicherung: ${timeText(lastBackup)}" else "Es wurde noch keine Sicherung erstellt.",
                 style = MaterialTheme.typography.bodyMedium,
             )
+            var remindDays by remember { mutableStateOf(AppPrefs.backupReminderDays(context)) }
+            Text("An Sicherung erinnern", style = MaterialTheme.typography.labelLarge)
+            androidx.compose.foundation.layout.Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf(0 to "Aus", 14 to "Alle 2 Wochen", 30 to "Monatlich").forEach { (d, label) ->
+                    androidx.compose.material3.FilterChip(
+                        selected = remindDays == d,
+                        onClick = {
+                            remindDays = d
+                            AppPrefs.setBackupReminderDays(context, d)
+                        },
+                        label = { Text(label) },
+                    )
+                }
+            }
             when {
                 restoreResult.startsWith("ok:") ->
                     Text("Zuletzt wiederhergestellt: ${timeText(restoreResult.removePrefix("ok:").toLongOrNull() ?: 0L)}", style = MaterialTheme.typography.bodySmall)

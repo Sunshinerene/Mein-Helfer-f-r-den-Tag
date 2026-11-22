@@ -100,6 +100,7 @@ fun MedicationDialog(
     val initialStockText = initial?.takeIf { it.stockKnown }?.currentStock()?.toString() ?: ""
     var stock by remember { mutableStateOf(initialStockText) }
     var dailyUse by remember { mutableStateOf(initial?.dailyUse?.toString() ?: "") }
+    var packSize by remember { mutableStateOf(initial?.packSize?.takeIf { it > 0 }?.toString() ?: "") }
     var notes by remember { mutableStateOf(initial?.notes ?: "") }
     var doctorId by remember { mutableStateOf<Long?>(initial?.doctorId) }
     var pharmacyId by remember { mutableStateOf<Long?>(initial?.pharmacyId) }
@@ -160,6 +161,7 @@ fun MedicationDialog(
             if (result != null) {
                 if (name.isBlank()) result.nameCandidates.firstOrNull()?.let { name = it }
                 if (stock.isBlank()) result.packSize?.let { stock = it.toString() }
+                if (packSize.isBlank()) result.packSize?.let { packSize = it.toString() }
                 if (notes.isBlank()) result.strength?.let { notes = "Stärke: $it" }
                 if (pzn.isBlank()) result.pzn?.let { pzn = it }
             }
@@ -223,6 +225,7 @@ fun MedicationDialog(
                     dailyUse = dailyUse.trim().toIntOrNull() ?: maxOf(1, times.size),
                     notes = notes.trim(),
                     photoPath = photoName,
+                    packSize = packSize.trim().toIntOrNull()?.coerceIn(0, 9999) ?: 0,
                     // Herkunftsvermerk nur behalten, solange es dasselbe Bild ist
                     photoCredit = if (photoName != null && photoName == originalPhoto) initial?.photoCredit.orEmpty() else "",
                 ),
@@ -352,8 +355,17 @@ fun MedicationDialog(
             )
         }
         Text(
-            "Vorrat in Stück, „Pro Tag“ = Verbrauch pro Tag (leer = Anzahl der Einnahmen). Der Vorrat sinkt danach automatisch jeden Tag.",
+            "Vorrat in Stück (leer = unbekannt), „Pro Tag“ = Verbrauch pro Tag (leer = Anzahl der Einnahmen). Der Vorrat sinkt danach automatisch jeden Tag.",
             style = MaterialTheme.typography.bodySmall,
+        )
+        OutlinedTextField(
+            value = packSize,
+            onValueChange = { packSize = it.filter(Char::isDigit).take(4) },
+            label = { Text("Stück pro Packung (optional)") },
+            supportingText = { Text("Dann reicht später ein Tipp auf „Neue Packung“.") },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.fillMaxWidth(),
         )
         // Zustaendige Stellen fuer die Nachbestellung (aus den Kontakten)
         val pharmacies = doctors.sortedBy { if (it.specialty.contains("Apotheke", ignoreCase = true)) 0 else 1 }

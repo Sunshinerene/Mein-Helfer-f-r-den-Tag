@@ -365,6 +365,34 @@ object AppPrefs {
 
     private fun prefs(context: Context) = context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
 
+    /** Erinnerung an die Sicherung alle so viele Tage, 0 = aus */
+    fun backupReminderDays(context: Context): Int = prefs(context).getInt("sicherung_erinnern_tage", 30)
+
+    fun setBackupReminderDays(context: Context, days: Int) {
+        prefs(context).edit().putInt("sicherung_erinnern_tage", days).apply()
+    }
+
+    /** "Spaeter": Hinweis bis zu diesem Zeitpunkt ausblenden */
+    fun backupSnoozeUntil(context: Context): Long = prefs(context).getLong("sicherung_spaeter", 0L)
+
+    fun setBackupSnoozeUntil(context: Context, millis: Long) {
+        prefs(context).edit().putLong("sicherung_spaeter", millis).apply()
+    }
+
+    /**
+     * Ist eine Sicherung faellig? Grundlage ist die letzte Sicherung, ohne Sicherung die Installation der App
+     * (erst nach einer Woche, damit am Anfang nicht gleich ein Hinweis kommt).
+     */
+    fun backupDue(context: Context, now: Long = System.currentTimeMillis()): Boolean {
+        val days = backupReminderDays(context)
+        if (days <= 0 || now < backupSnoozeUntil(context)) return false
+        val last = lastBackup(context)
+        val day = 24L * 60 * 60 * 1000
+        if (last > 0) return now - last >= days * day
+        val installed = runCatching { context.packageManager.getPackageInfo(context.packageName, 0).firstInstallTime }.getOrDefault(now)
+        return now - installed >= 7 * day
+    }
+
     /** Zeitpunkt der letzten Sicherung (Millisekunden), 0 = noch nie. */
     fun lastBackup(context: Context): Long = prefs(context).getLong("letzte_sicherung", 0L)
 
