@@ -13,8 +13,8 @@ android {
         applicationId = "de.meinhelfer.tag"
         minSdk = 26
         targetSdk = 35
-        versionCode = 62
-        versionName = "0.59.0"
+        versionCode = 63
+        versionName = "0.60.0"
     }
 
     // Fester Test-Schluessel, damit spaetere APK-Updates ueber die alte Version installiert werden koennen.
@@ -82,7 +82,7 @@ dependencies {
     implementation("com.google.mlkit:barcode-scanning:17.3.0")
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
     implementation("androidx.biometric:biometric:1.1.0")
-    // Health Connect (Beta): Werte von Uhr, Band, Waage, Blutdruckgerät lesen (1.1.0 stabil braucht compileSdk 36 und AGP 8.9)
+    // Health Connect (Beta): Werte von Uhr, Band, Waage, Blutdruckgerät lesen (1.1.0 stabil braucht compileSdk 36 und AGP 8.9, daher vorerst alpha11)
     implementation("androidx.health.connect:connect-client:1.1.0-alpha11")
     implementation("androidx.fragment:fragment-ktx:1.8.5")
 

@@ -1,10 +1,10 @@
 # TODO
 
-Stand: v0.59.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.60.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
-- [ ] Beta: Uhr, Fitnessband, Waage oder Blutdruckgerät über Health Connect anbinden (Werte lesen, Quelle wählen, mit Bestätigung übernehmen)
+- [ ] Health-Connect-Bibliothek auf 1.1.0 stabil heben, sobald die App auf compileSdk 36 und Android Gradle Plugin 8.9 umgestellt ist
 - [ ] Budgets: Beträge prüfen und anpassen, sobald die Pflegereform 2027 (Pflegeneuordnungsgesetz) beschlossen ist
 
 ## Ideen und Optimierungen
@@ -23,6 +23,7 @@ Stand: v0.59.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Datenbank prüfen, Beispiel-PDFs mit erfundenen Daten, Beispiel-Grafiken, Test-Benachrichtigungen). Die Datenbank-Umstellungen von Version 5 bis 26 prüft seit v0.54.0 bei jedem Bauen ein automatischer Test gegen das Schema (Tabellen, Spalten, Typen); auf dem Handy bleibt zu prüfen, dass die eigenen Daten nach dem Update vollständig da sind.
 
+- [ ] Health Connect (Beta): Zugriff erlauben, Werte holen, Quellen wählen (z. B. Fitbit, Samsung Health, Garmin, Withings, Blutdruckgerät-App), Übernahme ohne Doppelte, Einstellungen → Beta-Funktionen
 - [ ] Tagesplan-PDF: Kästchen fürs Trinken und Zeilen für Werte auf Papier; Vorlesen im Tagesplan, bei Dokumenten und in der Anleitung (deutsche Stimme vorhanden?); Design „Hoher Kontrast“ hell und dunkel; „Größer“ und „Sehr groß“ auf allen Seiten (nichts abgeschnitten?)
 - [ ] Entlassbericht mit echtem Bericht: Medikation bei Entlassung richtig erkannt (nicht die bei Aufnahme), Kontrollen mit Datum, Übernehmen als Aufgabe und als Termin, KI-Auslesen
 - [ ] Widget: hinzufügen über die Einstellungen, Anzeige nach Abhaken (auch über die Benachrichtigung), „Offen seit“, Termine, Namen ausblenden, Antippen öffnet die App ohne Einspieler
@@ -59,6 +60,12 @@ Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Daten
 - [ ] Entscheiden: Aufbewahrung der Nachweise 3 Jahre oder länger (30-Jahres-Frist bei Gesundheitsschäden); zusätzlicher Nachweis beim App-Ersteller (Server) ja oder nein
 - [ ] Medizinprodukte-Recht (MDR) prüfen lassen, vor allem den KI-Gesamt-Check der Medikamente; Zweckbestimmung als Organisationshilfe klar festhalten
 - [ ] Impressum und Datenschutzerklärung für eine Veröffentlichung (z. B. Play Store), eigener Signaturschlüssel statt Test-Schlüssel
+
+## Version 0.60.0 (fertig)
+
+- [x] Beta: Werte von Uhr, Fitnessband, Waage oder Blutdruckgerät über Health Connect: Blutdruck, Puls (Einzelmessungen, Ruhepuls), Gewicht, Blutzucker, Temperatur, Sauerstoff, Trinkmenge; nur lesen, 2/7/30 Tage, nach Quelle sortiert, Quellen je Person gemerkt, keine Doppelten, Quelle als Notiz
+- [x] Neue Einstellungs-Kategorie „Beta-Funktionen“ mit Status, Rechten und „Health Connect öffnen“; Erklärseite für Health Connect („Was wird gelesen?“)
+- [x] Automatische Tests für Abgleich und Plausibilität der übernommenen Werte
 
 ## Version 0.59.0 (fertig)
 
