@@ -4,13 +4,14 @@ by Sunshine@R
 
 Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbezogenen Daten bleiben lokal auf dem Gerät.
 
-## Stand: v0.57.0
+## Stand: v0.58.0
 
 ### Funktionsübersicht
 
-**Logo und Einspieler**
+**Logo, Einspieler und Widget**
 - Eigenes Logo (Hand, Herz, Sonne) als App-Symbol (auch als einfarbiges Themensymbol ab Android 13), in der Kopfzeile, auf dem Sperrbildschirm und im Rundgang
 - Kurzer Einspieler (10 Sekunden) beim Start: Tippen oder „Überspringen“ beendet ihn, Ton ein/aus, in den Einstellungen abschaltbar
+- Widget für den Startbildschirm: nächste Einnahme (auch „offen seit …“) und nächster Termin, Namen auf Wunsch ausgeblendet
 
 **Heute (Tag · Woche · Monat)**
 - Tagesansicht: Kurz nachgefragt (offene Antworten), Wichtig und demnächst (dringend, überfällig, Termine heute zum Abhaken, nächste 3 Tage, Termine bis 7 Tage), Bald nachbestellen, Heute einnehmen (Abhaken im Zeitfenster, früher/später/vergessen/bewusst nicht gegeben), Aufgaben, Bemerkung zum Tag, Auswertung
@@ -58,6 +59,7 @@ Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbe
 - Kategorien (u. a. Krankenhaus / Entlassbericht) mit gewichteter Erkennung, Suche, Filter (Jahr, Arzt), Zusammenfassung (selbst oder per KI)
 - Eingebauter Betrachter (PDF, Fotos, Text) mit Zoom (zwei Finger), Drucken (auch Text), Teilen, „Andere App“ (einstellbar)
 - Code des Medikationsplans wird beim Hochladen gelesen
+- Entlassbericht: Medikation bei Entlassung (ohne Aufnahme-Medikation, abgesetzte werden genannt) und Kontrollen („in 2 Wochen“, „am 03.12. um 10:30 Uhr“) als Vorschläge, übernehmen als Aufgabe „Termin vereinbaren“ oder als Termin; auf Wunsch genauer per KI
 - Schreiben und Vollmachten als PDF (Vollmacht, Schweigepflicht, Widerruf, Pflegegrad, Höherstufung, Widerspruch, Verhinderungspflege, Pflegehilfsmittel, Unterlagen anfordern, Folgerezept, Kündigung Pflegedienst, Schwerbehindertenausweis, frei); auch als E-Mail (Text und PDF-Anhang); unterschriebene Fassung wird beim Einscannen dem Entwurf zugeordnet
 
 **Kontakte**

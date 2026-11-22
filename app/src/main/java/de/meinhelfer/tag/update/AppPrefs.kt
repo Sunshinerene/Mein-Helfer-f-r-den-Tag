@@ -31,6 +31,13 @@ object AppPrefs {
         prefs(context).edit().putBoolean("einspieler_ton", on).apply()
     }
 
+    /** Widget auf dem Startbildschirm zeigt Namen von Medikamenten und Terminen (sonst nur Uhrzeit und Anzahl). */
+    fun widgetDetails(context: Context): Boolean = prefs(context).getBoolean("widget_details", true)
+
+    fun setWidgetDetails(context: Context, on: Boolean) {
+        prefs(context).edit().putBoolean("widget_details", on).apply()
+    }
+
     private const val KEY_THEME = "design"
 
     /** "system", "light" oder "dark" */

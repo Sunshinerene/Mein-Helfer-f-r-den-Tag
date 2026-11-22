@@ -153,7 +153,7 @@ fun MoodCheckScreen(
         ) { Text("Speichern") }
         OutlinedButton(shape = buttonShape(), onClick = onClose, modifier = Modifier.fillMaxWidth()) { Text("Später") }
         Text(
-            "Wie oft gefragt wird, stellst du unter Einstellungen → Heute-Seite und Motivator ein.",
+            "Wie oft gefragt wird, stellst du unter Einstellungen → Heute-Seite, Motivator und Widget ein.",
             style = MaterialTheme.typography.bodySmall,
         )
     }

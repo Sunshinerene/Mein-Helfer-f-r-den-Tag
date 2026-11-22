@@ -32,6 +32,7 @@ class TakenReceiver : BroadcastReceiver() {
                     }
                 }
                 NotificationManagerCompat.from(app).cancel(notifId)
+                de.meinhelfer.tag.widget.HelperWidget.refresh(app)
             } finally {
                 pending.finish()
             }

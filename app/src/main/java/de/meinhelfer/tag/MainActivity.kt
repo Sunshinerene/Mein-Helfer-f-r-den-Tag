@@ -47,6 +47,9 @@ class MainActivity : FragmentActivity() {
 
         /** Seite, die aus einer Benachrichtigung geoeffnet werden soll, z. B. "trinken" oder "tagebuch". */
         const val EXTRA_SCREEN = "seite"
+
+        /** Geöffnet über das Startbildschirm-Widget (dann ohne Einspieler). */
+        const val EXTRA_FROM_WIDGET = "widget"
     }
 
     /** Aus einer Benachrichtigung gewuenschte Person (null = nichts zu tun). */
@@ -90,7 +93,8 @@ class MainActivity : FragmentActivity() {
             intent?.getLongExtra(EXTRA_PERSON, -1L)?.takeIf { it > 0 }?.let { pendingPerson = it }
             pendingScreen = intent?.getStringExtra(EXTRA_SCREEN)
             // Nur beim normalen Öffnen, nicht aus einer Erinnerung oder vom Widget heraus
-            showIntro = AppPrefs.introEnabled(this) && pendingPerson == null && pendingScreen == null
+            showIntro = AppPrefs.introEnabled(this) && pendingPerson == null && pendingScreen == null &&
+                intent?.getBooleanExtra(EXTRA_FROM_WIDGET, false) != true
         }
 
         // Beim Start gesperrt, wenn die App-Sperre an ist
@@ -99,6 +103,7 @@ class MainActivity : FragmentActivity() {
         lifecycle.addObserver(object : DefaultLifecycleObserver {
             override fun onStop(owner: LifecycleOwner) {
                 stoppedAt = SystemClock.elapsedRealtime()
+                de.meinhelfer.tag.widget.HelperWidget.refresh(this@MainActivity)
             }
 
             override fun onStart(owner: LifecycleOwner) {

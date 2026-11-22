@@ -160,6 +160,7 @@ fun SettingsScreen(
                 SettingsCategory.Startseite -> {
                     item { HomeCardsCard() }
                     item { MotivatorSettingsCard(vm) }
+                    item { WidgetCard() }
                 }
                 SettingsCategory.Erinnerungen -> {
                     item { PermissionsCard() }
@@ -215,7 +216,7 @@ fun SettingsScreen(
 private enum class SettingsCategory(val emoji: String, val title: String, val keywords: String) {
     Profil("👤", "Meine Daten und Zustimmung", "name adresse telefon rolle ausweis angehörige pflegedienst zustimmung nutzungsbedingungen widerruf nachweis"),
     Darstellung("🎨", "Darstellung", "hell dunkel design farben schrift schriftgröße größe ecken effekte glas aurora liquid animation glanz transparenz einspieler video intro start logo ton"),
-    Startseite("🏠", "Heute-Seite und Motivator", "heute karten notfallkarte tagesstart motivator stimmung smiley ziele"),
+    Startseite("🏠", "Heute-Seite, Motivator und Widget", "heute karten notfallkarte tagesstart motivator stimmung smiley ziele widget startbildschirm"),
     Erinnerungen("🔔", "Erinnerungen und Freigaben", "benachrichtigung freigabe freigaben wecker alarm akku einnahme zeitfenster ton erinnerung trinken tagebuch pflegetagebuch"),
     Dokumente("📄", "Dokumente", "betrachter viewer pdf drucken öffnen dokument"),
     Sicherheit("🔒", "Sicherheit und Sicherung", "app-sperre sperre fingerabdruck gesicht pin sicherung backup wiederherstellen zurücksetzen reset löschen"),
@@ -936,6 +937,53 @@ private fun ViewerCard() {
     }
 }
 
+/** Startbildschirm-Widget: hinzufügen und festlegen, ob Namen zu sehen sind. */
+@Composable
+private fun WidgetCard() {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var details by remember { mutableStateOf(AppPrefs.widgetDetails(context)) }
+    val manager = android.appwidget.AppWidgetManager.getInstance(context)
+    val canPin = manager.isRequestPinAppWidgetSupported
+    HCard(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Widget auf dem Startbildschirm", style = MaterialTheme.typography.titleMedium)
+            Text(
+                "Zeigt die nächste Einnahme und den nächsten Termin der gewählten Person, ohne die App zu öffnen. Antippen öffnet die App. " +
+                    "Aktualisiert sich beim Abhaken, bei Erinnerungen und etwa jede halbe Stunde.",
+                style = MaterialTheme.typography.bodySmall,
+            )
+            if (canPin) {
+                OutlinedButton(shape = buttonShape(), onClick = {
+                    manager.requestPinAppWidget(
+                        android.content.ComponentName(context, de.meinhelfer.tag.widget.HelperWidgetProvider::class.java),
+                        null,
+                        null,
+                    )
+                }) { Text("Widget hinzufügen") }
+            } else {
+                Text(
+                    "Hinzufügen: Startbildschirm lange gedrückt halten → „Widgets“ → „Mein Helfer“.",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Namen von Medikamenten und Terminen zeigen", Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+                Switch(checked = details, onCheckedChange = {
+                    details = it
+                    AppPrefs.setWidgetDetails(context, it)
+                    de.meinhelfer.tag.widget.HelperWidget.refresh(context)
+                })
+            }
+            Text(
+                if (details) "Jeder, der dein Handy entsperrt sieht, kann die Namen auf dem Startbildschirm lesen." +
+                    (if (AppPrefs.lockEnabled(context)) " Die App-Sperre schützt das Widget nicht." else "")
+                else "Das Widget zeigt nur Uhrzeit, Anzahl der Medikamente und Termin-Zeit.",
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
+    }
+}
+
 /** Einspieler beim Start: an/aus, Ton, jetzt ansehen. */
 @Composable
 private fun IntroCard() {
@@ -951,7 +999,7 @@ private fun IntroCard() {
             }
             Text(
                 "Kurzes Video (10 Sekunden) mit dem Logo, wenn die App geöffnet wird. Tippen oder „Überspringen“ beendet es sofort. " +
-                    "Beim Öffnen aus einer Erinnerung wird es nicht gezeigt.",
+                    "Beim Öffnen aus einer Erinnerung oder vom Widget wird es nicht gezeigt.",
                 style = MaterialTheme.typography.bodySmall,
             )
             Row(verticalAlignment = Alignment.CenterVertically) {

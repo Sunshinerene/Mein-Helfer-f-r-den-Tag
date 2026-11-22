@@ -302,7 +302,7 @@ internal fun DailyStartScreen(
                     Column {
                     Button(shape = buttonShape(), onClick = onDone, modifier = Modifier.fillMaxWidth()) { Text("Fertig") }
                     Text(
-                        "Den Tagesstart findest du jederzeit oben auf der Heute-Seite. Automatisch erscheint er einmal am Tag (abschaltbar unter Einstellungen → Heute-Seite und Motivator).",
+                        "Den Tagesstart findest du jederzeit oben auf der Heute-Seite. Automatisch erscheint er einmal am Tag (abschaltbar unter Einstellungen → Heute-Seite, Motivator und Widget).",
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(top = 8.dp),
                     )

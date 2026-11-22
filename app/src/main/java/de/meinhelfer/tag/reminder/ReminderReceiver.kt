@@ -20,6 +20,8 @@ class ReminderReceiver : BroadcastReceiver() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 handle(app, intent)
+                // Widget zeigt nach jeder Erinnerung den neuen Stand (z. B. die nächste Einnahme)
+                runCatching { de.meinhelfer.tag.widget.HelperWidget.refresh(app) }
             } finally {
                 pending.finish()
             }

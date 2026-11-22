@@ -32,6 +32,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
@@ -437,6 +438,15 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 list = dao.list()
             }
             if (list.none { it.id == _personId.value }) selectPerson(list.first().id)
+        }
+        // Startbildschirm-Widget aktuell halten: Medikamente, Termine, Abhaken oder andere Person
+        viewModelScope.launch {
+            val d = LocalDate.now().toEpochDay()
+            combine(db.medicationDao().all(), db.appointmentDao().all(), db.checkinDao().range(d - 1, d + 1), _personId) { _, _, _, _ -> }
+                .collectLatest {
+                    kotlinx.coroutines.delay(1500)
+                    de.meinhelfer.tag.widget.HelperWidget.refresh(app)
+                }
         }
         // Terminserien ohne Ende fortschreiben, dann Erinnerungen neu planen (Sicherheitsnetz bei jedem App-Start).
         viewModelScope.launch {

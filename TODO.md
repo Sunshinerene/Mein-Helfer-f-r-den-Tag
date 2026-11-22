@@ -1,18 +1,17 @@
 # TODO
 
-Stand: v0.57.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.58.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
-- [ ] Punkte aus „Ideen und Optimierungen“ nach Wunsch vorziehen (Vorschlag: Vorschläge aus Entlassberichten, Startbildschirm-Widget)
+- [ ] Punkte aus „Ideen und Optimierungen“ nach Wunsch vorziehen (Vorschlag: Trinkmenge und Werte im Tagesplan-PDF, Barrierefreiheit)
 - [ ] Budgets: Beträge prüfen und anpassen, sobald die Pflegereform 2027 (Pflegeneuordnungsgesetz) beschlossen ist
 
 ## Ideen und Optimierungen
 
 - [ ] Trinkmenge und Werte im Tagesplan-PDF; Pflegetagebuch: Selbsteinschätzung je Bereich als Vorbereitung auf die Begutachtung
-- [ ] Dokumente: Medikamente und Kontrolltermine aus dem erkannten Text vorschlagen (z. B. aus Entlassbericht), immer mit Bestätigung
 - [ ] Packungsfoto: Erkennung verbessern (Wirkstoff, Packungsbeilage), Barcode live mit der Kamera
-- [ ] Startbildschirm-Widget: nächste Einnahme und nächster Termin
+- [ ] Widget: „Eingenommen“ direkt im Widget (mit Rückfrage), zweite Größe mit Tagesübersicht
 - [ ] Barrierefreiheit: Hochkontrast-Design, Vorlesen, größere Bedienflächen
 - [ ] Mehrsprachigkeit für Betreuungskräfte (z. B. Polnisch, Rumänisch)
 - [ ] Motivator: Pausen-Erinnerung, Stimmungsverlauf in der Auswertung (nur für dich, nicht in geteilten Berichten), Ziel-Schritte als Aufgabe mit Frist übernehmen
@@ -23,6 +22,8 @@ Stand: v0.57.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Datenbank prüfen, Beispiel-PDFs mit erfundenen Daten, Beispiel-Grafiken, Test-Benachrichtigungen). Die Datenbank-Umstellungen von Version 5 bis 26 prüft seit v0.54.0 bei jedem Bauen ein automatischer Test gegen das Schema (Tabellen, Spalten, Typen); auf dem Handy bleibt zu prüfen, dass die eigenen Daten nach dem Update vollständig da sind.
 
+- [ ] Entlassbericht mit echtem Bericht: Medikation bei Entlassung richtig erkannt (nicht die bei Aufnahme), Kontrollen mit Datum, Übernehmen als Aufgabe und als Termin, KI-Auslesen
+- [ ] Widget: hinzufügen über die Einstellungen, Anzeige nach Abhaken (auch über die Benachrichtigung), „Offen seit“, Termine, Namen ausblenden, Antippen öffnet die App ohne Einspieler
 - [ ] Neues App-Symbol auf dem Startbildschirm (rund und bei Themensymbolen), Logo in der Kopfzeile; Einspieler beim Start: Bild füllt die Breite, Ton, „Ton aus“, Überspringen, Abschalten in den Einstellungen, kein Einspieler beim Öffnen aus einer Erinnerung, App-Sperre erst danach
 - [ ] Nach den Updates: alte Daten vollständig da (Selbsttest → „Datenbank prüfen“ zeigt die Anzahl je Bereich), Wiederherstellen einer Sicherung
 - [ ] Wiederkehrende Termine: Anlegen, „nur diesen“ und „alle folgenden“ ändern und löschen, Erinnerungen
@@ -56,6 +57,14 @@ Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Daten
 - [ ] Entscheiden: Aufbewahrung der Nachweise 3 Jahre oder länger (30-Jahres-Frist bei Gesundheitsschäden); zusätzlicher Nachweis beim App-Ersteller (Server) ja oder nein
 - [ ] Medizinprodukte-Recht (MDR) prüfen lassen, vor allem den KI-Gesamt-Check der Medikamente; Zweckbestimmung als Organisationshilfe klar festhalten
 - [ ] Impressum und Datenschutzerklärung für eine Veröffentlichung (z. B. Play Store), eigener Signaturschlüssel statt Test-Schlüssel
+
+## Version 0.58.0 (fertig)
+
+- [x] Entlassbericht: Karte „Aus dem Entlassbericht“ im Dokument (öffnet sich nach dem Speichern): Entlassungsdatum, Medikation bei Entlassung aus dem passenden Abschnitt (Aufnahme- und Vormedikation zählen nicht, abgesetzte oder pausierte Mittel werden genannt), Übernahme über den bekannten Plan-Vergleich
+- [x] Kontrollen und Termine aus dem Bericht (Labor, Wiedervorstellung, Fäden, Wunde, Ultraschall, EKG, Röntgen …) mit zuständiger Stelle; Zeiträume ab Entlassungstag; übernehmen als Aufgabe „Termin vereinbaren“ (Frist eine Woche vorher) oder als Termin, Bericht als Unterlage verknüpft
+- [x] „Mit KI genauer auslesen“ für Entlassberichte (Medikamente, abgesetzte Mittel, Kontrollen in einem Schritt; Name und Nummern der Person ersetzt)
+- [x] Startbildschirm-Widget: nächste Einnahme und nächster Termin, „Widget hinzufügen“ in den Einstellungen, Namen ausblendbar, aktualisiert sich beim Abhaken, bei Erinnerungen und regelmäßig
+- [x] Automatische Tests für Entlassbericht und Widget-Inhalt
 
 ## Version 0.57.0 (fertig)
 
