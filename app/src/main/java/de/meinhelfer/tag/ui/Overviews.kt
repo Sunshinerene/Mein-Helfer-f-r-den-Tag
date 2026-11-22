@@ -174,7 +174,7 @@ internal fun OverviewEditors(edit: OverviewEdit, doctors: List<Doctor>, vm: Main
             onDismiss = { edit.task = null },
             onSave = { d ->
                 if (t.id == 0L) vm.addTasks(listOf(d))
-                else vm.updateTodo(t.copy(text = d.text, doctorId = d.doctorId, priority = d.priority, dueDay = d.dueDay, outside = d.outside))
+                else vm.updateTodo(t.copy(text = d.text, doctorId = d.doctorId, priority = d.priority, dueDay = d.dueDay, outside = d.outside, remindAt = d.remindAt))
                 edit.task = null
             },
         )
@@ -334,6 +334,7 @@ internal fun TaskLine(t: Todo, today: Long, vm: MainViewModel, edit: OverviewEdi
             val meta = listOfNotNull(
                 if (t.priority == 2 && !t.done) "Dringend" else null,
                 if (!t.done) t.dueDay?.let { dueText(it, today) } else null,
+                if (!t.done) remindText(t.remindAt) else null,
                 if (t.done) stars(t.rating).takeIf { it.isNotEmpty() } else null,
             ).joinToString(" · ")
             if (meta.isNotEmpty()) {

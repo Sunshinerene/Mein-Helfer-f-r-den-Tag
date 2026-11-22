@@ -26,6 +26,7 @@ object ReminderScheduler {
     const val TYPE_FOLLOWUP = "followup"
     const val EXTRA_DAY = "day"
     const val TYPE_MOOD = "mood"
+    const val TYPE_TODO = "todo"
 
     /** "30 Minuten", "1 Stunde", "2 Stunden", "1 Tag" */
     fun leadText(minutes: Int): String = when {
@@ -52,6 +53,7 @@ object ReminderScheduler {
             med.timeList().forEach { scheduleMedication(app, med.id, it) }
         }
         db.appointmentDao().list().forEach { scheduleAppointment(app, it) }
+        db.todoDao().list().forEach { scheduleTodo(app, it) }
         scheduleMood(app)
     }
 
@@ -168,6 +170,20 @@ object ReminderScheduler {
             triggerAt = trigger,
             type = TYPE_APPT,
             id = appointment.id,
+            time = null,
+        )
+    }
+
+    /** Erinnerung an eine Aufgabe (nur offene mit Erinnerungszeit in der Zukunft). */
+    fun scheduleTodo(context: Context, todo: de.meinhelfer.tag.data.Todo) {
+        val at = todo.remindAt ?: return
+        if (todo.done || todo.archived || at <= System.currentTimeMillis()) return
+        setAlarm(
+            context = context,
+            requestCode = "todo:${todo.id}".hashCode(),
+            triggerAt = at,
+            type = TYPE_TODO,
+            id = todo.id,
             time = null,
         )
     }

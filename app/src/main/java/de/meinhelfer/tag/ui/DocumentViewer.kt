@@ -52,10 +52,19 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.isSpecified
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import de.meinhelfer.tag.data.Document
+import de.meinhelfer.tag.export.PdfPages
 import de.meinhelfer.tag.export.PdfPrintAdapter
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.calculateZoom
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChanged
 import de.meinhelfer.tag.media.DocumentStore
 import de.meinhelfer.tag.media.PhotoStore
 import kotlinx.coroutines.Dispatchers
@@ -69,8 +78,26 @@ import java.io.File
 internal fun canViewInside(doc: Document): Boolean =
     doc.mimeType == "application/pdf" || doc.mimeType.startsWith("image/") || doc.mimeType.startsWith("text/")
 
-/** Kann dieses Dokument gedruckt werden (PDF und Fotos)? */
-internal fun canPrint(doc: Document): Boolean = doc.mimeType == "application/pdf" || doc.mimeType.startsWith("image/")
+/** Kann dieses Dokument gedruckt werden (PDF, Fotos und Text)? */
+internal fun canPrint(doc: Document): Boolean =
+    doc.mimeType == "application/pdf" || doc.mimeType.startsWith("image/") || doc.mimeType.startsWith("text/")
+
+/** Text-Dokument als A4-PDF (Titel oben, Zeilenumbruch, Seitenwechsel). */
+private fun textToPdf(title: String, text: String, target: File): File {
+    val pdf = PdfPages(595, 842, margin = 50f, footer = title.take(80))
+    pdf.newPage()
+    pdf.text(title, 14f, bold = true)
+    pdf.gap(10f)
+    text.take(400_000).replace("\r\n", "\n").split('\n').forEach { line ->
+        if (line.isBlank()) {
+            pdf.gap(6f)
+        } else {
+            // Sehr lange Zeilen in Stuecke teilen, damit nichts ueber den Seitenrand laeuft
+            line.chunked(1500).forEach { pdf.text(it, 10.5f) }
+        }
+    }
+    return pdf.save(target)
+}
 
 /** Gibt das Dokument an den Druckdienst des Handys. Fotos werden dafuer kurz in eine PDF umgewandelt. */
 internal suspend fun printDocument(context: Context, doc: Document, file: File): Boolean {
@@ -78,6 +105,9 @@ internal suspend fun printDocument(context: Context, doc: Document, file: File):
         doc.mimeType == "application/pdf" -> file
         doc.mimeType.startsWith("image/") -> withContext(Dispatchers.IO) {
             DocumentStore.newTempFile(context, "pdf").also { DocumentStore.imagesToPdf(listOf(file), it) }
+        }
+        doc.mimeType.startsWith("text/") -> withContext(Dispatchers.IO) {
+            textToPdf(doc.title, file.readText(), DocumentStore.newTempFile(context, "pdf"))
         }
         else -> return false
     }
@@ -87,7 +117,25 @@ internal suspend fun printDocument(context: Context, doc: Document, file: File):
     return true
 }
 
-private val ZOOMS = listOf(1f, 1.5f, 2f, 3f)
+private const val MAX_ZOOM = 4f
+
+/**
+ * Zoom mit zwei Fingern. Reagiert nur, wenn zwei Finger aufliegen; mit einem Finger wird wie gewohnt geblaettert.
+ * Laeuft im ersten Durchgang, damit das Blaettern die Zoom-Bewegung nicht uebernimmt.
+ */
+private fun Modifier.pinchToZoom(onZoom: (Float) -> Unit): Modifier = pointerInput(Unit) {
+    awaitEachGesture {
+        awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+        do {
+            val event = awaitPointerEvent(PointerEventPass.Initial)
+            if (event.changes.count { it.pressed } >= 2) {
+                val z = event.calculateZoom()
+                if (z != 1f) onZoom(z)
+                event.changes.forEach { if (it.positionChanged()) it.consume() }
+            }
+        } while (event.changes.any { it.pressed })
+    }
+}
 
 /** Vollbild-Betrachter fuer PDF, Fotos und Text. Mit Zoom, Drucken, Teilen und "in anderer App oeffnen". */
 @Composable
@@ -96,7 +144,7 @@ internal fun DocumentViewer(doc: Document, onClose: () -> Unit) {
     val scope = rememberCoroutineScope()
     var file by remember { mutableStateOf<File?>(null) }
     var failed by remember { mutableStateOf(false) }
-    var zoomIndex by remember { mutableStateOf(0) }
+    var zoom by remember { mutableFloatStateOf(1f) }
     val ext = DocumentStore.extensionFor(doc.mimeType)
 
     LaunchedEffect(doc.fileName) {
@@ -116,16 +164,24 @@ internal fun DocumentViewer(doc: Document, onClose: () -> Unit) {
                     Text(doc.title, style = MaterialTheme.typography.titleMedium, maxLines = 1, modifier = Modifier.weight(1f))
                     TextButton(onClick = onClose) { Text("Schließen") }
                 }
-                Box(Modifier.weight(1f).fillMaxWidth()) {
+                Box(Modifier.weight(1f).fillMaxWidth().pinchToZoom { zoom = (zoom * it).coerceIn(1f, MAX_ZOOM) }) {
                     val f = file
                     when {
                         failed -> Text("Die Datei konnte nicht geöffnet werden.", Modifier.padding(16.dp))
                         f == null -> CircularProgressIndicator(Modifier.align(Alignment.Center))
-                        doc.mimeType == "application/pdf" -> PdfBody(f, ZOOMS[zoomIndex])
-                        doc.mimeType.startsWith("image/") -> ImageBody(f, ZOOMS[zoomIndex])
+                        doc.mimeType == "application/pdf" -> PdfBody(f, zoom)
+                        doc.mimeType.startsWith("image/") -> ImageBody(f, zoom)
                         doc.mimeType.startsWith("text/") -> {
                             val text = remember(f) { runCatching { f.readText().take(200_000) }.getOrDefault("") }
-                            Text(text, Modifier.verticalScroll(rememberScrollState()).padding(16.dp), style = MaterialTheme.typography.bodyMedium)
+                            val base = MaterialTheme.typography.bodyMedium
+                            Text(
+                                text,
+                                Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+                                style = base.copy(
+                                    fontSize = if (base.fontSize.isSpecified) base.fontSize * zoom else base.fontSize,
+                                    lineHeight = if (base.lineHeight.isSpecified) base.lineHeight * zoom else base.lineHeight,
+                                ),
+                            )
                         }
                         else -> Text("Dieses Format kann die App nicht selbst anzeigen. Öffne es mit „Andere App“.", Modifier.padding(16.dp))
                     }
@@ -136,10 +192,12 @@ internal fun DocumentViewer(doc: Document, onClose: () -> Unit) {
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    if (canViewInside(doc) && !doc.mimeType.startsWith("text/")) {
-                        OutlinedButton(shape = buttonShape(), enabled = zoomIndex > 0, onClick = { zoomIndex-- }, contentPadding = PaddingValues(horizontal = 14.dp)) { Text("−") }
-                        Text("${(ZOOMS[zoomIndex] * 100).toInt()} %", style = MaterialTheme.typography.labelLarge)
-                        OutlinedButton(shape = buttonShape(), enabled = zoomIndex < ZOOMS.lastIndex, onClick = { zoomIndex++ }, contentPadding = PaddingValues(horizontal = 14.dp)) { Text("+") }
+                    if (canViewInside(doc)) {
+                        OutlinedButton(shape = buttonShape(), enabled = zoom > 1f, onClick = { zoom = (zoom / 1.5f).coerceAtLeast(1f) }, contentPadding = PaddingValues(horizontal = 14.dp)) { Text("−") }
+                        TextButton(onClick = { zoom = 1f }, contentPadding = PaddingValues(horizontal = 6.dp)) {
+                            Text("${(zoom * 100).toInt()} %", style = MaterialTheme.typography.labelLarge)
+                        }
+                        OutlinedButton(shape = buttonShape(), enabled = zoom < MAX_ZOOM, onClick = { zoom = (zoom * 1.5f).coerceAtMost(MAX_ZOOM) }, contentPadding = PaddingValues(horizontal = 14.dp)) { Text("+") }
                     }
                     if (canPrint(doc)) {
                         OutlinedButton(shape = buttonShape(), enabled = ready != null, onClick = {
@@ -192,7 +250,9 @@ private fun PdfBody(file: File, zoom: Float) {
     val mutex = remember(renderer) { Mutex() }
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val density = LocalDensity.current
-        val widthPx = with(density) { (maxWidth * zoom).toPx() }.toInt().coerceIn(300, 2200)
+        // Neu gerendert wird nur in Stufen (halbe Schritte), dazwischen wird das Bild nur skaliert
+        val renderZoom = kotlin.math.ceil(zoom * 2f) / 2f
+        val widthPx = with(density) { (maxWidth * renderZoom).toPx() }.toInt().coerceIn(300, 2200)
         val pageWidth = maxWidth * zoom
         Box(Modifier.fillMaxSize().horizontalScroll(rememberScrollState())) {
             LazyColumn(

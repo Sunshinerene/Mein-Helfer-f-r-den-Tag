@@ -1,13 +1,10 @@
 # TODO
 
-Stand: v0.50.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.51.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
-- [ ] Code des Medikationsplans auch beim Hochladen automatisch lesen; Namen zu PZN ohne Datenbank sind nicht möglich
-- [ ] Aufgaben mit Erinnerung zur Frist (Benachrichtigung) und „In Kalender eintragen“
-- [ ] Dokumenten-Betrachter: Zoom mit zwei Fingern, Text-Dokumente drucken
-- [ ] Vorlagen erweitern (Kündigung Pflegedienst, Antrag Schwerbehindertenausweis, Widerruf), eingescannte unterschriebene Fassung automatisch dem Entwurf zuordnen
+- [ ] Punkte aus „Ideen und Optimierungen“ nach Wunsch vorziehen (Vorschlag: Trink- und Vitalprotokoll, Pflegetagebuch, Budget-Übersicht, Übergabe-Bericht)
 
 ## Ideen und Optimierungen
 
@@ -43,6 +40,7 @@ Stand: v0.50.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 - [ ] Fotos zu Medikamenten: Kamera, Galerie, freie Bilder (Wikimedia), Internetsuche, „Fotos ergänzen“ nacheinander; Datenbank 21
 - [ ] Vorrat „unbekannt“: Umstellung auf Datenbank 22 (bisheriger Vorrat 0 gilt als unbekannt), Schnelleingabe und „Vorrat eintragen“ nacheinander
 - [ ] Datenbank 23 (Packungsgröße), „Neue Packung“, Sicherungs-Erinnerung auf der Heute-Seite, PDFs von Notfallkarte (Karte für die Geldbörse richtig groß?) und Medikamentenplan
+- [ ] Aufgaben-Erinnerung (kommt pünktlich, nicht mehr nach „erledigt“), „In Kalender eintragen“ mit deiner Kalender-App, Zoom mit zwei Fingern im Betrachter, Text-Dokumente drucken, Plan-Code beim Hochladen, Zuordnung der unterschriebenen Fassung
 - [ ] Ecken und Effekte (Beta): alle Ansichten mit „Eckig“ und „Rund“, Aurora hell und dunkel, bewegter Hintergrund flüssig und akkuschonend
 
 ## Rechtliches vor einer Veröffentlichung
@@ -51,6 +49,14 @@ Stand: v0.50.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 - [ ] Entscheiden: Aufbewahrung der Nachweise 3 Jahre oder länger (30-Jahres-Frist bei Gesundheitsschäden); zusätzlicher Nachweis beim App-Ersteller (Server) ja oder nein
 - [ ] Medizinprodukte-Recht (MDR) prüfen lassen, vor allem den KI-Gesamt-Check der Medikamente; Zweckbestimmung als Organisationshilfe klar festhalten
 - [ ] Impressum und Datenschutzerklärung für eine Veröffentlichung (z. B. Play Store), eigener Signaturschlüssel statt Test-Schlüssel
+
+## Version 0.51.0 (fertig)
+
+- [x] Aufgaben: Erinnerung per Benachrichtigung (Tag und Uhrzeit, Schnellwahl), 🔔 an der Aufgabe, „In Kalender eintragen“ über die Kalender-App
+- [x] Dokumenten-Betrachter: Zoom mit zwei Fingern (auch Text), Prozent antippen setzt zurück; Text-Dokumente drucken
+- [x] Code des Medikationsplans wird schon beim Hochladen und bei „Text neu auslesen“ gesucht und hat beim Einlesen Vorrang
+- [x] Neue Vorlagen: Kündigung des Pflegedienstes (§ 120 SGB XI), Antrag auf Schwerbehindertenausweis (§ 152 SGB IX), Widerruf einer Vollmacht oder Schweigepflicht-Entbindung
+- [x] Unterschriebene Fassung beim Einscannen dem Entwurf zuordnen (Titel, Kategorie, Empfänger; Entwurf vermerkt, Aufgabe abgehakt)
 
 ## Version 0.50.0 (fertig)
 

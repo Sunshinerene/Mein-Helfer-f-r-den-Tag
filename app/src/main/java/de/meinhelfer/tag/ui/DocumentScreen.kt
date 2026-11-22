@@ -22,6 +22,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -45,6 +46,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import de.meinhelfer.tag.data.Doctor
 import de.meinhelfer.tag.data.Document
+import de.meinhelfer.tag.letters.SignedCopies
 import de.meinhelfer.tag.data.Person
 import de.meinhelfer.tag.media.DOC_CATEGORIES
 import de.meinhelfer.tag.media.DocKind
@@ -351,6 +353,8 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?
                     DocumentStore.discard(pending)
                     draft = null
                 },
+                drafts = items,
+                onLinkDraft = { vm.markDraftSigned(it) },
                 onSave = { doc ->
                     scope.launch {
                         try {
@@ -409,6 +413,8 @@ private fun DocumentDialog(
     onRemoveLast: () -> Unit,
     onDismiss: () -> Unit,
     onSave: (Document) -> Unit,
+    drafts: List<Document> = emptyList(),
+    onLinkDraft: (Document) -> Unit = {},
 ) {
     val suggestion = remember { pending?.let { DocumentAnalyzer.analyze(it.text, doctors) } }
     var title by remember { mutableStateOf(initial?.title ?: suggestion?.title ?: "Dokument") }
@@ -420,6 +426,11 @@ private fun DocumentDialog(
     var notes by remember { mutableStateOf(initial?.notes ?: "") }
     var summary by remember { mutableStateOf(initial?.summary ?: "") }
     var text by remember { mutableStateOf(initial?.text ?: pending?.text ?: "") }
+    var planCode by remember { mutableStateOf(initial?.planCode ?: pending?.planCode ?: "") }
+    // Unterschriebene Fassung eines Entwurfs aus „Schreiben und Vollmachten“?
+    val draftMatch = remember(text, drafts) { if (pending != null && initial == null) SignedCopies.bestMatch(text, drafts) else null }
+    var linked by remember { mutableStateOf<Document?>(null) }
+    var matchDismissed by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -429,7 +440,10 @@ private fun DocumentDialog(
 
     // Weitere Seite hinzugefuegt: erkannten Text uebernehmen
     LaunchedEffect(pending?.text) {
-        if (pending != null) text = pending.text
+        if (pending != null) {
+            text = pending.text
+            planCode = pending.planCode
+        }
     }
 
     AlertDialog(
@@ -465,6 +479,34 @@ private fun DocumentDialog(
                             "Titel, Kategorie, Datum und Kontakt wurden aus dem Text vorgeschlagen. Bitte prüfen.",
                             style = MaterialTheme.typography.bodySmall,
                         )
+                    }
+                }
+                val match = draftMatch
+                val link = linked
+                if (link != null) {
+                    Text("✓ Zugeordnet: unterschriebene Fassung von „${link.title}“", style = MaterialTheme.typography.bodySmall)
+                    TextButton(onClick = { linked = null }) { Text("Zuordnung aufheben") }
+                } else if (match != null && !matchDismissed) {
+                    HCard(Modifier.fillMaxWidth(), colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
+                        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text("Unterschriebene Fassung?", style = MaterialTheme.typography.titleSmall)
+                            Text(
+                                "Der Text passt zum Entwurf „${match.title}“. Soll dieses Dokument als unterschriebene Fassung dazu abgelegt werden?",
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Button(shape = buttonShape(), onClick = {
+                                    linked = match
+                                    title = SignedCopies.baseTitle(match) + " (unterschrieben)"
+                                    category = match.category
+                                    if (match.doctorId != null) doctorId = match.doctorId
+                                    if (date == null) date = LocalDate.now()
+                                    val note = "Unterschriebene Fassung von „${match.title}“."
+                                    if (!notes.contains(note)) notes = listOf(note, notes).filter { it.isNotBlank() }.joinToString("\n")
+                                }) { Text("Ja, zuordnen") }
+                                TextButton(onClick = { matchDismissed = true }) { Text("Nein") }
+                            }
+                        }
                     }
                 }
                 OutlinedTextField(
@@ -531,7 +573,12 @@ private fun DocumentDialog(
                                         initial.fileName,
                                         DocumentStore.safeName(initial.title) + "." + DocumentStore.extensionFor(initial.mimeType),
                                     )
-                                    DocumentReader.extractText(file, initial.mimeType)
+                                    val found = DocumentReader.extractText(file, initial.mimeType)
+                                    // Medikationsplan: auch den Code auf dem Plan neu suchen
+                                    if (MedPlans.looksLikePlan(found) || initial.category == "Medikamentenplan") {
+                                        DocumentReader.planCodeInFile(file, initial.mimeType).takeIf { it.isNotBlank() }?.let { planCode = it }
+                                    }
+                                    found
                                 }.getOrDefault("")
                                 rereading = false
                                 if (result.isBlank()) {
@@ -558,6 +605,7 @@ private fun DocumentDialog(
             TextButton(
                 enabled = title.isNotBlank(),
                 onClick = {
+                    linked?.let(onLinkDraft)
                     onSave(
                         (initial ?: Document(title = title, fileName = "")).copy(
                             title = title.trim(),
@@ -567,6 +615,7 @@ private fun DocumentDialog(
                             notes = notes.trim(),
                             summary = summary.trim(),
                             text = text.trim(),
+                            planCode = planCode,
                             mimeType = initial?.mimeType ?: pending?.mime ?: "application/pdf",
                         ),
                     )

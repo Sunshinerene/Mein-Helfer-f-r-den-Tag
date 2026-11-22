@@ -52,7 +52,51 @@ data class TaskDraft(
     val priority: Int = 1,
     val dueDay: Long? = null,
     val outside: Boolean = false,
+    /** Erinnerung per Benachrichtigung (Millisekunden), null = keine. */
+    val remindAt: Long? = null,
 )
+
+private val REMIND_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("EE dd.MM., HH:mm", Locale.GERMANY)
+
+/** "🔔 Mo 24.11., 09:00 Uhr" fuer eine geplante Erinnerung in der Zukunft, sonst null. */
+internal fun remindText(at: Long?): String? {
+    if (at == null || at <= System.currentTimeMillis()) return null
+    return "🔔 " + java.time.Instant.ofEpochMilli(at).atZone(java.time.ZoneId.systemDefault()).format(REMIND_FORMAT) + " Uhr"
+}
+
+/** Oeffnet die Kalender-App mit einem vorausgefuellten Eintrag (ganztägig am Fristtag oder zur Erinnerungszeit). */
+internal fun addTaskToCalendar(context: Context, text: String, dueDay: Long?, remindAt: Long?, note: String = "") {
+    val zone = java.time.ZoneId.systemDefault()
+    val intent = Intent(Intent.ACTION_INSERT).apply {
+        data = android.provider.CalendarContract.Events.CONTENT_URI
+        putExtra(android.provider.CalendarContract.Events.TITLE, text.lines().first().take(120))
+        val details = listOf(text.takeIf { it.lines().size > 1 || it.length > 120 }.orEmpty(), note).filter { it.isNotBlank() }.joinToString("\n\n")
+        if (details.isNotBlank()) putExtra(android.provider.CalendarContract.Events.DESCRIPTION, details)
+        when {
+            remindAt != null -> {
+                putExtra(android.provider.CalendarContract.EXTRA_EVENT_BEGIN_TIME, remindAt)
+                putExtra(android.provider.CalendarContract.EXTRA_EVENT_END_TIME, remindAt + 30 * 60 * 1000L)
+            }
+            dueDay != null -> {
+                // Ganztaegige Eintraege erwarten Mitternacht UTC
+                val start = LocalDate.ofEpochDay(dueDay).atStartOfDay(java.time.ZoneOffset.UTC).toInstant().toEpochMilli()
+                putExtra(android.provider.CalendarContract.EXTRA_EVENT_ALL_DAY, true)
+                putExtra(android.provider.CalendarContract.EXTRA_EVENT_BEGIN_TIME, start)
+                putExtra(android.provider.CalendarContract.EXTRA_EVENT_END_TIME, start + 24 * 60 * 60 * 1000L)
+            }
+            else -> {
+                val start = LocalDate.now().plusDays(1).atTime(9, 0).atZone(zone).toInstant().toEpochMilli()
+                putExtra(android.provider.CalendarContract.EXTRA_EVENT_BEGIN_TIME, start)
+                putExtra(android.provider.CalendarContract.EXTRA_EVENT_END_TIME, start + 30 * 60 * 1000L)
+            }
+        }
+    }
+    try {
+        context.startActivity(intent)
+    } catch (_: ActivityNotFoundException) {
+        android.widget.Toast.makeText(context, "Keine Kalender-App gefunden.", android.widget.Toast.LENGTH_SHORT).show()
+    }
+}
 
 /** Verknuepfte Dokumente einer Aufgabe. */
 internal fun Todo.attachedIds(): List<Long> = docIds.split(",").mapNotNull { it.trim().toLongOrNull() }
@@ -163,6 +207,7 @@ internal fun TasksCard(
                                     else -> null
                                 },
                                 t.dueDay?.let { dueText(it, today) },
+                                remindText(t.remindAt),
                             ).joinToString(" · ")
                             if (meta.isNotEmpty()) {
                                 Text(
@@ -293,7 +338,7 @@ internal fun TasksCard(
             onSave = { d ->
                 val e = editItem
                 if (e == null) vm.addTasks(listOf(d))
-                else vm.updateTodo(e.copy(text = d.text, doctorId = d.doctorId, priority = d.priority, dueDay = d.dueDay, outside = d.outside))
+                else vm.updateTodo(e.copy(text = d.text, doctorId = d.doctorId, priority = d.priority, dueDay = d.dueDay, outside = d.outside, remindAt = d.remindAt))
                 showAdd = false
                 editItem = null
             },
@@ -375,6 +420,17 @@ internal fun TaskDialog(
     var outside by remember { mutableStateOf(initial?.outside ?: false) }
     var outsideTouched by remember { mutableStateOf(initial != null) }
     val today = LocalDate.now()
+    val zone = java.time.ZoneId.systemDefault()
+    val initialRemind = initial?.remindAt?.takeIf { it > System.currentTimeMillis() }?.let { java.time.Instant.ofEpochMilli(it).atZone(zone).toLocalDateTime() }
+    var remindOn by remember { mutableStateOf(initialRemind != null) }
+    var remindDate by remember { mutableStateOf(initialRemind?.toLocalDate()) }
+    var remindTime by remember { mutableStateOf(initialRemind?.toLocalTime() ?: java.time.LocalTime.of(9, 0)) }
+    val context = LocalContext.current
+    val remindMillis: Long? = if (remindOn) {
+        (remindDate ?: due ?: today.plusDays(1)).atTime(remindTime).atZone(zone).toInstant().toEpochMilli()
+    } else {
+        null
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -410,6 +466,41 @@ internal fun TaskDialog(
                     TextButton(onClick = { due = today.plusDays(7) }) { Text("In 1 Woche") }
                     if (due != null) TextButton(onClick = { due = null }) { Text("Ohne Frist") }
                 }
+                Row(
+                    Modifier.fillMaxWidth().clickable { remindOn = !remindOn },
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Checkbox(checked = remindOn, onCheckedChange = { remindOn = it })
+                    Text("Erinnern per Benachrichtigung", style = MaterialTheme.typography.bodyMedium)
+                }
+                if (remindOn) {
+                    DatePickerField(label = "Erinnern am", date = remindDate ?: due ?: today.plusDays(1), onChange = { remindDate = it })
+                    TimePickerField(label = "um", time = remindTime, onChange = { remindTime = it })
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        due?.let { d ->
+                            TextButton(onClick = {
+                                remindDate = d
+                                remindTime = java.time.LocalTime.of(9, 0)
+                            }) { Text("Am Fristtag 9 Uhr") }
+                            TextButton(onClick = {
+                                remindDate = d.minusDays(1)
+                                remindTime = java.time.LocalTime.of(18, 0)
+                            }) { Text("Am Vortag 18 Uhr") }
+                        }
+                        TextButton(onClick = {
+                            remindDate = today.plusDays(1)
+                            remindTime = java.time.LocalTime.of(9, 0)
+                        }) { Text("Morgen 9 Uhr") }
+                    }
+                    if (remindMillis != null && remindMillis <= System.currentTimeMillis()) {
+                        Text("Dieser Zeitpunkt liegt in der Vergangenheit, es kommt keine Erinnerung.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+                    }
+                }
+                if (text.isNotBlank()) {
+                    TextButton(onClick = { addTaskToCalendar(context, text.trim(), due?.toEpochDay(), remindMillis) }) {
+                        Text("📅 In Kalender eintragen")
+                    }
+                }
                 if (doctors.isNotEmpty()) {
                     DropdownField(
                         label = "Arzt / Stelle (zum direkten Kontakt)",
@@ -440,7 +531,7 @@ internal fun TaskDialog(
         confirmButton = {
             TextButton(
                 enabled = text.isNotBlank(),
-                onClick = { onSave(TaskDraft(text.trim(), doctorId, priority, due?.toEpochDay(), outside)) },
+                onClick = { onSave(TaskDraft(text.trim(), doctorId, priority, due?.toEpochDay(), outside, remindMillis)) },
             ) { Text("Speichern") }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Abbrechen") } },

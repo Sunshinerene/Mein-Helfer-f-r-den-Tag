@@ -117,6 +117,22 @@ class ReminderReceiver : BroadcastReceiver() {
                 )
             }
 
+            ReminderScheduler.TYPE_TODO -> {
+                val todo = db.todoDao().byId(id) ?: return
+                val at = todo.remindAt ?: return
+                // Erledigt, geloescht oder Erinnerung verschoben: alter Alarm, nichts anzeigen.
+                if (todo.done || todo.archived) return
+                if (kotlin.math.abs(System.currentTimeMillis() - at) > 10 * 60 * 1000L) return
+                val due = todo.dueDay?.let { " · " + de.meinhelfer.tag.ui.dueText(it) }.orEmpty()
+                Notifications.show(
+                    context,
+                    "todo:$id".hashCode(),
+                    "Aufgabe${forPerson(todo.personId)}",
+                    todo.text + due,
+                    personId = todo.personId,
+                )
+            }
+
             ReminderScheduler.TYPE_APPT -> {
                 val appointment = db.appointmentDao().byId(id) ?: return
                 // Termin wurde verschoben oder liegt in der Vergangenheit: alter Alarm, nichts anzeigen.

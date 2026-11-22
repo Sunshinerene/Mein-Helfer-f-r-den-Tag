@@ -268,6 +268,7 @@ internal fun LetterScreen(
                             val want = when (t.to) {
                                 LetterTo.Kasse -> kind == RecipientKind.Pflegekasse
                                 LetterTo.Arzt -> kind == RecipientKind.Arzt
+                                LetterTo.Pflegedienst -> kind == RecipientKind.Pflegedienst
                                 else -> false
                             }
                             if (want) 0 else 1
@@ -456,7 +457,7 @@ internal fun LetterScreen(
                             }) { Text(if (taskAdded) "Aufgabe angelegt ✓" else "Als Aufgabe merken") }
                         }
                         Text(
-                            "Die PDF liegt nur auf deinem Handy. Gesendet wird nichts automatisch. Nach dem Unterschreiben: abschicken, die unterschriebene Fassung im Tab „Dokumente“ einscannen, gern mit der Kategorie dieses Entwurfs.",
+                            "Die PDF liegt nur auf deinem Handy. Gesendet wird nichts automatisch. Nach dem Unterschreiben: abschicken und die unterschriebene Fassung im Tab „Dokumente“ einscannen. Liegt der Entwurf unter Dokumente, schlägt die App vor, beide zuzuordnen.",
                             style = MaterialTheme.typography.bodySmall,
                         )
                     }

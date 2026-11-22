@@ -1,5 +1,6 @@
 package de.meinhelfer.tag.media
 
+import de.meinhelfer.tag.summary.MedPlans
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -34,6 +35,8 @@ data class PendingDoc(
     val ext: String,
     val text: String,
     val displayName: String,
+    /** Inhalt des Codes (Data Matrix) auf einem bundeseinheitlichen Medikationsplan, leer = keiner gefunden. */
+    val planCode: String = "",
 )
 
 /**
@@ -153,6 +156,7 @@ object DocumentReader {
     suspend fun fromImages(files: List<File>, previousText: String = ""): PendingDoc {
         val texts = mutableListOf<String>()
         if (previousText.isNotBlank()) texts.add(previousText)
+        var code = ""
         files.forEach { file ->
             val bitmap = withContext(Dispatchers.IO) {
                 PhotoStore.decodeSampled(file, 1800)?.also { bmp ->
@@ -160,10 +164,66 @@ object DocumentReader {
                 }
             }
             if (bitmap != null) {
-                runCatching { recognize(bitmap) }.getOrNull()?.takeIf { it.isNotBlank() }?.let { texts.add(it) }
+                val pageText = runCatching { recognize(bitmap) }.getOrNull().orEmpty()
+                if (pageText.isNotBlank()) texts.add(pageText)
+                if (code.isEmpty() && MedPlans.looksLikePlan(pageText)) code = planCodeIn(bitmap)
             }
         }
-        return PendingDoc(files, DocKind.IMAGES, "image/jpeg", "jpg", texts.joinToString("\n\n"), "Dokument")
+        return PendingDoc(files, DocKind.IMAGES, "image/jpeg", "jpg", texts.joinToString("\n\n"), "Dokument", code)
+    }
+
+    /** Sucht auf dem Bild den Code eines Medikationsplans (nur auf dem Handy). Leer, wenn keiner lesbar ist. */
+    private suspend fun planCodeIn(bitmap: Bitmap): String =
+        runCatching { BarcodeReader.scanAll(bitmap) }.getOrDefault(emptyList())
+            .firstOrNull { MedPlans.parseBmp(it)?.meds?.isNotEmpty() == true }.orEmpty()
+
+    /**
+     * Code eines Medikationsplans in einer PDF: erste Seiten ganz und das obere rechte Viertel in hoher Aufloesung
+     * (dort steht der Code auf dem bundeseinheitlichen Plan).
+     */
+    suspend fun planCodeInPdf(file: File): String = withContext(Dispatchers.IO) {
+        try {
+            ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY).use { fd ->
+                PdfRenderer(fd).use { renderer ->
+                    for (i in 0 until minOf(renderer.pageCount, 3)) {
+                        val found = renderer.openPage(i).use { page ->
+                            val scale = 2800f / page.width
+                            val w = 1400
+                            val h = minOf((page.height * scale / 2).toInt(), 1400).coerceAtLeast(1)
+                            val crop = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+                            crop.eraseColor(Color.WHITE)
+                            val m = android.graphics.Matrix().apply {
+                                postScale(scale, scale)
+                                postTranslate(-w.toFloat(), 0f)
+                            }
+                            page.render(crop, null, m, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                            val inCrop = planCodeIn(crop)
+                            crop.recycle()
+                            if (inCrop.isNotEmpty()) return@use inCrop
+                            val width = 1600
+                            val full = Bitmap.createBitmap(width, (width.toFloat() * page.height / page.width).toInt().coerceAtLeast(1), Bitmap.Config.ARGB_8888)
+                            full.eraseColor(Color.WHITE)
+                            page.render(full, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                            planCodeIn(full).also { full.recycle() }
+                        }
+                        if (found.isNotEmpty()) return@withContext found
+                    }
+                    ""
+                }
+            }
+        } catch (_: Exception) {
+            ""
+        }
+    }
+
+    /** Code eines Medikationsplans in einer gespeicherten Datei (PDF oder Foto), leer = keiner. */
+    suspend fun planCodeInFile(file: File, mime: String): String = when {
+        mime == "application/pdf" -> planCodeInPdf(file)
+        mime.startsWith("image/") -> {
+            val bitmap = withContext(Dispatchers.IO) { PhotoStore.decodeSampled(file, 2400) }
+            if (bitmap != null) planCodeIn(bitmap).also { bitmap.recycle() } else ""
+        }
+        else -> ""
     }
 
     private const val MAX_PAGES = 30
@@ -221,6 +281,7 @@ object DocumentReader {
             ext = "jpg",
             text = listOf(base.text, added.text).filter { it.isNotBlank() }.joinToString("\n\n"),
             displayName = base.displayName,
+            planCode = base.planCode.ifBlank { added.planCode },
         )
     }
 
@@ -292,7 +353,9 @@ object DocumentReader {
         return when {
             mime.startsWith("image/") -> fromImages(listOf(temp)).copy(displayName = base)
             mime == "application/pdf" || ext == "pdf" -> {
-                PendingDoc(listOf(temp), DocKind.PDF, "application/pdf", "pdf", readPdf(temp), base)
+                val text = readPdf(temp)
+                val code = if (MedPlans.looksLikePlan(text)) planCodeInPdf(temp) else ""
+                PendingDoc(listOf(temp), DocKind.PDF, "application/pdf", "pdf", text, base, code)
             }
             mime.startsWith("text/") || ext == "txt" -> {
                 val text = withContext(Dispatchers.IO) { temp.readText(Charsets.UTF_8).take(200_000) }

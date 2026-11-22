@@ -113,7 +113,7 @@ private val TOUR_PAGES = listOf(
     TourPage(
         title = "Tag, Woche, Monat",
         text = "Oben auf dem ersten Reiter wählst du Tag, Woche oder Monat. Der Tag zeigt zuerst „Wichtig und demnächst“: Dringendes, die Termine von heute und die nächsten Tage. In Woche und Monat kannst du Termine, Aufgaben und Einnahmen antippen, ändern und abhaken.",
-        tips = listOf("Aufgaben mit hoher Priorität stehen immer ganz oben.", "Jede Karte lässt sich einklappen, dann bleibt nur eine Kurzinfo."),
+        tips = listOf("Aufgaben mit hoher Priorität stehen immer ganz oben.", "Aufgaben können per Benachrichtigung erinnern und lassen sich in den Kalender eintragen.", "Jede Karte lässt sich einklappen, dann bleibt nur eine Kurzinfo."),
         mock = { MockPeriods() },
     ),
     TourPage(
@@ -131,7 +131,7 @@ private val TOUR_PAGES = listOf(
     TourPage(
         title = "Dokumente und Schreiben",
         text = "Befunde, Berichte und Bescheide fotografieren oder laden. Die App liest den Text, schlägt Kategorie, Datum und Arzt vor und legt alles verschlüsselt ab. Öffnen, drucken und teilen geht direkt in der App. Für Anträge und Vollmachten gibt es Vorlagen als PDF.",
-        tips = listOf("Die Suche findet auch Wörter im Text, z. B. ein Medikament.", "Eine Zusammenfassung schreibst du selbst oder lässt sie per KI erstellen."),
+        tips = listOf("Die Suche findet auch Wörter im Text, z. B. ein Medikament.", "Im Betrachter mit zwei Fingern zoomen.", "Unterschriebene Schreiben ordnet die App beim Einscannen dem Entwurf zu."),
         mock = { MockDocuments() },
     ),
     TourPage(

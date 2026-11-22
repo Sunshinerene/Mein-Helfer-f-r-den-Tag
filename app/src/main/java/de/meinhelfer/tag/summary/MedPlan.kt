@@ -102,11 +102,17 @@ object MedPlans {
         return text.lines().count { SCHEMA.containsMatchIn(it) } >= 2
     }
 
-    fun isPlanDocument(doc: Document): Boolean = doc.text.isNotBlank() && (doc.category == "Medikamentenplan" || looksLikePlan(doc.text))
+    fun isPlanDocument(doc: Document): Boolean =
+        doc.planCode.isNotBlank() || (doc.text.isNotBlank() && (doc.category == "Medikamentenplan" || looksLikePlan(doc.text)))
+
+    /** Plan aus dem beim Hochladen gelesenen Code, null = kein (lesbarer) Code. */
+    fun fromCode(doc: Document): MedPlan? =
+        doc.planCode.takeIf { it.isNotBlank() }?.let { parseBmp(it) }?.takeIf { it.meds.isNotEmpty() }
 
     /** Stand des Plans: aus dem Text ("Ausgedruckt am ..."), sonst Datum des Dokuments, sonst Tag des Hochladens. */
     fun planDay(doc: Document, plan: MedPlan? = null, zone: ZoneId = ZoneId.systemDefault()): Long {
         plan?.day?.let { return it }
+        fromCode(doc)?.day?.let { return it }
         PLAN_DATE.find(doc.text)?.groupValues?.get(2)?.let { s ->
             DATE.find(s)?.let { m -> date(m.groupValues[1], m.groupValues[2], m.groupValues[3])?.let { return it.toEpochDay() } }
         }

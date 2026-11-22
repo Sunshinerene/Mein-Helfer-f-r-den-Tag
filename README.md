@@ -4,7 +4,7 @@ by Sunshine@R
 
 Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbezogenen Daten bleiben lokal auf dem Gerät.
 
-## Stand: v0.50.0
+## Stand: v0.51.0
 
 ### Funktionsübersicht
 
@@ -38,14 +38,16 @@ Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbe
 
 **Aufgaben**
 - Kontakt, Wichtigkeit, Frist, Fahrdienst, verknüpfte Unterlagen; beim Erledigen Ergebnis und Sterne festhalten
+- Erinnerung per Benachrichtigung, „In Kalender eintragen“
 - Verlauf mit Suche (auch nach Jahren); frühere Aufgaben zum gleichen Thema werden automatisch angezeigt
 - Vorschläge aus Dokument-Zusammenfassungen, Wegweiser und Auswertung
 
 **Dokumente**
 - Fotografieren (mehrseitig) oder Datei laden, verschlüsselt gespeichert, Text wird gelesen
 - Kategorien (u. a. Krankenhaus / Entlassbericht) mit gewichteter Erkennung, Suche, Filter (Jahr, Arzt), Zusammenfassung (selbst oder per KI)
-- Eingebauter Betrachter (PDF, Fotos, Text) mit Zoom, Drucken, Teilen, „Andere App“ (einstellbar)
-- Schreiben und Vollmachten als PDF (Vollmacht, Schweigepflicht, Pflegegrad, Höherstufung, Widerspruch, Verhinderungspflege, Pflegehilfsmittel, Unterlagen anfordern, Folgerezept, frei)
+- Eingebauter Betrachter (PDF, Fotos, Text) mit Zoom (zwei Finger), Drucken (auch Text), Teilen, „Andere App“ (einstellbar)
+- Code des Medikationsplans wird beim Hochladen gelesen
+- Schreiben und Vollmachten als PDF (Vollmacht, Schweigepflicht, Widerruf, Pflegegrad, Höherstufung, Widerspruch, Verhinderungspflege, Pflegehilfsmittel, Unterlagen anfordern, Folgerezept, Kündigung Pflegedienst, Schwerbehindertenausweis, frei); unterschriebene Fassung wird beim Einscannen dem Entwurf zugeordnet
 
 **Kontakte**
 - Ärzte, Pflegedienst, Apotheke, Kassen usw. mit Anruf und vorbereiteter E-Mail, Filter nach Art

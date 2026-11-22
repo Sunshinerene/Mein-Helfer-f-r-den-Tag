@@ -243,7 +243,16 @@ fun MedPlanImportBox(doc: Document?, person: Person?, meds: List<Medication>, vm
     val scope = rememberCoroutineScope()
     val personId = person?.id ?: doc?.personId ?: 1L
     val local = remember(doc?.text) { doc?.let { MedPlans.parseText(it.text) } ?: MedPlan(null, emptyList(), "Text") }
-    var plan by remember(doc?.id) { mutableStateOf(local.takeIf { it.meds.isNotEmpty() }) }
+    // Beim Hochladen gelesener Code auf dem Plan hat Vorrang (dort stehen alle Einnahmen genau); fehlende Namen aus dem Text
+    val coded = remember(doc?.planCode, local) {
+        doc?.let { MedPlans.fromCode(it) }?.let { c ->
+            val names = local.meds
+            if (names.size == c.meds.size) {
+                c.copy(meds = c.meds.mapIndexed { i, m -> if (m.nameMissing) m.copy(name = names[i].name, strength = m.strength.ifBlank { names[i].strength }, nameMissing = false) else m })
+            } else c
+        }
+    }
+    var plan by remember(doc?.id) { mutableStateOf(coded ?: local.takeIf { it.meds.isNotEmpty() }) }
     var review by remember { mutableStateOf(false) }
     var reading by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf<String?>(null) }
@@ -290,7 +299,7 @@ fun MedPlanImportBox(doc: Document?, person: Person?, meds: List<Medication>, vm
             val p = plan
             Text(
                 when {
-                    p != null -> "${p.meds.size} Medikamente erkannt, Stand " + LocalDate.ofEpochDay(planDay).format(PLAN_DAY) + "."
+                    p != null -> "${p.meds.size} Medikamente erkannt" + (if (p.source == "Code") " (aus dem Code auf dem Plan)" else "") + ", Stand " + LocalDate.ofEpochDay(planDay).format(PLAN_DAY) + "."
                     doc == null -> "Fotografiere den quadratischen Code oben rechts auf dem Medikationsplan. Oder lade den Plan unter Dokumente hoch, dann geht es auch über den Text oder die KI."
                     else -> "Im Text wurden keine Medikamente sicher erkannt. Versuche den Code auf dem Plan oder die KI."
                 },

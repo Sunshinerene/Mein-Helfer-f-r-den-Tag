@@ -148,7 +148,10 @@ interface TodoDao {
     fun all(personId: Long): Flow<List<Todo>>
 
     @Insert
-    suspend fun insert(item: Todo)
+    suspend fun insert(item: Todo): Long
+
+    @Query("SELECT * FROM Todo WHERE id = :id")
+    suspend fun byId(id: Long): Todo?
 
     @Update
     suspend fun update(item: Todo)

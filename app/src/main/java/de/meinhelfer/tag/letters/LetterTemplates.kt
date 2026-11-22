@@ -39,7 +39,7 @@ class LetterBody(
 )
 
 /** Wohin das Schreiben typischerweise geht: bestimmt, welche Kontakte zur Auswahl stehen. */
-enum class LetterTo { Kasse, Arzt, Frei, Keiner }
+enum class LetterTo { Kasse, Arzt, Pflegedienst, Frei, Keiner }
 
 class LetterTemplate(
     val id: String,
@@ -371,6 +371,97 @@ object LetterTemplates {
                         "Falls vorher ein Termin nötig ist, melden Sie sich bitte. ${contact(i)}",
                     signatures = signatures(i),
                     enclosures = enclosures(i),
+                )
+            },
+        ),
+        // ---------------------------------------------------------- Pflegedienst und Aemter
+        LetterTemplate(
+            id = "kuendigung_pflegedienst",
+            title = "Kündigung des Pflegedienstes",
+            description = "Den Pflegevertrag mit dem ambulanten Pflegedienst beenden, z. B. bei Wechsel oder Unzufriedenheit.",
+            group = "Pflegedienst und Ämter",
+            docCategory = "Vertrag / Kündigung",
+            to = LetterTo.Pflegedienst,
+            fields = listOf(
+                field("vertrag", "Pflegevertrag vom (optional)", "TT.MM.JJJJ oder Kundennummer"),
+                field("zum", "Kündigung zum", "leer = sofort; sonst z. B. 31.12.2026", default = ""),
+                field("rueckgabe", "Was soll zurückgegeben werden? (optional)", "z. B. Wohnungsschlüssel, Pflegedokumentation", multiline = true),
+            ),
+            notice = "Pflegebedürftige können den Pflegevertrag laut § 120 Abs. 2 SGB XI jederzeit ohne Einhaltung einer Frist kündigen, egal was im Vertrag steht. Für ärztlich verordnete Behandlungspflege (Krankenkasse) gilt in der Regel Ähnliches. Damit keine Versorgungslücke entsteht: neuen Pflegedienst vorher klären und die Pflegekasse informieren. Am besten per Einschreiben senden. Ohne Gewähr, keine Rechtsberatung.",
+            build = { i ->
+                val vertrag = v(i, "vertrag").takeIf { it.isNotBlank() }?.let { " vom $it" }.orEmpty()
+                val zum = v(i, "zum").takeIf { it.isNotBlank() }?.let { "zum $it" } ?: "fristlos mit sofortiger Wirkung"
+                val rueck = v(i, "rueckgabe")
+                LetterBody(
+                    subject = "Kündigung des Pflegevertrages$vertrag",
+                    reference = "Pflegebedürftige Person: " + idLine(i, withNumber = false),
+                    body = "Sehr geehrte Damen und Herren,\n\n" +
+                        "${hiermit(i, "kündige")} den bestehenden Pflegevertrag$vertrag $zum. Ich berufe mich dabei auf § 120 Abs. 2 Satz 2 SGB XI.\n\n" +
+                        "Bitte stellen Sie Ihre Leistungen ab diesem Zeitpunkt ein und senden Sie mir eine abschließende Rechnung. " +
+                        (if (rueck.isNotBlank()) "Bitte geben Sie folgendes zurück: $rueck\n\n" else "Bitte geben Sie überlassene Schlüssel und Unterlagen zurück.\n\n") +
+                        "Bitte bestätigen Sie mir die Kündigung und das Ende des Vertrages schriftlich.\n\n${contact(i)}",
+                    signatures = signatures(i),
+                    enclosures = enclosures(i),
+                )
+            },
+        ),
+        LetterTemplate(
+            id = "schwerbehinderung",
+            title = "Antrag auf Schwerbehindertenausweis (Grad der Behinderung)",
+            description = "Formloser Antrag auf Feststellung des Grades der Behinderung und von Merkzeichen beim Versorgungsamt.",
+            group = "Pflegedienst und Ämter",
+            docCategory = "Antrag / Widerspruch",
+            to = LetterTo.Frei,
+            fields = listOf(
+                field("gesundheit", "Welche Erkrankungen bzw. Einschränkungen?", "z. B. Herzschwäche, Demenz, Gehbehinderung", multiline = true),
+                field("aerzte", "Behandelnde Ärzte und Kliniken", "Name und Ort, damit das Amt Befunde anfordern kann", multiline = true),
+                field("merkzeichen", "Merkzeichen (optional)", "z. B. G (gehbehindert), aG, B (Begleitung), H (hilflos), RF"),
+            ),
+            notice = "Zuständig ist je nach Bundesland das Versorgungsamt, ein Landesamt oder der Kreis bzw. die Stadt. Ein formloser Antrag sichert das Datum; meist schickt das Amt danach ein Formular zum Ausfüllen. Liegt der festgestellte Grad bei 50 oder mehr, gibt es den Ausweis. Befunde in Kopie beilegen beschleunigt die Bearbeitung. Ohne Gewähr.",
+            build = { i ->
+                val mz = v(i, "merkzeichen")
+                LetterBody(
+                    subject = "Antrag auf Feststellung einer Behinderung und Ausstellung eines Schwerbehindertenausweises (§ 152 SGB IX)",
+                    reference = "Antragsteller/in: " + idLine(i, withNumber = false) + ", wohnhaft in " + address(i.person),
+                    body = "Sehr geehrte Damen und Herren,\n\n" +
+                        "${hiermit(i, "beantrage")} die Feststellung des Grades der Behinderung" +
+                        (if (mz.isNotBlank()) ", die Feststellung der Merkzeichen $mz" else " und gesundheitlicher Merkmale für Nachteilsausgleiche (Merkzeichen)") +
+                        " sowie die Ausstellung eines Schwerbehindertenausweises.\n\n" +
+                        "Gesundheitliche Einschränkungen: ${v(i, "gesundheit").ifBlank { P }}\n\n" +
+                        "Behandelnde Ärzte und Kliniken:\n${v(i, "aerzte").ifBlank { P }}\n\n" +
+                        "Sollten Sie dafür Ihr Antragsformular benötigen, senden Sie es mir bitte zu. Das Datum dieses Schreibens gilt als Datum der Antragstellung. ${confirmReceipt()}\n\n${contact(i)}",
+                    signatures = signatures(i),
+                    enclosures = enclosures(i, "Kopien vorhandener Befunde (falls vorhanden)"),
+                )
+            },
+        ),
+        LetterTemplate(
+            id = "widerruf",
+            title = "Widerruf einer Vollmacht oder Schweigepflicht-Entbindung",
+            description = "Eine erteilte Vollmacht oder Entbindung von der Schweigepflicht zurücknehmen.",
+            group = "Vollmachten",
+            docCategory = "Vollmacht / Verfügung",
+            to = LetterTo.Frei,
+            fields = listOf(
+                field("was", "Was wird widerrufen?", "z. B. Vollmacht oder Entbindung von der Schweigepflicht", default = "die Vollmacht"),
+                field("vom", "Ausgestellt am (optional)", "TT.MM.JJJJ"),
+                field("fuer", "Für wen war sie ausgestellt?", "Name der bevollmächtigten Person"),
+            ),
+            notice = "Ein Widerruf gilt für die Zukunft. Informiere alle Stellen, denen die Vollmacht oder Entbindung vorliegt (z. B. Arztpraxis, Pflegekasse, Bank), und fordere Originale zurück. Bei einer notariellen oder einer Vorsorgevollmacht bitte zusätzlich beraten lassen. Ohne Gewähr.",
+            build = { i ->
+                val was = v(i, "was").ifBlank { "die Vollmacht" }
+                val vom = v(i, "vom").takeIf { it.isNotBlank() }?.let { " vom $it" }.orEmpty()
+                val fuer = v(i, "fuer").ifBlank { P }
+                LetterBody(
+                    subject = "Widerruf: ${was.replaceFirstChar { it.uppercase() }}$vom",
+                    reference = "Erteilt von: " + idLine(i, withNumber = false),
+                    body = "Sehr geehrte Damen und Herren,\n\n" +
+                        "hiermit widerrufe ich, ${idLine(i, withNumber = false)}, $was$vom zugunsten von $fuer mit sofortiger Wirkung.\n\n" +
+                        "Ab sofort darf $fuer auf dieser Grundlage nicht mehr für mich handeln bzw. keine Auskünfte mehr erhalten. " +
+                        "Bitte vermerken Sie den Widerruf in Ihren Unterlagen und senden Sie mir ein bei Ihnen vorliegendes Original zurück.\n\n" +
+                        "${confirmReceipt()}",
+                    signatures = listOf("Ort, Datum, Unterschrift ${name(i)}"),
+                    enclosures = emptyList(),
                 )
             },
         ),

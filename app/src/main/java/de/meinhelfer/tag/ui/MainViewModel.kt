@@ -383,6 +383,18 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun update(item: Document) = viewModelScope.launch { db.documentDao().update(item) }
 
+    /** Entwurf eines Schreibens als unterschrieben vermerken und die Aufgabe „ausdrucken, unterschreiben …“ abhaken. */
+    fun markDraftSigned(draft: Document) = viewModelScope.launch {
+        val day = LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+        db.documentDao().update(
+            draft.copy(notes = listOf(draft.notes, "${de.meinhelfer.tag.letters.SignedCopies.SIGNED_NOTE} am $day.").filter { it.isNotBlank() }.joinToString("\n")),
+        )
+        val prefix = "„" + de.meinhelfer.tag.letters.SignedCopies.baseTitle(draft) + "“ ausdrucken"
+        db.todoDao().list().filter { !it.done && it.personId == draft.personId && it.text.startsWith(prefix) }.forEach {
+            db.todoDao().update(it.copy(done = true, doneMillis = System.currentTimeMillis(), result = "Unterschriebene Fassung eingescannt"))
+        }
+    }
+
     fun delete(item: Document) = viewModelScope.launch {
         db.documentDao().delete(item)
         DocumentStore.delete(getApplication(), item.fileName)
@@ -558,21 +570,25 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun addTasks(drafts: List<TaskDraft>) = viewModelScope.launch {
         val now = System.currentTimeMillis()
         drafts.filter { it.text.isNotBlank() }.forEach {
-            db.todoDao().insert(
-                Todo(
-                    personId = _personId.value,
-                    text = it.text.trim(),
-                    createdMillis = now,
-                    doctorId = it.doctorId,
-                    priority = it.priority,
-                    dueDay = it.dueDay,
-                    outside = it.outside,
-                ),
+            val todo = Todo(
+                personId = _personId.value,
+                text = it.text.trim(),
+                createdMillis = now,
+                doctorId = it.doctorId,
+                priority = it.priority,
+                dueDay = it.dueDay,
+                outside = it.outside,
+                remindAt = it.remindAt,
             )
+            val id = db.todoDao().insert(todo)
+            if (todo.remindAt != null) ReminderScheduler.scheduleTodo(getApplication(), todo.copy(id = id))
         }
     }
 
-    fun updateTodo(item: Todo) = viewModelScope.launch { db.todoDao().update(item) }
+    fun updateTodo(item: Todo) = viewModelScope.launch {
+        db.todoDao().update(item)
+        ReminderScheduler.scheduleTodo(getApplication(), item)
+    }
 
     fun setTodoDone(item: Todo, done: Boolean) = viewModelScope.launch {
         db.todoDao().update(item.copy(done = done, doneMillis = if (done) System.currentTimeMillis() else null, archived = false))
