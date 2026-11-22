@@ -33,6 +33,31 @@ object AppPrefs {
         prefs(context).edit().putFloat("schrift_faktor", factor).apply()
     }
 
+    // ---- Medikamentenplan: Stand und letzte Aenderung je Person
+
+    /** Stand (Epoch-Tag) des zuletzt uebernommenen Medikamentenplans, -1 = keiner */
+    fun medPlanStand(context: Context, personId: Long): Long = prefs(context).getLong("medplan_stand_$personId", -1L)
+
+    fun setMedPlanStand(context: Context, personId: Long, day: Long) {
+        prefs(context).edit().putLong("medplan_stand_$personId", day).apply()
+    }
+
+    /** Letzte Aenderung an der Medikamentenliste (Name, Dosierung, Zeiten, neu, geloescht), 0 = unbekannt */
+    fun medListChanged(context: Context, personId: Long): Long = prefs(context).getLong("medliste_geaendert_$personId", 0L)
+
+    fun setMedListChanged(context: Context, personId: Long, millis: Long) {
+        prefs(context).edit().putLong("medliste_geaendert_$personId", millis).apply()
+    }
+
+    /** Dokumente, deren Plan schon uebernommen oder ausgeblendet wurde */
+    fun medPlanHandled(context: Context): Set<String> = prefs(context).getStringSet("medplan_erledigt", emptySet()) ?: emptySet()
+
+    fun addMedPlanHandled(context: Context, docId: Long) {
+        val set = medPlanHandled(context).toMutableSet()
+        set += docId.toString()
+        prefs(context).edit().putStringSet("medplan_erledigt", set).apply()
+    }
+
     // ---- Tages-Motivator und Stimmungs-Check
 
     /** Motivator-Karte auf der Heute-Seite zeigen */

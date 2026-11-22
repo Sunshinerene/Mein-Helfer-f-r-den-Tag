@@ -42,6 +42,16 @@ object BarcodeReader {
         }
     }
 
+    /** Alle Barcodes auf dem Bild als Rohtext (z. B. der Data-Matrix-Code eines Medikationsplans). */
+    suspend fun scanAll(bitmap: Bitmap): List<String> {
+        val scanner = BarcodeScanning.getClient()
+        try {
+            return scanner.process(InputImage.fromBitmap(bitmap, 0)).await().mapNotNull { it.rawValue }
+        } finally {
+            scanner.close()
+        }
+    }
+
     private suspend fun <T> Task<T>.await(): T = suspendCancellableCoroutine { continuation ->
         addOnSuccessListener { continuation.resume(it) }
         addOnFailureListener { continuation.resumeWithException(it) }

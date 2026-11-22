@@ -330,13 +330,21 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     // ---------------------------------------------------------------- Medikamente
 
+    private fun medListChanged(personId: Long) {
+        AppPrefs.setMedListChanged(getApplication(), personId, System.currentTimeMillis())
+    }
+
     fun add(item: Medication) = viewModelScope.launch {
         db.medicationDao().insert(item.copy(personId = _personId.value))
+        medListChanged(_personId.value)
         ReminderScheduler.rescheduleAll(getApplication())
     }
 
     fun update(item: Medication) = viewModelScope.launch {
+        val old = db.medicationDao().byId(item.id)
         db.medicationDao().update(item)
+        // Nur echte Plan-Aenderungen zaehlen (nicht Vorrat, Foto, Beschreibung)
+        if (old == null || old.name != item.name || old.dosage != item.dosage || old.times != item.times) medListChanged(item.personId)
         ReminderScheduler.rescheduleAll(getApplication())
     }
 
@@ -344,7 +352,28 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         db.medicationDao().delete(item)
         db.checkinDao().deleteFor(Checkin.MED, item.id)
         PhotoStore.delete(getApplication(), item.photoPath)
+        medListChanged(item.personId)
     }
+
+    /**
+     * Uebernimmt einen Medikamentenplan: neue anlegen, geaenderte anpassen (Vorrat wird auf heute umgerechnet),
+     * auf Wunsch nicht mehr enthaltene entfernen. Merkt sich den Stand des Plans.
+     */
+    fun applyMedPlan(personId: Long, adds: List<Medication>, updates: List<Medication>, removes: List<Medication>, planDay: Long, docId: Long?) =
+        viewModelScope.launch {
+            val app = getApplication<Application>()
+            adds.forEach { db.medicationDao().insert(it.copy(personId = personId)) }
+            updates.forEach { db.medicationDao().update(it) }
+            removes.forEach {
+                db.medicationDao().delete(it)
+                db.checkinDao().deleteFor(Checkin.MED, it.id)
+                PhotoStore.delete(app, it.photoPath)
+            }
+            AppPrefs.setMedPlanStand(app, personId, planDay)
+            medListChanged(personId)
+            docId?.let { AppPrefs.addMedPlanHandled(app, it) }
+            ReminderScheduler.rescheduleAll(app)
+        }
 
     // ---------------------------------------------------------------- Dokumente
 

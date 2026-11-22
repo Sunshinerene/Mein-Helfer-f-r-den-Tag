@@ -1,5 +1,7 @@
 package de.meinhelfer.tag.ui
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.meinhelfer.tag.summary.MedPlans
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
@@ -82,6 +84,7 @@ private fun Document.dateText(): String? = docDate?.let { LocalDate.ofEpochDay(i
 @Composable
 fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?, vm: MainViewModel, onOpenLetters: () -> Unit = {}) {
     val context = LocalContext.current
+    val meds by vm.medications.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     var query by remember { mutableStateOf("") }
     var category by remember { mutableStateOf<String?>(null) }
@@ -371,6 +374,7 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?
                 detailId = null
             },
             onClose = { detailId = null },
+            extra = { if (MedPlans.isPlanDocument(doc)) MedPlanImportBox(doc, person, meds, vm) },
         )
     }
     editItem?.let { doc ->
@@ -580,6 +584,7 @@ internal fun DocumentDetailDialog(
     doctors: List<Doctor>,
     onEdit: (() -> Unit)?,
     onClose: () -> Unit,
+    extra: (@Composable () -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -627,6 +632,7 @@ internal fun DocumentDetailDialog(
                     doc.notes.takeIf { it.isNotBlank() }?.let { "Notizen: $it" },
                 )
                 facts.forEach { Text(it, style = MaterialTheme.typography.bodyMedium) }
+                extra?.invoke()
                 androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     OutlinedButton(shape = buttonShape(), onClick = {
                         if (AppPrefs.internalViewer(context) && canViewInside(doc)) {

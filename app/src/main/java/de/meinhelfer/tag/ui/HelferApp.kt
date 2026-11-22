@@ -390,7 +390,7 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
                               }
                           }
                       }
-                      Tab.Medikamente -> MedicationScreen(meds, doctors, vm, onReorder = { showReorder = true }, onOverview = { showMedOverview = true })
+                      Tab.Medikamente -> MedicationScreen(meds, doctors, vm, onReorder = { showReorder = true }, onOverview = { showMedOverview = true }, documents = documents, person = persons.firstOrNull { it.id == personId })
                       Tab.Termine -> AppointmentScreen(appointments, doctors, documents, meds, persons.firstOrNull { it.id == personId }, vm, caregiver) { showCaregiver = true }
                       Tab.Dokumente -> DocumentScreen(documents, doctors, persons.firstOrNull { it.id == personId }, vm, onOpenLetters = { showLetters = true })
                       Tab.Aerzte -> DoctorScreen(
@@ -487,6 +487,8 @@ private fun MedicationScreen(
     vm: MainViewModel,
     onReorder: () -> Unit,
     onOverview: () -> Unit = {},
+    documents: List<de.meinhelfer.tag.data.Document> = emptyList(),
+    person: de.meinhelfer.tag.data.Person? = null,
 ) {
     var showAdd by remember { mutableStateOf(false) }
     var editItem by remember { mutableStateOf<Medication?>(null) }
@@ -494,6 +496,7 @@ private fun MedicationScreen(
 
     val lowCount = lowStockMeds(items).size
     Column(Modifier.fillMaxSize()) {
+        MedPlanSuggestion(documents = documents, meds = items, person = person, vm = vm)
         if (items.isNotEmpty()) {
             Row(
                 Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp),
