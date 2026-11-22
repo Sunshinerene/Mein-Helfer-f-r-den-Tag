@@ -1,6 +1,7 @@
 package de.meinhelfer.tag.ui
 
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.meinhelfer.tag.summary.Discharge
 import de.meinhelfer.tag.summary.MedPlans
 import android.content.ActivityNotFoundException
 import android.content.Intent
@@ -365,8 +366,11 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?
                     scope.launch {
                         try {
                             val (name, mime) = DocumentStore.commit(context, pending)
-                            vm.add(doc.copy(fileName = name, mimeType = mime))
+                            val saved = doc.copy(fileName = name, mimeType = mime)
+                            val newId = vm.addDocumentNow(saved)
                             draft = null
+                            // Entlassbericht oder Medikamentenplan: gleich öffnen, damit die Vorschläge zu sehen sind
+                            if (isDischargeDoc(saved) || MedPlans.isPlanDocument(saved)) detailId = newId
                         } catch (_: Exception) {
                             Toast.makeText(context, "Speichern hat nicht geklappt.", Toast.LENGTH_LONG).show()
                         }
@@ -385,7 +389,11 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?
             },
             onClose = { detailId = null },
             extra = {
-                if (MedPlans.isPlanDocument(doc)) MedPlanImportBox(doc, person, meds, vm)
+                if (isDischargeDoc(doc)) {
+                    DischargeBox(doc, person, meds, doctors, vm)
+                } else if (MedPlans.isPlanDocument(doc)) {
+                    MedPlanImportBox(doc, person, meds, vm)
+                }
                 if (isLetterDraft(doc)) {
                     OutlinedButton(shape = buttonShape(), onClick = {
                         scope.launch {
@@ -755,3 +763,7 @@ internal fun DocumentDetailDialog(
         dismissButton = { TextButton(onClick = onClose) { Text("Schließen") } },
     )
 }
+
+/** Entlassbericht (nicht der Medikationsplan selbst): eigene Vorschläge für Medikation bei Entlassung und Kontrollen. */
+internal fun isDischargeDoc(doc: Document): Boolean =
+    doc.category != "Medikamentenplan" && doc.planCode.isBlank() && Discharge.looksLikeReport(doc.category, doc.text)

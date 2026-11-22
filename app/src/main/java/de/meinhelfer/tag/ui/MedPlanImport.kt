@@ -42,6 +42,7 @@ import de.meinhelfer.tag.data.Person
 import de.meinhelfer.tag.media.BarcodeReader
 import de.meinhelfer.tag.media.CardScanner
 import de.meinhelfer.tag.media.PhotoStore
+import de.meinhelfer.tag.summary.Discharge
 import de.meinhelfer.tag.summary.MedPlan
 import de.meinhelfer.tag.summary.MedPlans
 import de.meinhelfer.tag.summary.PlanMatch
@@ -242,7 +243,10 @@ fun MedPlanImportBox(doc: Document?, person: Person?, meds: List<Medication>, vm
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val personId = person?.id ?: doc?.personId ?: 1L
-    val local = remember(doc?.text) { doc?.let { MedPlans.parseText(it.text) } ?: MedPlan(null, emptyList(), "Text") }
+    // Entlassbericht: nur die Medikation bei Entlassung, nicht die bei Aufnahme
+    val local = remember(doc?.text) {
+        doc?.let { if (isDischargeDoc(it)) Discharge.meds(it.text).first else MedPlans.parseText(it.text) } ?: MedPlan(null, emptyList(), "Text")
+    }
     // Beim Hochladen gelesener Code auf dem Plan hat Vorrang (dort stehen alle Einnahmen genau); fehlende Namen aus dem Text
     val coded = remember(doc?.planCode, local) {
         doc?.let { MedPlans.fromCode(it) }?.let { c ->
