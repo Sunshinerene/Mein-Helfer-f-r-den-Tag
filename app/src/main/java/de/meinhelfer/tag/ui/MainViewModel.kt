@@ -558,6 +558,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 _ratesTick.value++
             }
             de.meinhelfer.tag.summary.ProposalAction.Acknowledge -> Unit
+            is de.meinhelfer.tag.summary.ProposalAction.SetAlarm -> Unit // stellt die Karte selbst (braucht die Activity)
             is de.meinhelfer.tag.summary.ProposalAction.OpenedToday -> {
                 val m = db.medicationDao().byId(a.medId) ?: return@launch
                 db.medicationDao().update(m.copy(openedDay = LocalDate.now().toEpochDay()))

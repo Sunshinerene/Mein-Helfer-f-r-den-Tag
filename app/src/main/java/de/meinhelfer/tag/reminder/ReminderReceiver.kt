@@ -257,9 +257,19 @@ class ReminderReceiver : BroadcastReceiver() {
                     val diaryMissing = persons.filter { p ->
                         careLog.any { it.personId == p.id && it.day >= today - 30 } && careLog.none { it.personId == p.id && it.day == today }
                     }.map { it.name }
+                    val wake = if (de.meinhelfer.tag.update.AppPrefs.wakeOn(context)) {
+                        de.meinhelfer.tag.summary.WakeUp.eveningLine(
+                            de.meinhelfer.tag.summary.WakeUp.plans(
+                                persons, appointments, checkins, now, zone,
+                                de.meinhelfer.tag.update.AppPrefs.wakeEarly(context), de.meinhelfer.tag.update.AppPrefs.wakeLead(context),
+                            ),
+                        )
+                    } else {
+                        ""
+                    }
                     de.meinhelfer.tag.summary.AssistantBrief.evening(
                         name, done, line, preps.filter { dayOf(it.appointment.whenMillis) == today + 1 }, diaryMissing, multi,
-                    )
+                    ).let { (t, x) -> t to if (wake.isBlank()) x else x.replace(" Gute Nacht!", " $wake Gute Nacht!") }
                 }
                 Notifications.show(
                     context,

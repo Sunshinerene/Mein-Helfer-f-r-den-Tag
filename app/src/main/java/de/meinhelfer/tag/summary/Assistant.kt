@@ -27,6 +27,8 @@ sealed interface ProposalAction {
     data class SetBenefits(val year: Int, val monthly: Double, val yearly: Double, val carryMonth: Int) : ProposalAction
     /** Nur ein Hinweis: gelesen. */
     data object Acknowledge : ProposalAction
+    /** Wecker in der Uhr-App stellen (Stunde, Minute, Beschriftung) */
+    data class SetAlarm(val hour: Int, val minute: Int, val label: String) : ProposalAction
 }
 
 /** Ein Vorschlag des Assistenten. Wird nur nach deiner Bestätigung ausgeführt. */

@@ -99,6 +99,15 @@ object AppPrefs {
         prefs(context).edit().putBoolean("assistent_hinweise_vorlesen", on).apply()
     }
 
+    /** Wecker bei frühen Terminen anbieten: an/aus, „früh“ = Beginn vor (Minuten des Tages), Vorlauf in Minuten. */
+    fun wakeOn(context: Context): Boolean = prefs(context).getBoolean("wecker_an", true)
+    fun wakeEarly(context: Context): Int = prefs(context).getInt("wecker_frueh", 10 * 60)
+    fun wakeLead(context: Context): Int = prefs(context).getInt("wecker_vorlauf", 90)
+
+    fun setWake(context: Context, on: Boolean, early: Int, lead: Int) {
+        prefs(context).edit().putBoolean("wecker_an", on).putInt("wecker_frueh", early).putInt("wecker_vorlauf", lead).apply()
+    }
+
     fun assistantImage(context: Context): Boolean = prefs(context).getBoolean("assistent_bild", true)
 
     fun setAssistantImage(context: Context, on: Boolean) {

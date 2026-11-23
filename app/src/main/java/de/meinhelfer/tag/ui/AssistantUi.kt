@@ -85,7 +85,14 @@ private fun rememberAssistantState(vm: MainViewModel): AssistantState {
     val ratesText by vm.ratesText.collectAsStateWithLifecycle()
     val ratesTick by vm.ratesTick.collectAsStateWithLifecycle()
     val rates = remember(ratesText, ratesTick, today) { vm.rateChanges() }
-    val proposals = Assistant.proposals(persons, todos, meds, duties, doctors, today, dismissed, recent, rates.first, rates.second)
+    val wake = if (AppPrefs.wakeOn(appContext)) {
+        de.meinhelfer.tag.summary.WakeUp.plans(persons, appointments, checkins, now, zone, AppPrefs.wakeEarly(appContext), AppPrefs.wakeLead(appContext))
+            .filter { it.key !in dismissed }
+            .map { de.meinhelfer.tag.summary.WakeUp.proposal(it, persons.size > 1, name) }
+    } else {
+        emptyList()
+    }
+    val proposals = wake + Assistant.proposals(persons, todos, meds, duties, doctors, today, dismissed, recent, rates.first, rates.second)
     val measured = persons.associate { p ->
         p.id to vitals.any { it.personId == p.id && it.kind != VitalKind.Trinken.key && it.day >= today - 14 }
     }
@@ -115,14 +122,41 @@ private fun NextUpRow(n: NextUp, multi: Boolean) {
 
 @Composable
 private fun ProposalBox(p: Proposal, vm: MainViewModel) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val alarm = p.action as? de.meinhelfer.tag.summary.ProposalAction.SetAlarm
+    var alarmFailed by remember { mutableStateOf(false) }
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Text("💡 " + p.text, style = MaterialTheme.typography.bodyMedium)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(shape = buttonShape(), onClick = { vm.applyProposal(p) }) { Text(p.confirmLabel) }
+        Text((if (alarm != null) "⏰ " else "💡 ") + p.text, style = MaterialTheme.typography.bodyMedium)
+        androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(shape = buttonShape(), onClick = {
+                if (alarm != null) {
+                    if (setAlarm(context, alarm, skipUi = true)) vm.applyProposal(p) else alarmFailed = true
+                } else {
+                    vm.applyProposal(p)
+                }
+            }) { Text(p.confirmLabel) }
+            if (alarm != null) {
+                TextButton(onClick = { if (setAlarm(context, alarm, skipUi = false)) vm.applyProposal(p) else alarmFailed = true }) { Text("Andere Zeit …") }
+            }
             TextButton(onClick = { vm.dismissProposal(p.key) }) { Text("Nein, danke") }
+        }
+        if (alarmFailed) {
+            Text("Ich konnte die Uhr-App nicht öffnen. Bitte stell den Wecker selbst.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
         }
     }
 }
+
+/** Wecker über die Uhr-App des Handys stellen ([skipUi] = ohne die Uhr-App zu zeigen). */
+private fun setAlarm(context: android.content.Context, a: de.meinhelfer.tag.summary.ProposalAction.SetAlarm, skipUi: Boolean): Boolean = runCatching {
+    val intent = android.content.Intent(android.provider.AlarmClock.ACTION_SET_ALARM)
+        .putExtra(android.provider.AlarmClock.EXTRA_HOUR, a.hour)
+        .putExtra(android.provider.AlarmClock.EXTRA_MINUTES, a.minute)
+        .putExtra(android.provider.AlarmClock.EXTRA_MESSAGE, a.label.take(60))
+        .putExtra(android.provider.AlarmClock.EXTRA_SKIP_UI, skipUi)
+    context.startActivity(intent)
+    if (skipUi) android.widget.Toast.makeText(context, "Wecker für %d:%02d gestellt".format(a.hour, a.minute), android.widget.Toast.LENGTH_LONG).show()
+    true
+}.getOrDefault(false)
 
 /** Vorlese-Text des Assistenten. */
 private fun speech(st: AssistantState, greeting: String?, sentence: String?): String = buildString {
@@ -164,7 +198,9 @@ fun AssistantCard(vm: MainViewModel, onOpen: (tab: Int) -> Unit, onMood: () -> U
     fun talkText(item: de.meinhelfer.tag.info.NewsItem?): String {
         val todayPreps = st.preps.filter { it.whenText.startsWith("Heute") }
         return AssistantBrief.talk(
-            st.name, java.time.LocalTime.now().hour, st.line, todayPreps, st.proposals.size, selfHints,
+            st.name, java.time.LocalTime.now().hour, st.line, todayPreps,
+            st.proposals.count { it.action !is de.meinhelfer.tag.summary.ProposalAction.SetAlarm },
+            st.proposals.filter { it.action is de.meinhelfer.tag.summary.ProposalAction.SetAlarm }.map { it.text } + selfHints,
             item?.let { it.title to it.source }, st.multi,
         )
     }
@@ -642,6 +678,8 @@ fun AssistantSettingsCard(vm: MainViewModel) {
             HorizontalDivider()
             PopupSettings(name, image)
             HorizontalDivider()
+            WakeSettings(name)
+            HorizontalDivider()
             Text("Benachrichtigungen von $name", style = MaterialTheme.typography.labelLarge)
             OptionalTimeRow(
                 label = "Morgenüberblick",
@@ -915,5 +953,37 @@ private fun PopupSettings(name: String, image: Boolean) {
     }
     SpeakButton(owner = "assistent-vorschau", label = "▶ So sieht es beim Sprechen aus", modifier = Modifier.fillMaxWidth()) {
         "Hier bin ich. So blende ich mich ein, wenn ich spreche. Antippen hält mich an."
+    }
+}
+
+/** Wecker bei frühen Terminen: an/aus, was „früh“ ist und wie viel Zeit vorher. */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+private fun WakeSettings(name: String) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var on by remember { mutableStateOf(AppPrefs.wakeOn(context)) }
+    var early by remember { mutableStateOf(AppPrefs.wakeEarly(context)) }
+    var lead by remember { mutableStateOf(AppPrefs.wakeLead(context)) }
+    fun save() = AppPrefs.setWake(context, on, early, lead)
+    SwitchLine(
+        "⏰ Wecker bei frühen Terminen",
+        "Am Vortag ab 14 Uhr (und im Abendüberblick) erinnert $name an frühe Termine und bietet an, den Wecker zu stellen – mit einem Tipp in der Uhr-App des Handys.",
+        on,
+    ) {
+        on = it
+        save()
+    }
+    if (!on) return
+    Text("Früh heißt: Beginn vor", style = MaterialTheme.typography.bodyMedium)
+    androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        listOf(8, 9, 10, 11, 12).forEach { h ->
+            FilterChip(selected = early == h * 60, onClick = { early = h * 60; save() }, label = { Text("$h Uhr") })
+        }
+    }
+    Text("Wecken vor dem Termin", style = MaterialTheme.typography.bodyMedium)
+    androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        listOf(45, 60, 90, 120, 150).forEach { m ->
+            FilterChip(selected = lead == m, onClick = { lead = m; save() }, label = { Text(if (m % 60 == 0) "${m / 60} Std." else if (m > 60) "${m / 60}½ Std." else "$m Min.") })
+        }
     }
 }
