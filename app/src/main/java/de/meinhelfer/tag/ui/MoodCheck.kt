@@ -116,8 +116,13 @@ fun MoodCheckScreen(
                 "Schwere Momente gehören dazu, und du musst sie nicht allein tragen. Vielleicht hilft dir etwas davon:",
                 style = MaterialTheme.typography.bodyLarge,
             )
-            SupportBox(if (low <= 1) SupportLevel.Strong else SupportLevel.Relief, professional)
-            Button(shape = buttonShape(), onClick = onClose, modifier = Modifier.fillMaxWidth()) { Text("Weiter") }
+            val level = if (low <= 1) SupportLevel.Strong else SupportLevel.Relief
+            SupportBox(level, professional, read = false)
+            HintReader("stimmung", modifier = Modifier.fillMaxWidth()) {
+                "Danke, dass du es festhältst. Schwere Momente gehören dazu, und du musst sie nicht allein tragen. Vielleicht hilft dir etwas davon. " +
+                    supportSpeech(level, professional)
+            }
+            Button(shape = buttonShape(), onClick = { Speech.stop(); onClose() }, modifier = Modifier.fillMaxWidth()) { Text("Weiter") }
             return@Column
         }
         Text(if (first.isNotBlank()) "Wie geht es dir gerade, $first?" else "Wie geht es dir gerade?", style = MaterialTheme.typography.headlineSmall)
@@ -168,7 +173,7 @@ private fun dial(context: Context, number: String) {
 
 /** Hinweise zur Entlastung; bei sehr schlechter Stimmung zusaetzlich die Telefonseelsorge. */
 @Composable
-fun SupportBox(level: SupportLevel, professional: Boolean) {
+fun SupportBox(level: SupportLevel, professional: Boolean, read: Boolean = true) {
     if (level == SupportLevel.None) return
     val context = LocalContext.current
     HCard(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
@@ -191,6 +196,23 @@ fun SupportBox(level: SupportLevel, professional: Boolean) {
                 TextButton(onClick = { dial(context, "08001110111") }) { Text("Telefonseelsorge anrufen") }
                 Text("• Im Notfall: 112.", style = MaterialTheme.typography.bodyMedium)
             }
+            if (read) HintReader("unterstuetzung", auto = false) { supportSpeech(level, professional) }
         }
+    }
+}
+
+/** Die Hinweise der Unterstützung als Vorlese-Text (Nummern in Gruppen, damit sie gut verständlich sind). */
+internal fun supportSpeech(level: SupportLevel, professional: Boolean): String = buildString {
+    if (professional) {
+        append("Sprich mit deinem Team oder deiner Leitung über die Belastung. Das ist kein Versagen, sondern Teil guter Pflege. ")
+        append("Nimm deine Pausen bewusst, auch wenn es eng ist. ")
+    } else {
+        append("Das Pflegetelefon des Bundes berät rund um die Pflege, auch in belastenden Situationen: 030, 20 17 91 31, Montag bis Donnerstag von 9 bis 18 Uhr. ")
+        append("Pflegeberatung gibt es bei der Pflegekasse oder im Pflegestützpunkt vor Ort. ")
+        append("Zur Entlastung: Entlastungsbetrag für Hilfe im Alltag und Verhinderungspflege für eine Auszeit. ")
+    }
+    if (level == SupportLevel.Strong) {
+        append("Wenn es dir sehr schlecht geht, sprich mit jemandem: Die Telefonseelsorge erreichst du kostenfrei und rund um die Uhr unter 0800, 111, 0, 111, oder 116, 123. ")
+        append("Im Notfall wähle 112.")
     }
 }

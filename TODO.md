@@ -1,6 +1,6 @@
 # TODO
 
-Stand: v0.73.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.74.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
@@ -22,6 +22,7 @@ Stand: v0.73.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Datenbank prüfen, Beispiel-PDFs mit erfundenen Daten, Beispiel-Grafiken, Test-Benachrichtigungen). Die Datenbank-Umstellungen von Version 5 bis 29 prüft seit v0.54.0 bei jedem Bauen ein automatischer Test gegen das Schema (Tabellen, Spalten, Typen); auf dem Handy bleibt zu prüfen, dass die eigenen Daten nach dem Update vollständig da sind.
 
+- [ ] Stimmung „sehr schlecht“ speichern → Sunny erscheint und liest die Unterstützung vor; „Weiter“ stoppt; Schalter „Empfehlungen gleich vorlesen“ aus → nur Knopf
 - [ ] Einblendung: Video jetzt rund ausgeschnitten? Ort, Größe, Deckkraft, Rand und Hintergrund wirken sofort; „Bei jedem Vorlesen“ zeigt Sunny auch im Tagesplan, bei Dokumenten und in der Anleitung; Stimme mit Regler unter Persönlicher Assistent
 - [ ] Sunny-Bild: Ausdrücke passen zur Lage? Beim „Erzähl mal“ blendet sich das Video unten rechts ein (stumm, Antippen stoppt); „Erzählt von sich aus“ beim Öffnen der Heute-Seite, nicht öfter als alle 3 Stunden, nicht bei stummem Handy; Schlagzeile mit „Lesen“
 - [ ] Pflegetagebuch → Selbsteinschätzung: Fragen beantworten, Speichern, Teilen, im PDF beifügen
@@ -79,6 +80,10 @@ Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Daten
 - [ ] Sammel-Import: Vorschläge mit echten Scans verfeinern (z. B. gleicher Absender und gleiches Datum als weiterer Hinweis)
 
 - [ ] Eigene KI-Stimme direkt in der App (nur falls SherpaTTS nicht reicht): sherpa-onnx mit Piper-Stimme Thorsten oder Kerstin (CC0) oder apptor-tiny-tts (Apache-2.0, 21 MB); macht die App 25–70 MB größer, Lizenzen der Bibliotheken prüfen
+
+## Version 0.74.0 (fertig)
+
+- Empfehlungen gleich vorlesen: Unterstützung nach schlechter Stimmung und KI-Hinweise liest Sunny sofort vor (abschaltbar), sonst Knopf „🔊 Vorlesen“
 
 ## Version 0.73.0 (fertig)
 

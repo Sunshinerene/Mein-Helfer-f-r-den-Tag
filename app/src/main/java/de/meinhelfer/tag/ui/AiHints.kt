@@ -122,6 +122,7 @@ fun AiHintBox(
                 }
             }
             Text(AiClient.DISCLAIMER, style = MaterialTheme.typography.bodySmall)
+            HintReader("ki-${bullets.hashCode()}") { bullets.joinToString(" ") + " " + AiClient.DISCLAIMER }
         }
     }
 

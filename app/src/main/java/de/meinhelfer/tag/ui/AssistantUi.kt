@@ -624,6 +624,11 @@ fun AssistantSettingsCard(vm: MainViewModel) {
                 AppPrefs.setAssistantImage(context, it)
                 SunnyAvatar.useImage.value = it
             }
+            var readHints by remember { mutableStateOf(AppPrefs.assistantReadHints(context)) }
+            SwitchLine("Empfehlungen gleich vorlesen", "Erscheint eine Empfehlung (z. B. Unterstützung nach schlechter Stimmung oder Hinweise der KI), liest $name sie sofort vor. Einen Knopf „🔊 Vorlesen“ gibt es dort immer.", readHints) {
+                readHints = it
+                AppPrefs.setAssistantReadHints(context, it)
+            }
             SwitchLine("$name erzählt von sich aus", "Beim Öffnen der Heute-Seite liest $name höchstens alle 3 Stunden kurz vor, was ansteht – nie in der Ruhezeit. Stumm geschaltet? Dann bleibt es still.", talk) {
                 talk = it
                 AppPrefs.setAssistantTalk(context, it)

@@ -92,6 +92,13 @@ object AppPrefs {
             .apply()
     }
 
+    /** Empfehlungen und Hinweise (z. B. nach schlechter Stimmung) gleich von Sunny vorlesen lassen. */
+    fun assistantReadHints(context: Context): Boolean = prefs(context).getBoolean("assistent_hinweise_vorlesen", true)
+
+    fun setAssistantReadHints(context: Context, on: Boolean) {
+        prefs(context).edit().putBoolean("assistent_hinweise_vorlesen", on).apply()
+    }
+
     fun assistantImage(context: Context): Boolean = prefs(context).getBoolean("assistent_bild", true)
 
     fun setAssistantImage(context: Context, on: Boolean) {

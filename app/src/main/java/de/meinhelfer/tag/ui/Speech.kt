@@ -295,3 +295,21 @@ fun VoiceChooser() {
         }) { Text("SherpaTTS bei F-Droid ansehen") }
     }
 }
+
+/**
+ * Vorlesen für Empfehlungen und Hinweise: Knopf „🔊 Vorlesen“ und, wenn eingestellt
+ * (Einstellungen → Persönlicher Assistent → „Empfehlungen gleich vorlesen“), liest Sunny beim Erscheinen gleich vor.
+ * Sprecher beginnt mit „assistent“, damit Sunny sich dazu einblendet.
+ */
+@Composable
+fun HintReader(key: String, auto: Boolean = true, modifier: Modifier = Modifier, text: () -> String) {
+    val context = LocalContext.current
+    val owner = "assistent-hinweis-$key"
+    androidx.compose.runtime.LaunchedEffect(key) {
+        if (auto && AppPrefs.assistantEnabled(context) && AppPrefs.assistantReadHints(context)) {
+            kotlinx.coroutines.delay(500)
+            Speech.speak(context, owner, text())
+        }
+    }
+    SpeakButton(owner = owner, label = "🔊 Vorlesen", modifier = modifier, text = text)
+}
