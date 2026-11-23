@@ -977,7 +977,6 @@ private fun AccessibilityCard(vm: MainViewModel) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val style by vm.designStyle.collectAsStateWithLifecycle()
     val scale by vm.uiScale.collectAsStateWithLifecycle()
-    var rate by remember { mutableStateOf(AppPrefs.speechRate(context)) }
     HCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Barrierefreiheit", style = MaterialTheme.typography.titleMedium)
@@ -1007,21 +1006,9 @@ private fun AccessibilityCard(vm: MainViewModel) {
 
             Text("Vorlesen", style = MaterialTheme.typography.labelLarge)
             Text(
-                "„🔊 Vorlesen“ gibt es im Tagesplan, bei Dokumenten und in der Anleitung. Gesprochen wird mit der Sprachausgabe des Handys.",
+                "„🔊 Vorlesen“ gibt es im Tagesplan, bei Dokumenten und in der Anleitung. Stimme und Geschwindigkeit stellst du unter Einstellungen → „Persönlicher Assistent“ → „Stimme“ ein.",
                 style = MaterialTheme.typography.bodySmall,
             )
-            androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf(0.75f to "Langsam", 0.95f to "Normal", 1.2f to "Schneller").forEach { (r, label) ->
-                    FilterChip(selected = kotlin.math.abs(rate - r) < 0.01f, onClick = {
-                        rate = r
-                        AppPrefs.setSpeechRate(context, r)
-                    }, label = { Text(label) })
-                }
-            }
-            VoiceChooser()
-            SpeakButton(owner = "probe", label = "🔊 Probe hören") {
-                "So klingt das Vorlesen in dieser Geschwindigkeit. Mein Helfer für den Tag liest dir Tagesplan, Dokumente und Anleitung vor."
-            }
             Text(
                 "Die App lässt sich auch mit TalkBack bedienen, dem Bildschirmleser von Android (Android-Einstellungen → Bedienungshilfen).",
                 style = MaterialTheme.typography.bodySmall,

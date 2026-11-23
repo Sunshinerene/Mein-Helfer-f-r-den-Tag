@@ -2,6 +2,7 @@ package de.meinhelfer.tag.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -632,6 +633,10 @@ fun AssistantSettingsCard(vm: MainViewModel) {
                 AppPrefs.setAssistantTalkNews(context, it)
             }
             HorizontalDivider()
+            VoiceSettings(name)
+            HorizontalDivider()
+            PopupSettings(name, image)
+            HorizontalDivider()
             Text("Benachrichtigungen von $name", style = MaterialTheme.typography.labelLarge)
             OptionalTimeRow(
                 label = "Morgenüberblick",
@@ -814,5 +819,96 @@ private fun SwitchLine(title: String, hint: String, checked: Boolean, onChange: 
             Text(hint, style = MaterialTheme.typography.bodySmall)
         }
         Switch(checked = checked, onCheckedChange = onChange)
+    }
+}
+
+/** Stimme: Geschwindigkeit (Regler), Sprachausgabe und Stimme, Probe. Gilt für alles Vorlesen in der App. */
+@Composable
+private fun VoiceSettings(name: String) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var rate by remember { mutableStateOf(AppPrefs.speechRate(context)) }
+    Text("Stimme", style = MaterialTheme.typography.labelLarge)
+    Text(
+        "Gilt für $name und für alles Vorlesen in der App (Tagesplan, Dokumente, Anleitung). Gesprochen wird mit der Sprachausgabe des Handys.",
+        style = MaterialTheme.typography.bodySmall,
+    )
+    Text("Geschwindigkeit: " + rateLabel(rate) + " (" + "%.1f".format(java.util.Locale.GERMANY, rate) + "×)", style = MaterialTheme.typography.bodyMedium)
+    androidx.compose.material3.Slider(
+        value = rate,
+        onValueChange = { rate = (kotlin.math.round(it * 20f) / 20f) },
+        onValueChangeFinished = { AppPrefs.setSpeechRate(context, rate) },
+        valueRange = 0.5f..2.5f,
+    )
+    Row {
+        Text("langsam", style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
+        Text("sehr schnell", style = MaterialTheme.typography.bodySmall)
+    }
+    VoiceChooser()
+    SpeakButton(owner = "assistent-probe", label = "🔊 Probe hören", modifier = Modifier.fillMaxWidth()) {
+        "Hallo, hier ist $name. So klinge ich in dieser Geschwindigkeit. Ich lese dir vor, was heute ansteht."
+    }
+}
+
+private fun rateLabel(r: Float) = when {
+    r < 0.8f -> "langsam"
+    r < 1.1f -> "normal"
+    r < 1.5f -> "schnell"
+    r < 2.0f -> "sehr schnell"
+    else -> "am schnellsten"
+}
+
+/** Einblendung beim Sprechen: wann, wo, wie groß, Deckkraft, Rand und Hintergrund, mit Vorschau. */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+private fun PopupSettings(name: String, image: Boolean) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val style by SunnyAvatar.popup.collectAsState()
+    fun set(s: SunnyPopup) {
+        SunnyAvatar.popup.value = s
+        AppPrefs.setSunnyPopup(context, s)
+    }
+    Text("Einblendung beim Sprechen", style = MaterialTheme.typography.labelLarge)
+    if (!image) {
+        Text("Nur mit dem Sunny-Bild (Schalter oben).", style = MaterialTheme.typography.bodySmall)
+        return
+    }
+    @Composable
+    fun chips(title: String, options: List<String>, selected: Int, onPick: (Int) -> Unit) {
+        Text(title, style = MaterialTheme.typography.bodyMedium)
+        androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            options.forEachIndexed { i, o -> FilterChip(selected = selected == i, onClick = { onPick(i) }, label = { Text(o) }) }
+        }
+    }
+    chips("Wann", SunnyPopup.SHOWS, style.show) { set(style.copy(show = it)) }
+    Text(
+        "„Bei jedem Vorlesen“: $name erscheint auch, wenn Tagesplan, Dokumente oder Anleitung vorgelesen werden, und spricht mit.",
+        style = MaterialTheme.typography.bodySmall,
+    )
+    if (style.show == 0) return
+    chips("Wo", SunnyPopup.PLACES, style.place) { set(style.copy(place = it)) }
+    Text("Größe: ${style.size} dp", style = MaterialTheme.typography.bodyMedium)
+    var size by remember(style.size) { mutableStateOf(style.size.toFloat()) }
+    androidx.compose.material3.Slider(
+        value = size,
+        onValueChange = { size = it },
+        onValueChangeFinished = { set(style.copy(size = size.toInt())) },
+        valueRange = SunnyPopup.MIN_SIZE.toFloat()..SunnyPopup.MAX_SIZE.toFloat(),
+    )
+    Text("Deckkraft: ${(style.alpha * 100).toInt()} %", style = MaterialTheme.typography.bodyMedium)
+    var alpha by remember(style.alpha) { mutableStateOf(style.alpha) }
+    androidx.compose.material3.Slider(
+        value = alpha,
+        onValueChange = { alpha = it },
+        onValueChangeFinished = { set(style.copy(alpha = alpha)) },
+        valueRange = 0.3f..1f,
+    )
+    chips("Rand", SunnyPopup.FRAMES, style.frame) { set(style.copy(frame = it)) }
+    chips("Hintergrund", SunnyPopup.BACKS, style.back) { set(style.copy(back = it)) }
+    Text("Vorschau", style = MaterialTheme.typography.bodyMedium)
+    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+        SunnyBubble(style.copy(size = size.toInt(), alpha = alpha), Modifier.padding(8.dp), video = false)
+    }
+    SpeakButton(owner = "assistent-vorschau", label = "▶ So sieht es beim Sprechen aus", modifier = Modifier.fillMaxWidth()) {
+        "Hier bin ich. So blende ich mich ein, wenn ich spreche. Antippen hält mich an."
     }
 }

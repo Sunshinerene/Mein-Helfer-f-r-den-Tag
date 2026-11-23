@@ -227,6 +227,7 @@ private fun DrawScope.drawFace(expression: Expression, eyeOpen: Float, mouthOpen
 /** Bild von Sunny statt des gezeichneten Gesichts (Einstellungen → Persönlicher Assistent). */
 object SunnyAvatar {
     val useImage = kotlinx.coroutines.flow.MutableStateFlow(true)
+    val popup = kotlinx.coroutines.flow.MutableStateFlow(SunnyPopup())
 
     fun drawable(e: Expression): Int = when (e) {
         Expression.Friendly -> de.meinhelfer.tag.R.drawable.sunny_freundlich

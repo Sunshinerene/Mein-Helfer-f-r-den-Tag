@@ -46,7 +46,7 @@ object AppPrefs {
     }
 
     /** Geschwindigkeit beim Vorlesen (1.0 = normal). */
-    fun speechRate(context: Context): Float = prefs(context).getFloat("vorlesen_tempo", 0.95f).coerceIn(0.5f, 1.6f)
+    fun speechRate(context: Context): Float = prefs(context).getFloat("vorlesen_tempo", 0.95f).coerceIn(0.5f, 2.5f)
 
     fun setSpeechRate(context: Context, rate: Float) {
         prefs(context).edit().putFloat("vorlesen_tempo", rate).apply()
@@ -68,6 +68,30 @@ object AppPrefs {
     }
 
     /** Assistent als Bild (Sunny) statt gezeichnetem Gesicht. */
+    /** Einblendung von Sunny beim Sprechen (Wann, Ort, Größe, Deckkraft, Rand, Hintergrund). */
+    fun sunnyPopup(context: Context): de.meinhelfer.tag.ui.SunnyPopup {
+        val p = prefs(context)
+        return de.meinhelfer.tag.ui.SunnyPopup(
+            show = p.getInt("sunny_popup_wann", 1),
+            place = p.getInt("sunny_popup_ort", 0),
+            size = p.getInt("sunny_popup_groesse", 132),
+            alpha = p.getFloat("sunny_popup_deckkraft", 1f),
+            frame = p.getInt("sunny_popup_rand", 1),
+            back = p.getInt("sunny_popup_hintergrund", 0),
+        )
+    }
+
+    fun setSunnyPopup(context: Context, s: de.meinhelfer.tag.ui.SunnyPopup) {
+        prefs(context).edit()
+            .putInt("sunny_popup_wann", s.show)
+            .putInt("sunny_popup_ort", s.place)
+            .putInt("sunny_popup_groesse", s.size)
+            .putFloat("sunny_popup_deckkraft", s.alpha)
+            .putInt("sunny_popup_rand", s.frame)
+            .putInt("sunny_popup_hintergrund", s.back)
+            .apply()
+    }
+
     fun assistantImage(context: Context): Boolean = prefs(context).getBoolean("assistent_bild", true)
 
     fun setAssistantImage(context: Context, on: Boolean) {
