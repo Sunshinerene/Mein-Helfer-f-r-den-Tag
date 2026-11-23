@@ -89,7 +89,7 @@ fun SettingsScreen(
 
     var categoryKey by rememberSaveable { mutableStateOf(initialCategory) }
     var query by rememberSaveable { mutableStateOf("") }
-    val category = SettingsCategory.entries.firstOrNull { it.name == categoryKey }
+    val category = SettingsCategory.entries.firstOrNull { it.name == (if (categoryKey == "Internet") "Assistent" else categoryKey) }
     androidx.activity.compose.BackHandler(enabled = category != null) { categoryKey = null }
 
     Scaffold(
@@ -154,6 +154,9 @@ fun SettingsScreen(
                 }
                 SettingsCategory.Assistent -> {
                     item { AssistantSettingsCard(vm) }
+                    item { AiCard() }
+                    item { MedInfoCard() }
+                    item { SunnyBetaCard() }
                     item {
                         Text(
                             "Wann Erinnerungen und Hinweise kommen und die Ruhezeit: Einstellungen → Erinnerungen und Freigaben. Ist der Assistent aus, zeigt die Heute-Seite wieder den Tages-Motivator.",
@@ -186,16 +189,6 @@ fun SettingsScreen(
                     item { SecurityCard() }
                     item { BackupCard() }
                 }
-                SettingsCategory.Internet -> {
-                    item {
-                        Text(
-                            "Alles hier ist freiwillig. Ohne Einrichtung funktioniert die App vollständig, nur ohne Hilfen aus dem Internet.",
-                            style = MaterialTheme.typography.bodySmall,
-                        )
-                    }
-                    item { AiCard() }
-                    item { MedInfoCard() }
-                }
                 SettingsCategory.Hilfe -> {
                     item { HelpCard(onOpenGuide, onStartTour) }
                     item { FeedbackCard(context) }
@@ -207,6 +200,20 @@ fun SettingsScreen(
                             "Neue Funktionen in Erprobung. Sie können sich noch ändern; Rückmeldungen dazu helfen sehr (Hilfe und Rückmeldung → Feedback).",
                             style = MaterialTheme.typography.bodySmall,
                         )
+                    }
+                    item {
+                        HCard(Modifier.fillMaxWidth()) {
+                            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Text("🌞 Beta bei ${AppPrefs.assistantName(context)}", style = MaterialTheme.typography.titleMedium)
+                                Text(
+                                    "🧰 Alltagshelfer: kleine Werkzeuge in der Karte des Assistenten – „Was koche ich heute?“ (passend dazu, wer zu Hause ist und worauf beim Essen zu achten ist, auch mit Kühlschrank-Foto), " +
+                                        "Essensplan für die Woche, Einkaufsliste mit Grundvorrat und getrennter Apotheken-Liste, Fragen für den Arztbesuch, Wochenrückblick und eigene Werkzeuge, die der Assistent zu einem Thema baut.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                )
+                                Text("Eingeschaltet wird das im Persönlichen Assistenten unter „Beta-Funktionen“.", style = MaterialTheme.typography.bodySmall)
+                                OutlinedButton(shape = buttonShape(), onClick = { categoryKey = SettingsCategory.Assistent.name }) { Text("Zum Persönlichen Assistenten") }
+                            }
+                        }
                     }
                     item { HealthConnectSettingsCard() }
                     item {
@@ -244,13 +251,12 @@ fun SettingsScreen(
 /** Kategorien der Einstellungen; [keywords] fuer die Suche. */
 private enum class SettingsCategory(val emoji: String, val title: String, val keywords: String) {
     Profil("👤", "Meine Daten und Zustimmung", "name adresse telefon rolle ausweis angehörige pflegedienst zustimmung nutzungsbedingungen widerruf nachweis"),
-    Assistent("🌞", "Persönlicher Assistent", "assistent sunny name gesicht persönlich morgen abend überblick morgenüberblick vorschläge checkliste termin eigene werte schlaf schritte ruhepuls motivator helfer"),
+    Assistent("🌞", "Persönlicher Assistent", "assistent sunny name gesicht persönlich morgen abend überblick morgenüberblick vorschläge checkliste termin eigene werte schlaf schritte ruhepuls motivator helfer ki schlüssel api gemini openai chatgpt claude ollama groq mistral wikipedia beschreibung internet stimme vorlesen alltagshelfer kochen einkauf beta"),
     Darstellung("🎨", "Darstellung", "hell dunkel design farben schrift schriftgröße größe ecken effekte glas aurora liquid animation glanz transparenz einspieler video intro start logo ton barrierefreiheit kontrast vorlesen sprachausgabe bedienflächen größer zoom sehen"),
     Startseite("🏠", "Heute-Seite, Motivator und Widget", "heute karten notfallkarte tagesstart motivator stimmung smiley ziele widget startbildschirm"),
     Erinnerungen("🔔", "Erinnerungen und Freigaben", "benachrichtigung freigabe freigaben wecker alarm akku einnahme zeitfenster ton erinnerung trinken tagebuch pflegetagebuch ruhezeit nacht übersicht assistent morgen abend"),
     Dokumente("📄", "Dokumente", "betrachter viewer pdf drucken öffnen dokument"),
     Sicherheit("🔒", "Sicherheit und Sicherung", "app-sperre sperre fingerabdruck gesicht pin sicherung backup wiederherstellen zurücksetzen reset löschen"),
-    Internet("🤖", "KI und Internet", "ki assistent schlüssel api gemini openai chatgpt claude ollama groq mistral wikipedia beschreibung internet"),
     Hilfe("💬", "Hilfe und Rückmeldung", "anleitung rundgang hilfe feedback fehler wunsch rückmeldung selbsttest test prüfen beispiel pdf datenbank"),
     Beta("🧪", "Beta-Funktionen", "beta uhr smartwatch fitnessband armband band waage blutdruckgerät health connect gesundheit verbinden fitbit garmin samsung withings omron aurora effekte"),
     App("ℹ️", "App und Updates", "update aktualisieren version neuigkeiten neu geplant über app"),
@@ -283,12 +289,11 @@ private fun categorySummary(
     SettingsCategory.Erinnerungen -> "Übersicht, Ruhezeit, Freigaben, Einnahme-Zeitfenster, Trinken und Pflegetagebuch"
     SettingsCategory.Dokumente -> if (AppPrefs.internalViewer(context)) "Öffnen im eingebauten Betrachter" else "Öffnen mit einer anderen App"
     SettingsCategory.Sicherheit -> "App-Sperre " + (if (AppPrefs.lockEnabled(context)) "an" else "aus") + " · Sicherung, Zurücksetzen"
-    SettingsCategory.Internet ->
-        de.meinhelfer.tag.ai.AiMode.of(context).title + " · " + (if (AiConfig.isConfigured(context)) AiConfig.provider(context).label else "kein Dienst eingerichtet")
     SettingsCategory.Hilfe -> "Anleitung, Rundgang, Fehler oder Wunsch melden, Selbsttest"
     SettingsCategory.Assistent ->
-        vm.assistantName.value + " · " + (if (vm.assistantOn.value) "an" else "aus (Tages-Motivator)")
-    SettingsCategory.Beta -> "Uhr, Fitnessband und Messgeräte (Health Connect), Aurora und Effekte"
+        vm.assistantName.value + " · " + (if (vm.assistantOn.value) "an" else "aus (Tages-Motivator)") + " · " +
+            de.meinhelfer.tag.ai.AiMode.of(context).title + (if (AiConfig.isConfigured(context)) " · " + AiConfig.provider(context).label.substringBefore(" (") else "")
+    SettingsCategory.Beta -> "Alltagshelfer von Sunny, Uhr und Messgeräte (Health Connect), Aurora und Effekte"
     SettingsCategory.App -> "Version " + UpdateChecker.installedVersion(context) +
         if (updateState is UpdateState.Available || updateState is UpdateState.Ready) " · Update verfügbar" else ""
 }
@@ -756,9 +761,7 @@ private fun AiCard() {
 
     HCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("KI-Assistent (optional)", style = MaterialTheme.typography.titleMedium)
-            AiModeChooser(AppPrefs.assistantName(context))
-            androidx.compose.material3.HorizontalDivider()
+            Text("KI-Dienst (optional)", style = MaterialTheme.typography.titleMedium)
             Text(
                 "Die KI liefert Anhaltspunkte, z. B. „Medikamentenplan vom Hausarzt prüfen lassen“. Sie ist kein Arzt und kein Apotheker. " +
                     "Du wählst den Dienst und hinterlegst deinen eigenen Schlüssel (API-Key). Gesendet wird je nach KI-Modus nach deiner Bestätigung oder automatisch – immer ohne Namen und andere persönliche Angaben. " +

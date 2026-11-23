@@ -284,7 +284,7 @@ fun MedOverviewScreen(
                         } else {
                             if (!configured && !otherReady) {
                                 Text(
-                                    if (de.meinhelfer.tag.ai.AiMode.isOff(context)) de.meinhelfer.tag.ai.AiMode.OFF_TEXT else "KI nicht eingerichtet. Du kannst sie unter Einstellungen → KI und Internet einrichten (z. B. kostenlos mit Google Gemini).",
+                                    if (de.meinhelfer.tag.ai.AiMode.isOff(context)) de.meinhelfer.tag.ai.AiMode.OFF_TEXT else "KI nicht eingerichtet. Du kannst sie unter Einstellungen → Persönlicher Assistent → KI-Dienst einrichten (z. B. kostenlos mit Google Gemini).",
                                     style = MaterialTheme.typography.bodySmall,
                                 )
                             }
@@ -311,7 +311,7 @@ fun MedOverviewScreen(
                             if (limitHit) {
                                 Text(
                                     if (otherReady) "Wähle oben einen anderen KI-Dienst und sende erneut."
-                                    else "Du kannst unter Einstellungen → KI und Internet einen weiteren Dienst einrichten und dann hier umschalten.",
+                                    else "Du kannst unter Einstellungen → Persönlicher Assistent → KI-Dienst einen weiteren Dienst einrichten und dann hier umschalten.",
                                     style = MaterialTheme.typography.bodySmall,
                                 )
                             }

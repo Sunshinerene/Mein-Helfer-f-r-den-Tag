@@ -239,7 +239,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "KI-Modus: was der Assistent mit KI darf",
-                "Einstellungen → „Persönlicher Assistent“ (oder „KI und Internet“) → „KI-Modus“, nach Sicherheitsstufe: " +
+                "Einstellungen → „Persönlicher Assistent“ → „KI-Modus“, nach Sicherheitsstufe: " +
                     "Stufe 1 „Ohne KI“: nichts geht an KI-Dienste, alle KI-Knöpfe sind aus. " +
                     "Stufe 2 „KI mit Bestätigung“ (Standard): vor jedem Senden siehst du genau den Text, der rausgeht, und bestätigst. " +
                     "Stufe 3 „KI vollumfänglich“: der Assistent nutzt KI ohne Nachfrage. " +
@@ -269,7 +269,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Alltagshelfer (Beta)",
-                "In der Karte des Assistenten stehen kleine Werkzeuge als Knöpfe, „🧰 Alltagshelfer“ öffnet alle. " +
+                "In der Karte des Assistenten stehen kleine Werkzeuge als Knöpfe, „🧰 Alltagshelfer“ öffnet alle. Ein- und ausschalten: Einstellungen → „Persönlicher Assistent“ → „Beta-Funktionen“ (unter „Beta-Funktionen“ in den Einstellungen steht die Beschreibung mit Link dorthin). " +
                     "🍳 „Was koche ich heute?“: Mahlzeit und Zeit wählen, eintippen was da ist oder den Kühlschrank fotografieren. Die App weiß, wer dann zu Hause ist (Werkstatt-, Tagespflegezeiten und Termine aus dem Profil) und worauf beim Essen zu achten ist (im Profil unter „Essen und Trinken“: Diabetes, weiche oder pürierte Kost, Allergien, Vorlieben). Sunny schlägt drei passende Gerichte vor und liest sie vor. " +
                     "🛒 „Einkaufsliste“: was fehlt eintippen oder Kühlschrank bzw. Vorratsschrank fotografieren. Unter „Listen“ → „Grundvorrat“ legst du fest, was immer da sein soll (Kühlschrank, Vorratsschrank, Tiefkühler, Bad/Drogerie); Sunny vergleicht das Foto damit und setzt Fehlendes auf die Liste. Ohne KI hakst du im Grundvorrat ab, was fehlt. Medikamente und Pflegehilfsmittel kommen auf die eigene Liste „Apotheke & Sanitätshaus“, getrennt vom Einkauf. " +
                     "📅 „Essensplan für die Woche“: je Tag passend dazu, wer mittags und abends zu Hause ist; „🛒 Auf die Liste“ übernimmt die Zutaten. 🩺 „Fragen für den Arztbesuch“: was du beim Termin ansprechen könntest. 📊 „Wochenrückblick“: Werte, Einnahmen und Termine der letzten sieben Tage kurz zusammengefasst, mit Auffälligkeiten zum Besprechen. " +
@@ -643,7 +643,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Einrichten",
-                "Einstellungen → KI und Internet. Dienst wählen: kostenlos nutzbar (mit Mengengrenzen) sind Google Gemini, Groq, Mistral, OpenRouter (Modelle mit „:free“), Cerebras, SambaNova, GitHub Models, Hugging Face (kleines Monatsguthaben), Cohere (Test-Schlüssel), OVHcloud (EU, auch ganz ohne Schlüssel mit 2 Anfragen pro Minute) und Scaleway (EU, 1 Million Tokens). Kostenpflichtig nach Verbrauch sind OpenAI, Anthropic (Claude), xAI (Grok), Together AI, Nebius, IONOS (Server in Deutschland) und DeepSeek. Dann den eigenen API-Schlüssel eintragen („Schlüssel besorgen“ öffnet die Seite des Anbieters) und „Testen“ antippen. Mit „Verfügbare Modelle laden“ wählst du ein anderes Modell, falls das vorgeschlagene nicht mehr angeboten wird. Ein Abo bei ChatGPT oder Claude reicht nicht, es braucht den API-Schlüssel. Angaben zu kostenlosen Kontingenten ändern sich häufig; maßgeblich ist die Seite des Anbieters.",
+                "Einstellungen → Persönlicher Assistent → KI-Dienst. Dienst wählen: kostenlos nutzbar (mit Mengengrenzen) sind Google Gemini, Groq, Mistral, OpenRouter (Modelle mit „:free“), Cerebras, SambaNova, GitHub Models, Hugging Face (kleines Monatsguthaben), Cohere (Test-Schlüssel), OVHcloud (EU, auch ganz ohne Schlüssel mit 2 Anfragen pro Minute) und Scaleway (EU, 1 Million Tokens). Kostenpflichtig nach Verbrauch sind OpenAI, Anthropic (Claude), xAI (Grok), Together AI, Nebius, IONOS (Server in Deutschland) und DeepSeek. Dann den eigenen API-Schlüssel eintragen („Schlüssel besorgen“ öffnet die Seite des Anbieters) und „Testen“ antippen. Mit „Verfügbare Modelle laden“ wählst du ein anderes Modell, falls das vorgeschlagene nicht mehr angeboten wird. Ein Abo bei ChatGPT oder Claude reicht nicht, es braucht den API-Schlüssel. Angaben zu kostenlosen Kontingenten ändern sich häufig; maßgeblich ist die Seite des Anbieters.",
             ),
             GuideItem(
                 "Einschätzung zu einem Medikament",
@@ -841,7 +841,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Die Bereiche",
-                "Meine Daten und Zustimmung (wer du bist, Adresse, Nutzungsbedingungen und Nachweis). Persönlicher Assistent (ein/aus, Name, Morgen- und Abendüberblick, eigene Werte). Darstellung (hell/dunkel, Schriftgröße, Design mit eigenen Farben, Barrierefreiheit mit hohem Kontrast, Größe und Vorlesen, Ecken, Effekte, Einspieler beim Start). Heute-Seite, Motivator und Widget (Notfallkarte, Tagesstart, Motivator-Karte, Stimmungs-Check, Widget auf dem Startbildschirm). Erinnerungen und Freigaben (Android-Freigaben, Einnahmen abhaken). Dokumente (Betrachter in der App oder andere App). Sicherheit und Sicherung (App-Sperre, Sicherung, Wiederherstellung, Zurücksetzen). KI und Internet (KI-Assistent, Medikamenten-Beschreibung; freiwillig). Hilfe und Rückmeldung (Anleitung, Rundgang, Feedback). Beta-Funktionen (Uhr, Fitnessband und Messgeräte über Health Connect, Design Aurora und Effekte). App und Updates (Version, Updates, Neuigkeiten und Pläne, Infos zur App).",
+                "Meine Daten und Zustimmung (wer du bist, Adresse, Nutzungsbedingungen und Nachweis). Persönlicher Assistent (ein/aus, Name, Stimme, Einblendung, KI-Modus, KI-Dienst und Schlüssel, KI-Aufgaben, Medikamenten-Infos aus dem Internet, kleine Helfer, Beta-Funktionen von Sunny). Darstellung (hell/dunkel, Schriftgröße, Design mit eigenen Farben, Barrierefreiheit mit hohem Kontrast, Größe und Vorlesen, Ecken, Effekte, Einspieler beim Start). Heute-Seite, Motivator und Widget (Notfallkarte, Tagesstart, Motivator-Karte, Stimmungs-Check, Widget auf dem Startbildschirm). Erinnerungen und Freigaben (Android-Freigaben, Einnahmen abhaken). Dokumente (Betrachter in der App oder andere App). Sicherheit und Sicherung (App-Sperre, Sicherung, Wiederherstellung, Zurücksetzen). Hilfe und Rückmeldung (Anleitung, Rundgang, Feedback). Beta-Funktionen (Uhr, Fitnessband und Messgeräte über Health Connect, Design Aurora und Effekte). App und Updates (Version, Updates, Neuigkeiten und Pläne, Infos zur App).",
             ),
         ),
     ),

@@ -195,6 +195,7 @@ object HelperStore {
 @Composable
 fun HelperChips(vm: MainViewModel) {
     val context = LocalContext.current
+    if (!de.meinhelfer.tag.update.AppPrefs.helpersBeta(context)) return
     var open by remember { mutableStateOf<String?>(null) }
     var hub by remember { mutableStateOf(false) }
     var tick by remember { mutableStateOf(0) }
@@ -236,7 +237,7 @@ fun HelperHub(vm: MainViewModel, onClose: () -> Unit) {
                         "📌 heftet ein Werkzeug als Knopf in Sunnys Karte.",
                     style = MaterialTheme.typography.bodySmall,
                 )
-                if (!aiReady) Text("Die Helfer brauchen KI (Stufe 2 oder 3, Einstellungen → KI und Internet).", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+                if (!aiReady) Text("Die Helfer brauchen KI (Stufe 2 oder 3, Einstellungen → Persönlicher Assistent → KI-Dienst).", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
                 tools.forEach { t ->
                     HCard(Modifier.fillMaxWidth().clickable { open = t }) {
                         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -708,4 +709,37 @@ private fun shareHelperText(context: Context, text: String) {
         putExtra(android.content.Intent.EXTRA_TEXT, text)
     }
     runCatching { context.startActivity(android.content.Intent.createChooser(send, "Teilen")) }
+}
+
+/** Einstellungen → Persönlicher Assistent → Beta-Funktionen: Alltagshelfer ein/aus. */
+@Composable
+fun SunnyBetaCard() {
+    val context = LocalContext.current
+    var on by remember { mutableStateOf(de.meinhelfer.tag.update.AppPrefs.helpersBeta(context)) }
+    var hub by remember { mutableStateOf(false) }
+    val name = de.meinhelfer.tag.update.AppPrefs.assistantName(context)
+    HCard(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text("🧪 Beta-Funktionen von $name", style = MaterialTheme.typography.titleMedium)
+            Text("In Erprobung – kann sich noch ändern. Rückmeldungen helfen sehr (Hilfe und Rückmeldung).", style = MaterialTheme.typography.bodySmall)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("🧰 Alltagshelfer", style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        "Kochen, Essensplan, Einkaufs- und Apotheken-Liste mit Grundvorrat, Arztfragen, Wochenrückblick und eigene Werkzeuge – als Knöpfe in der Karte des Assistenten. Braucht KI (Stufe 2 oder 3).",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+                androidx.compose.material3.Switch(checked = on, onCheckedChange = {
+                    on = it
+                    de.meinhelfer.tag.update.AppPrefs.setHelpersBeta(context, it)
+                })
+            }
+            if (on) TextButton(onClick = { hub = true }) { Text("Alltagshelfer öffnen") }
+        }
+    }
+    if (hub) {
+        val vm: MainViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+        HelperHub(vm) { hub = false }
+    }
 }

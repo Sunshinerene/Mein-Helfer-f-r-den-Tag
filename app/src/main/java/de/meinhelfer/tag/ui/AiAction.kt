@@ -62,7 +62,7 @@ fun AiActionButton(
     Column(modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
         if (!configured && !otherReady) {
             Text(
-                if (de.meinhelfer.tag.ai.AiMode.isOff(context)) de.meinhelfer.tag.ai.AiMode.OFF_TEXT else "KI nicht eingerichtet. Unter Einstellungen → KI und Internet kannst du sie einrichten (z. B. kostenlos mit Google Gemini). Oder teile den Text an eine KI-App auf deinem Handy.",
+                if (de.meinhelfer.tag.ai.AiMode.isOff(context)) de.meinhelfer.tag.ai.AiMode.OFF_TEXT else "KI nicht eingerichtet. Unter Einstellungen → Persönlicher Assistent → KI-Dienst kannst du sie einrichten (z. B. kostenlos mit Google Gemini). Oder teile den Text an eine KI-App auf deinem Handy.",
                 style = MaterialTheme.typography.bodySmall,
             )
             if (!de.meinhelfer.tag.ai.AiMode.isOff(context)) AiShareButton(system, text = prompt)
@@ -93,7 +93,7 @@ fun AiActionButton(
         if (limitHit) {
             Text(
                 if (otherReady) "Wähle oben einen anderen KI-Dienst und sende erneut."
-                else "Unter Einstellungen → KI und Internet kannst du einen weiteren Dienst einrichten und hier umschalten.",
+                else "Unter Einstellungen → Persönlicher Assistent → KI-Dienst kannst du einen weiteren Dienst einrichten und hier umschalten.",
                 style = MaterialTheme.typography.bodySmall,
             )
         }

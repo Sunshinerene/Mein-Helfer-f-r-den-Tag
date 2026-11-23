@@ -637,7 +637,7 @@ fun AssistantSheetContent(vm: MainViewModel, page: String, onOpenGuide: () -> Un
                     },
                 )
             } else {
-                Text("Mit eingerichteter KI (Einstellungen → KI und Internet) kann ich Fragen auch frei beantworten.", style = MaterialTheme.typography.bodySmall)
+                Text("Mit eingerichteter KI (Einstellungen → Persönlicher Assistent → KI-Dienst) kann ich Fragen auch frei beantworten.", style = MaterialTheme.typography.bodySmall)
             }
             aiAnswer?.let {
                 Text("🤖 $it", style = MaterialTheme.typography.bodyMedium)

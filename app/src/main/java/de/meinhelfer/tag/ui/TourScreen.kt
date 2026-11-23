@@ -131,7 +131,7 @@ private val TOUR_PAGES = listOf(
     ),
     TourPage(
         title = "KI (freiwillig)",
-        text = "Die KI gibt auf Wunsch Anhaltspunkte, z. B. zu Medikamenten oder Dokumenten. Dafür brauchst du einen Schlüssel: eine Art Ausweis dieser App bei einem KI-Dienst. Bei Google Gemini bekommst du ihn kostenlos mit deinem Google-Konto, eine Anleitung Schritt für Schritt steht in den Einstellungen unter „KI und Internet“.",
+        text = "Die KI gibt auf Wunsch Anhaltspunkte, z. B. zu Medikamenten oder Dokumenten. Dafür brauchst du einen Schlüssel: eine Art Ausweis dieser App bei einem KI-Dienst. Bei Google Gemini bekommst du ihn kostenlos mit deinem Google-Konto, eine Anleitung Schritt für Schritt steht in den Einstellungen unter „Persönlicher Assistent“ → „KI-Dienst“.",
         tips = listOf("Ohne KI funktioniert alles andere genauso.", "Gesendet wird nur nach deiner Bestätigung und nie mit Namen.", "Der Schlüssel bleibt verschlüsselt auf dem Handy."),
         mock = { MockAiKey() },
     ),

@@ -172,6 +172,13 @@ object AppPrefs {
         prefs(context).edit().putBoolean("seite_kommentar", on).putBoolean("seite_kommentar_auto", auto).apply()
     }
 
+    /** Beta: Alltagshelfer in der Karte des Assistenten. */
+    fun helpersBeta(context: Context): Boolean = prefs(context).getBoolean("beta_alltagshelfer", true)
+
+    fun setHelpersBeta(context: Context, on: Boolean) {
+        prefs(context).edit().putBoolean("beta_alltagshelfer", on).apply()
+    }
+
     fun assistantImage(context: Context): Boolean = prefs(context).getBoolean("assistent_bild", true)
 
     fun setAssistantImage(context: Context, on: Boolean) {

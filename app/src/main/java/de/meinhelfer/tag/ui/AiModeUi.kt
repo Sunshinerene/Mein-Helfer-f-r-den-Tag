@@ -83,7 +83,7 @@ fun AiModeChooser(name: String) {
     }
     if (mode != AiMode.Off) AiTaskSettings(name, mode == AiMode.Auto)
     if (mode != AiMode.Off && !de.meinhelfer.tag.ai.AiConfig.isConfigured(context)) {
-        Text("Noch kein KI-Dienst eingerichtet: Einstellungen → KI und Internet.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+        Text("Noch kein KI-Dienst eingerichtet: Einstellungen → Persönlicher Assistent → KI-Dienst.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
     }
     asking?.let { m ->
         var read by remember(m) { mutableStateOf(false) }
@@ -145,7 +145,7 @@ private fun AiTaskSettings(name: String, auto: Boolean) {
     }
     if (!open) return
     Text(
-        "Jede Aufgabe kannst du einzeln ausschalten oder einem eigenen KI-Dienst geben – so verteilen sich die Anfragen auf mehrere kostenlose Kontingente (z. B. Kommentare an Groq, Dokumente an Gemini). Weitere Dienste richtest du unter „KI und Internet“ ein.",
+        "Jede Aufgabe kannst du einzeln ausschalten oder einem eigenen KI-Dienst geben – so verteilen sich die Anfragen auf mehrere kostenlose Kontingente (z. B. Kommentare an Groq, Dokumente an Gemini). Weitere Dienste richtest du unter „Persönlicher Assistent“ → „KI-Dienst“ ein.",
         style = MaterialTheme.typography.bodySmall,
     )
     de.meinhelfer.tag.ai.AiTask.entries.filter { it != de.meinhelfer.tag.ai.AiTask.Allgemein }.forEach { t ->

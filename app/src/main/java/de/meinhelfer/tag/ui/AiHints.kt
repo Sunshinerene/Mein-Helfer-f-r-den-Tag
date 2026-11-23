@@ -81,7 +81,7 @@ fun AiHintBox(
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         if (!configured) {
             Text(
-                if (de.meinhelfer.tag.ai.AiMode.isOff(context)) de.meinhelfer.tag.ai.AiMode.OFF_TEXT else "KI nicht eingerichtet. Du kannst sie unter Einstellungen → KI und Internet einrichten (z. B. kostenlos mit Google Gemini).",
+                if (de.meinhelfer.tag.ai.AiMode.isOff(context)) de.meinhelfer.tag.ai.AiMode.OFF_TEXT else "KI nicht eingerichtet. Du kannst sie unter Einstellungen → Persönlicher Assistent → KI-Dienst einrichten (z. B. kostenlos mit Google Gemini).",
                 style = MaterialTheme.typography.bodySmall,
             )
         }
@@ -106,7 +106,7 @@ fun AiHintBox(
         if (limitHit) {
             Text(
                 if (otherReady) "Wähle oben einen anderen KI-Dienst und sende erneut."
-                else "Du kannst unter Einstellungen → KI und Internet einen weiteren Dienst einrichten (z. B. Groq oder Mistral, kostenlos) und dann hier umschalten.",
+                else "Du kannst unter Einstellungen → Persönlicher Assistent → KI-Dienst einen weiteren Dienst einrichten (z. B. Groq oder Mistral, kostenlos) und dann hier umschalten.",
                 style = MaterialTheme.typography.bodySmall,
             )
         }
