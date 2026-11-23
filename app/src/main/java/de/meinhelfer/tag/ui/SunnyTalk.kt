@@ -41,11 +41,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.compose.ui.window.Popup
-import androidx.compose.ui.window.PopupProperties
+import androidx.lifecycle.findViewTreeLifecycleOwner
+import androidx.lifecycle.setViewTreeLifecycleOwner
+import androidx.lifecycle.findViewTreeViewModelStoreOwner
+import androidx.lifecycle.setViewTreeViewModelStoreOwner
+import androidx.savedstate.findViewTreeSavedStateRegistryOwner
+import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import de.meinhelfer.tag.R
 
 /**
@@ -81,6 +84,7 @@ data class SunnyPopup(
 /**
  * Wenn der Assistent spricht (oder auf Wunsch bei jedem Vorlesen) und das Sunny-Bild an ist,
  * blendet sich Sunny als kleines, stummes Video ein. Tippen stoppt das Vorlesen.
+ * Eigenes Fenster, das bei jedem Sprechen neu oben aufgelegt wird – so liegt Sunny auch über Dialogen und Blättern.
  */
 @Composable
 fun SunnyTalkOverlay() {
@@ -88,40 +92,92 @@ fun SunnyTalkOverlay() {
     val image by SunnyAvatar.useImage.collectAsState()
     val style by SunnyAvatar.popup.collectAsState()
     val visible = image && style.showsFor(speaking)
+    val view = androidx.compose.ui.platform.LocalView.current
     val density = LocalDensity.current
-    val (alignment, offsetDp) = when (style.place) {
-        1 -> Alignment.BottomStart to 96
-        2 -> Alignment.BottomCenter to 96
-        3 -> Alignment.TopEnd to -84
-        4 -> Alignment.TopStart to -84
-        5 -> Alignment.Center to 0
-        else -> Alignment.BottomEnd to 96
+    val colors = MaterialTheme.colorScheme
+    val typography = MaterialTheme.typography
+    val shown = remember { androidx.compose.runtime.mutableStateOf(false) }
+    val holder = remember { arrayOfNulls<android.view.View>(1) }
+    val wm = remember { view.context.getSystemService(android.content.Context.WINDOW_SERVICE) as android.view.WindowManager }
+
+    fun remove() {
+        holder[0]?.let { runCatching { wm.removeViewImmediate(it) } }
+        holder[0] = null
     }
-    val lift = with(density) { offsetDp.dp.roundToPx() }
-    Popup(
-        alignment = alignment,
-        offset = IntOffset(0, -lift),
-        properties = PopupProperties(focusable = false),
-    ) {
-        AnimatedVisibility(
-            visible = visible,
-            enter = fadeIn(tween(600)) + scaleIn(initialScale = 0.85f),
-            exit = fadeOut(tween(500)) + scaleOut(targetScale = 0.9f),
-        ) {
-            val caption by SunnyAvatar.caption.collectAsState()
-            androidx.compose.foundation.layout.Column(horizontalAlignment = Alignment.End) {
-                caption?.takeIf { speaking?.startsWith("assistent-seite") == true }?.let { c ->
-                    Surface(
-                        shape = RoundedCornerShape(16.dp),
-                        tonalElevation = 6.dp,
-                        shadowElevation = 6.dp,
-                        modifier = Modifier.padding(horizontal = 12.dp).widthIn(max = 280.dp).clickable { Speech.stop() },
-                    ) { Text(c, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(12.dp)) }
+
+    fun add() {
+        remove()
+        val token = view.applicationWindowToken ?: return
+        val (gravity, offsetDp) = when (style.place) {
+            1 -> (android.view.Gravity.BOTTOM or android.view.Gravity.START) to 96
+            2 -> (android.view.Gravity.BOTTOM or android.view.Gravity.CENTER_HORIZONTAL) to 96
+            3 -> (android.view.Gravity.TOP or android.view.Gravity.END) to 84
+            4 -> (android.view.Gravity.TOP or android.view.Gravity.START) to 84
+            5 -> android.view.Gravity.CENTER to 0
+            else -> (android.view.Gravity.BOTTOM or android.view.Gravity.END) to 96
+        }
+        val lp = android.view.WindowManager.LayoutParams(
+            android.view.WindowManager.LayoutParams.WRAP_CONTENT,
+            android.view.WindowManager.LayoutParams.WRAP_CONTENT,
+            android.view.WindowManager.LayoutParams.TYPE_APPLICATION,
+            android.view.WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                android.view.WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+                android.view.WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
+            android.graphics.PixelFormat.TRANSLUCENT,
+        ).apply {
+            this.token = token
+            this.gravity = gravity
+            y = with(density) { offsetDp.dp.roundToPx() }
+            title = "Sunny"
+        }
+        val compose = androidx.compose.ui.platform.ComposeView(view.context).apply {
+            setViewTreeLifecycleOwner(view.findViewTreeLifecycleOwner())
+            setViewTreeViewModelStoreOwner(view.findViewTreeViewModelStoreOwner())
+            setViewTreeSavedStateRegistryOwner(view.findViewTreeSavedStateRegistryOwner())
+            setContent {
+                MaterialTheme(colorScheme = colors, typography = typography) {
+                    val now by SunnyAvatar.popup.collectAsState()
+                    val talking by Speech.speaking.collectAsState()
+                    AnimatedVisibility(
+                        visible = shown.value,
+                        enter = fadeIn(tween(600)) + scaleIn(initialScale = 0.85f),
+                        exit = fadeOut(tween(500)) + scaleOut(targetScale = 0.9f),
+                    ) {
+                        val caption by SunnyAvatar.caption.collectAsState()
+                        androidx.compose.foundation.layout.Column(horizontalAlignment = Alignment.End) {
+                            caption?.takeIf { talking?.startsWith("assistent-seite") == true }?.let { c ->
+                                Surface(
+                                    shape = RoundedCornerShape(16.dp),
+                                    tonalElevation = 6.dp,
+                                    shadowElevation = 6.dp,
+                                    modifier = Modifier.padding(horizontal = 12.dp).widthIn(max = 280.dp).clickable { Speech.stop() },
+                                ) { Text(c, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(12.dp)) }
+                            }
+                            SunnyBubble(now, Modifier.padding(12.dp).clickable { Speech.stop() })
+                        }
+                    }
                 }
-                SunnyBubble(style, Modifier.padding(12.dp).clickable { Speech.stop() })
             }
         }
+        runCatching {
+            wm.addView(compose, lp)
+            holder[0] = compose
+        }
     }
+
+    androidx.compose.runtime.LaunchedEffect(visible, style.place, speaking) {
+        if (visible) {
+            // Bei jedem neuen Sprechen oben auflegen (über inzwischen geöffnete Dialoge)
+            add()
+            kotlinx.coroutines.delay(30)
+            shown.value = true
+        } else {
+            shown.value = false
+            kotlinx.coroutines.delay(600)
+            if (!shown.value) remove()
+        }
+    }
+    androidx.compose.runtime.DisposableEffect(Unit) { onDispose { remove() } }
 }
 
 /** Sunny im Rahmen mit Hintergrund nach [style]; auch als Vorschau in den Einstellungen. */
