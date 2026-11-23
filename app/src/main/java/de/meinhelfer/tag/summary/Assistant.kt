@@ -19,6 +19,10 @@ sealed interface ProposalAction {
     data class RaisePriority(val todoId: Long) : ProposalAction
     data class Postpone(val todoId: Long, val newDueDay: Long) : ProposalAction
     data class ReorderTask(val personId: Long, val text: String, val doctorId: Long?, val dueDay: Long) : ProposalAction
+    /** Verbrauch pro Tag anpassen (Vorrat wird dafür auf heute umgerechnet). */
+    data class AdjustDailyUse(val medId: Long, val daily: Double) : ProposalAction
+    /** Heute neu angebrochen (Haltbarkeit beginnt neu). */
+    data class OpenedToday(val medId: Long) : ProposalAction
 }
 
 /** Ein Vorschlag des Assistenten. Wird nur nach deiner Bestätigung ausgeführt. */
@@ -55,6 +59,8 @@ object Assistant {
         doctors: List<Doctor>,
         today: Long,
         dismissed: Set<String>,
+        /** Abhak-Einträge der letzten zwei Wochen (für die tatsächlich gegebenen Mengen) */
+        checkins: List<de.meinhelfer.tag.data.Checkin> = emptyList(),
     ): List<Proposal> {
         val out = mutableListOf<Proposal>()
         val open = todos.filter { !it.done && !it.archived }
@@ -102,6 +108,36 @@ object Assistant {
                     ". Aufgabe „$text“ anlegen?" + (resolved.substitute?.let { " (Vertretung ist eingetragen.)" } ?: ""),
                 confirmLabel = "Aufgabe anlegen",
                 action = ProposalAction.ReorderTask(m.personId, text, resolved.id, due),
+            )
+        }
+        // Angebrochen: Haltbarkeit läuft ab (Packungsbeilage), dann neuen anbrechen
+        meds.forEach { m ->
+            val left = MedOpen.daysLeft(m.openedDay, m.openLifeDays, today) ?: return@forEach
+            if (left > 1) return@forEach
+            val name = m.name.trim().ifEmpty { return@forEach }
+            out += Proposal(
+                key = "anbruch:${m.id}:${m.openedDay}",
+                text = when {
+                    left < 0 -> "$name${who(m.personId)} ist seit ${if (left == -1L) "gestern" else "${-left} Tagen"} über der Haltbarkeit nach dem Anbruch. " +
+                        "Neuen anbrechen und hier vermerken?"
+                    left == 0L -> "$name${who(m.personId)}: Heute ist der letzte Tag nach dem Anbruch. Ab morgen einen neuen nehmen."
+                    else -> "$name${who(m.personId)} ist nur noch bis morgen haltbar (nach dem Anbruch). Schon mal einen neuen bereitlegen."
+                },
+                confirmLabel = "Heute neu angebrochen",
+                action = ProposalAction.OpenedToday(m.id),
+            )
+        }
+        // Tatsächlich gegebene Mengen weichen vom eingetragenen Verbrauch ab (z. B. Insulin nach Schema)
+        meds.forEach { m ->
+            val (actual, days) = IntakeStats.actualDaily(checkins, m.id, today) ?: return@forEach
+            if (!IntakeStats.differs(actual, m.dailyUse)) return@forEach
+            val rounded = kotlin.math.round(actual * 2) / 2.0
+            out += Proposal(
+                key = "verbrauch:${m.id}:${Amounts.fmt(rounded)}:${today / 7}",
+                text = "${m.name.trim()}${who(m.personId)}: An $days Tagen wurden im Schnitt ${Amounts.withUnit(actual, m.unit)} pro Tag gegeben, " +
+                    "eingetragen sind ${Amounts.withUnit(m.dailyUse, m.unit)}. Verbrauch für die Vorrat-Rechnung auf ${Amounts.withUnit(rounded, m.unit)} anpassen?",
+                confirmLabel = "Anpassen",
+                action = ProposalAction.AdjustDailyUse(m.id, rounded),
             )
         }
         return out.filter { it.key !in dismissed }.take(5)

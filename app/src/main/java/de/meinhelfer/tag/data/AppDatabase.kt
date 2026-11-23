@@ -9,7 +9,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [Medication::class, Appointment::class, Doctor::class, Checkin::class, DayNote::class, Person::class, Todo::class, Document::class, ConsentRecord::class, MoodEntry::class, Goal::class, GoalStep::class, Responsibility::class, VitalEntry::class, CareLogEntry::class, BudgetEntry::class],
-    version = 28,
+    version = 29,
     // Das Schema wird beim Bauen exportiert; ein Test vergleicht es mit den Umstellungen (MigrationSchemaTest).
     exportSchema = true,
 )
@@ -359,6 +359,19 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /** Version 29: Einnahme-Fenster (gegebene Menge, Messwerte beim Abhaken) und Haltbarkeit nach dem Anbruch. */
+        private val MIGRATION_28_29 = object : Migration(28, 29) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE Medication ADD COLUMN askAtIntake INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE Medication ADD COLUMN intakeVitals TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE Medication ADD COLUMN openLifeDays INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE Medication ADD COLUMN openedDay INTEGER")
+                db.execSQL("ALTER TABLE Checkin ADD COLUMN amount REAL")
+                // Insulin und andere Mittel in IE: beim Abhaken nach der gegebenen Menge fragen
+                db.execSQL("UPDATE Medication SET askAtIntake = 1 WHERE unit = 'IE'")
+            }
+        }
+
         /** Tabellen, die eine Umstellung neu anlegt: Version nach der Umstellung → Tabelle → Fassung davor (fuer den Test). */
         internal val REBUILT_BEFORE: Map<Int, Map<String, String>> = mapOf(27 to mapOf("Medication" to MEDICATION_V26_SQL))
 
@@ -367,7 +380,7 @@ abstract class AppDatabase : RoomDatabase() {
             MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9,
             MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16,
             MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23,
-            MIGRATION_23_24, MIGRATION_24_25, MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28,
+            MIGRATION_23_24, MIGRATION_24_25, MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29,
         )
 
         fun get(context: Context): AppDatabase =

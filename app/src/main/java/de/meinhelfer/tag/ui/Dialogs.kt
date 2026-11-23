@@ -109,7 +109,20 @@ fun MedicationDialog(
     // Angezeigt wird der aktuell errechnete Vorrat (gezaehlter Vorrat minus Verbrauch seit dem Zaehltag).
     val initialStockText = initial?.takeIf { it.stockKnown }?.currentStock()?.let { Amounts.fmt(it) } ?: ""
     var stock by remember { mutableStateOf(initialStockText) }
-    var dailyUse by remember { mutableStateOf(initial?.dailyUse?.let { Amounts.fmt(it) } ?: "") }
+    // „Pro Tag“ leer = aus den Mengen je Einnahme; nur ein abweichender Wert (z. B. vom Assistenten angepasst) steht drin
+    var dailyUse by remember {
+        mutableStateOf(
+            initial?.let { m ->
+                val fromInitial = Doses.daily(m.timeList(), m.doseMap())
+                if (fromInitial != null && kotlin.math.abs(fromInitial - m.dailyUse) < 0.001) "" else Amounts.fmt(m.dailyUse)
+            } ?: "",
+        )
+    }
+    var askAtIntake by remember { mutableStateOf(initial?.askAtIntake ?: false) }
+    var askTouched by remember { mutableStateOf(initial != null) }
+    var intakeVitals by remember { mutableStateOf(initial?.intakeVitalKeys().orEmpty()) }
+    var openLife by remember { mutableStateOf(initial?.openLifeDays?.takeIf { it > 0 }?.toString() ?: "") }
+    var openedDate by remember { mutableStateOf(initial?.openedDay?.let { LocalDate.ofEpochDay(it) }) }
     var packSize by remember { mutableStateOf(initial?.packSize?.takeIf { it > 0 }?.let { Amounts.fmt(it) } ?: "") }
     // Einheit (Stück, ml, IE …) und Menge je Einnahmezeit ("08:00" -> "8")
     var unit by remember { mutableStateOf(MedUnit.of(initial?.unit)) }
@@ -240,7 +253,11 @@ fun MedicationDialog(
                     // Einschaetzung bleibt nur, solange der Name gleich ist
                     rating = if (initial != null && initial.name == name.trim()) initial.rating else "",
                     // Aus den Mengen je Einnahme, sonst wie eingetragen, leer = Anzahl der Einnahmen pro Tag
-                    dailyUse = fromDoses ?: Amounts.parse(dailyUse) ?: maxOf(1, times.size).toDouble(),
+                    dailyUse = Amounts.parse(dailyUse) ?: fromDoses ?: maxOf(1, times.size).toDouble(),
+                    askAtIntake = askAtIntake,
+                    intakeVitals = intakeVitals.joinToString(","),
+                    openLifeDays = openLife.toIntOrNull()?.coerceIn(0, 999) ?: 0,
+                    openedDay = if ((openLife.toIntOrNull() ?: 0) > 0) openedDate?.toEpochDay() else null,
                     unit = unit.key,
                     doses = Doses.format(doseValues),
                     notes = notes.trim(),
@@ -370,6 +387,11 @@ fun MedicationDialog(
                 FilterChip(selected = unit == u, onClick = {
                     unit = u
                     unitTouched = true
+                    // Insulin: beim Abhaken gleich gegebene Menge und Blutzucker eintragen
+                    if (!askTouched && u == MedUnit.IE) {
+                        askAtIntake = true
+                        if (intakeVitals.isEmpty()) intakeVitals = listOf("blutzucker")
+                    }
                 }, label = { Text(u.key) })
             }
         }
@@ -414,10 +436,10 @@ fun MedicationDialog(
                 modifier = Modifier.weight(1f),
             )
             OutlinedTextField(
-                value = if (fromDoses != null) Amounts.fmt(fromDoses) else dailyUse,
+                value = dailyUse,
                 onValueChange = { dailyUse = it.filter { c -> c.isDigit() || c in ",.½¼¾" }.take(6) },
                 label = { Text("Pro Tag (${unit.key})", maxLines = 1) },
-                enabled = fromDoses == null,
+                placeholder = { Text(Amounts.fmt(fromDoses ?: maxOf(1, times.size).toDouble()), maxLines = 1) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 modifier = Modifier.weight(1f),
@@ -425,7 +447,7 @@ fun MedicationDialog(
         }
         Text(
             if (fromDoses != null) {
-                "Verbrauch pro Tag aus den Mengen je Einnahme: ${Amounts.withUnit(fromDoses, unit.key)}. Vorrat leer = unbekannt. Der Vorrat sinkt danach automatisch jeden Tag."
+                "„Pro Tag“ leer = aus den Mengen je Einnahme (${Amounts.withUnit(fromDoses, unit.key)}); wird mehr oder weniger gegeben, hier eintragen. Vorrat leer = unbekannt. Der Vorrat sinkt danach automatisch jeden Tag."
             } else {
                 "Vorrat in ${unit.key} (leer = unbekannt), „Pro Tag“ = Verbrauch pro Tag (leer = Anzahl der Einnahmen). Der Vorrat sinkt danach automatisch jeden Tag."
             },
@@ -440,6 +462,56 @@ fun MedicationDialog(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             modifier = Modifier.fillMaxWidth(),
         )
+        // ---- Einnahme-Fenster: beim Abhaken Menge und Messwerte
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text("Beim Abhaken nachfragen", style = MaterialTheme.typography.bodyLarge)
+                Text("Tatsächlich gegebene Menge und Messwerte gleich mit eintragen (z. B. Insulin mit Blutzucker).", style = MaterialTheme.typography.bodySmall)
+            }
+            androidx.compose.material3.Switch(checked = askAtIntake, onCheckedChange = {
+                askAtIntake = it
+                askTouched = true
+            })
+        }
+        if (askAtIntake) {
+            Text("Dabei gleich messen (optional)", style = MaterialTheme.typography.labelMedium)
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                de.meinhelfer.tag.summary.VitalKind.MEASURES.forEach { k ->
+                    FilterChip(
+                        selected = k.key in intakeVitals,
+                        onClick = { intakeVitals = if (k.key in intakeVitals) intakeVitals - k.key else intakeVitals + k.key },
+                        label = { Text(k.emoji + " " + k.label) },
+                    )
+                }
+            }
+        }
+        // ---- Haltbarkeit nach dem Anbruch
+        Text("Nach dem Öffnen haltbar (laut Packungsbeilage, optional)", style = MaterialTheme.typography.labelMedium)
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            FilterChip(selected = openLife.isBlank() || openLife == "0", onClick = { openLife = "" }, label = { Text("keine Angabe") })
+            de.meinhelfer.tag.summary.MedOpen.PRESETS.forEach { d ->
+                FilterChip(selected = openLife == d.toString(), onClick = {
+                    openLife = d.toString()
+                    if (openedDate == null) openedDate = LocalDate.now()
+                }, label = { Text("$d Tage") })
+            }
+        }
+        if ((openLife.toIntOrNull() ?: 0) > 0) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                OutlinedTextField(
+                    value = openLife,
+                    onValueChange = { openLife = it.filter(Char::isDigit).take(3) },
+                    label = { Text("Tage", maxLines = 1) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.width(96.dp),
+                )
+                DatePickerField(label = "Angebrochen am", date = openedDate, onChange = { openedDate = it }, modifier = Modifier.weight(1f))
+            }
+            de.meinhelfer.tag.summary.MedOpen.text(openedDate?.toEpochDay(), openLife.toIntOrNull() ?: 0, LocalDate.now().toEpochDay())?.let {
+                Text(it + ". Am letzten Tag und danach erinnert die App.", style = MaterialTheme.typography.bodySmall)
+            }
+        }
         // Zustaendige Stellen fuer die Nachbestellung (aus den Kontakten)
         val pharmacies = doctors.sortedBy { if (it.specialty.contains("Apotheke", ignoreCase = true)) 0 else 1 }
         val prescribers = doctors.sortedBy { if (it.specialty.contains("Apotheke", ignoreCase = true)) 1 else 0 }

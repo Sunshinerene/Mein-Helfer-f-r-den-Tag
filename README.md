@@ -4,7 +4,7 @@ by Sunshine@R
 
 Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbezogenen Daten bleiben lokal auf dem Gerät.
 
-## Stand: v0.68.0
+## Stand: v0.69.0
 
 ### Funktionsübersicht
 
@@ -57,6 +57,8 @@ Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbe
 
 **Medikamente**
 - Einnahmezeiten, Dosierung, Vorrat mit automatischem Verbrauch, Warnung bei knappem Vorrat
+- Einnahme-Fenster: beim Abhaken tatsächlich gegebene Menge (z. B. Insulin nach Schema) und Messwerte wie Blutzucker in einem Schritt, weitere Werte hinzufügbar; Assistent schlägt bei Abweichung angepassten Verbrauch vor
+- Haltbarkeit nach dem Anbruch (z. B. Pen 28 Tage) mit „haltbar bis“, Erinnerung und „Neu angebrochen“
 - Einheit je Medikament: Stück, ml (Saft, Lösung), IE (Insulin), Tropfen, Hub (Spray) oder g; Kommazahlen (½ Tablette, 7,5 ml); Menge je Einnahmezeit (z. B. 8 IE morgens, 6 IE abends) ergibt den Verbrauch und steht bei Einnahmen, Erinnerung, Tagesplan und Medikamentenplan
 - Anlegen per Packungsfoto (Texterkennung auf dem Handy), PZN/Barcode
 - Fotos nachträglich: Kamera, Galerie, freie Bilder (Wikimedia Commons mit Lizenzangabe) oder Internetsuche; „Fotos ergänzen“ für alle ohne Bild

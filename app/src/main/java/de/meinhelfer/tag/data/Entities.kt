@@ -75,7 +75,17 @@ data class Medication(
     val unit: String = "Stück",
     /** Menge je Einnahmezeit in [unit], z. B. "08:00=8,18:00=6"; leer = keine Angabe ([de.meinhelfer.tag.summary.Doses]). */
     val doses: String = "",
+    /** Beim Abhaken nachfragen: tatsaechlich gegebene Menge und Messwerte (z. B. Insulin mit Blutzucker). */
+    val askAtIntake: Boolean = false,
+    /** Messwerte, die beim Abhaken gleich mit eingetragen werden (Schluessel aus VitalKind, kommagetrennt). */
+    val intakeVitals: String = "",
+    /** Nach dem Oeffnen so viele Tage haltbar (laut Packungsbeilage), 0 = keine Angabe. */
+    val openLifeDays: Int = 0,
+    /** Angebrochen am (Epoch-Tag), null = nicht eingetragen. */
+    val openedDay: Long? = null,
 ) {
+    fun intakeVitalKeys(): List<String> = intakeVitals.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+
     fun timeList(): List<String> =
         times.split(",").map { it.trim() }.filter { it.isNotEmpty() }
 
@@ -178,6 +188,8 @@ data class Checkin(
     val status: String = "",
     /** Uhrzeit "HH:mm", wann spaeter oder frueher genommen wurde (optional). */
     val actual: String = "",
+    /** Tatsaechlich gegebene Menge in der Einheit des Medikaments (z. B. 10 IE), null = wie geplant bzw. nicht erfasst. */
+    val amount: Double? = null,
 ) {
     companion object {
         const val MED = "MED"

@@ -151,6 +151,9 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
             else -> if (openScreen?.startsWith("messen:") == true) {
                 vitalStart = openScreen?.substringAfter("messen:")
                 showVitals = true
+            } else if (openScreen?.startsWith("einnahme:") == true) {
+                vm.requestIntake(openScreen?.substringAfter("einnahme:"))
+                tabIndex = 0
             }
         }
         if (openScreen != null) vm.requestScreen(null)
@@ -667,6 +670,7 @@ private fun MedicationScreen(
     documents: List<de.meinhelfer.tag.data.Document> = emptyList(),
     person: de.meinhelfer.tag.data.Person? = null,
 ) {
+    val medContext = LocalContext.current
     var showAdd by remember { mutableStateOf(false) }
     var editItem by remember { mutableStateOf<Medication?>(null) }
     var detailId by remember { mutableStateOf<Long?>(null) }
@@ -728,11 +732,14 @@ private fun MedicationScreen(
             foldKey = { it.id },
         ) { m ->
             val days = m.daysLeft()
+            val todayEpoch = java.time.LocalDate.now().toEpochDay()
+            val openLeft = de.meinhelfer.tag.summary.MedOpen.daysLeft(m.openedDay, m.openLifeDays, todayEpoch)
             ItemCard(
                 title = m.name + if (m.dosage.isNotBlank()) " – ${m.dosage}" else "",
                 lines = listOfNotNull(
                     m.times.takeIf { it.isNotBlank() }?.let { "Einnahme: ${it.replace(",", ", ")} Uhr" + (m.doseSummary()?.let { d -> " · $d" } ?: "") },
                     m.stockText() + (days?.let { " (ca. $it Tage)" } ?: ""),
+                    de.meinhelfer.tag.summary.MedOpen.text(m.openedDay, m.openLifeDays, todayEpoch),
                 ),
                 onClick = { detailId = m.id },
                 onDelete = { vm.delete(m) },
@@ -741,12 +748,13 @@ private fun MedicationScreen(
                 fold = medFold,
                 foldKey = m.id,
                 note = when {
+                    openLeft != null && openLeft < 0 -> "Haltbarkeit nach Anbruch vorbei – neuen anbrechen"
                     days != null && days <= 0 -> "Vorrat aufgebraucht – bitte nachbestellen"
                     days != null && days <= 7 -> "Bald nachbestellen"
                     !m.stockKnown -> "Vorrat noch nicht eingetragen"
                     else -> null
                 },
-                noteColor = if (days != null && days <= 7) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary,
+                noteColor = if ((days != null && days <= 7) || (openLeft != null && openLeft < 0)) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary,
             ) {
                 FlowRow {
                     TextButton(onClick = { detailId = m.id }, contentPadding = PaddingValues(horizontal = 8.dp)) { Text("Infos") }
@@ -758,6 +766,12 @@ private fun MedicationScreen(
                         TextButton(onClick = { packFor = m.id }, contentPadding = PaddingValues(horizontal = 8.dp)) {
                             Text("Neue Packung")
                         }
+                    }
+                    if (m.openLifeDays > 0) {
+                        TextButton(onClick = {
+                            vm.update(m.copy(openedDay = todayEpoch))
+                            android.widget.Toast.makeText(medContext, "Angebrochen heute vermerkt.", android.widget.Toast.LENGTH_SHORT).show()
+                        }, contentPadding = PaddingValues(horizontal = 8.dp)) { Text("Neu angebrochen") }
                     }
                 }
             }

@@ -82,6 +82,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         _sharedUris.value = null
     }
 
+    // Einnahme-Fenster aus der Erinnerung öffnen (Uhrzeit "08:00"), die Heute-Seite zeigt es dann
+    private val _intakeRequest = MutableStateFlow<String?>(null)
+    val intakeRequest: StateFlow<String?> = _intakeRequest
+
+    fun requestIntake(slot: String?) {
+        _intakeRequest.value = slot
+    }
+
     fun requestScreen(screen: String?) {
         _openScreen.value = screen
     }
@@ -227,6 +235,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     @OptIn(ExperimentalCoroutinesApi::class)
     val checkins: StateFlow<List<Checkin>> = _today
         .flatMapLatest { d -> db.checkinDao().range(d - 1, d + 7) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    /** Abhak-Einträge der letzten zwei Wochen (für gegebene Mengen und Vorschläge des Assistenten). */
+    val recentCheckins: StateFlow<List<Checkin>> = _today
+        .flatMapLatest { d -> db.checkinDao().range(d - 15, d) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _overviewRange = MutableStateFlow(LocalDate.now().toEpochDay() to LocalDate.now().toEpochDay())
@@ -487,6 +500,17 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 val moved = t.copy(dueDay = a.newDueDay)
                 db.todoDao().update(moved)
                 ReminderScheduler.scheduleTodo(getApplication(), moved)
+            }
+            is de.meinhelfer.tag.summary.ProposalAction.AdjustDailyUse -> {
+                val m = db.medicationDao().byId(a.medId) ?: return@launch
+                val today = LocalDate.now().toEpochDay()
+                // Vorrat auf heute umrechnen, damit der neue Verbrauch nicht rückwirkend zählt
+                db.medicationDao().update(m.copy(stock = m.currentStock(today), stockDay = today, dailyUse = a.daily))
+            }
+            is de.meinhelfer.tag.summary.ProposalAction.OpenedToday -> {
+                val m = db.medicationDao().byId(a.medId) ?: return@launch
+                db.medicationDao().update(m.copy(openedDay = LocalDate.now().toEpochDay()))
+                ReminderScheduler.scheduleOpened(getApplication(), m.copy(openedDay = LocalDate.now().toEpochDay()))
             }
             is de.meinhelfer.tag.summary.ProposalAction.ReorderTask -> {
                 val today = LocalDate.now().toEpochDay()
@@ -800,6 +824,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         note: String? = null,
         status: String? = null,
         actual: String? = null,
+        /** Tatsächlich gegebene Menge (Einnahme-Fenster), null = unverändert */
+        amount: Double? = null,
     ) = viewModelScope.launch {
         val normSlot = if (slot.isEmpty()) "" else SummaryBuilder.normSlot(slot)
         val dao = db.checkinDao()
@@ -810,7 +836,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 Checkin(
                     kind = kind, refId = refId, day = day, slot = normSlot,
                     done = done ?: false, note = note?.trim().orEmpty(), atMillis = now,
-                    status = status.orEmpty(), actual = actual.orEmpty(),
+                    status = status.orEmpty(), actual = actual.orEmpty(), amount = amount,
                 ),
             )
         } else {
@@ -821,6 +847,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     atMillis = now,
                     status = status ?: existing.status,
                     actual = actual ?: existing.actual,
+                    amount = amount ?: existing.amount,
                 ),
             )
         }

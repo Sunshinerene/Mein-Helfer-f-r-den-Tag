@@ -1,6 +1,6 @@
 # TODO
 
-Stand: v0.68.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.69.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
@@ -9,7 +9,6 @@ Stand: v0.68.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Ideen und Optimierungen
 
-- [ ] Medikamente: beim Abhaken die tatsächlich gegebene Menge eintragen (z. B. Insulin nach Korrekturschema), Haltbarkeit nach Anbruch (Insulin, Augentropfen) mit Erinnerung
 - [ ] Pflegetagebuch: Selbsteinschätzung je Bereich als Vorbereitung auf die Begutachtung
 - [ ] Packungsfoto: Erkennung verbessern (Wirkstoff, Packungsbeilage), Barcode live mit der Kamera
 - [ ] Widget: „Eingenommen“ direkt im Widget (mit Rückfrage), zweite Größe mit Tagesübersicht
@@ -22,8 +21,9 @@ Stand: v0.68.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Bitte auf dem Handy prüfen (bisher nicht getestet)
 
-Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Datenbank prüfen, Beispiel-PDFs mit erfundenen Daten, Beispiel-Grafiken, Test-Benachrichtigungen). Die Datenbank-Umstellungen von Version 5 bis 26 prüft seit v0.54.0 bei jedem Bauen ein automatischer Test gegen das Schema (Tabellen, Spalten, Typen); auf dem Handy bleibt zu prüfen, dass die eigenen Daten nach dem Update vollständig da sind.
+Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Datenbank prüfen, Beispiel-PDFs mit erfundenen Daten, Beispiel-Grafiken, Test-Benachrichtigungen). Die Datenbank-Umstellungen von Version 5 bis 29 prüft seit v0.54.0 bei jedem Bauen ein automatischer Test gegen das Schema (Tabellen, Spalten, Typen); auf dem Handy bleibt zu prüfen, dass die eigenen Daten nach dem Update vollständig da sind.
 
+- [ ] Einnahme-Fenster (Datenbank 29): Insulin antippen → Menge ändern, Blutzucker dazu, „+ Messwert“, Speichern; Erinnerung öffnet das Fenster; Haltbarkeit nach Anbruch mit „Neu angebrochen“ und Erinnerung am letzten Tag
 - [ ] Fenster schließen nicht mehr beim Tippen daneben (alle Eingabe- und Info-Fenster, Datum und Uhrzeit); Ordner mit Unterordnern laden; Dateien aus „Dateien“, Drive oder Dropbox über „Teilen“ → „Mein Helfer“ übernehmen (auch bei gesperrter App erst nach dem Entsperren)
 - [ ] Messwerte (Datenbank 28): neue Werte (Atemfrequenz, Schmerz, INR, Urin), Angabe wie „nüchtern“ oder „Ohr“, Schnellknöpfe auf der Heute-Seite, Messzeiten mit Erinnerung (kommt sie nur, wenn noch nicht gemessen? Antippen öffnet das Eintragen), „Heute zu messen“, Assistent und Tagesplan; Bericht mit eigenem Zeitraum, Grafik, E-Mail an den Arzt und „In Dokumente ablegen“; Pflegetagebuch-PDF mit Messungen
 - [ ] Medikamente mit Einheit (Datenbank 27): nach dem Update alle Medikamente mit Vorrat da? Insulin mit IE und Menge je Uhrzeit, Saft in ml, ½ Tablette; „Heute einnehmen“, Erinnerung, Tagesplan und Medikamentenplan-PDF zeigen die Menge; „Neue Packung“ und Vorrat-Fenster mit Komma; Packungsfoto mit ml oder Pens
@@ -76,6 +76,13 @@ Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Daten
 - [ ] Sammel-Import: Vorschläge mit echten Scans verfeinern (z. B. gleicher Absender und gleiches Datum als weiterer Hinweis)
 
 - [ ] Eigene KI-Stimme direkt in der App (nur falls SherpaTTS nicht reicht): sherpa-onnx mit Piper-Stimme Thorsten oder Kerstin (CC0) oder apptor-tiny-tts (Apache-2.0, 21 MB); macht die App 25–70 MB größer, Lizenzen der Bibliotheken prüfen
+
+## Version 0.69.0 (fertig)
+
+- [x] Einnahme-Fenster je Uhrzeit: alle Medikamente abhaken, gegebene Menge eintragen (z. B. Insulin nach Korrekturschema), Messwerte wie Blutzucker gleich dazu, weitere hinzufügbar, Bemerkung; Erinnerung öffnet das Fenster (Datenbank 29)
+- [x] Assistent: Vorschlag, den Verbrauch anzupassen, wenn die gegebenen Mengen an mindestens 5 Tagen deutlich abweichen; „Pro Tag“ bleibt dafür frei änderbar
+- [x] Haltbarkeit nach dem Anbruch (Tage laut Packungsbeilage, angebrochen am): Anzeige „haltbar bis“, Erinnerung am letzten Tag und danach, „Neu angebrochen“ an der Karte und als Vorschlag des Assistenten
+- [x] Automatischer Test (MedCareTest)
 
 ## Version 0.68.0 (fertig)
 

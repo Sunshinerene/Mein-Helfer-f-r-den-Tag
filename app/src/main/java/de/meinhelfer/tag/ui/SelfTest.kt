@@ -67,6 +67,7 @@ internal object DemoData {
         Medication(
             name = "Insulin glargin (Pen)", dosage = "100 E/ml", times = "08:00,18:00", personId = PID, unit = "IE",
             doses = "08:00=8,18:00=6", stock = 900.0, dailyUse = 14.0, packSize = 1500.0,
+            askAtIntake = true, intakeVitals = "blutzucker", openLifeDays = 28, openedDay = java.time.LocalDate.now().toEpochDay() - 20,
         ),
         Medication(name = "Lactulose Sirup", dosage = "10 ml", times = "08:00", personId = PID, unit = "ml", doses = "08:00=10", stock = 200.0, dailyUse = 10.0, packSize = 500.0),
     )

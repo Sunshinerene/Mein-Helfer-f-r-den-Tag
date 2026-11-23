@@ -67,13 +67,15 @@ class ReminderReceiver : BroadcastReceiver() {
                     taken,
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
                 )
+                // Mit Einnahme-Fenster (z. B. Insulin): Antippen öffnet das Eintragen von Menge und Werten
                 Notifications.show(
                     context,
                     notifId,
                     "Medikament${forPerson(med.personId)} einnehmen ($time Uhr)",
-                    text,
-                    actions = listOf("Eingenommen" to takenPending),
+                    if (med.askAtIntake) "$text\nAntippen: gegebene Menge und Werte eintragen." else text,
+                    actions = if (med.askAtIntake) emptyList() else listOf("Eingenommen" to takenPending),
                     personId = med.personId,
+                    screen = if (med.askAtIntake) "einnahme:$time" else null,
                 )
                 ReminderScheduler.scheduleMedication(context, id, time)
             }
@@ -153,6 +155,25 @@ class ReminderReceiver : BroadcastReceiver() {
                 }
             }
 
+            ReminderScheduler.TYPE_OPENED -> {
+                val med = db.medicationDao().byId(id) ?: return
+                val last = intent.getLongExtra(ReminderScheduler.EXTRA_DAY, -1L)
+                // Inzwischen neu angebrochen oder Angabe geändert: nichts mehr zu tun
+                if (de.meinhelfer.tag.summary.MedOpen.lastDay(med.openedDay, med.openLifeDays) != last) return
+                val after = intent.getStringExtra(ReminderScheduler.EXTRA_TIME) == "1"
+                Notifications.show(
+                    context,
+                    "opened:$id".hashCode(),
+                    (if (after) "Abgelaufen: " else "Heute letzter Tag: ") + med.name + forPerson(med.personId),
+                    if (after) {
+                        "Die Haltbarkeit nach dem Anbruch ist vorbei. Bitte einen neuen anbrechen und in der App „Neu angebrochen“ antippen."
+                    } else {
+                        "Nach dem Anbruch nur noch heute haltbar. Ab morgen einen neuen nehmen (siehe Packungsbeilage)."
+                    },
+                    personId = med.personId,
+                )
+            }
+
             ReminderScheduler.TYPE_MEASURE -> {
                 val spec = intent.getStringExtra(ReminderScheduler.EXTRA_TIME) ?: return
                 val kind = de.meinhelfer.tag.summary.VitalKind.of(spec.substringBefore("@")) ?: return
@@ -225,6 +246,7 @@ class ReminderReceiver : BroadcastReceiver() {
                 val (title, text) = if (id == 0L) {
                     val proposals = de.meinhelfer.tag.summary.Assistant.proposals(
                         persons, todos, meds, db.responsibilityDao().list(), doctors, today, de.meinhelfer.tag.update.AppPrefs.assistantDismissed(context),
+                        db.checkinDao().rangeList(today - 15, today),
                     ).size
                     de.meinhelfer.tag.summary.AssistantBrief.morning(name, line, preps.filter { dayOf(it.appointment.whenMillis) == today }, proposals, multi)
                 } else {

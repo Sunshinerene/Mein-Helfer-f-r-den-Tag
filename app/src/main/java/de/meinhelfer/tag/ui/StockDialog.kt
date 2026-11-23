@@ -38,7 +38,6 @@ fun StockDialog(
 ) {
     val start = if (med.stockKnown) med.currentStock() else 0.0
     val unit = med.unit
-    val fromDoses = de.meinhelfer.tag.summary.Doses.daily(med.timeList(), med.doseMap())
     var stock by remember {
         mutableStateOf(
             when {
@@ -78,7 +77,6 @@ fun StockDialog(
                         value = perDay,
                         onValueChange = { perDay = clean(it) },
                         label = { Text("Pro Tag ($unit)") },
-                        enabled = fromDoses == null,
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         modifier = Modifier.weight(1f),
@@ -117,7 +115,7 @@ fun StockDialog(
                             stock = value ?: 0.0,
                             stockDay = today,
                             stockKnown = true,
-                            dailyUse = fromDoses ?: Amounts.parse(perDay) ?: med.dailyUse,
+                            dailyUse = Amounts.parse(perDay) ?: med.dailyUse,
                             packSize = Amounts.parse(pack) ?: med.packSize,
                         ),
                     )

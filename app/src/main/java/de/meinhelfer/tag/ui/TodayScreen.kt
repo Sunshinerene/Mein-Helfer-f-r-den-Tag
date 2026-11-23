@@ -24,6 +24,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -128,6 +129,15 @@ fun TodayScreen(
     val window = AppPrefs.intakeWindow(context)
     val nowMinutes = nowTime.hour * 60 + nowTime.minute
     var statusTarget by remember { mutableStateOf<StatusTarget?>(null) }
+    // Einnahme-Fenster (gegebene Menge, Messwerte) für eine Uhrzeit
+    var intakeSlot by remember { mutableStateOf<String?>(null) }
+    val intakeRequest by vm.intakeRequest.collectAsStateWithLifecycle()
+    LaunchedEffect(intakeRequest) {
+        intakeRequest?.let {
+            intakeSlot = SummaryBuilder.normSlot(it)
+            vm.requestIntake(null)
+        }
+    }
 
     // Rueckfragen: Einnahmen und Termine von gestern und heute, deren Zeit vorbei ist und zu denen noch nichts eingetragen wurde
     val allMedChecks = checkins.filter { it.kind == Checkin.MED }
@@ -230,8 +240,12 @@ fun TodayScreen(
                                     warn = st == Checkin.MISSED
                                 }
                                 done -> {
-                                    sub = null
+                                    sub = check?.amount?.let { "gegeben " + de.meinhelfer.tag.summary.Amounts.withUnit(it, m.unit) }
                                     warn = false
+                                }
+                                m.askAtIntake && phase != IntakePhase.Before -> {
+                                    sub = "Antippen: Menge und Werte eintragen"
+                                    warn = phase == IntakePhase.Past
                                 }
                                 phase == IntakePhase.Before -> {
                                     sub = "abhakbar ab ${clockText(slotMinutes - window)} Uhr"
@@ -257,7 +271,9 @@ fun TodayScreen(
                                 warn = warn,
                                 note = check?.note.orEmpty(),
                                 onClick = {
-                                    if (st.isEmpty() && phase == IntakePhase.Open) {
+                                    if (m.askAtIntake && st.isEmpty() && !done && phase != IntakePhase.Before) {
+                                        intakeSlot = time
+                                    } else if (st.isEmpty() && phase == IntakePhase.Open) {
                                         vm.saveCheckin(Checkin.MED, m.id, todayDay, time, done = !done, status = "", actual = "")
                                     } else {
                                         statusTarget = StatusTarget(
@@ -533,6 +549,15 @@ fun TodayScreen(
             },
         )
     }
+    intakeSlot?.let { slot ->
+        val slotMeds = meds.filter { m -> m.timeList().any { SummaryBuilder.normSlot(it) == slot } && todayDay >= m.createdDay }
+        if (slotMeds.isEmpty()) {
+            LaunchedEffect(slot) { intakeSlot = null }
+        } else {
+            IntakeDialog(vm, slotMeds, todayDay, slot, checkins, onDone = { intakeSlot = null })
+        }
+    }
+
     statusTarget?.let { t ->
         StatusDialog(
             title = t.title,

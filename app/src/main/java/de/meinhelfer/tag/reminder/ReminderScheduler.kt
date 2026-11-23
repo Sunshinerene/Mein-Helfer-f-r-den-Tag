@@ -31,6 +31,7 @@ object ReminderScheduler {
     const val TYPE_DIARY = "tagebuch"
     const val TYPE_ASSIST = "assistent"
     const val TYPE_MEASURE = "messen"
+    const val TYPE_OPENED = "anbruch"
 
     /** Uhrzeiten der Trink-Erinnerung je Abstand */
     fun drinkHours(interval: Int): List<Int> = when (interval) {
@@ -62,6 +63,7 @@ object ReminderScheduler {
         val db = AppDatabase.get(app)
         db.medicationDao().list().forEach { med ->
             med.timeList().forEach { scheduleMedication(app, med.id, it) }
+            scheduleOpened(app, med)
         }
         db.appointmentDao().list().forEach { scheduleAppointment(app, it) }
         db.todoDao().list().forEach { scheduleTodo(app, it) }
@@ -80,6 +82,21 @@ object ReminderScheduler {
         val app = context.applicationContext
         de.meinhelfer.tag.summary.MeasurePlans.parse(de.meinhelfer.tag.update.AppPrefs.measurePlan(app, personId)).forEach { (kind, times) ->
             times.forEach { scheduleMeasure(app, personId, kind, it) }
+        }
+    }
+
+    /**
+     * Haltbarkeit nach dem Anbruch: Hinweis am letzten Tag um 8 Uhr und, falls noch nicht neu angebrochen, am Tag danach.
+     * Der Receiver prüft, ob der Anbruch noch derselbe ist.
+     */
+    fun scheduleOpened(context: Context, med: de.meinhelfer.tag.data.Medication) {
+        val last = de.meinhelfer.tag.summary.MedOpen.lastDay(med.openedDay, med.openLifeDays) ?: return
+        val zone = java.time.ZoneId.systemDefault()
+        listOf(0L, 1L).forEach { n ->
+            val at = java.time.LocalDate.ofEpochDay(last + n).atTime(8, 0).atZone(zone).toInstant().toEpochMilli()
+            if (at > System.currentTimeMillis()) {
+                setAlarm(context, "opened:${med.id}:$n".hashCode(), at, TYPE_OPENED, med.id, n.toString(), last)
+            }
         }
     }
 
