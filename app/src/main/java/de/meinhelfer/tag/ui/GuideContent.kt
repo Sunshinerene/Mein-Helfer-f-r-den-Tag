@@ -228,7 +228,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             GuideItem(
                 "Kleine Helfer: Losfahren, Wetter, Geburtstage, Rezepte",
                 "🚗 Losfahren: Vor Terminen mit Ort oder Kontakt meldet sich der Assistent rechtzeitig („In 10 Minuten losfahren: Zahnarzt um 08:00 Uhr, ca. 30 Min. Weg“) mit „Route“ für die Karten-App. Die Wegzeit trägst du je Kontakt ein (Kontakt bearbeiten → „Wegzeit dorthin“), sonst gilt der Standard. " +
-                    "🌦 Wetter (Standard aus): Nach Eingabe deines Ortes nennt er bei Terminen Regen, Schnee, Glätte, Kälte oder Hitze und was mit sollte – in seiner Karte, in der Terminerinnerung und beim Losfahren. Gesendet wird nur der Ort an Open-Meteo (frei, ohne Konto), höchstens alle 3 Stunden. " +
+                    "🌦 Wetter (Standard aus): Nach Eingabe deines Ortes nennt er bei Terminen Regen, Schnee, Glätte, Kälte oder Hitze und was mit sollte – in seiner Karte, in der Terminerinnerung und beim Losfahren. Gesendet wird nur der Ort an Open-Meteo (frei, ohne Konto), höchstens alle 3 Stunden; findet Open-Meteo den Ort nicht, sucht die App über die Ortssuche des Handys. " +
                     "🎂 Geburtstage: Eine Woche vorher schlägt er vor, Karte oder Geschenk zu besorgen (als Aufgabe), am Tag selbst erinnert er morgens ans Gratulieren. Die Geburtstage der betreuten Personen kommen aus dem Profil, weitere trägst du als Liste ein (z. B. „Oma Erna, 14.03.1936“). " +
                     "💊 Rezepte bündeln: Wird ein Medikament knapp, schlägt er beim selben Arzt gleich alles mit vor, was in den nächsten zwei Wochen knapp wird – eine Aufgabe, ein Weg. " +
                     "Alles einzeln abschaltbar unter Einstellungen → „Persönlicher Assistent“.",

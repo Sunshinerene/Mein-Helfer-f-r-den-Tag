@@ -26,16 +26,36 @@ object Weather {
         return c.inputStream.bufferedReader().use { it.readText() }
     }
 
-    /** Ort suchen: Name und Koordinaten (erster Treffer in Deutschland bevorzugt). */
-    suspend fun find(place: String): Result<Triple<String, Double, Double>> = withContext(Dispatchers.IO) {
-        runCatching {
-            val json = JSONObject(get("https://geocoding-api.open-meteo.com/v1/search?count=5&language=de&name=" + URLEncoder.encode(place.trim(), "UTF-8")))
-            val arr = json.optJSONArray("results") ?: throw IllegalStateException("Ort nicht gefunden")
+    /**
+     * Ort suchen: Name und Koordinaten. Erst Open-Meteo (Name oder PLZ), sonst die Ortssuche des Handys (Android-Geocoder).
+     * Fehler mit Grund, damit man sieht, ob es an der Verbindung oder am Ort liegt.
+     */
+    suspend fun find(context: Context, place: String): Result<Triple<String, Double, Double>> = withContext(Dispatchers.IO) {
+        val q = place.trim()
+        val first = runCatching {
+            // Leerzeichen als %20 (manche Server lesen „+“ nicht als Leerzeichen)
+            val enc = URLEncoder.encode(q, "UTF-8").replace("+", "%20")
+            val json = JSONObject(get("https://geocoding-api.open-meteo.com/v1/search?count=10&language=de&format=json&name=$enc"))
+            val arr = json.optJSONArray("results") ?: throw NoSuchElementException("nicht gefunden")
             val all = (0 until arr.length()).map { arr.getJSONObject(it) }
-            val r = all.firstOrNull { it.optString("country_code") == "DE" } ?: all.first()
-            val label = listOf(r.optString("name"), r.optString("admin1")).filter { it.isNotBlank() }.joinToString(", ")
+            val r = all.firstOrNull { it.optString("country_code").equals("DE", true) } ?: all.first()
+            val label = listOf(r.optString("name"), r.optString("admin1")).filter { it.isNotBlank() }.distinct().joinToString(", ")
             Triple(label, r.getDouble("latitude"), r.getDouble("longitude"))
         }
+        if (first.isSuccess) return@withContext first
+        val second = runCatching {
+            if (!android.location.Geocoder.isPresent()) throw IllegalStateException("keine Ortssuche auf dem Handy")
+            @Suppress("DEPRECATION")
+            val list = android.location.Geocoder(context, java.util.Locale.GERMANY).getFromLocationName(if (q.all { it.isDigit() }) "$q, Deutschland" else q, 5)
+            val a = list?.firstOrNull { it.countryCode.equals("DE", true) } ?: list?.firstOrNull() ?: throw NoSuchElementException("nicht gefunden")
+            val label = listOfNotNull(a.locality ?: a.subAdminArea ?: a.featureName, a.adminArea).filter { it.isNotBlank() }.distinct().joinToString(", ")
+            Triple(label.ifBlank { q }, a.latitude, a.longitude)
+        }
+        if (second.isSuccess) second
+        else Result.failure(IllegalStateException(
+            "Open-Meteo: " + (first.exceptionOrNull()?.let { it.message ?: it.javaClass.simpleName } ?: "?") +
+                " · Handy: " + (second.exceptionOrNull()?.let { it.message ?: it.javaClass.simpleName } ?: "?"),
+        ))
     }
 
     /** Vorhersage holen, wenn eingeschaltet, ein Ort gesetzt ist und die letzte älter als 3 Stunden ist. */

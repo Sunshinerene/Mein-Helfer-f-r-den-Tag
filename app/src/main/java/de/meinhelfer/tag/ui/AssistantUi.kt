@@ -1095,13 +1095,13 @@ private fun WeatherSettings(name: String) {
         OutlinedButton(shape = buttonShape(), enabled = input.isNotBlank(), onClick = {
             status = "Suche …"
             scope.launch {
-                de.meinhelfer.tag.info.Weather.find(input).onSuccess { (label, lat, lon) ->
+                de.meinhelfer.tag.info.Weather.find(context, input).onSuccess { (label, lat, lon) ->
                     AppPrefs.setWeatherPlace(context, label, lat, lon)
                     place = label
                     input = ""
                     de.meinhelfer.tag.info.Weather.refresh(context, force = true)
                     status = if (AppPrefs.weatherData(context).isNotBlank()) "Vorhersage geladen." else "Ort gespeichert, Vorhersage folgt."
-                }.onFailure { status = "Nicht gefunden oder keine Verbindung." }
+                }.onFailure { status = "Nicht gefunden oder keine Verbindung (" + (it.message ?: "") + "). Versuche den Ortsnamen ohne Zusatz oder die PLZ." }
             }
         }) { Text("Übernehmen") }
     }

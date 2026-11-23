@@ -1,6 +1,6 @@
 # TODO
 
-Stand: v0.79.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.80.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
@@ -23,6 +23,7 @@ Stand: v0.79.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Datenbank prüfen, Beispiel-PDFs mit erfundenen Daten, Beispiel-Grafiken, Test-Benachrichtigungen). Die Datenbank-Umstellungen von Version 5 bis 29 prüft seit v0.54.0 bei jedem Bauen ein automatischer Test gegen das Schema (Tabellen, Spalten, Typen); auf dem Handy bleibt zu prüfen, dass die eigenen Daten nach dem Update vollständig da sind.
 
+- [ ] Wetter: Ort „Bad Rappenau“ und PLZ werden gefunden (sonst steht der Grund in Klammern)
 - [ ] Rundgang blättert jetzt ganz auf die nächste Seite; nach „⏸ Anhalten“ macht „▶ Weiterlesen“ am selben Satz weiter; Meine Designs speichern, anwenden, löschen
 - [ ] Rundgang: „▶ Mit Vorlesen“ liest und blättert bis zum Ende; „⏸ Anhalten“ und Stopp über die Einblendung halten an; Schalter startet automatisch
 - [ ] Sunny-Bild in Benachrichtigungen (rechts im Eintrag) und im Widget oben links; Ausdruck im Widget wechselt
@@ -86,6 +87,10 @@ Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Daten
 - [ ] Sammel-Import: Vorschläge mit echten Scans verfeinern (z. B. gleicher Absender und gleiches Datum als weiterer Hinweis)
 
 - [ ] Eigene KI-Stimme direkt in der App (nur falls SherpaTTS nicht reicht): sherpa-onnx mit Piper-Stimme Thorsten oder Kerstin (CC0) oder apptor-tiny-tts (Apache-2.0, 21 MB); macht die App 25–70 MB größer, Lizenzen der Bibliotheken prüfen
+
+## Version 0.80.0 (fertig)
+
+- Wetter: Ortssuche repariert (Leerzeichen richtig kodiert), Ausweich-Suche über die Ortssuche des Handys, Fehlergrund sichtbar
 
 ## Version 0.79.0 (fertig)
 
