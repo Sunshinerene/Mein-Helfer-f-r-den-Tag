@@ -95,6 +95,20 @@ fun CareDiaryTodayCard(vm: MainViewModel, todayDay: Long, onOpen: () -> Unit) {
             }
         }
     }
+    if (showSelfCheck && person != null) {
+        SelfCheckDialog(
+            personName = person.name,
+            initial = selfAnswers,
+            diaryCounts = log.filter { it.day > today - 14 }.groupingBy { it.module }.eachCount(),
+            onDismiss = { showSelfCheck = false },
+            onSave = {
+                selfAnswers = it
+                AppPrefs.setSelfCheck(diaryContext, person.id, it)
+                showSelfCheck = false
+            },
+        )
+    }
+
     if (adding) {
         CareLogDialog(initial = null, day = todayDay, onDismiss = { adding = false }, onSave = {
             vm.saveCareLog(it)
@@ -203,6 +217,10 @@ fun CareDiaryScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit) {
     var editing by remember { mutableStateOf<CareLogEntry?>(null) }
     var adding by remember { mutableStateOf(false) }
     var pdfDays by remember { mutableIntStateOf(14) }
+    val diaryContext = androidx.compose.ui.platform.LocalContext.current
+    var selfAnswers by remember(person?.id) { mutableStateOf(person?.let { AppPrefs.selfCheck(diaryContext, it.id) } ?: emptyMap()) }
+    var showSelfCheck by remember { mutableStateOf(false) }
+    var pdfWithCheck by remember { mutableStateOf(true) }
     val entries = log.filter { it.day == day }.sortedWith(compareBy({ it.module }, { it.atMillis }))
     val previous = log.filter { it.day < day }.maxOfOrNull { it.day }
     val recentDays = log.filter { it.day > today - 14 }.map { it.day }.distinct().size
@@ -285,6 +303,29 @@ fun CareDiaryScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit) {
                     }
                 }
             }
+            jumpItem(diaryJumps, "Selbsteinschätzung") {
+                val r = de.meinhelfer.tag.summary.SelfCheck.evaluate(selfAnswers)
+                HCard(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text("Selbsteinschätzung wie bei der Begutachtung", style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            "Beantworte die Fragen der Begutachtung selbst – mit dem Tagebuch im Blick. So siehst du ungefähr, wo die Person steht, und gehst vorbereitet ins Gespräch. Nur ein Anhaltspunkt.",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                        if (selfAnswers.isNotEmpty()) {
+                            val g = de.meinhelfer.tag.summary.SelfCheck.grade(r.total)
+                            Text(
+                                "${de.meinhelfer.tag.summary.SelfCheck.points(r.total)} von 100 Punkten → " + (if (g == 0) "kein Pflegegrad" else "etwa Pflegegrad $g") +
+                                    if (!r.complete) " (noch ${r.questions - r.answered} Fragen offen)" else "",
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                        }
+                        Button(shape = buttonShape(), enabled = person != null, onClick = { showSelfCheck = true }) {
+                            Text(if (selfAnswers.isEmpty()) "Einschätzung starten" else "Einschätzung ansehen und ändern")
+                        }
+                    }
+                }
+            }
             jumpItem(diaryJumps, "Bericht für die Begutachtung") {
                 HCard(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -296,8 +337,17 @@ fun CareDiaryScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit) {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             listOf(7, 14, 28).forEach { d -> FilterChip(selected = pdfDays == d, onClick = { pdfDays = d }, label = { Text("$d Tage") }) }
                         }
+                        if (selfAnswers.isNotEmpty()) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Checkbox(checked = pdfWithCheck, onCheckedChange = { pdfWithCheck = it })
+                                Text("Selbsteinschätzung beifügen", style = MaterialTheme.typography.bodyMedium)
+                            }
+                        }
                         PdfButtons(shareLabel = "Als PDF teilen", chooserTitle = "Pflegetagebuch teilen") { ctx ->
-                            CarePdfs.careDiary(ctx, person, log.filter { it.day > today - pdfDays }, today - pdfDays + 1, today, AppPrefs.caregiver(ctx), vitals)
+                            CarePdfs.careDiary(
+                                ctx, person, log.filter { it.day > today - pdfDays }, today - pdfDays + 1, today, AppPrefs.caregiver(ctx), vitals,
+                                selfCheck = if (pdfWithCheck) selfAnswers else emptyMap(),
+                            )
                         }
                     }
                 }
@@ -336,5 +386,105 @@ fun CareDiaryScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit) {
                 editing = null
             },
         )
+    }
+}
+
+/** Fragebogen der Selbsteinschätzung, Bereich für Bereich, mit Punkten und Ergebnis. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun SelfCheckDialog(
+    personName: String,
+    initial: Map<String, Int>,
+    diaryCounts: Map<Int, Int>,
+    onDismiss: () -> Unit,
+    onSave: (Map<String, Int>) -> Unit,
+) {
+    val check = de.meinhelfer.tag.summary.SelfCheck
+    var answers by remember { mutableStateOf(initial) }
+    val r = check.evaluate(answers)
+    androidx.compose.ui.window.Dialog(
+        onDismissRequest = onDismiss,
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false),
+    ) {
+        androidx.compose.material3.Surface(Modifier.fillMaxWidth().padding(8.dp), shape = MaterialTheme.shapes.large) {
+            Column(Modifier.padding(12.dp)) {
+                Text("Selbsteinschätzung – $personName", style = MaterialTheme.typography.titleLarge)
+                val g = check.grade(r.total)
+                Text(
+                    "${check.points(r.total)} von 100 Punkten → " + (if (g == 0) "kein Pflegegrad" else "etwa Pflegegrad $g") +
+                        " · ${r.answered}/${r.questions} beantwortet",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                LazyColumn(Modifier.weight(1f, fill = false).padding(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    item {
+                        Text(
+                            "Wähle jeweils, was im Alltag meistens zutrifft – nicht der beste Tag. Was die Person nur mit Hilfe kann, gilt nicht als selbständig. " +
+                                "Bereiche 2 und 3: der höhere zählt. Bereich 5 ist vereinfacht.",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                    check.AREAS.forEach { area ->
+                        item(key = "a${area.module}") {
+                            Column {
+                                androidx.compose.material3.HorizontalDivider()
+                                Text(
+                                    "${area.module} ${area.title}: ${r.sums[area.module]} Punkte → ${check.points(r.weighted.getValue(area.module))} gewichtet",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    modifier = Modifier.padding(top = 6.dp),
+                                )
+                                diaryCounts[area.module]?.let {
+                                    Text("Im Tagebuch (14 Tage): $it Einträge", style = MaterialTheme.typography.bodySmall)
+                                }
+                            }
+                        }
+                        area.questions.forEach { q ->
+                            item(key = q.key) {
+                                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                    Text(q.text, style = MaterialTheme.typography.bodyMedium)
+                                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                        q.options.forEachIndexed { i, o ->
+                                            FilterChip(
+                                                selected = answers[q.key] == i,
+                                                onClick = { answers = if (answers[q.key] == i) answers - q.key else answers + (q.key to i) },
+                                                label = { Text(o.label) },
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    item {
+                        val p = check.gradePlanned(r.total)
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            androidx.compose.material3.HorizontalDivider()
+                            Text("Pflegegrade nach Punkten: 1 ab 12,5 · 2 ab 27 · 3 ab 47,5 · 4 ab 70 · 5 ab 90.", style = MaterialTheme.typography.bodySmall)
+                            Text(
+                                "Geplant ab 2027 (Reformentwurf, noch offen): 1 ab 15 · 2 ab 30 · 3 ab 50; auch die Bewertung in den Bereichen soll sich ändern." +
+                                    if (p != g) " Mit diesen Schwellen wäre es " + (if (p == 0) "kein Pflegegrad." else "Pflegegrad $p.") else "",
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                            Text(
+                                "Nur ein Anhaltspunkt zur Vorbereitung. Den Pflegegrad legt die Pflegekasse nach der Begutachtung fest. Beratung gibt es z. B. beim Pflegestützpunkt.",
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
+                    }
+                }
+                val context = androidx.compose.ui.platform.LocalContext.current
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(shape = buttonShape(), onClick = { onSave(answers) }) { Text("Speichern") }
+                    OutlinedButton(shape = buttonShape(), enabled = answers.isNotEmpty(), onClick = {
+                        val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(android.content.Intent.EXTRA_TEXT, check.report(personName, answers))
+                        }
+                        context.startActivity(android.content.Intent.createChooser(send, "Selbsteinschätzung teilen"))
+                    }) { Text("Teilen") }
+                    TextButton(onClick = onDismiss) { Text("Abbrechen") }
+                }
+            }
+        }
     }
 }

@@ -292,6 +292,8 @@ object CarePdfs {
         caregiver: CaregiverProfile,
         /** Messwerte der Person: zeigen, wie oft gemessen wurde (Bereich 5, z. B. Blutzucker messen) */
         vitals: List<de.meinhelfer.tag.data.VitalEntry> = emptyList(),
+        /** Antworten der Selbsteinschätzung (leer = nicht beifügen) */
+        selfCheck: Map<String, Int> = emptyMap(),
     ): File {
         val areas = de.meinhelfer.tag.summary.CareAreas
         val file = File(PdfPages.dir(context, "pflegetagebuch"), "Pflegetagebuch_${safe(person?.name ?: "")}_${LocalDate.now()}.pdf")
@@ -312,8 +314,18 @@ object CarePdfs {
             pdf.text("Geführt von: " + listOfNotNull(caregiver.name, caregiver.relation.ifBlank { null }, caregiver.phone.ifBlank { null }).joinToString(", "), 10f, gray = true)
         }
         pdf.gap(10f)
+        fun selfCheckSection() {
+            if (selfCheck.isEmpty()) return
+            pdf.gap(10f)
+            pdf.ensure(60f)
+            pdf.text("Selbsteinschätzung (Anhaltspunkt, ersetzt keine Begutachtung)", 13f, bold = true)
+            de.meinhelfer.tag.summary.SelfCheck.report("", selfCheck).lines().drop(3).filter { it.isNotBlank() }.forEach { l ->
+                pdf.text(l.trim(), if (l.startsWith("   ")) 9f else 10f, x = pdf.left + if (l.startsWith("   ")) 10f else 0f, w = pdf.width - if (l.startsWith("   ")) 10 else 0)
+            }
+        }
         if (entries.isEmpty()) {
             pdf.text("Keine Einträge im Zeitraum.", 11f)
+            selfCheckSection()
             return pdf.save(file)
         }
 
@@ -380,6 +392,8 @@ object CarePdfs {
                 )
             }
         }
+
+        selfCheckSection()
 
         // Tag fuer Tag
         pdf.gap(14f)

@@ -67,6 +67,52 @@ object AppPrefs {
         prefs(context).edit().putBoolean("assistent_an", on).apply()
     }
 
+    /** Assistent als Bild (Sunny) statt gezeichnetem Gesicht. */
+    fun assistantImage(context: Context): Boolean = prefs(context).getBoolean("assistent_bild", true)
+
+    fun setAssistantImage(context: Context, on: Boolean) {
+        prefs(context).edit().putBoolean("assistent_bild", on).apply()
+    }
+
+    /** Sunny erzählt von sich aus (beim Öffnen, höchstens alle 3 Stunden) und ob Neuigkeiten dabei sein dürfen. */
+    fun assistantTalk(context: Context): Boolean = prefs(context).getBoolean("assistent_erzaehlt", false)
+    fun assistantTalkNews(context: Context): Boolean = prefs(context).getBoolean("assistent_neuigkeiten", false)
+    fun assistantLastTalk(context: Context): Long = prefs(context).getLong("assistent_zuletzt_erzaehlt", 0L)
+
+    fun setAssistantTalk(context: Context, on: Boolean) {
+        prefs(context).edit().putBoolean("assistent_erzaehlt", on).apply()
+    }
+
+    fun setAssistantTalkNews(context: Context, on: Boolean) {
+        prefs(context).edit().putBoolean("assistent_neuigkeiten", on).apply()
+    }
+
+    fun setAssistantLastTalk(context: Context, at: Long) {
+        prefs(context).edit().putLong("assistent_zuletzt_erzaehlt", at).apply()
+    }
+
+    /** Schon erzählte Meldungen (Links, die letzten 60) und welches Thema als Nächstes dran ist. */
+    /** Selbsteinschätzung zur Begutachtung je Person (Antworten als Text, siehe [de.meinhelfer.tag.summary.SelfCheck.encode]). */
+    fun selfCheck(context: Context, personId: Long): Map<String, Int> =
+        de.meinhelfer.tag.summary.SelfCheck.decode(prefs(context).getString("selbsteinschaetzung_$personId", "")!!)
+
+    fun setSelfCheck(context: Context, personId: Long, answers: Map<String, Int>) {
+        prefs(context).edit().putString("selbsteinschaetzung_$personId", de.meinhelfer.tag.summary.SelfCheck.encode(answers)).apply()
+    }
+
+    fun newsTold(context: Context): List<String> = prefs(context).getString("neuigkeiten_erzaehlt", "")!!.split("\n").filter { it.isNotBlank() }
+
+    fun addNewsTold(context: Context, link: String) {
+        val list = (newsTold(context) + link).takeLast(60)
+        prefs(context).edit().putString("neuigkeiten_erzaehlt", list.joinToString("\n")).apply()
+    }
+
+    fun nextNewsTopic(context: Context): Int {
+        val i = prefs(context).getInt("neuigkeiten_thema", 0)
+        prefs(context).edit().putInt("neuigkeiten_thema", i + 1).apply()
+        return i
+    }
+
     /** Name des Assistenten (frei wählbar). */
     fun assistantName(context: Context): String =
         prefs(context).getString("assistent_name", null)?.takeIf { it.isNotBlank() } ?: de.meinhelfer.tag.summary.Assistant.DEFAULT_NAME

@@ -87,6 +87,43 @@ object AssistantBrief {
         return title to (done + stillOpen + (if (prep.isNotBlank()) " $prep" else "") + diary + " Gute Nacht!")
     }
 
+    /**
+     * Was Sunny von sich aus erzählt (Vorlesen beim Öffnen oder auf „Erzähl mal“): Gruß, was als Nächstes ansteht,
+     * Termin heute mit Checkliste, Vorschläge, ein Hinweis für dich und auf Wunsch eine aktuelle Meldung.
+     * [news] = Überschrift und Quelle. Kurz gehalten, damit es nicht nervt.
+     */
+    fun talk(
+        name: String,
+        hour: Int,
+        line: List<NextUp>,
+        todayPreps: List<AppointmentPrep>,
+        proposals: Int,
+        hints: List<String>,
+        news: Pair<String, String>?,
+        multi: Boolean,
+    ): String {
+        val greet = when (hour) {
+            in 5..10 -> "Guten Morgen"
+            in 11..17 -> "Hallo"
+            else -> "Guten Abend"
+        }
+        val parts = mutableListOf("$greet, hier ist $name.")
+        if (line.isEmpty()) {
+            parts += "Gerade steht laut App nichts an."
+        } else {
+            val first = line.first()
+            parts += "Als Nächstes: " + first.title + (if (multi && first.personName.isNotBlank()) " für ${first.personName}" else "") + "."
+            if (line.size > 1) parts += "Danach noch ${count(line.size - 1, "Punkt", "Punkte")} heute."
+        }
+        todayPreps.firstOrNull { it.hints.isNotEmpty() }?.let { p ->
+            parts += "Für ${p.appointment.title} um ${p.whenText.substringAfterLast(' ')}: ${prepShort(p)}."
+        }
+        if (proposals > 0) parts += "Ich habe ${count(proposals, "Vorschlag", "Vorschläge")} für dich, schau gern in meine Karte."
+        hints.firstOrNull()?.let { parts += it }
+        news?.let { (title, source) -> parts += "Neu in den Nachrichten" + (if (source.isNotBlank()) " bei $source" else "") + ": $title." }
+        return parts.joinToString(" ")
+    }
+
     /** Hinweis-Zusatz für die Terminerinnerung, z. B. „Denk an: Versichertenkarte; Medikamentenplan“. */
     fun appointmentAddon(p: AppointmentPrep?): String = p?.takeIf { it.hints.isNotEmpty() }?.let { "\nDenk an: " + prepShort(it) + "." }.orEmpty()
 

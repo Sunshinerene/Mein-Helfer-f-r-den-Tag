@@ -58,4 +58,19 @@ class AssistantBriefTest {
         assertTrue(AssistantBrief.selfHints(OwnHealth(restingNow = 66, restingAvg = 62), 10).isEmpty())
         assertTrue(AssistantBrief.selfHints(null, 10).isEmpty())
     }
+
+    @Test
+    fun talkIsShortAndPersonal() {
+        val line = listOf(
+            NextUp(NextKind.Intake, 0L, "Medikamente 12:00: Ramipril", 1, "Mama", overdue = false),
+            NextUp(NextKind.Task, null, "Rezept abholen", 1, "Mama", overdue = false),
+        )
+        val t = AssistantBrief.talk("Sunny", 9, line, emptyList(), 2, listOf("Trink selbst genug."), "Pflegegeld steigt" to "tagesschau.de", multi = false)
+        assertEquals(
+            "Guten Morgen, hier ist Sunny. Als Nächstes: Medikamente 12:00: Ramipril. Danach noch 1 Punkt heute. " +
+                "Ich habe 2 Vorschläge für dich, schau gern in meine Karte. Trink selbst genug. Neu in den Nachrichten bei tagesschau.de: Pflegegeld steigt.",
+            t,
+        )
+        assertEquals("Guten Abend, hier ist Sunny. Gerade steht laut App nichts an.", AssistantBrief.talk("Sunny", 21, emptyList(), emptyList(), 0, emptyList(), null, false))
+    }
 }

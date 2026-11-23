@@ -9,6 +9,11 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.border
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -76,6 +81,25 @@ fun AssistantFace(
     val eyeOpen = if (animate) blink else 1f
     val grow = if (animate) breath else 1f
     val mouthOpen = if (speaking && animate) talk else if (speaking) 0.6f else 0f
+    // Bild von Sunny (Einstellung), je nach Lage ein anderer Ausdruck
+    val useImage by SunnyAvatar.useImage.collectAsState()
+    if (useImage) {
+        val ring = if (speaking) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
+        androidx.compose.foundation.Image(
+            painter = androidx.compose.ui.res.painterResource(SunnyAvatar.drawable(expression)),
+            contentDescription = description,
+            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+            modifier = modifier
+                .size(size)
+                .graphicsLayer {
+                    scaleX = if (speaking && animate) 1f + (talk - 0.6f) * 0.04f else grow
+                    scaleY = scaleX
+                }
+                .clip(androidx.compose.foundation.shape.CircleShape)
+                .border(if (speaking) 2.dp else 1.dp, ring, androidx.compose.foundation.shape.CircleShape),
+        )
+        return
+    }
 
     Canvas(modifier.size(size).semantics { contentDescription = description }) {
         scale(grow) { drawFace(expression, eyeOpen, mouthOpen) }
@@ -196,5 +220,20 @@ private fun DrawScope.drawFace(expression: Expression, eyeOpen: Float, mouthOpen
             arcEye(rightX, up = false)
             mouth(0.20f, 0.05f)
         }
+    }
+}
+
+
+/** Bild von Sunny statt des gezeichneten Gesichts (Einstellungen → Persönlicher Assistent). */
+object SunnyAvatar {
+    val useImage = kotlinx.coroutines.flow.MutableStateFlow(true)
+
+    fun drawable(e: Expression): Int = when (e) {
+        Expression.Friendly -> de.meinhelfer.tag.R.drawable.sunny_freundlich
+        Expression.Happy -> de.meinhelfer.tag.R.drawable.sunny_froh
+        Expression.Attentive -> de.meinhelfer.tag.R.drawable.sunny_ernst
+        Expression.Concerned -> de.meinhelfer.tag.R.drawable.sunny_besorgt
+        Expression.Thinking -> de.meinhelfer.tag.R.drawable.sunny_ernst
+        Expression.Calm -> de.meinhelfer.tag.R.drawable.sunny_portrait
     }
 }

@@ -592,6 +592,8 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
     }
     }
 
+    if (assistantOn) SunnyTalkOverlay()
+
     if (showProfile) {
         persons.firstOrNull { it.id == personId }?.let { p ->
             PersonDialog(

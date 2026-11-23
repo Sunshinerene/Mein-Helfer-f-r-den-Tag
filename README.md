@@ -4,12 +4,14 @@ by Sunshine@R
 
 Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbezogenen Daten bleiben lokal auf dem Gerät.
 
-## Stand: v0.71.0
+## Stand: v0.72.0
 
 ### Funktionsübersicht
 
 **Persönlicher Assistent**
 - Fester Teil der App (eigener Bereich in den Einstellungen), für die pflegende Person, mit wählbarem Namen (Start: Sunny) und digitalem Gesicht, das die Lage zeigt
+- Sunny-Bild mit sechs Gesichtsausdrücken (oder das gezeichnete Gesicht); beim Vorlesen blendet sich Sunny als kleines, stummes Video ein
+- „Erzähl mal“ und auf Wunsch von sich aus (höchstens alle 3 Stunden, nie in der Ruhezeit oder bei stummem Handy): was ansteht, Termin-Checkliste, Vorschläge, Hinweis für dich, auf Wunsch eine aktuelle Schlagzeile zu Pflege, Gesetzen oder eigenen Themen (nur Suchwort an Google News, Anhaltspunkt)
 - Als Nächstes über alle Personen (gemeinsame Tageslage, auch fürs Widget), Vorbereitung auf Termine der nächsten 36 Stunden
 - Vorschläge mit Bestätigung: bald fällige Aufgabe auf dringend, Überfälliges neu planen, bei knappem Vorrat „Rezept bestellen“ beim Zuständigen
 - Tagesstart über den Assistenten (Rückblick und Tagesplan in seiner Karte); Heute-Seite ordnet nach Dringlichkeit, gemeinsame Regeln mit Widget und Tagesplan
@@ -46,6 +48,7 @@ Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbe
 - Bericht über Messwerte für einen frei wählbaren Zeitraum (7/14/30/90 Tage oder von–bis), Werte wählbar, Verlauf als Grafik; teilen, drucken, per E-Mail an Arzt oder Pflegedienst oder unter Dokumente ablegen
 - Werte von Uhr, Fitnessband, Waage oder Blutdruckgerät über Health Connect übernehmen (Beta): nur lesen, Quelle je Person wählen, Vorschau und Bestätigung, keine Doppelten
 - Pflegetagebuch für die Begutachtung (sechs Bereiche, Art der Hilfe, wie oft, nachts), „wie am Vortag“, PDF-Bericht
+- Selbsteinschätzung wie bei der Begutachtung (alle Fragen der Bereiche 1–6, Bereich 5 vereinfacht), Punkte nach Anlage 2 SGB XI, ungefährer Pflegegrad, Vergleich mit den geplanten Schwellen 2027; teilen oder dem Tagebuch-PDF beifügen
 - Erinnerungen ans Trinken (nur wenn unter Plan) und abends ans Pflegetagebuch
 - Budgets der Pflegekasse (Entlastungsbetrag mit Übertrag, Gemeinsamer Jahresbetrag für Verhinderungs- und Kurzzeitpflege); Beträge prüft die App selbst in der jährlichen Übersicht des Bundesgesundheitsministeriums und mit einer Liste im Repo (wöchentlich automatisch aktualisiert), übernommen wird nach Bestätigung
 - Übergabe-Bericht als PDF für Vertretung oder Urlaub

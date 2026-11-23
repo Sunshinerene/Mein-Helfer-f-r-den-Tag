@@ -143,6 +143,7 @@ class MainActivity : FragmentActivity() {
         // Hintergrund-Pruefung auf neue Versionen (kann in den Einstellungen abgeschaltet werden)
         if (AppPrefs.autoUpdateCheck(this)) UpdateWorker.schedule(this) else UpdateWorker.cancel(this)
 
+        de.meinhelfer.tag.ui.SunnyAvatar.useImage.value = AppPrefs.assistantImage(this)
         setContent {
             val vm: MainViewModel = viewModel()
             val mode by vm.themeMode.collectAsStateWithLifecycle()

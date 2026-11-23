@@ -153,6 +153,61 @@ fun AssistantCard(vm: MainViewModel, onOpen: (tab: Int) -> Unit, onMood: () -> U
     androidx.compose.runtime.LaunchedEffect(Unit) { vm.refreshOwnHealth() }
     val selfHints = AssistantBrief.selfHints(ownHealth, java.time.LocalTime.now().hour)
     val p = plan
+    // Von sich aus erzählen: beim Öffnen höchstens alle 3 Stunden, nie in der Ruhezeit oder bei stummem Handy
+    val talkScope = androidx.compose.runtime.rememberCoroutineScope()
+    var news by remember { mutableStateOf<de.meinhelfer.tag.info.NewsItem?>(null) }
+    var newsLoading by remember { mutableStateOf(false) }
+    val talkPersons by vm.persons.collectAsStateWithLifecycle()
+    val talkMeds by vm.medications.collectAsStateWithLifecycle()
+    val talkDocs by vm.documents.collectAsStateWithLifecycle()
+    fun talkText(item: de.meinhelfer.tag.info.NewsItem?): String {
+        val todayPreps = st.preps.filter { it.whenText.startsWith("Heute") }
+        return AssistantBrief.talk(
+            st.name, java.time.LocalTime.now().hour, st.line, todayPreps, st.proposals.size, selfHints,
+            item?.let { it.title to it.source }, st.multi,
+        )
+    }
+    suspend fun fetchNews(): de.meinhelfer.tag.info.NewsItem? {
+        if (!AppPrefs.assistantTalkNews(context)) return null
+        newsLoading = true
+        try {
+            val person = talkPersons.firstOrNull { it.id == personId }
+            val topics = (
+                listOf("Pflegeversicherung", "Pflegereform", "pflegende Angehörige") +
+                    de.meinhelfer.tag.info.PersonalTopics.suggest(person, talkMeds, talkDocs, AppPrefs.caregiver(context).roleValue).map { it.query }
+                ).distinct()
+            val told = AppPrefs.newsTold(context).toSet()
+            val cutoff = System.currentTimeMillis() - 14L * 24 * 3600 * 1000
+            repeat(3) {
+                val q = topics[AppPrefs.nextNewsTopic(context) % topics.size]
+                val item = de.meinhelfer.tag.info.NewsFeed.search(q).getOrNull()
+                    ?.firstOrNull { it.link !in told && (it.published ?: 0L) >= cutoff }
+                if (item != null) {
+                    AppPrefs.addNewsTold(context, item.link)
+                    return item
+                }
+            }
+            return null
+        } finally {
+            newsLoading = false
+        }
+    }
+    fun tell() {
+        talkScope.launch {
+            val item = fetchNews() ?: news
+            news = item
+            AppPrefs.setAssistantLastTalk(context, System.currentTimeMillis())
+            Speech.speak(context, "assistent", talkText(item))
+        }
+    }
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        if (!AppPrefs.assistantTalk(context) || AppPrefs.isQuietNow(context)) return@LaunchedEffect
+        if (System.currentTimeMillis() - AppPrefs.assistantLastTalk(context) < 3L * 3600 * 1000) return@LaunchedEffect
+        val audio = context.getSystemService(android.content.Context.AUDIO_SERVICE) as? android.media.AudioManager
+        if (audio != null && audio.ringerMode != android.media.AudioManager.RINGER_MODE_NORMAL) return@LaunchedEffect
+        kotlinx.coroutines.delay(1200)
+        if (Speech.speaking.value == null) tell()
+    }
     Foldable(
         key = "assistent",
         title = st.name + " · dein Assistent",
@@ -161,7 +216,7 @@ fun AssistantCard(vm: MainViewModel, onOpen: (tab: Int) -> Unit, onMood: () -> U
         HCard(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    AssistantFace(st.expression, size = 60.dp, speaking = speaking == "assistent", description = "Gesicht von ${st.name}")
+                    AssistantFace(st.expression, size = 60.dp, speaking = speaking?.startsWith("assistent") == true, description = "Gesicht von ${st.name}")
                     Column(Modifier.weight(1f)) {
                         Text(p?.greeting ?: "Hallo", style = MaterialTheme.typography.titleMedium)
                         Text("Ich bin ${st.name}, dein persönlicher Assistent.", style = MaterialTheme.typography.bodySmall)
@@ -234,8 +289,22 @@ fun AssistantCard(vm: MainViewModel, onOpen: (tab: Int) -> Unit, onMood: () -> U
                     OutlinedButton(shape = buttonShape(), onClick = { onOpen(0) }, modifier = Modifier.weight(1f)) { FitText("Mehr", maxSize = 14.sp) }
                     OutlinedButton(shape = buttonShape(), onClick = { onOpen(2) }, modifier = Modifier.weight(1f)) { FitText("Ziele", maxSize = 14.sp) }
                 }
-                SpeakButton(owner = "assistent", label = "🔊 Vorlesen", modifier = Modifier.fillMaxWidth()) {
-                    speech(st, p?.greeting, p?.sentence)
+                news?.let { n ->
+                    HorizontalDivider()
+                    Text("📰 Neu" + (if (n.source.isNotBlank()) " · ${n.source}" else ""), style = MaterialTheme.typography.labelLarge)
+                    Text(n.title, style = MaterialTheme.typography.bodyMedium)
+                    Text("Nur ein Anhaltspunkt – prüfe die Quelle, keine Beratung.", style = MaterialTheme.typography.bodySmall)
+                    TextButton(onClick = {
+                        runCatching { context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(n.link))) }
+                    }) { Text("Lesen") }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(shape = buttonShape(), modifier = Modifier.weight(1f), enabled = !newsLoading, onClick = {
+                        if (speaking == "assistent") Speech.stop() else tell()
+                    }) { FitText(if (speaking == "assistent") "⏹ Stopp" else if (newsLoading) "Moment …" else "🗣 Erzähl mal", maxSize = 14.sp) }
+                    SpeakButton(owner = "assistent-alles", label = "🔊 Alles vorlesen", modifier = Modifier.weight(1f)) {
+                        speech(st, p?.greeting, p?.sentence)
+                    }
                 }
             }
         }
@@ -545,6 +614,24 @@ fun AssistantSettingsCard(vm: MainViewModel) {
                 }) { Text("Übernehmen") }
             }
             HorizontalDivider()
+            Text("Aussehen und Sprechen", style = MaterialTheme.typography.labelLarge)
+            var image by remember { mutableStateOf(AppPrefs.assistantImage(context)) }
+            var talk by remember { mutableStateOf(AppPrefs.assistantTalk(context)) }
+            var talkNews by remember { mutableStateOf(AppPrefs.assistantTalkNews(context)) }
+            SwitchLine("Sunny-Bild statt gezeichnetem Gesicht", "Mit Gesichtsausdrücken passend zur Lage; beim Vorlesen blendet sich $name dezent als kleines Video ein.", image) {
+                image = it
+                AppPrefs.setAssistantImage(context, it)
+                SunnyAvatar.useImage.value = it
+            }
+            SwitchLine("$name erzählt von sich aus", "Beim Öffnen der Heute-Seite liest $name höchstens alle 3 Stunden kurz vor, was ansteht – nie in der Ruhezeit. Stumm geschaltet? Dann bleibt es still.", talk) {
+                talk = it
+                AppPrefs.setAssistantTalk(context, it)
+            }
+            SwitchLine("Neuigkeiten einbeziehen", "Eine aktuelle Schlagzeile zu Pflege, Gesetzen oder deinen Themen (Google News, nur das Suchwort wird gesendet). Nur ein Anhaltspunkt, keine Beratung.", talkNews) {
+                talkNews = it
+                AppPrefs.setAssistantTalkNews(context, it)
+            }
+            HorizontalDivider()
             Text("Benachrichtigungen von $name", style = MaterialTheme.typography.labelLarge)
             OptionalTimeRow(
                 label = "Morgenüberblick",
@@ -716,5 +803,16 @@ internal fun assistantAiPrompt(question: String, items: List<GuideItem>): String
         if (size + block.length > 7000) return@forEach
         appendLine(block)
         size += block.length
+    }
+}
+
+@Composable
+private fun SwitchLine(title: String, hint: String, checked: Boolean, onChange: (Boolean) -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.bodyLarge)
+            Text(hint, style = MaterialTheme.typography.bodySmall)
+        }
+        Switch(checked = checked, onCheckedChange = onChange)
     }
 }

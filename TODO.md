@@ -1,18 +1,17 @@
 # TODO
 
-Stand: v0.71.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.72.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
 - [ ] Health-Connect-Bibliothek auf 1.1.0 stabil heben, sobald die App auf compileSdk 36 und Android Gradle Plugin 8.9 umgestellt ist
-- [ ] Pflegereform 2027: sobald beschlossen, daten/leistungen.txt anpassen (Beträge, Übertrag, Hinweis); für die neuen Budgets ggf. neue Bereiche in der App
+- [ ] Pflegereform 2027: sobald beschlossen, Selbsteinschätzung an neue Schwellen und Modulbewertung anpassen; daten/leistungen.txt anpassen (Beträge, Übertrag, Hinweis); für die neuen Budgets ggf. neue Bereiche in der App
 
 ## Ideen und Optimierungen
 
-- [ ] Pflegetagebuch: Selbsteinschätzung je Bereich als Vorbereitung auf die Begutachtung
 - [ ] Packungsfoto: Erkennung verbessern (Wirkstoff, Packungsbeilage), Barcode live mit der Kamera
 - [ ] Widget: zweite Größe mit Tagesübersicht
-- [ ] Barrierefreiheit: „Heute vorlesen“ direkt auf der Heute-Seite, Vorlesen für Schreiben und Medikamentenplan
+- [ ] Barrierefreiheit: Vorlesen für Schreiben und Medikamentenplan
 - [ ] Health Connect: eigene Werte der pflegenden Person (Schlaf, Schritte) freiwillig im Tages-Motivator, Abruf im Hintergrund
 - [ ] Mehrsprachigkeit für Betreuungskräfte (z. B. Polnisch, Rumänisch)
 - [ ] Motivator: Pausen-Erinnerung, Stimmungsverlauf in der Auswertung (nur für dich, nicht in geteilten Berichten), Ziel-Schritte als Aufgabe mit Frist übernehmen
@@ -23,6 +22,8 @@ Stand: v0.71.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Datenbank prüfen, Beispiel-PDFs mit erfundenen Daten, Beispiel-Grafiken, Test-Benachrichtigungen). Die Datenbank-Umstellungen von Version 5 bis 29 prüft seit v0.54.0 bei jedem Bauen ein automatischer Test gegen das Schema (Tabellen, Spalten, Typen); auf dem Handy bleibt zu prüfen, dass die eigenen Daten nach dem Update vollständig da sind.
 
+- [ ] Sunny-Bild: Ausdrücke passen zur Lage? Beim „Erzähl mal“ blendet sich das Video unten rechts ein (stumm, Antippen stoppt); „Erzählt von sich aus“ beim Öffnen der Heute-Seite, nicht öfter als alle 3 Stunden, nicht bei stummem Handy; Schlagzeile mit „Lesen“
+- [ ] Pflegetagebuch → Selbsteinschätzung: Fragen beantworten, Speichern, Teilen, im PDF beifügen
 - [ ] Widget „✓ Eingenommen“ → „Ja“ hakt ab, „Nein“ und Ablauf nach 30 Sekunden; bei Insulin „Eintragen …“; Budgets „Beträge aktuell?“ und Hinweis zur Reform, Assistent fragt nach
 - [ ] Einnahme-Fenster (Datenbank 29): Insulin antippen → Menge ändern, Blutzucker dazu, „+ Messwert“, Speichern; Erinnerung öffnet das Fenster; Haltbarkeit nach Anbruch mit „Neu angebrochen“ und Erinnerung am letzten Tag
 - [ ] Fenster schließen nicht mehr beim Tippen daneben (alle Eingabe- und Info-Fenster, Datum und Uhrzeit); Ordner mit Unterordnern laden; Dateien aus „Dateien“, Drive oder Dropbox über „Teilen“ → „Mein Helfer“ übernehmen (auch bei gesperrter App erst nach dem Entsperren)
@@ -77,6 +78,12 @@ Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Daten
 - [ ] Sammel-Import: Vorschläge mit echten Scans verfeinern (z. B. gleicher Absender und gleiches Datum als weiterer Hinweis)
 
 - [ ] Eigene KI-Stimme direkt in der App (nur falls SherpaTTS nicht reicht): sherpa-onnx mit Piper-Stimme Thorsten oder Kerstin (CC0) oder apptor-tiny-tts (Apache-2.0, 21 MB); macht die App 25–70 MB größer, Lizenzen der Bibliotheken prüfen
+
+## Version 0.72.0 (fertig)
+
+- Sunny-Bild mit Gesichtsausdrücken, Sprech-Video beim Vorlesen
+- Sunny erzählt: „Erzähl mal“ und auf Wunsch von sich aus, mit aktueller Schlagzeile (Anhaltspunkt)
+- Pflegetagebuch: Selbsteinschätzung wie bei der Begutachtung mit Punkten nach SGB XI, im PDF
 
 ## Version 0.71.0 (fertig)
 

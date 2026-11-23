@@ -107,7 +107,7 @@ private val TOUR_PAGES = listOf(
     TourPage(
         title = "Dein Assistent",
         text = "Dein persönlicher Assistent ist für dich da: Er sagt, was als Nächstes ansteht, bereitet Termine vor und schlägt vor, was dringend ist oder nachbestellt werden muss. Dazu ein Satz für den Tag, was du geschafft hast, kleine Vorhaben und der Stimmungs-Check. Ziele gehst du Schritt für Schritt an.",
-        tips = listOf("Das Gesicht unten links in der Leiste hilft auf jeder Seite, auch mit „Frag mich“.", "Morgens und abends meldet er sich kurz, vor Terminen mit Checkliste; in der Ruhezeit nicht.", "Name wählen oder ausschalten: Einstellungen → Persönlicher Assistent.", "Wie oft nach der Stimmung gefragt wird, stellst du unter Einstellungen → Heute-Seite, Motivator und Widget ein.", "Für Ziele gibt es Vorlagen, z. B. „Pflegegrad beantragen“. Auf Wunsch schlägt die KI einen Weg vor."),
+        tips = listOf("Das Gesicht unten links in der Leiste hilft auf jeder Seite, auch mit „Frag mich“.", "„Erzähl mal“: Sunny sagt kurz, was ansteht – auf Wunsch von sich aus und mit einer aktuellen Schlagzeile.", "Morgens und abends meldet er sich kurz, vor Terminen mit Checkliste; in der Ruhezeit nicht.", "Name wählen oder ausschalten: Einstellungen → Persönlicher Assistent.", "Wie oft nach der Stimmung gefragt wird, stellst du unter Einstellungen → Heute-Seite, Motivator und Widget ein.", "Für Ziele gibt es Vorlagen, z. B. „Pflegegrad beantragen“. Auf Wunsch schlägt die KI einen Weg vor."),
         mock = { MockMotivator() },
     ),
     TourPage(
@@ -131,7 +131,7 @@ private val TOUR_PAGES = listOf(
     TourPage(
         title = "Tag, Woche, Monat",
         text = "Oben auf dem ersten Reiter wählst du Tag, Woche oder Monat. Der Tag zeigt zuerst „Wichtig und demnächst“: Dringendes, die Termine von heute und die nächsten Tage. In Woche und Monat kannst du Termine, Aufgaben und Einnahmen antippen, ändern und abhaken.",
-        tips = listOf("Aufgaben mit hoher Priorität stehen immer ganz oben.", "„Trinken und Werte“ zählt die Trinkmenge mit einem Tipp; das Pflegetagebuch hilft bei der Begutachtung.", "Aufgaben können per Benachrichtigung erinnern und lassen sich in den Kalender eintragen.", "Antippen klappt Karten und Einträge auf, ein Tipp auf den oberen Rand klappt wieder zu.", "Aufgaben mit Schreiben: per E-Mail mit frei gewählten Anhängen senden oder drucken."),
+        tips = listOf("Aufgaben mit hoher Priorität stehen immer ganz oben.", "„Trinken und Werte“ zählt die Trinkmenge mit einem Tipp; das Pflegetagebuch hilft bei der Begutachtung, mit Selbsteinschätzung und Punkten.", "Aufgaben können per Benachrichtigung erinnern und lassen sich in den Kalender eintragen.", "Antippen klappt Karten und Einträge auf, ein Tipp auf den oberen Rand klappt wieder zu.", "Aufgaben mit Schreiben: per E-Mail mit frei gewählten Anhängen senden oder drucken."),
         mock = { MockPeriods() },
     ),
     TourPage(
