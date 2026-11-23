@@ -185,6 +185,18 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
         showHandover = false
     }
 
+    // Sunny möchte eine Stelle öffnen (z. B. Sicherung, ihre Einstellungen)
+    val nav by vm.navRequest.collectAsStateWithLifecycle()
+    LaunchedEffect(nav) {
+        val target = nav ?: return@LaunchedEffect
+        if (target.startsWith("settings:")) {
+            closeOverlays()
+            settingsCategory = target.removePrefix("settings:")
+            showSettings = true
+        }
+        vm.clearNav()
+    }
+
     // Geteilte Dateien (aus einer anderen App): zu Dokumente wechseln, dort beginnt der Import
     val shared by vm.sharedUris.collectAsStateWithLifecycle()
     LaunchedEffect(shared) {
@@ -1212,6 +1224,8 @@ private fun DockBar(
     val registry = LocalJumps.current
     var sheet by remember { mutableStateOf(false) }
     var helper by remember { mutableStateOf(false) }
+    val navWish by vm.navRequest.collectAsStateWithLifecycle()
+    LaunchedEffect(navWish) { if (navWish != null) helper = false }
     val scope = androidx.compose.runtime.rememberCoroutineScope()
     Column(
         Modifier.pointerInput(Unit) {

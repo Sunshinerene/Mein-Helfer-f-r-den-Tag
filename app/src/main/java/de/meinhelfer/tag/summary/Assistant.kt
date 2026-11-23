@@ -35,6 +35,10 @@ sealed interface ProposalAction {
     data object Cleanup : ProposalAction
     /** Steuerwerk: Freiheitsstufe eines Bereichs ändern. */
     data class SetAutonomy(val area: String, val level: Int) : ProposalAction
+    /** Einstellungen an einer Stelle öffnen (Kategorie, z. B. „Sicherheit“). */
+    data class OpenSettings(val category: String) : ProposalAction
+    /** Zu einer fehlenden Android-Freigabe führen. */
+    data class FixPermission(val kind: String) : ProposalAction
 }
 
 /** Ein Vorschlag des Assistenten. Wird nur nach deiner Bestätigung ausgeführt. */

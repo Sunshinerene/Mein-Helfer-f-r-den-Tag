@@ -366,7 +366,8 @@ fun TodayScreen(
         if (motivatorOn && !assistantOn) {
             jumpItem(jumps, "Tages-Motivator") { MotivatorCard(vm, onOpen = onOpenMotivator, onMood = onOpenMood) }
         }
-        jumpItem(jumps, null) { BackupReminderCard(onOpenBackup) }
+        // Mit Assistent erinnert Sunny an die Sicherung (Steuerwerk)
+        if (!assistantOn) jumpItem(jumps, null) { BackupReminderCard(onOpenBackup) }
 
         // ---- Rueckfragen
         if (followUps.isNotEmpty()) {

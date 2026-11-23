@@ -577,6 +577,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val autoTick: StateFlow<Int> = _autoTick
     fun bumpAuto() { _autoTick.value++ }
 
+    private val _navRequest = MutableStateFlow<String?>(null)
+    /** Wunsch, eine Stelle der App zu öffnen (z. B. „settings:Sicherheit“), erledigt von HelferApp. */
+    val navRequest: StateFlow<String?> = _navRequest
+    fun requestNav(target: String) { _navRequest.value = target }
+    fun clearNav() { _navRequest.value = null }
+
     private val _cleanupCount = MutableStateFlow(0)
     /** Erledigte Aufgaben, die älter als 14 Tage noch in der Liste stehen. */
     val cleanupCount: StateFlow<Int> = _cleanupCount
@@ -630,19 +636,41 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             AppPrefs.addJournal(app, cat, "Auf deinen Tipp („${p.confirmLabel}“): " + p.text.take(140))
             _autoTick.value++
         }
+        doApply(p)
+    }
+
+    /** Steuerwerk: Vorschlag ohne Frage ausführen (Stufe „Machen und Bescheid sagen“ / „Still erledigen“). */
+    fun autoApply(p: de.meinhelfer.tag.summary.Proposal, report: Boolean) {
+        val app = getApplication<Application>()
+        AppPrefs.addAssistantDismissed(app, p.key)
+        _assistantDismissed.value = AppPrefs.assistantDismissed(app)
+        val clean = p.text.replace(Regex("^\\W+"), "").substringBefore(" Soll ich").substringBefore(" Aufgabe „")
+        AppPrefs.addJournal(app, de.meinhelfer.tag.summary.Steuerwerk.category(p.key), "Von selbst erledigt: " + clean.take(140))
+        if (report) _autoReport.value = "Ich habe mich ums Nachbestellen gekümmert: $clean Die Aufgabe steht in der Liste, das Medikament auf der Apotheken-Liste."
+        _autoTick.value++
+        viewModelScope.launch { doApply(p) }
+    }
+
+    private suspend fun doApply(p: de.meinhelfer.tag.summary.Proposal) {
+        if (de.meinhelfer.tag.summary.Steuerwerk.category(p.key) == "bestellen") {
+            // Medikamente aus dem Schlüssel („bestellen:1-2:week“) auf die Apotheken-Liste
+            val ids = p.key.split(":").getOrNull(1).orEmpty().split("-").mapNotNull { it.toLongOrNull() }
+            val names = ids.mapNotNull { db.medicationDao().byId(it)?.let { m -> (m.name + " " + m.dosage).trim() } }
+            if (names.isNotEmpty()) HelperStore.addShopping(getApplication(), names, HelperStore.PHARMACY)
+        }
         when (val a = p.action) {
             is de.meinhelfer.tag.summary.ProposalAction.RaisePriority -> {
-                val t = db.todoDao().byId(a.todoId) ?: return@launch
+                val t = db.todoDao().byId(a.todoId) ?: return
                 db.todoDao().update(t.copy(priority = 2))
             }
             is de.meinhelfer.tag.summary.ProposalAction.Postpone -> {
-                val t = db.todoDao().byId(a.todoId) ?: return@launch
+                val t = db.todoDao().byId(a.todoId) ?: return
                 val moved = t.copy(dueDay = a.newDueDay)
                 db.todoDao().update(moved)
                 ReminderScheduler.scheduleTodo(getApplication(), moved)
             }
             is de.meinhelfer.tag.summary.ProposalAction.AdjustDailyUse -> {
-                val m = db.medicationDao().byId(a.medId) ?: return@launch
+                val m = db.medicationDao().byId(a.medId) ?: return
                 val today = LocalDate.now().toEpochDay()
                 // Vorrat auf heute umrechnen, damit der neue Verbrauch nicht rückwirkend zählt
                 db.medicationDao().update(m.copy(stock = m.currentStock(today), stockDay = today, dailyUse = a.daily))
@@ -658,16 +686,18 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             is de.meinhelfer.tag.summary.ProposalAction.SetAlarm -> Unit // stellt die Karte selbst (braucht die Activity)
             is de.meinhelfer.tag.summary.ProposalAction.StartUpdate -> startUpdateBySunny()
             de.meinhelfer.tag.summary.ProposalAction.Cleanup -> runCleanup()
+            is de.meinhelfer.tag.summary.ProposalAction.OpenSettings -> _navRequest.value = "settings:" + a.category
+            is de.meinhelfer.tag.summary.ProposalAction.FixPermission -> Unit // öffnet die Karte selbst (Android-Einstellungen)
             is de.meinhelfer.tag.summary.ProposalAction.SetAutonomy -> {
                 val app = getApplication<Application>()
-                val area = de.meinhelfer.tag.summary.AutoArea.of(a.area) ?: return@launch
+                val area = de.meinhelfer.tag.summary.AutoArea.of(a.area) ?: return
                 val level = de.meinhelfer.tag.summary.AutoLevel.of(a.level)
                 AppPrefs.setAutoLevel(app, area, level)
                 AppPrefs.addJournal(app, area.key, "„${area.title}“ steht jetzt auf „${level.label}“.")
                 _autoTick.value++
             }
             is de.meinhelfer.tag.summary.ProposalAction.OpenedToday -> {
-                val m = db.medicationDao().byId(a.medId) ?: return@launch
+                val m = db.medicationDao().byId(a.medId) ?: return
                 db.medicationDao().update(m.copy(openedDay = LocalDate.now().toEpochDay()))
                 ReminderScheduler.scheduleOpened(getApplication(), m.copy(openedDay = LocalDate.now().toEpochDay()))
             }
@@ -685,8 +715,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 )
             }
         }
-        // Erledigt: nicht noch einmal vorschlagen
-        dismissProposal(p.key)
+        // Erledigt: nicht noch einmal vorschlagen (zählt nicht als „Nein“)
+        AppPrefs.addAssistantDismissed(getApplication(), p.key)
+        _assistantDismissed.value = AppPrefs.assistantDismissed(getApplication())
     }
 
     /** Schritt aus dem Motivator heraus abhaken bzw. wieder oeffnen. */

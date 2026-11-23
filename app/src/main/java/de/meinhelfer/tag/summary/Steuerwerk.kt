@@ -26,9 +26,29 @@ enum class AutoArea(val key: String, val title: String, val text: String, val le
         "Erledigte Aufgaben nach 14 Tagen aus der Liste nehmen (im Verlauf bleiben sie).",
         AutoLevel.entries,
     ),
+    Reorder(
+        "nachbestellen", "Nachbestellen vorbereiten",
+        "Wird ein Medikament knapp: Aufgabe zum Nachbestellen anlegen und das Medikament auf die Apotheken-Liste setzen.",
+        AutoLevel.entries,
+    ),
+    Backup(
+        "sicherung", "Sicherung",
+        "Erinnert, wenn die letzte Sicherung zu lange her ist, und öffnet die Sicherung. Passwort und Speicherort wählst du selbst.",
+        listOf(AutoLevel.Ask),
+    ),
+    Permissions(
+        "freigaben", "Fehlende Freigaben",
+        "Fehlt eine Android-Freigabe für Erinnerungen, führt Sunny Schritt für Schritt hin. Einschalten musst du selbst.",
+        listOf(AutoLevel.Ask),
+    ),
+    DataCheck(
+        "datencheck", "Daten-Check",
+        "Einmal pro Woche: fehlende Angaben finden (z. B. Medikament ohne Einnahmezeit, Arzt ohne Telefonnummer). Ändert nichts.",
+        listOf(AutoLevel.Ask),
+    ),
     Hints(
-        "hinweise", "Vorschläge zu Aufgaben und Medikamenten",
-        "Wichtiger machen, verschieben, nachbestellen … ändert deine Daten, deshalb fragt Sunny hier immer.",
+        "hinweise", "Andere Vorschläge zu Aufgaben und Medikamenten",
+        "Wichtiger machen, verschieben, Verbrauch anpassen … ändert deine Daten, deshalb fragt Sunny hier immer.",
         listOf(AutoLevel.Ask),
     ),
     ;
@@ -96,6 +116,9 @@ object Steuerwerk {
         "update" -> "App-Updates"
         "aufraeumen" -> "Aufräumen"
         "stufe" -> "Mehr Selbstständigkeit"
+        "sicherung" -> "Sicherung"
+        "freigabe" -> "Fehlende Freigaben"
+        "datencheck" -> "Daten-Check"
         else -> cat
     }
 }

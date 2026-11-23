@@ -176,7 +176,11 @@ private fun rememberAssistantState(vm: MainViewModel): AssistantState {
         emptyList()
     }
     // Steuerwerk: immer „Ja“ → mehr Selbstständigkeit anbieten
-    val upgrades = listOf(de.meinhelfer.tag.summary.AutoArea.Updates to "update", de.meinhelfer.tag.summary.AutoArea.Cleanup to "aufraeumen").mapNotNull { (area, cat) ->
+    val upgrades = listOf(
+        de.meinhelfer.tag.summary.AutoArea.Updates to "update",
+        de.meinhelfer.tag.summary.AutoArea.Cleanup to "aufraeumen",
+        de.meinhelfer.tag.summary.AutoArea.Reorder to "bestellen",
+    ).mapNotNull { (area, cat) ->
         val level = AppPrefs.autoLevel(appContext, area)
         if (!de.meinhelfer.tag.summary.Steuerwerk.offerUpgrade(area, level, AppPrefs.autoStat(appContext, cat))) return@mapNotNull null
         de.meinhelfer.tag.summary.Proposal(
@@ -186,9 +190,68 @@ private fun rememberAssistantState(vm: MainViewModel): AssistantState {
             de.meinhelfer.tag.summary.ProposalAction.SetAutonomy(area.key, de.meinhelfer.tag.summary.AutoLevel.Report.key),
         ).takeIf { it.key !in dismissed }
     }
+    // Steuerwerk: Sicherung, Freigaben, Daten-Check (nach jeder Rückkehr in die App neu prüfen)
+    var resumeTick by remember { mutableStateOf(0) }
+    androidx.lifecycle.compose.LifecycleResumeEffect(Unit) {
+        resumeTick++
+        onPauseOrDispose { }
+    }
+    val backupProposal = remember(resumeTick, autoTick, today) {
+        if (!AppPrefs.backupDue(appContext)) return@remember emptyList<de.meinhelfer.tag.summary.Proposal>()
+        val last = AppPrefs.lastBackup(appContext)
+        val days = ((System.currentTimeMillis() - last) / (24L * 3600 * 1000)).toInt()
+        listOf(
+            de.meinhelfer.tag.summary.Proposal(
+                "sicherung:${today / 7}",
+                "💾 " + (if (last > 0) "Die letzte Sicherung ist $days Tage her." else "Es gibt noch keine Sicherung.") +
+                    " Soll ich die Sicherung öffnen? Passwort und Speicherort wählst du selbst.",
+                "Sicherung öffnen",
+                de.meinhelfer.tag.summary.ProposalAction.OpenSettings("Sicherheit"),
+            ),
+        )
+    }.filter { it.key !in dismissed }
+    val permissionProposal = remember(resumeTick, today) {
+        val missing = listOfNotNull(
+            ("benachrichtigung" to "Benachrichtigungen sind aus – ohne sie kommen keine Erinnerungen.").takeIf { !AppPermissions.notificationsOn(appContext) },
+            ("ton" to "Erinnerungen sind stumm geschaltet – du hörst sie nicht.").takeIf { AppPermissions.notificationsOn(appContext) && !AppPermissions.reminderChannelOk(appContext) },
+            ("wecker" to "Pünktliche Wecker sind nicht erlaubt – Erinnerungen können sich verspäten.").takeIf { !AppPermissions.exactAlarms(appContext) },
+            ("akku" to "Die Akku-Optimierung ist an – Android hält Erinnerungen manchmal zurück.").takeIf { !AppPermissions.batteryUnrestricted(appContext) },
+        )
+        missing.firstOrNull()?.let { (kind, text) ->
+            listOf(
+                de.meinhelfer.tag.summary.Proposal(
+                    "freigabe:$kind:${today / 7}",
+                    "🔔 " + (if (missing.size > 1) "Schritt 1 von ${missing.size}: " else "") + text + " Soll ich dich zur richtigen Stelle bringen? Dort einschalten und zurückkommen.",
+                    "Hinführen",
+                    de.meinhelfer.tag.summary.ProposalAction.FixPermission(kind),
+                ),
+            )
+        }.orEmpty()
+    }.filter { it.key !in dismissed }
+    val dataCheckProposal = remember(persons, meds, doctors, appointments, today) {
+        val found = de.meinhelfer.tag.summary.DataCheck.findings(persons, meds, doctors, appointments, System.currentTimeMillis())
+        if (found.isEmpty()) emptyList() else listOf(
+            de.meinhelfer.tag.summary.Proposal(
+                "datencheck:${today / 7}",
+                "🔎 " + de.meinhelfer.tag.summary.DataCheck.sentence(found) + " Magst du das bei Gelegenheit ergänzen?",
+                "Verstanden",
+                de.meinhelfer.tag.summary.ProposalAction.Acknowledge,
+            ),
+        )
+    }.filter { it.key !in dismissed }
     val now0 = System.currentTimeMillis()
-    val proposals = (updateProposal + cleanupProposal + upgrades + wake + birthdays + householdHints + Assistant.proposals(persons, todos, meds, duties, doctors, today, dismissed, recent, rates.first, rates.second))
+    val allProposals = (permissionProposal + updateProposal + backupProposal + cleanupProposal + upgrades + wake + birthdays + householdHints + Assistant.proposals(persons, todos, meds, duties, doctors, today, dismissed, recent, rates.first, rates.second))
+        .plus(dataCheckProposal)
         .filter { !de.meinhelfer.tag.summary.Steuerwerk.paused(AppPrefs.autoStat(appContext, de.meinhelfer.tag.summary.Steuerwerk.category(it.key)), now0) }
+    // Steuerwerk: Nachbestellen ohne Frage, wenn die Stufe es erlaubt
+    val reorderLevel = AppPrefs.autoLevel(appContext, de.meinhelfer.tag.summary.AutoArea.Reorder)
+    val autoReorder = if (reorderLevel == de.meinhelfer.tag.summary.AutoLevel.Ask) emptyList() else allProposals.filter {
+        de.meinhelfer.tag.summary.Steuerwerk.category(it.key) == "bestellen" && it.action is de.meinhelfer.tag.summary.ProposalAction.ReorderTask
+    }
+    androidx.compose.runtime.LaunchedEffect(autoReorder.map { it.key }) {
+        autoReorder.forEach { vm.autoApply(it, report = reorderLevel == de.meinhelfer.tag.summary.AutoLevel.Report) }
+    }
+    val proposals = allProposals - autoReorder.toSet()
     val measured = persons.associate { p ->
         p.id to vitals.any { it.personId == p.id && it.kind != VitalKind.Trinken.key && it.day >= today - 14 }
     }
@@ -236,8 +299,21 @@ private fun ProposalBox(p: Proposal, vm: MainViewModel) {
         Text((if (alarm != null) "⏰ " else "💡 ") + p.text, style = MaterialTheme.typography.bodyMedium)
         androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(shape = buttonShape(), onClick = {
+                val perm = p.action as? de.meinhelfer.tag.summary.ProposalAction.FixPermission
                 if (alarm != null) {
                     if (setAlarm(context, alarm, skipUi = true)) vm.applyProposal(p) else alarmFailed = true
+                } else if (perm != null) {
+                    when (perm.kind) {
+                        "benachrichtigung" -> AppPermissions.openNotificationSettings(context)
+                        "ton" -> AppPermissions.openChannelSettings(context)
+                        "wecker" -> AppPermissions.openExactAlarmSettings(context)
+                        "akku" -> AppPermissions.requestBattery(context)
+                    }
+                    // nicht als „erledigt“ ausblenden: nach der Rückkehr wird neu geprüft
+                    val cat = de.meinhelfer.tag.summary.Steuerwerk.category(p.key)
+                    AppPrefs.setAutoStat(context, cat, de.meinhelfer.tag.summary.Steuerwerk.accepted(AppPrefs.autoStat(context, cat)))
+                    AppPrefs.addJournal(context, cat, "Zur Freigabe geführt: " + p.text.substringAfter(": ").substringBefore(" Soll ich").take(120))
+                    vm.bumpAuto()
                 } else {
                     vm.applyProposal(p)
                 }
@@ -636,6 +712,16 @@ fun AssistantSheetContent(vm: MainViewModel, page: String, onOpenGuide: () -> Un
         Text(note, style = MaterialTheme.typography.bodyLarge)
         if (page != "heute" && st.line.isNotEmpty()) Text("Heute als Nächstes: " + st.line.first().title, style = MaterialTheme.typography.bodySmall)
         st.proposals.take(2).forEach { ProposalBox(it, vm) }
+        // Sunny-Menü: von jeder Seite aus erreichbar
+        HorizontalDivider()
+        Text("Alles von ${st.name}", style = MaterialTheme.typography.labelLarge)
+        HelperChips(vm)
+        if (!AppPrefs.helpersBeta(context)) {
+            Text("Alltagshelfer (Kochen, Einkauf, Arztfragen …): unter „⚙️ ${st.name} einstellen“ → Beta einschalten.", style = MaterialTheme.typography.bodySmall)
+        }
+        SunnyReportBox(vm, st.name)
+        OutlinedButton(shape = buttonShape(), onClick = { vm.requestNav("settings:Assistent") }) { Text("⚙️ ${st.name} einstellen") }
+        HorizontalDivider()
         SpeakButton(owner = "seite_$page", label = "🔊 Vorlesen") {
             note + " " + help.take(6).joinToString(" ") { it.title + ". " + it.text }
         }
