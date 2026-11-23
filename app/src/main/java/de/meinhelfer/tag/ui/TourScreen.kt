@@ -192,15 +192,19 @@ fun TourScreen(onClose: () -> Unit) {
     val scope = rememberCoroutineScope()
     val last = pagerState.currentPage == TOUR_PAGES.lastIndex
     val context = androidx.compose.ui.platform.LocalContext.current
-    // Automatisch: Sunny liest jede Seite vor und blättert danach weiter („⏹“ oder Wischen hält bzw. springt)
+    // Automatisch: Sunny liest jede Seite vor und blättert danach weiter. Anhalten merkt sich die Stelle (Satz).
     var auto by remember { mutableStateOf(AppPrefs.tourAutoRead(context)) }
+    val resume = remember { androidx.compose.runtime.mutableStateMapOf<Int, Int>() }
     val owner = "assistent-rundgang"
-    androidx.compose.runtime.LaunchedEffect(auto, pagerState.currentPage) {
+    val settled = pagerState.settledPage
+    androidx.compose.runtime.LaunchedEffect(auto, settled) {
         if (!auto) return@LaunchedEffect
-        val index = pagerState.currentPage
-        kotlinx.coroutines.delay(500)
+        val index = settled
+        val parts = tourParts(TOUR_PAGES[index], index + 1, TOUR_PAGES.size)
+        val from = (resume[index] ?: 0).takeIf { it < parts.size } ?: 0
+        kotlinx.coroutines.delay(if (from > 0) 200 else 500)
         val started = System.currentTimeMillis()
-        Speech.speak(context, owner, tourSpeech(TOUR_PAGES[index], index + 1, TOUR_PAGES.size))
+        Speech.speakParts(context, owner, parts, from)
         val began = kotlinx.coroutines.withTimeoutOrNull(8000) { Speech.speaking.first { it == owner } }
         if (began == null) {
             auto = false
@@ -208,11 +212,15 @@ fun TourScreen(onClose: () -> Unit) {
         }
         Speech.speaking.first { it != owner }
         if (Speech.stoppedAt >= started) {
+            // Angehalten (z. B. über die Einblendung): hier weiterlesen
+            resume[index] = Speech.part.value
             auto = false
             return@LaunchedEffect
         }
+        resume.remove(index)
         kotlinx.coroutines.delay(900)
-        if (index < TOUR_PAGES.lastIndex) pagerState.animateScrollToPage(index + 1) else auto = false
+        // Eigener Ablauf, damit das Blättern nicht abbricht, wenn die Seite wechselt
+        if (index < TOUR_PAGES.lastIndex) scope.launch { pagerState.animateScrollToPage(index + 1) } else auto = false
     }
     androidx.compose.runtime.DisposableEffect(Unit) {
         onDispose { if (Speech.speaking.value == owner) Speech.stop() }
@@ -263,12 +271,13 @@ fun TourScreen(onClose: () -> Unit) {
                 ) { Text("Zurück") }
                 OutlinedButton(shape = buttonShape(), onClick = {
                     if (auto) {
+                        if (Speech.speaking.value == owner) resume[pagerState.settledPage] = Speech.part.value
                         auto = false
                         Speech.stop()
                     } else {
                         auto = true
                     }
-                }) { Text(if (auto) "⏸ Anhalten" else "▶ Mit Vorlesen") }
+                }) { Text(if (auto) "⏸ Anhalten" else if (resume[pagerState.currentPage] != null) "▶ Weiterlesen" else "▶ Mit Vorlesen") }
                 Button(shape = buttonShape(), 
                     onClick = {
                         if (last) onClose() else scope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) }
@@ -758,9 +767,10 @@ private fun MockNotruf() {
     MockButton("Notfallkarte zeigen")
 }
 
-/** Vorlese-Text einer Seite des Rundgangs. */
-private fun tourSpeech(page: TourPage, number: Int, total: Int): String = buildString {
-    append("Schritt $number von $total. ").append(page.title).append(". ").append(page.text).append(" ")
-    page.tips.forEach { append(it.trimEnd('.')).append(". ") }
-    if (number == total) append("Das war der Rundgang. Viel Freude mit der App!")
+/** Vorlese-Abschnitte einer Seite des Rundgangs (Sätze), damit nach einer Pause an der Stelle weitergelesen wird. */
+private fun tourParts(page: TourPage, number: Int, total: Int): List<String> = buildList {
+    add("Schritt $number von $total. ${page.title}.")
+    addAll(page.text.split(Regex("(?<=[.!?])\\s+")).filter { it.isNotBlank() })
+    page.tips.forEach { add(it.trimEnd('.') + ".") }
+    if (number == total) add("Das war der Rundgang. Viel Freude mit der App!")
 }

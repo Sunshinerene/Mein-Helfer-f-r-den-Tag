@@ -235,7 +235,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             ),
             GuideItem(
                 "Rundgang mit Vorlesen",
-                "Im Rundgang (Anleitung → „Rundgang starten“) gibt es unten „▶ Mit Vorlesen“: Der Assistent liest jede Seite vor und blättert danach von selbst weiter, bis zum Ende. „⏸ Anhalten“, ein Tipp auf die Einblendung oder Wischen auf eine andere Seite hält an bzw. springt dorthin. Soll der Rundgang immer so starten: Einstellungen → „Persönlicher Assistent“ → „Rundgang mit Vorlesen“.",
+                "Im Rundgang (Anleitung → „Rundgang starten“) gibt es unten „▶ Mit Vorlesen“: Der Assistent liest jede Seite vor und blättert danach von selbst weiter, bis zum Ende. „⏸ Anhalten“ oder ein Tipp auf die Einblendung hält an; der Assistent merkt sich den Satz, „▶ Weiterlesen“ macht genau dort weiter. Wischen auf eine andere Seite springt dorthin. Soll der Rundgang immer so starten: Einstellungen → „Persönlicher Assistent“ → „Rundgang mit Vorlesen“.",
             ),
             GuideItem(
                 "Sunny erzählt",
@@ -821,6 +821,10 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             GuideItem(
                 "Barrierefreiheit",
                 "Einstellungen → Darstellung → „Barrierefreiheit“. „Hohen Kontrast einschalten“ wählt das Design „Hoher Kontrast“: Schwarz und Weiß mit kräftigen Farben, deutlichen Rändern und ohne graue Schrift (dunkel: Gelb auf Schwarz). „Größe von Knöpfen und Feldern“ (Normal, Größer, Sehr groß) vergrößert die ganze App wie eine Lupe: Knöpfe, Kästchen, Abstände und Schrift, damit sie leichter zu treffen sind; die Schriftgröße gilt zusätzlich. „Vorlesen“: Im Tagesplan, bei jedem Dokument (Titel, Zusammenfassung, Text) und in jedem Abschnitt dieser Anleitung gibt es „🔊 Vorlesen“, nochmal tippen („⏹ Stopp“) hört auf, beim Verlassen der Seite auch. Stimme und Geschwindigkeit stellst du unter Einstellungen → „Persönlicher Assistent“ → „Stimme“ ein: Der Regler geht von langsam bis sehr schnell, „Probe hören“ spielt ein Beispiel. Unter „Sprachausgabe“ und „Stimme“ wählst du, wer spricht: angezeigt werden nur deutsche Stimmen, die ohne Internet arbeiten, damit der vorgelesene Text das Handy nicht verlässt. Natürlicher klingt eine KI-Stimme ohne Internet: Die freie App „SherpaTTS“ (F-Droid) installieren, darin eine deutsche Piper-Stimme laden (z. B. Thorsten oder Kerstin) und sie hier als Sprachausgabe wählen; die App selbst wird dadurch nicht größer. Gesprochen wird mit der Sprachausgabe des Handys; fehlt die deutsche Stimme, sagt die App, wo man sie installiert. Die App lässt sich außerdem mit TalkBack bedienen, dem Bildschirmleser von Android.",
+            ),
+            GuideItem(
+                "Meine Designs",
+                "Einstellungen → Darstellung → „Meine Designs“: Gib einen Namen ein und tippe „Speichern“ – gespeichert wird alles zusammen: Hell/Dunkel, Design, eigene Farben, Ecken, Effekte, Schrift- und Bediengröße. „Anwenden“ stellt ein gespeichertes Design wieder her, „Löschen“ entfernt es. Gleicher Name ersetzt das alte. Die Designs werden mit der Datensicherung nicht übertragen; sie bleiben auf diesem Handy.",
             ),
             GuideItem(
                 "Logo und Einspieler",

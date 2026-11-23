@@ -165,6 +165,7 @@ fun SettingsScreen(
                     item { ThemeCard(vm) }
                     item { AccessibilityCard(vm) }
                     item { EffectsCard(vm) }
+                    item { DesignPresetsCard(vm) }
                     item { IntroCard() }
                 }
                 SettingsCategory.Startseite -> {

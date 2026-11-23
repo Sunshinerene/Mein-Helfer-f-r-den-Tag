@@ -101,7 +101,9 @@ object Speech {
                     }
                 }
                 engine.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
-                    override fun onStart(utteranceId: String?) {}
+                    override fun onStart(utteranceId: String?) {
+                        partIds[utteranceId]?.let { _part.value = it }
+                    }
                     override fun onDone(utteranceId: String?) {
                         if (utteranceId == lastId) _speaking.value = null
                     }
@@ -156,6 +158,38 @@ object Speech {
                     v.name to (v.name.replace('_', ' ').replace('-', ' ') + " · " + v.locale.displayCountry + " · Qualität " + quality)
                 }
             result(voices)
+        }
+    }
+
+    private val partIds = java.util.concurrent.ConcurrentHashMap<String, Int>()
+    private val _part = kotlinx.coroutines.flow.MutableStateFlow(0)
+
+    /** Welcher Abschnitt von [speakParts] gerade gesprochen wird (zum Weiterlesen nach einer Pause). */
+    val part: kotlinx.coroutines.flow.StateFlow<Int> = _part
+
+    /** Abschnitte (z. B. Sätze) ab [start] vorlesen; [part] zeigt, wo gerade gelesen wird. */
+    fun speakParts(context: Context, owner: String, parts: List<String>, start: Int = 0) {
+        val app = context.applicationContext
+        val list = parts.map { clean(it) }
+        if (list.drop(start).all { it.isBlank() }) return
+        _speaking.value = owner
+        _part.value = start
+        ensure(app) { engine ->
+            if (engine == null) {
+                _speaking.value = null
+            } else if (_speaking.value == owner) {
+                engine.setSpeechRate(AppPrefs.speechRate(app))
+                partIds.clear()
+                var first = true
+                for (i in start until list.size) {
+                    if (list[i].isBlank()) continue
+                    val id = "teil_${System.nanoTime()}_$i"
+                    partIds[id] = i
+                    lastId = id
+                    engine.speak(list[i], if (first) TextToSpeech.QUEUE_FLUSH else TextToSpeech.QUEUE_ADD, null, id)
+                    first = false
+                }
+            }
         }
     }
 
