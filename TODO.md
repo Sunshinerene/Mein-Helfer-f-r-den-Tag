@@ -1,6 +1,6 @@
 # TODO
 
-Stand: v0.88.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.89.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
@@ -9,10 +9,13 @@ Stand: v0.88.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Ideen und Optimierungen
 
+- [ ] Alltagshelfer: Ergebnisse als Aufgabe/Termin übernehmen, Rezepte merken, Wochenplan fürs Essen, Werkzeuge teilen
+
 - [ ] Sprach-Varianten auch für „Erzähl mal“, Morgen- und Abendüberblick (Stufe 3, aus dem Zwischenspeicher)
 
 - [ ] KI vollumfänglich – nach und nach: Dokument-Zusammenfassung beim Speichern, Messwerte aus Handschrift per KI, Wochenrückblick mit Auffälligkeiten, Fragen an den Arzt vor Terminen, Rückfrage-Chat mit Sunny
 
+- [ ] Alltagshelfer: Kochen mit Kühlschrank-Foto (Gemini), „Dann zu Hause“ stimmt mit Werkstattzeiten; Einkaufsliste abhaken/teilen; eigenes Werkzeug aus Thema; 📌 anheften; Profil „Essen und Trinken“; DB-Version 31
 - [ ] Profil: Ausweis-Felder, Wohnsituation (Zähler, Mitbewohner, Tagsüber mit Tagen/Zeiten); Ausweis-Foto unter Dokumente → „Übernehmen“; 🏠-Vorschläge bei Terminen im Haushalt; Sprachschatz sichern/wiederherstellen; DB-Version 30 (Umstellung prüfen)
 - [ ] Sprachschatz: „Erzähl mal“ begrüßt abwechselnd; ohne Internet liest Sunny die Seite selbst vor; abends neue Formulierungen (Anzeige „Zuletzt: … gelernt“)
 - [ ] Zwischenspeicher: zweimal „Was meinst du zu dieser Seite?“ ohne Änderung → keine neue Anfrage, andere Formulierung; nach Neustart neu; „Gespart“-Zähler
@@ -101,6 +104,11 @@ Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Daten
 - [ ] Sammel-Import: Vorschläge mit echten Scans verfeinern (z. B. gleicher Absender und gleiches Datum als weiterer Hinweis)
 
 - [ ] Eigene KI-Stimme direkt in der App (nur falls SherpaTTS nicht reicht): sherpa-onnx mit Piper-Stimme Thorsten oder Kerstin (CC0) oder apptor-tiny-tts (Apache-2.0, 21 MB); macht die App 25–70 MB größer, Lizenzen der Bibliotheken prüfen
+
+## Version 0.89.0 (fertig)
+
+- Alltagshelfer (Beta): Kochen, Einkaufsliste, eigene Werkzeuge; Fotos an KI (Gemini, OpenAI-kompatibel, Anthropic)
+- Profil: Essen und Trinken
 
 ## Version 0.88.0 (fertig)
 

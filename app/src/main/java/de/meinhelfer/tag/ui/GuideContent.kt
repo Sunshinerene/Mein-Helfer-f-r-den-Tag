@@ -268,6 +268,14 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
                     "Damit gleicht der Assistent Termine über alle im Haushalt ab (🏠): fast gleichzeitige Termine (Begleitung klären), gleicher Arzt für zwei Personen an verschiedenen Tagen (zusammenlegen spart einen Weg), volle Tage mit Wegen und Aufwand, und Termine in der Werkstatt- oder Tagespflegezeit (Einrichtung Bescheid geben, Fahrdienst abbestellen). Jeder Vorschlag wird erst nach deinem Tipp zur Aufgabe.",
             ),
             GuideItem(
+                "Alltagshelfer (Beta)",
+                "In der Karte des Assistenten stehen kleine Werkzeuge als Knöpfe, „🧰 Alltagshelfer“ öffnet alle. " +
+                    "🍳 „Was koche ich heute?“: Mahlzeit und Zeit wählen, eintippen was da ist oder den Kühlschrank fotografieren. Die App weiß, wer dann zu Hause ist (Werkstatt-, Tagespflegezeiten und Termine aus dem Profil) und worauf beim Essen zu achten ist (im Profil unter „Essen und Trinken“: Diabetes, weiche oder pürierte Kost, Allergien, Vorlieben). Sunny schlägt drei passende Gerichte vor und liest sie vor. " +
+                    "🛒 „Einkaufsliste“: was fehlt eintippen oder fotografieren; Sunny ergänzt sinnvolle Dinge für den Pflegealltag; „Auf die Einkaufsliste“ übernimmt sie in eine Liste zum Abhaken und Teilen. " +
+                    "Eigenes Werkzeug: Thema nennen (z. B. „Wäscheplan“, „Ausflug mit Rollstuhl“), Sunny baut daraus ein kleines Werkzeug nach demselben Grundgerüst (ein paar Felder, eine Anfrage, eine Liste). 📌 heftet ein Werkzeug als Knopf in Sunnys Karte, ✕ löscht eigene. " +
+                    "An die KI gehen Personen nur als „Person A, B …“; die Zuordnung steht unter dem Ergebnis. Fotos werden nur nach deinem Tipp mitgeschickt und nur Dienste wie Gemini verstehen sie. KI-Aufgabe „Alltagshelfer“. Vorschläge sind ein Anhaltspunkt.",
+            ),
+            GuideItem(
                 "Rundgang mit Vorlesen",
                 "Im Rundgang (Anleitung → „Rundgang starten“) gibt es unten „▶ Mit Vorlesen“: Der Assistent liest jede Seite vor und blättert danach von selbst weiter, bis zum Ende. „⏸ Anhalten“ oder ein Tipp auf die Einblendung hält an; der Assistent merkt sich den Satz, „▶ Weiterlesen“ macht genau dort weiter. Wischen auf eine andere Seite springt dorthin. Soll der Rundgang immer so starten: Einstellungen → „Persönlicher Assistent“ → „Rundgang mit Vorlesen“.",
             ),

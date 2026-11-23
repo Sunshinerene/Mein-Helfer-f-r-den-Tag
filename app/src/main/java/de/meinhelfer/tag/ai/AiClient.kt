@@ -57,6 +57,8 @@ object AiClient {
         task: AiTask = AiTask.Allgemein,
         /** Antwort aus dem Zwischenspeicher nehmen, wenn dieselbe Anfrage in dieser Sitzung schon gestellt wurde */
         cache: Boolean = task != AiTask.Allgemein,
+        /** Foto als JPEG in Base64 (z. B. Kühlschrank), nur für Dienste, die Bilder verstehen */
+        image: String? = null,
     ): Result<String> = withContext(Dispatchers.IO) {
         if (AiMode.isOff(context)) return@withContext Result.failure(IllegalStateException(AiMode.OFF_TEXT))
         if (!AiTask.enabled(context, task)) {
@@ -64,7 +66,7 @@ object AiClient {
         }
         // In jedem Modus: personenbezogene Angaben vor dem Senden entfernen
         val user = de.meinhelfer.tag.summary.Anonymizer.scrub(user, knownNames(context))
-        val cacheKey = AiCache.key(task, system, user)
+        val cacheKey = AiCache.key(task, system, user + (image?.let { "\nBild:" + it.hashCode() + ":" + it.length } ?: ""))
         if (cache) {
             AiCache.get(context, cacheKey)?.let {
                 AiUsage.saved(context)
@@ -80,7 +82,7 @@ object AiClient {
         }
         var last: Result<String> = Result.failure(IllegalStateException("Kein KI-Dienst eingerichtet."))
         for (provider in order) {
-            last = askOnce(context, provider, system, user, maxTokens)
+            last = askOnce(context, provider, system, user, maxTokens, image)
             AiUsage.count(context, provider, task, last.isSuccess)
             val e = last.exceptionOrNull()
             if (e is AiLimitException) {
@@ -93,7 +95,7 @@ object AiClient {
         last
     }
 
-    private fun askOnce(context: Context, provider: AiProvider, system: String, user: String, maxTokens: Int): Result<String> {
+    private fun askOnce(context: Context, provider: AiProvider, system: String, user: String, maxTokens: Int, image: String? = null): Result<String> {
         val key = AiConfig.apiKey(context, provider)
         if (!AiConfig.isReady(context, provider)) {
             return Result.failure(
@@ -102,7 +104,7 @@ object AiClient {
         }
         val model = AiConfig.model(context, provider)
         return try {
-            Result.success(call(AiConfig.baseUrl(context, provider), provider, key, model, system, user, maxTokens))
+            Result.success(call(AiConfig.baseUrl(context, provider), provider, key, model, system, user, maxTokens, image))
         } catch (e: java.net.ConnectException) {
             Result.failure(IllegalStateException(if (provider == AiProvider.LOCAL) "Der eigene Server antwortet nicht. Läuft er, und ist das Handy im selben WLAN?" else "Keine Verbindung zum Dienst."))
         } catch (e: java.net.SocketTimeoutException) {
@@ -165,7 +167,16 @@ object AiClient {
         }
     }
 
-    private fun call(base: String, provider: AiProvider, key: String, model: String, system: String, user: String, maxTokens: Int): String {
+    private fun call(base: String, provider: AiProvider, key: String, model: String, system: String, user: String, maxTokens: Int, image: String? = null): String {
+        val openAiContent: Any = if (image == null) user else JSONArray()
+            .put(JSONObject().put("type", "text").put("text", user))
+            .put(JSONObject().put("type", "image_url").put("image_url", JSONObject().put("url", "data:image/jpeg;base64,$image")))
+        val anthropicContent: Any = if (image == null) user else JSONArray()
+            .put(JSONObject().put("type", "image").put("source", JSONObject().put("type", "base64").put("media_type", "image/jpeg").put("data", image)))
+            .put(JSONObject().put("type", "text").put("text", user))
+        val geminiParts = JSONArray().put(JSONObject().put("text", user)).apply {
+            if (image != null) put(JSONObject().put("inline_data", JSONObject().put("mime_type", "image/jpeg").put("data", image)))
+        }
         val (url, headers, body) = when (provider.kind) {
             AiKind.OPENAI_COMPAT -> Triple(
                 "$base/chat/completions",
@@ -178,7 +189,7 @@ object AiClient {
                         "messages",
                         JSONArray()
                             .put(JSONObject().put("role", "system").put("content", system))
-                            .put(JSONObject().put("role", "user").put("content", user)),
+                            .put(JSONObject().put("role", "user").put("content", openAiContent)),
                     ),
             )
             AiKind.ANTHROPIC -> Triple(
@@ -188,7 +199,7 @@ object AiClient {
                     .put("model", model)
                     .put("max_tokens", maxTokens)
                     .put("system", system)
-                    .put("messages", JSONArray().put(JSONObject().put("role", "user").put("content", user))),
+                    .put("messages", JSONArray().put(JSONObject().put("role", "user").put("content", anthropicContent))),
             )
             AiKind.GEMINI -> Triple(
                 "$base/models/$model:generateContent",
@@ -199,7 +210,7 @@ object AiClient {
                         "contents",
                         JSONArray().put(
                             JSONObject().put("role", "user")
-                                .put("parts", JSONArray().put(JSONObject().put("text", user))),
+                                .put("parts", geminiParts),
                         ),
                     ),
             )

@@ -4,7 +4,7 @@ by Sunshine@R
 
 Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbezogenen Daten bleiben lokal auf dem Gerät.
 
-## Stand: v0.88.0
+## Stand: v0.89.0
 
 ### Funktionsübersicht
 
@@ -20,6 +20,8 @@ Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbe
 - KI-Aufgaben: jede Unterfunktion einzeln an/aus und mit eigenem KI-Dienst (mehrere freie Kontingente), Verbrauch je Tag, Ausweichen bei Limit, Tageslimit für automatische Kommentare
 - KI-Zwischenspeicher: gleiche Anfrage mit gleichen Daten ohne neue KI-Anfrage, Aktualisierung bei Änderung und nach Neustart; Sprach-Themen mit Kurzform, Varianten und ausführlicher Fassung
 - Sprachschatz: Sunny merkt sich ihre Sätze für einen Tag; abends (Stufe 3) neue Formulierungen mit gleichem Sinn per KI; Grundbestand auch ohne KI; ohne Verbindung liest Sunny die Seite selbst vor
+- Alltagshelfer (Beta): „Was koche ich heute?“ (wer ist zu Hause, Ernährung je Person, Kühlschrank-Foto), Einkaufsliste mit Vorschlägen, eigene kleine Werkzeuge von Sunny nach einem Grundgerüst, anheftbar in Sunnys Karte
+- Profil: Essen und Trinken (Diabetes, Kostform, Allergien, Vorlieben)
 - Schwerbehindertenausweis im Profil (GdB, Merkzeichen, Gültigkeit), aus Foto erkannt, Nachteilsausgleiche als Anhaltspunkt, Erinnerung vor Ablauf
 - Wohnsituation und Tagesstruktur (Haushalt, Werkstatt/Tagespflege, du im Haushalt); Haushalts-Abgleich der Termine über alle Personen
 - Sprachschatz in der Datensicherung und einzeln sichern/wiederherstellen

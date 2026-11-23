@@ -149,6 +149,7 @@ fun PersonDialog(initial: Person?, onDismiss: () -> Unit, onSave: (Person) -> Un
     var phone by remember { mutableStateOf(initial?.phone ?: "") }
     var disability by remember { mutableStateOf(de.meinhelfer.tag.summary.Disability.decode(initial?.disability ?: "")) }
     var household by remember { mutableStateOf(de.meinhelfer.tag.summary.Household.decode(initial?.household ?: "")) }
+    var nutrition by remember { mutableStateOf(de.meinhelfer.tag.summary.Nutrition.decode(initial?.nutrition ?: "")) }
     AlertDialog(
         properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onDismiss,
@@ -240,6 +241,7 @@ fun PersonDialog(initial: Person?, onDismiss: () -> Unit, onSave: (Person) -> Un
                 )
                 DisabilityFields(disability) { disability = it }
                 HouseholdFields(household, others) { household = it }
+                NutritionFields(nutrition) { nutrition = it }
                 OutlinedTextField(
                     value = important,
                     onValueChange = { important = it },
@@ -274,6 +276,7 @@ fun PersonDialog(initial: Person?, onDismiss: () -> Unit, onSave: (Person) -> Un
                             access = access.trim(),
                             phone = phone.trim(),
                             disability = disability.encode(),
+                            nutrition = nutrition.encode(),
                             household = household.copy(withPersons = household.withPersons.filter { id -> others.any { it.id == id } }.toSet()).encode(),
                         ),
                     )
@@ -450,4 +453,27 @@ private fun HouseholdFields(h: de.meinhelfer.tag.summary.Household, others: List
         }
         Text("Fällt ein Termin in diese Zeit, erinnert der Assistent, der Einrichtung Bescheid zu geben.", style = MaterialTheme.typography.bodySmall)
     }
+}
+
+/** Essen und Trinken: Diabetes, Kostform, Allergien, Vorlieben (für Kochen und Einkauf in den Alltagshelfern). */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+private fun NutritionFields(n: de.meinhelfer.tag.summary.Nutrition, onChange: (de.meinhelfer.tag.summary.Nutrition) -> Unit) {
+    Text("Essen und Trinken", style = MaterialTheme.typography.labelLarge)
+    Text("Diabetes", style = MaterialTheme.typography.bodyMedium)
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        listOf("" to "nein", "1" to "Typ 1", "2" to "Typ 2", "andere" to "anderer Typ").forEach { (k, v) ->
+            FilterChip(selected = n.diabetes == k, onClick = { onChange(n.copy(diabetes = k)) }, label = { Text(v) })
+        }
+    }
+    Text("Worauf achten", style = MaterialTheme.typography.bodyMedium)
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        de.meinhelfer.tag.summary.Nutrition.FLAGS.forEach { (k, v) ->
+            FilterChip(selected = k in n.flags, onClick = { onChange(n.copy(flags = if (k in n.flags) n.flags - k else n.flags + k)) }, label = { Text(v.substringBefore(" (").substringBefore(":")) })
+        }
+    }
+    OutlinedTextField(value = n.allergies, onValueChange = { onChange(n.copy(allergies = it.take(200))) }, label = { Text("Allergien / verträgt nicht") }, modifier = Modifier.fillMaxWidth())
+    OutlinedTextField(value = n.dislikes, onValueChange = { onChange(n.copy(dislikes = it.take(200))) }, label = { Text("Mag nicht") }, modifier = Modifier.fillMaxWidth())
+    OutlinedTextField(value = n.likes, onValueChange = { onChange(n.copy(likes = it.take(200))) }, label = { Text("Isst gern") }, modifier = Modifier.fillMaxWidth())
+    Text("Für die Alltagshelfer (z. B. „Was koche ich heute?“). An die KI geht das nur ohne Namen („Person A“).", style = MaterialTheme.typography.bodySmall)
 }

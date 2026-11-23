@@ -315,6 +315,8 @@ fun AssistantCard(vm: MainViewModel, onOpen: (tab: Int) -> Unit, onMood: () -> U
                         Text("Ich bin ${st.name}, dein persönlicher Assistent.", style = MaterialTheme.typography.bodySmall)
                     }
                 }
+                // Alltagshelfer (Beta): angeheftete Werkzeuge als Knöpfe
+                HelperChips(vm)
                 if (offerStart) {
                     HCard(Modifier.fillMaxWidth(), colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
                         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {

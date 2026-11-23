@@ -14,6 +14,7 @@ enum class AiTask(val key: String, val title: String, val hint: String) {
     Medikamente("medikamente", "Medikamente", "Medikamenten-Check, Bewertung und Hinweise zu Wechselwirkungen."),
     Plan("plan", "Pläne und Berichte lesen", "Medikationsplan und Entlassbericht auslesen. Lange Texte, selten."),
     Ziele("ziele", "Ziele und Motivation", "Ziele aufteilen, Motivation und Tipps."),
+    Helfer("helfer", "Alltagshelfer (Beta)", "Kochen, Einkaufsliste und eigene kleine Werkzeuge. Personen als „Person A, B …“, ohne Namen; Fotos nur nach deinem Tipp."),
     Lernen("lernen", "Sprachschatz abends erweitern", "Einmal am Abend: aus dem, was Sunny heute gesagt hat, neue Formulierungen mit gleichem Sinn (ohne Namen und Daten). Stufe 3."),
     Allgemein("allgemein", "Sonstiges", "Alles andere, z. B. der Verbindungstest."),
     ;

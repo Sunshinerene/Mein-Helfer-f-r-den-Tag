@@ -34,6 +34,8 @@ data class Person(
     val disability: String = "",
     /** Wohnsituation und Tagesstruktur (siehe [de.meinhelfer.tag.summary.Household]) */
     val household: String = "",
+    /** Essen und Trinken (siehe [de.meinhelfer.tag.summary.Nutrition]) */
+    val nutrition: String = "",
 )
 
 /** Medikament mit Einnahmezeiten und Vorrat (fuer die Nachbestell-Warnung). */
