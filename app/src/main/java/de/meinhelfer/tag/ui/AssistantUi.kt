@@ -1014,7 +1014,7 @@ private fun PopupSettings(name: String, image: Boolean) {
     }
     chips("Wann", SunnyPopup.SHOWS, style.show) { set(style.copy(show = it)) }
     Text(
-        "„Bei jedem Vorlesen“: $name erscheint auch, wenn Tagesplan, Dokumente oder Anleitung vorgelesen werden, und spricht mit.",
+        "Standard: $name erscheint bei allem, was vorgelesen wird – auch bei Tagesplan, Dokumenten, Anleitung und Empfehlungen – und spricht mit.",
         style = MaterialTheme.typography.bodySmall,
     )
     if (style.show == 0) return

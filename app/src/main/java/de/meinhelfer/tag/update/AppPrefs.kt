@@ -72,7 +72,8 @@ object AppPrefs {
     fun sunnyPopup(context: Context): de.meinhelfer.tag.ui.SunnyPopup {
         val p = prefs(context)
         return de.meinhelfer.tag.ui.SunnyPopup(
-            show = p.getInt("sunny_popup_wann", 1),
+            // Standard: Sunny erscheint bei jedem Vorlesen (neuer Schlüssel, damit alte Einstellungen umgestellt werden)
+            show = p.getInt("sunny_popup_wann2", 2),
             place = p.getInt("sunny_popup_ort", 0),
             size = p.getInt("sunny_popup_groesse", 132),
             alpha = p.getFloat("sunny_popup_deckkraft", 1f),
@@ -83,7 +84,7 @@ object AppPrefs {
 
     fun setSunnyPopup(context: Context, s: de.meinhelfer.tag.ui.SunnyPopup) {
         prefs(context).edit()
-            .putInt("sunny_popup_wann", s.show)
+            .putInt("sunny_popup_wann2", s.show)
             .putInt("sunny_popup_ort", s.place)
             .putInt("sunny_popup_groesse", s.size)
             .putFloat("sunny_popup_deckkraft", s.alpha)

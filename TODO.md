@@ -1,6 +1,6 @@
 # TODO
 
-Stand: v0.92.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.93.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
@@ -21,6 +21,7 @@ Stand: v0.92.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 - [ ] Designs verfeinern (Schriftarten, weitere Varianten); Effekte: echte Unschärfe hinter Glas-Karten ab Android 12, Glanz auch auf Knöpfen
 ## Bitte auf dem Handy prüfen (bisher nicht getestet)
 
+- [ ] Sunny erscheint wieder beim Sprechen – bei allem, was vorgelesen wird (Erzähl mal, Tagesplan, Dokumente, Anleitung, Empfehlungen, Rundgang), auch über Fenstern
 - [ ] Einstellungen: „KI und Internet“ weg, alles unter „Persönlicher Assistent“ (KI-Modus, KI-Dienst, Medikamenten-Infos, Beta); „Beta-Funktionen“ → Link zum Assistenten; Schalter Alltagshelfer blendet die Knöpfe aus
 - [ ] Stufe 3: Dokument ohne Zusammenfassung öffnen → Zusammenfassung entsteht von selbst; Messwerte-Prüffenster „🤖 Mit KI ordnen“; Helfer „Wochenrückblick“
 - [ ] Listen: Einkauf/Apotheke getrennt, Grundvorrat mit Ort, Foto-Abgleich „fehlt auf dem Foto“; Essensplan Woche; Arztfragen; ⭐ Merken, ＋ Aufgabe; Werkzeug teilen/übernehmen; Beziehung im Profil
@@ -100,6 +101,10 @@ Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Daten
 - [ ] Sammel-Import: Vorschläge mit echten Scans verfeinern (z. B. gleicher Absender und gleiches Datum als weiterer Hinweis)
 
 - [ ] Eigene KI-Stimme direkt in der App (nur falls SherpaTTS nicht reicht): sherpa-onnx mit Piper-Stimme Thorsten oder Kerstin (CC0) oder apptor-tiny-tts (Apache-2.0, 21 MB); macht die App 25–70 MB größer, Lizenzen der Bibliotheken prüfen
+
+## Version 0.93.0 (fertig)
+
+- Fix: Sunny-Einblendung beim Sprechen (Fenster hat feste Größe, Rückfall auf Einblendung in der App); Standard jetzt „bei allem, was vorgelesen wird“
 
 ## Version 0.92.0 (fertig)
 

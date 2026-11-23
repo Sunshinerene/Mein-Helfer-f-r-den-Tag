@@ -37,6 +37,7 @@ import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
@@ -57,7 +58,7 @@ import de.meinhelfer.tag.R
  * [place]: Index in [PLACES]. [frame]: Index in [FRAMES]. [back]: Index in [BACKS].
  */
 data class SunnyPopup(
-    val show: Int = 1,
+    val show: Int = 2,
     val place: Int = 0,
     val size: Int = 132,
     val alpha: Float = 1f,
@@ -65,7 +66,7 @@ data class SunnyPopup(
     val back: Int = 0,
 ) {
     companion object {
-        val SHOWS = listOf("Nie", "Wenn Sunny spricht", "Bei jedem Vorlesen")
+        val SHOWS = listOf("Nie", "Nur wenn Sunny selbst spricht", "Bei allem, was vorgelesen wird")
         val PLACES = listOf("Unten rechts", "Unten links", "Unten Mitte", "Oben rechts", "Oben links", "Bildmitte")
         val FRAMES = listOf("Ohne", "Leuchtrand", "Glas", "Liquid")
         val BACKS = listOf("Karte", "Glas", "Liquid", "Ohne")
@@ -98,6 +99,7 @@ fun SunnyTalkOverlay() {
     val typography = MaterialTheme.typography
     val shown = remember { androidx.compose.runtime.mutableStateOf(false) }
     val holder = remember { arrayOfNulls<android.view.View>(1) }
+    val windowFailed = remember { androidx.compose.runtime.mutableStateOf(false) }
     val wm = remember { view.context.getSystemService(android.content.Context.WINDOW_SERVICE) as android.view.WindowManager }
 
     fun remove() {
@@ -138,13 +140,18 @@ fun SunnyTalkOverlay() {
                 MaterialTheme(colorScheme = colors, typography = typography) {
                     val now by SunnyAvatar.popup.collectAsState()
                     val talking by Speech.speaking.collectAsState()
-                    AnimatedVisibility(
-                        visible = shown.value,
-                        enter = fadeIn(tween(600)) + scaleIn(initialScale = 0.85f),
-                        exit = fadeOut(tween(500)) + scaleOut(targetScale = 0.9f),
-                    ) {
+                    // Immer gleich groß (Fenster hat von Anfang an seine Größe), nur Deckkraft und Größe werden animiert
+                    val a by androidx.compose.animation.core.animateFloatAsState(if (shown.value) 1f else 0f, tween(if (shown.value) 600 else 450), label = "sichtbar")
+                    run {
                         val caption by SunnyAvatar.caption.collectAsState()
-                        androidx.compose.foundation.layout.Column(horizontalAlignment = Alignment.End) {
+                        androidx.compose.foundation.layout.Column(
+                            horizontalAlignment = Alignment.End,
+                            modifier = Modifier.graphicsLayer {
+                                alpha = a
+                                scaleX = 0.85f + 0.15f * a
+                                scaleY = 0.85f + 0.15f * a
+                            },
+                        ) {
                             caption?.takeIf { talking?.startsWith("assistent-seite") == true }?.let { c ->
                                 Surface(
                                     shape = RoundedCornerShape(16.dp),
@@ -162,7 +169,7 @@ fun SunnyTalkOverlay() {
         runCatching {
             wm.addView(compose, lp)
             holder[0] = compose
-        }
+        }.onFailure { windowFailed.value = true }
     }
 
     androidx.compose.runtime.LaunchedEffect(visible, style.place, speaking) {
@@ -178,6 +185,24 @@ fun SunnyTalkOverlay() {
         }
     }
     androidx.compose.runtime.DisposableEffect(Unit) { onDispose { remove() } }
+
+    // Rückfall, falls kein eigenes Fenster möglich ist: Einblendung innerhalb der App (wie früher)
+    if (windowFailed.value && visible) {
+        androidx.compose.ui.window.Popup(
+            alignment = when (style.place) {
+                1 -> Alignment.BottomStart
+                2 -> Alignment.BottomCenter
+                3 -> Alignment.TopEnd
+                4 -> Alignment.TopStart
+                5 -> Alignment.Center
+                else -> Alignment.BottomEnd
+            },
+            offset = androidx.compose.ui.unit.IntOffset(0, with(density) { (if (style.place in 3..4) 84 else if (style.place == 5) 0 else -96).dp.roundToPx() }),
+            properties = androidx.compose.ui.window.PopupProperties(focusable = false),
+        ) {
+            SunnyBubble(style, Modifier.padding(12.dp).clickable { Speech.stop() })
+        }
+    }
 }
 
 /** Sunny im Rahmen mit Hintergrund nach [style]; auch als Vorschau in den Einstellungen. */
