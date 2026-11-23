@@ -589,6 +589,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             }
             de.meinhelfer.tag.summary.ProposalAction.Acknowledge -> Unit
             is de.meinhelfer.tag.summary.ProposalAction.SetAlarm -> Unit // stellt die Karte selbst (braucht die Activity)
+            is de.meinhelfer.tag.summary.ProposalAction.StartUpdate -> startUpdateBySunny()
             is de.meinhelfer.tag.summary.ProposalAction.OpenedToday -> {
                 val m = db.medicationDao().byId(a.medId) ?: return@launch
                 db.medicationDao().update(m.copy(openedDay = LocalDate.now().toEpochDay()))
@@ -1156,6 +1157,19 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 UpdateState.Error("Keine Verbindung zu GitHub.")
             }
         }
+    }
+
+    /** Sunny übernimmt: laden und danach selbst die Installation anstoßen (siehe SunnyUpdateAgent). */
+    private val _sunnyInstall = MutableStateFlow(false)
+    val sunnyInstall: StateFlow<Boolean> = _sunnyInstall
+
+    fun startUpdateBySunny() {
+        _sunnyInstall.value = true
+        if (_updateState.value is UpdateState.Available) downloadUpdate()
+    }
+
+    fun clearSunnyInstall() {
+        _sunnyInstall.value = false
     }
 
     fun downloadUpdate() {

@@ -1,6 +1,6 @@
 # TODO
 
-Stand: v0.93.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.94.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
@@ -18,8 +18,12 @@ Stand: v0.93.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 - [ ] Mehrsprachigkeit für Betreuungskräfte (z. B. Polnisch, Rumänisch)
 - [ ] Motivator: Pausen-Erinnerung, Stimmungsverlauf in der Auswertung (nur für dich, nicht in geteilten Berichten), Ziel-Schritte als Aufgabe mit Frist übernehmen
 - [ ] KI direkt auf dem Handy: Gemini Nano über ML Kit (nur neuere Geräte, z. B. ab Pixel 9) oder ein eigenes kleines Modell in der App (z. B. Gemma, mehrere GB Download)
+- [ ] Sunny übernimmt App-Aufgaben (immer mit Frage „Soll ich …?“): Sicherung fällig → selbst anlegen; fehlende Android-Freigaben → Schritt für Schritt hinführen; Vorrat knapp → Apotheken-Bestellung/Rezeptanfrage vorbereiten; Aufräumen (erledigte Aufgaben archivieren, abgelaufene Erinnerungen, doppelte Dokumente); Daten-Check (Termin ohne Arzt, Medikament ohne Einnahmezeit, Person ohne Notfallkontakt); nach einem Update „Was ist neu?“ vorlesen; Speicherplatz knapp → alte Fotos/PDFs anbieten
+- [ ] Sunny-„Steuerwerk“ (fast selbstständig, indirekt gesteuert): 1) Signale sammeln (Uhrzeit, Termine, Vorrat, Stimmung, Update, Sicherung …) 2) Regeln mit Wichtigkeit und Risiko (nur lesen / ändert Daten / sendet etwas) 3) je Bereich eine Freiheitsstufe: nur fragen · machen und danach berichten · still erledigen 4) aus „Ja“/„Nein danke“ lernen (oft abgelehnt → seltener fragen, immer angenommen → Stufe höher anbieten) 5) Tagesplan: höchstens ein paar Anstöße am Tag, nie in der Ruhezeit; alles im Protokoll „Was Sunny heute gemacht hat“ und jederzeit zurücknehmbar
 - [ ] Designs verfeinern (Schriftarten, weitere Varianten); Effekte: echte Unschärfe hinter Glas-Karten ab Android 12, Glanz auch auf Knöpfen
 ## Bitte auf dem Handy prüfen (bisher nicht getestet)
+
+- [ ] Update über Sunny: neue Version → Sunny sagt es an und fragt in ihrer Karte; „Ja, aktualisieren“ → lädt (Fortschritt in der Karte) → startet die Installation selbst; erste Mal Freigabe „Updates installieren“, nach Rückkehr geht es weiter
 
 - [ ] Sunny erscheint wieder beim Sprechen – bei allem, was vorgelesen wird (Erzähl mal, Tagesplan, Dokumente, Anleitung, Empfehlungen, Rundgang), auch über Fenstern
 - [ ] Einstellungen: „KI und Internet“ weg, alles unter „Persönlicher Assistent“ (KI-Modus, KI-Dienst, Medikamenten-Infos, Beta); „Beta-Funktionen“ → Link zum Assistenten; Schalter Alltagshelfer blendet die Knöpfe aus
@@ -101,6 +105,11 @@ Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Daten
 - [ ] Sammel-Import: Vorschläge mit echten Scans verfeinern (z. B. gleicher Absender und gleiches Datum als weiterer Hinweis)
 
 - [ ] Eigene KI-Stimme direkt in der App (nur falls SherpaTTS nicht reicht): sherpa-onnx mit Piper-Stimme Thorsten oder Kerstin (CC0) oder apptor-tiny-tts (Apache-2.0, 21 MB); macht die App 25–70 MB größer, Lizenzen der Bibliotheken prüfen
+
+## Version 0.94.0 (fertig)
+
+- Sunny kümmert sich um Updates: sagt neue Versionen einmal an, fragt nach und übernimmt Download und Installation (abschaltbar); Benachrichtigung verweist auf Sunny
+- Ideen: Sunny übernimmt App-Aufgaben, „Steuerwerk“ mit Freiheitsstufen
 
 ## Version 0.93.0 (fertig)
 

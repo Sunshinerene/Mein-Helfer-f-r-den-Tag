@@ -135,7 +135,21 @@ private fun rememberAssistantState(vm: MainViewModel): AssistantState {
             }
         }
     }
-    val proposals = wake + birthdays + householdHints + Assistant.proposals(persons, todos, meds, duties, doctors, today, dismissed, recent, rates.first, rates.second)
+    // Neue App-Version: Sunny fragt, ob sie laden und installieren soll
+    val upd by vm.updateState.collectAsStateWithLifecycle()
+    val updateProposal = (upd as? de.meinhelfer.tag.update.UpdateState.Available)?.info?.version
+        ?.takeIf { AppPrefs.sunnyUpdates(appContext) && "update:$it" !in dismissed }
+        ?.let { v ->
+            listOf(
+                de.meinhelfer.tag.summary.Proposal(
+                    "update:$v",
+                    "📲 Es gibt eine neue Version ($v). Soll ich sie herunterladen und installieren? Android fragt am Ende noch einmal nach – dann einfach „Installieren“ tippen. Deine Daten bleiben erhalten.",
+                    "Ja, aktualisieren",
+                    de.meinhelfer.tag.summary.ProposalAction.StartUpdate(v),
+                ),
+            )
+        }.orEmpty()
+    val proposals = updateProposal + wake + birthdays + householdHints + Assistant.proposals(persons, todos, meds, duties, doctors, today, dismissed, recent, rates.first, rates.second)
     val measured = persons.associate { p ->
         p.id to vitals.any { it.personId == p.id && it.kind != VitalKind.Trinken.key && it.day >= today - 14 }
     }
@@ -358,6 +372,7 @@ fun AssistantCard(vm: MainViewModel, onOpen: (tab: Int) -> Unit, onMood: () -> U
                     Text("Mein Vorschlag", style = MaterialTheme.typography.labelLarge)
                     st.proposals.take(3).forEach { ProposalBox(it, vm) }
                 }
+                SunnyUpdateStatus(vm, st.name)
                 if (p != null) {
                     HorizontalDivider()
                     Text("Für dich", style = MaterialTheme.typography.labelLarge)
@@ -749,6 +764,11 @@ fun AssistantSettingsCard(vm: MainViewModel) {
             SwitchLine("Neuigkeiten einbeziehen", "Eine aktuelle Schlagzeile zu Pflege, Gesetzen oder deinen Themen (Google News, nur das Suchwort wird gesendet). Nur ein Anhaltspunkt, keine Beratung.", talkNews) {
                 talkNews = it
                 AppPrefs.setAssistantTalkNews(context, it)
+            }
+            var sunnyUpd by remember { mutableStateOf(AppPrefs.sunnyUpdates(context)) }
+            SwitchLine("$name kümmert sich um Updates", "Gibt es eine neue Version, sagt $name Bescheid und fragt, ob sie sie laden und installieren soll. Bei „Ja“ lädt sie selbst und startet die Installation – Android fragt zum Schluss immer noch einmal nach.", sunnyUpd) {
+                sunnyUpd = it
+                AppPrefs.setSunnyUpdates(context, it)
             }
             var tourAuto by remember { mutableStateOf(AppPrefs.tourAutoRead(context)) }
             SwitchLine("Rundgang mit Vorlesen", "Beim Rundgang (Einstellungen → Hilfe) liest $name jede Seite vor und blättert von selbst weiter. Im Rundgang jederzeit „⏸ Anhalten“ oder „▶ Mit Vorlesen“.", tourAuto) {
@@ -1286,5 +1306,83 @@ fun ScreenCommentAuto(vm: MainViewModel, page: String) {
         // Tageslimit für automatische Kommentare (schont das freie Kontingent)
         if (de.meinhelfer.tag.ai.AiUsage.byTask(context, de.meinhelfer.tag.ai.AiTask.Seite) >= de.meinhelfer.tag.ai.AiTask.autoLimit(context)) return@LaunchedEffect
         ScreenComment.ask(context, st.name, page, data, note)
+    }
+}
+
+
+/** Fortschritt, solange Sunny ein Update lädt. */
+@Composable
+private fun SunnyUpdateStatus(vm: MainViewModel, name: String) {
+    val upd by vm.updateState.collectAsStateWithLifecycle()
+    val mine by vm.sunnyInstall.collectAsStateWithLifecycle()
+    if (!mine) return
+    when (val u = upd) {
+        is de.meinhelfer.tag.update.UpdateState.Downloading -> {
+            HorizontalDivider()
+            Text("⬇️ $name lädt Version ${u.info.version} … ${(u.progress * 100).toInt()} %", style = MaterialTheme.typography.bodyMedium)
+            androidx.compose.material3.LinearProgressIndicator(progress = { u.progress }, modifier = Modifier.fillMaxWidth())
+        }
+        is de.meinhelfer.tag.update.UpdateState.Ready -> {
+            HorizontalDivider()
+            Text("✅ Version ${u.info.version} ist geladen. Android fragt gleich nach – „Installieren“ tippen.", style = MaterialTheme.typography.bodyMedium)
+        }
+        else -> Unit
+    }
+}
+
+/**
+ * Sunny kümmert sich um Updates (läuft überall in der App):
+ * sagt eine neue Version einmal an und startet nach dem Laden selbst die Installation.
+ */
+@Composable
+fun SunnyUpdateAgent(vm: MainViewModel) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val upd by vm.updateState.collectAsStateWithLifecycle()
+    val mine by vm.sunnyInstall.collectAsStateWithLifecycle()
+    var resumeTick by remember { mutableStateOf(0) }
+    androidx.lifecycle.compose.LifecycleResumeEffect(Unit) {
+        resumeTick++
+        onPauseOrDispose { }
+    }
+    val name = AppPrefs.assistantName(context)
+    // Ansage: einmal pro Version, nicht in der Ruhezeit, nicht bei stummem Handy
+    androidx.compose.runtime.LaunchedEffect(upd) {
+        val u = upd as? de.meinhelfer.tag.update.UpdateState.Available ?: return@LaunchedEffect
+        if (!AppPrefs.sunnyUpdates(context) || AppPrefs.sunnyUpdateAnnounced(context) == u.info.version) return@LaunchedEffect
+        if (AppPrefs.isQuietNow(context)) return@LaunchedEffect
+        val audio = context.getSystemService(android.content.Context.AUDIO_SERVICE) as? android.media.AudioManager
+        if (audio != null && audio.ringerMode != android.media.AudioManager.RINGER_MODE_NORMAL) return@LaunchedEffect
+        kotlinx.coroutines.delay(2500)
+        var waited = 0
+        while (Speech.speaking.value != null && waited < 60) { kotlinx.coroutines.delay(1000); waited++ }
+        AppPrefs.setSunnyUpdateAnnounced(context, u.info.version)
+        Speech.speak(
+            context, "assistent_update",
+            "Es gibt eine neue Version von Mein Helfer, Version ${u.info.version}. Soll ich sie für dich herunterladen und installieren? Tipp dafür in meiner Karte auf „Ja, aktualisieren“.",
+        )
+    }
+    // Nach dem Laden selbst installieren (auch nach Rückkehr aus der Freigabe)
+    androidx.compose.runtime.LaunchedEffect(upd, mine, resumeTick) {
+        if (!mine) return@LaunchedEffect
+        when (val u = upd) {
+            is de.meinhelfer.tag.update.UpdateState.Ready -> {
+                if (de.meinhelfer.tag.update.UpdateChecker.canInstall(context)) {
+                    vm.clearSunnyInstall()
+                    Speech.speak(context, "assistent_update", "Fertig geladen. Android fragt jetzt noch einmal – tipp bitte auf Installieren. Danach startet die App neu, deine Daten bleiben erhalten.")
+                    kotlinx.coroutines.delay(1500)
+                    runCatching { de.meinhelfer.tag.update.UpdateChecker.install(context, u.file) }
+                } else if (AppPrefs.sunnyUpdateAnnounced(context) != "perm:" + u.info.version) {
+                    AppPrefs.setSunnyUpdateAnnounced(context, "perm:" + u.info.version)
+                    Speech.speak(context, "assistent_update", "Geladen. Android muss mir einmal erlauben, Updates zu installieren. Ich öffne die Einstellung – bitte „Zulassen“ einschalten und zurückkommen, dann mache ich weiter.")
+                    kotlinx.coroutines.delay(2500)
+                    de.meinhelfer.tag.update.UpdateChecker.openInstallPermissionSettings(context)
+                }
+            }
+            is de.meinhelfer.tag.update.UpdateState.Error -> {
+                vm.clearSunnyInstall()
+                Speech.speak(context, "assistent_update", "Das Laden hat leider nicht geklappt: ${u.message} Du kannst es später in den Einstellungen unter App nochmal versuchen.")
+            }
+            else -> Unit
+        }
     }
 }

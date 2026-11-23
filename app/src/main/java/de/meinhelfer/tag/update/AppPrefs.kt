@@ -186,6 +186,17 @@ object AppPrefs {
         prefs(context).edit().putBoolean("assistent_bild", on).apply()
     }
 
+    /** Sunny meldet neue Versionen, fragt nach und übernimmt auf Wunsch Download und Installation. */
+    fun sunnyUpdates(context: Context): Boolean = prefs(context).getBoolean("sunny_updates", true)
+    fun setSunnyUpdates(context: Context, on: Boolean) {
+        prefs(context).edit().putBoolean("sunny_updates", on).apply()
+    }
+    /** Version, die Sunny schon angesagt hat (einmal pro Version). */
+    fun sunnyUpdateAnnounced(context: Context): String = prefs(context).getString("sunny_update_angesagt", "") ?: ""
+    fun setSunnyUpdateAnnounced(context: Context, v: String) {
+        prefs(context).edit().putString("sunny_update_angesagt", v).apply()
+    }
+
     /** Sunny erzählt von sich aus (beim Öffnen, höchstens alle 3 Stunden) und ob Neuigkeiten dabei sein dürfen. */
     fun assistantTalk(context: Context): Boolean = prefs(context).getBoolean("assistent_erzaehlt", false)
     fun assistantTalkNews(context: Context): Boolean = prefs(context).getBoolean("assistent_neuigkeiten", false)

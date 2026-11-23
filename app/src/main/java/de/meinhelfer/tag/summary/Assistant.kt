@@ -29,6 +29,8 @@ sealed interface ProposalAction {
     data object Acknowledge : ProposalAction
     /** Wecker in der Uhr-App stellen (Stunde, Minute, Beschriftung) */
     data class SetAlarm(val hour: Int, val minute: Int, val label: String) : ProposalAction
+    /** Neue App-Version laden und danach die Installation starten (Android fragt zum Schluss selbst nach). */
+    data class StartUpdate(val version: String) : ProposalAction
 }
 
 /** Ein Vorschlag des Assistenten. Wird nur nach deiner Bestätigung ausgeführt. */

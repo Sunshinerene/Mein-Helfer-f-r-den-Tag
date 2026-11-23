@@ -593,7 +593,10 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
     }
     }
 
-    if (vm.assistantOn.collectAsStateWithLifecycle().value) SunnyTalkOverlay()
+    if (vm.assistantOn.collectAsStateWithLifecycle().value) {
+        SunnyTalkOverlay()
+        SunnyUpdateAgent(vm)
+    }
 
     if (showProfile) {
         persons.firstOrNull { it.id == personId }?.let { p ->

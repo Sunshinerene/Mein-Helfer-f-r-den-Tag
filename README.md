@@ -4,13 +4,14 @@ by Sunshine@R
 
 Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbezogenen Daten bleiben lokal auf dem Gerät.
 
-## Stand: v0.93.0
+## Stand: v0.94.0
 
 ### Funktionsübersicht
 
 **Persönlicher Assistent**
 - Fester Teil der App (eigener Bereich in den Einstellungen), für die pflegende Person, mit wählbarem Namen (Start: Sunny) und digitalem Gesicht, das die Lage zeigt
 - Sunny-Bild mit sechs Gesichtsausdrücken (oder das gezeichnete Gesicht); beim Vorlesen blendet sich Sunny als kleines, stummes Video ein; einstellbar wann (auch bei jedem Vorlesen), wo, Größe, Deckkraft, Rand und Hintergrund (Glas, Liquid)
+- Updates über Sunny: sie sagt eine neue Version an, fragt nach und lädt und installiert auf „Ja“ selbst (Android fragt zum Schluss noch einmal)
 - Wecker bei frühen Terminen: am Vortag ab 14 Uhr Hinweis mit vorgeschlagener Weckzeit, Wecker mit einem Tipp in der Uhr-App (einstellbar: was früh ist, Vorlauf)
 - Kleine Helfer: Erinnerung ans Losfahren (Wegzeit je Kontakt, „Route“), Wetter zum Termin (Open-Meteo, nur Ort, Standard aus), Geburtstage (Profil und eigene Liste), Rezepte beim selben Arzt gebündelt
 - Empfehlungen gleich vorlesen (abschaltbar): Unterstützung nach schlechter Stimmung, KI-Hinweise; überall dort auch „🔊 Vorlesen“

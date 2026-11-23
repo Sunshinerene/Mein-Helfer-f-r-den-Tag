@@ -29,7 +29,11 @@ class UpdateWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                     context,
                     id = NOTIFICATION_ID,
                     title = "Neue Version verfügbar",
-                    text = "Mein Helfer ${info.version} kann installiert werden: Einstellungen öffnen und Update laden.",
+                    text = if (AppPrefs.assistantEnabled(context) && AppPrefs.sunnyUpdates(context)) {
+                        "Mein Helfer ${info.version} ist da. Öffne die App – ${AppPrefs.assistantName(context)} lädt und installiert es auf Wunsch für dich."
+                    } else {
+                        "Mein Helfer ${info.version} kann installiert werden: Einstellungen öffnen und Update laden."
+                    },
                     updates = true,
                 )
                 AppPrefs.setLastNotifiedVersion(context, info.version)

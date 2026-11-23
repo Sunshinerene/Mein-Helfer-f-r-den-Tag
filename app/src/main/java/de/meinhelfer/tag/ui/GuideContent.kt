@@ -857,6 +857,7 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
             GuideItem(
                 "App aktualisieren",
                 "Zahnrad → App und Updates → „Nach Updates suchen“ → „Herunterladen“ → „Installieren“. Die App meldet neue Versionen auch von selbst, das lässt sich in den Einstellungen abschalten.",
+                "Einfacher mit Sunny: Gibt es eine neue Version, sagt dein Assistent Bescheid und fragt in seiner Karte „Soll ich sie herunterladen und installieren?“. Bei „Ja, aktualisieren“ lädt er selbst und startet die Installation; Android fragt zum Schluss noch einmal – dann „Installieren“ tippen. Beim ersten Mal muss Android die Installation von Updates erlauben; der Assistent öffnet die Stelle und macht nach der Rückkehr weiter. Abschalten: Persönlicher Assistent → „… kümmert sich um Updates“.",
             ),
             GuideItem(
                 "Darstellung",
