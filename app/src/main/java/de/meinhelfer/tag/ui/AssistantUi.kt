@@ -120,6 +120,7 @@ private fun NextUpRow(n: NextUp, multi: Boolean) {
     )
 }
 
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 private fun ProposalBox(p: Proposal, vm: MainViewModel) {
     val context = androidx.compose.ui.platform.LocalContext.current
