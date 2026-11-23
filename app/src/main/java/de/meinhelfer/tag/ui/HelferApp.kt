@@ -185,6 +185,37 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
         showHandover = false
     }
 
+    // Nach einem Absturz: Bericht zum Teilen anbieten
+    var crash by remember { mutableStateOf(de.meinhelfer.tag.CrashReport.pending(appContext)) }
+    crash?.let { report ->
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { },
+            title = { Text("Die App wurde unerwartet beendet") },
+            text = {
+                Text(
+                    "Das tut mir leid. Ein kurzer Fehlerbericht ist gespeichert (nur Fehlerart und Programmstellen, keine deiner Einträge). " +
+                        "Teilst du ihn, lässt sich der Fehler schneller beheben.",
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val send = android.content.Intent(android.content.Intent.ACTION_SEND).setType("text/plain")
+                        .putExtra(android.content.Intent.EXTRA_SUBJECT, "Mein Helfer – Absturzbericht")
+                        .putExtra(android.content.Intent.EXTRA_TEXT, report)
+                    runCatching { appContext.startActivity(android.content.Intent.createChooser(send, "Bericht teilen").addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)) }
+                    de.meinhelfer.tag.CrashReport.clear(appContext)
+                    crash = null
+                }) { Text("Bericht teilen") }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    de.meinhelfer.tag.CrashReport.clear(appContext)
+                    crash = null
+                }) { Text("Verwerfen") }
+            },
+        )
+    }
+
     // Sunny möchte eine Stelle öffnen (z. B. Sicherung, ihre Einstellungen)
     val nav by vm.navRequest.collectAsStateWithLifecycle()
     LaunchedEffect(nav) {

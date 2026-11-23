@@ -1,6 +1,6 @@
 # TODO
 
-Stand: v0.96.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.96.1 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
@@ -24,6 +24,7 @@ Stand: v0.96.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 - [ ] Designs verfeinern (Schriftarten, weitere Varianten); Effekte: echte Unschärfe hinter Glas-Karten ab Android 12, Glanz auch auf Knöpfen
 ## Bitte auf dem Handy prüfen (bisher nicht getestet)
 
+- [ ] Alltagshelfer: „Sunny fragen“ stürzt nicht mehr ab (Kochen, Essensplan, Einkauf …); nach einem Absturz fragt die App beim nächsten Start „Bericht teilen“
 - [ ] Sunny-Menü: Gesicht unten links → „Alles von Sunny“ mit Alltagshelfern, Protokoll, „⚙️ Sunny einstellen“; Alltagshelfer-Fenster unten nicht mehr abgeschnitten
 - [ ] Steuerwerk neu: 🔔 Freigaben Schritt für Schritt (Hinführen, nach Rückkehr nächster Schritt); 💾 Sicherung öffnen (Karte auf Heute nur noch ohne Assistent); Nachbestellen bei „Machen und Bescheid sagen“: Aufgabe + Apotheken-Liste von selbst; 🔎 Daten-Check einmal pro Woche
 - [ ] Steuerwerk: Persönlicher Assistent → Steuerwerk: Stufen je Bereich; Aufräumen-Vorschlag (🧹) bzw. von selbst beim Start; Updates bei „Machen und Bescheid sagen“ von selbst geladen, Sunny sagt Bescheid, „Jetzt installieren“; dreimal „Nein, danke“ → Pause; dreimal Ja → ⚙️-Angebot; Protokoll in der Karte und den Einstellungen
@@ -110,6 +111,11 @@ Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Daten
 - [ ] Sammel-Import: Vorschläge mit echten Scans verfeinern (z. B. gleicher Absender und gleiches Datum als weiterer Hinweis)
 
 - [ ] Eigene KI-Stimme direkt in der App (nur falls SherpaTTS nicht reicht): sherpa-onnx mit Piper-Stimme Thorsten oder Kerstin (CC0) oder apptor-tiny-tts (Apache-2.0, 21 MB); macht die App 25–70 MB größer, Lizenzen der Bibliotheken prüfen
+
+## Version 0.96.1 (fertig)
+
+- Fix: Absturz bei „Sunny fragen“ in den Alltagshelfern (Auslesen langer KI-Antworten lief über; gleiches Muster im Sprachschatz behoben)
+- Absturzbericht: wird gespeichert (ohne Einträge) und beim nächsten Start zum Teilen angeboten
 
 ## Version 0.96.0 (fertig)
 

@@ -249,11 +249,19 @@ object HelperPrompt {
 
     data class Result(val short: String, val items: List<Item>, val note: String)
 
-    private const val STR = "\"((?:[^\"\\\\]|\\\\.)*)\""
+    private const val STR = "\"([^\"\\\\]*(?:\\\\.[^\"\\\\]*)*)\""
     private fun un(s: String) = s.replace("\\n", "\n").replace("\\\"", "\"").replace("\\\\", "\\").trim()
 
     /** Antwort lesen (JSON); sonst Text Zeile für Zeile. */
-    fun parse(answer: String): Result {
+    fun parse(answer: String): Result = try {
+        parseJson(answer)
+    } catch (_: Throwable) {
+        // Notfall (z. B. sehr lange oder kaputte Antwort): Zeile für Zeile
+        val lines = answer.lines().map { it.trim().removePrefix("- ").removePrefix("* ") }.filter { it.isNotBlank() }
+        Result(lines.firstOrNull().orEmpty(), lines.drop(1).map { Item(it) }, "")
+    }
+
+    private fun parseJson(answer: String): Result {
         val text = answer.trim().removePrefix("```json").removePrefix("```").removeSuffix("```").trim()
         val short = Regex("\"kurz\"\\s*:\\s*$STR").find(text)?.groupValues?.get(1)?.let(::un)
         val note = Regex("\"hinweis\"\\s*:\\s*$STR").find(text)?.groupValues?.get(1)?.let(::un).orEmpty()

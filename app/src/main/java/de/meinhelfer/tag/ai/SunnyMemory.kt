@@ -95,7 +95,7 @@ object SunnyMemory {
         Regex("\\{\\s*\"thema\"\\s*:\\s*\"([^\"]+)\"\\s*,\\s*\"saetze\"\\s*:\\s*\\[(.*?)]", RegexOption.DOT_MATCHES_ALL).findAll(answer).forEach { m ->
             val theme = m.groupValues[1].trim()
             if (theme !in Phrasebook.THEMES) return@forEach
-            val phrases = Regex("\"((?:[^\"\\\\]|\\\\.)*)\"").findAll(m.groupValues[2]).map { it.groupValues[1].replace("\\\"", "\"") }.toList()
+            val phrases = Regex("\"([^\"\\\\]*(?:\\\\.[^\"\\\\]*)*)\"").findAll(m.groupValues[2]).map { it.groupValues[1].replace("\\\"", "\"") }.toList()
             added += b.merge(theme, phrases)
         }
         saveBook(context)

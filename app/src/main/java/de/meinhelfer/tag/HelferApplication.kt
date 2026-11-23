@@ -7,6 +7,7 @@ import de.meinhelfer.tag.backup.Backup
 class HelferApplication : Application() {
     override fun onCreate() {
         super.onCreate()
+        CrashReport.install(this)
         try {
             de.meinhelfer.tag.backup.AppReset.applyPending(this)
         } catch (_: Throwable) {

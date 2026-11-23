@@ -15,7 +15,7 @@ object SpeechVariants {
         "Antworte nur als JSON ohne weiteren Text: {\"kurz\": \"ein kurzer Satz zum Vorlesen\", " +
             "\"lang\": \"zwei bis vier Sätze ausführlicher\", \"varianten\": [\"die Kurzform anders formuliert\", \"noch eine andere Formulierung\"]}."
 
-    private const val STR = "\"((?:[^\"\\\\]|\\\\.)*)\""
+    private const val STR = "\"([^\"\\\\]*(?:\\\\.[^\"\\\\]*)*)\""
 
     private fun field(json: String, name: String): String? =
         Regex("\"$name\"\\s*:\\s*$STR", RegexOption.DOT_MATCHES_ALL).find(json)?.groupValues?.get(1)?.let(::unescape)

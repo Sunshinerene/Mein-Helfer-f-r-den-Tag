@@ -417,12 +417,17 @@ fun ToolDialog(tool: HelperTool, vm: MainViewModel, onClose: () -> Unit) {
         error = null
         added = false
         scope.launch {
-            AiClient.ask(context, HelperTool.SYSTEM, text, 1800, AiTask.Helfer, image = image)
-                .onSuccess {
-                    raw = it
-                    HelperStore.setLastResult(context, tool.id, it)
-                }
-                .onFailure { error = it.message ?: "Das hat nicht geklappt." }
+            try {
+                AiClient.ask(context, HelperTool.SYSTEM, text, 1800, AiTask.Helfer, image = image)
+                    .onSuccess {
+                        raw = it
+                        HelperStore.setLastResult(context, tool.id, it)
+                    }
+                    .onFailure { error = it.message ?: "Das hat nicht geklappt." }
+            } catch (e: Throwable) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                error = "Das hat nicht geklappt (${e.javaClass.simpleName})."
+            }
             loading = false
         }
     }
@@ -485,8 +490,13 @@ fun ToolDialog(tool: HelperTool, vm: MainViewModel, onClose: () -> Unit) {
                     }
                 } else {
                     Button(shape = buttonShape(), modifier = Modifier.fillMaxWidth(), enabled = !AiMode.isOff(context), onClick = {
-                        val p = prompt()
-                        if (AiMode.skipConfirm(context)) send(p) else confirm = p
+                        val p = try {
+                            prompt()
+                        } catch (e: Throwable) {
+                            error = "Anfrage konnte nicht vorbereitet werden (${e.javaClass.simpleName}). Bitte per Feedback melden."
+                            null
+                        }
+                        if (p != null) { if (AiMode.skipConfirm(context)) send(p) else confirm = p }
                     }) { Text("Sunny fragen") }
                 }
                 if (AiMode.isOff(context)) Text(AiMode.OFF_TEXT, style = MaterialTheme.typography.bodySmall)
