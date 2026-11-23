@@ -116,6 +116,7 @@ fun DischargeBox(doc: Document, person: Person?, meds: List<Medication>, doctors
                 system = DischargeAi.SYSTEM_PROMPT,
                 maxTokens = 4000,
                 prompt = { DischargeAi.prompt(maskPersonal(doc.text, person)) },
+                task = de.meinhelfer.tag.ai.AiTask.Plan,
                 onAnswer = { answer, _ ->
                     val parsed = DischargeAi.parse(answer, LocalDate.ofEpochDay(baseDay))
                     if (parsed != null) {

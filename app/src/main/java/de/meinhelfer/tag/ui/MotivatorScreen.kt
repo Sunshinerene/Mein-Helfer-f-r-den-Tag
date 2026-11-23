@@ -353,6 +353,7 @@ private fun TodayTab(vm: MainViewModel, caregiver: CaregiverProfile, onMood: () 
                         note = "Enthalten sind deine Stimmung der letzten Tage, Stichworte, Zahlen und die Titel deiner Ziele, aber keine Namen.",
                         system = GoalAi.SYSTEM_PROMPT,
                         prompt = { GoalAi.impulsePrompt(p, caregiver.roleValue?.label) },
+                        task = de.meinhelfer.tag.ai.AiTask.Ziele,
                         onAnswer = { answer, provider ->
                             val parsed = GoalAi.parseImpulse(answer, p.day, provider)
                             if (parsed != null) {

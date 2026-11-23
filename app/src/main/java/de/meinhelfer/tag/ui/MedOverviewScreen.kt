@@ -380,7 +380,7 @@ fun MedOverviewScreen(
                     limitHit = false
                     val used = provider
                     scope.launch {
-                        AiClient.ask(context, MedCheck.SYSTEM_PROMPT, promptText, 3000)
+                        AiClient.ask(context, MedCheck.SYSTEM_PROMPT, promptText, 3000, de.meinhelfer.tag.ai.AiTask.Medikamente)
                             .onSuccess { answer ->
                                 val today = LocalDate.now().toEpochDay()
                                 val label = used.label.substringBefore(" (")

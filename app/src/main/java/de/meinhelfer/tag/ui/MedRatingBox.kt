@@ -169,7 +169,7 @@ fun MedRatingBox(med: Medication, otherNames: List<String>, onUpdate: (Medicatio
                     limitHit = false
                     scope.launch {
                         val used = provider
-                        AiClient.ask(context, MedRating.SYSTEM_PROMPT, promptText)
+                        AiClient.ask(context, MedRating.SYSTEM_PROMPT, promptText, task = de.meinhelfer.tag.ai.AiTask.Medikamente)
                             .onSuccess { answer ->
                                 val parsed = MedRating.parse(answer, LocalDate.now().toEpochDay(), used.label.substringBefore(" ("))
                                 if (parsed != null) onUpdate(med.copy(rating = parsed.toJson()))

@@ -178,7 +178,7 @@ fun DocSummaryBox(
                     error = null
                     limitHit = false
                     scope.launch {
-                        AiClient.ask(context, SUMMARY_SYSTEM, promptText)
+                        AiClient.ask(context, SUMMARY_SYSTEM, promptText, task = de.meinhelfer.tag.ai.AiTask.Dokument)
                             .onSuccess { answer -> onSummary(AiClient.bullets(answer).joinToString("\n") { "• $it" }) }
                             .onFailure {
                                 error = it.message ?: "Das hat nicht geklappt."
@@ -225,7 +225,7 @@ fun DocSummaryBox(
                     limitHit = false
                     taskInfo = null
                     scope.launch {
-                        AiClient.ask(context, TASKS_SYSTEM, taskPrompt)
+                        AiClient.ask(context, TASKS_SYSTEM, taskPrompt, task = de.meinhelfer.tag.ai.AiTask.Dokument)
                             .onSuccess { answer ->
                                 val drafts = parseTaskSuggestions(answer, doctors, LocalDate.now().toEpochDay())
                                 if (drafts.isEmpty()) taskInfo = "Die KI hat keine Aufgaben im Text gefunden." else taskDrafts = drafts

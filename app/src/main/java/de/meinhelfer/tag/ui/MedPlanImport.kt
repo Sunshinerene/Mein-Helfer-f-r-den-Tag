@@ -353,6 +353,7 @@ fun MedPlanImportBox(doc: Document?, person: Person?, meds: List<Medication>, vm
                 system = MedPlanAi.SYSTEM_PROMPT,
                 maxTokens = 4000,
                 prompt = { MedPlanAi.prompt(maskPersonal(doc.text, person)) },
+                task = de.meinhelfer.tag.ai.AiTask.Plan,
                 onAnswer = { answer, _ ->
                     val parsed = MedPlanAi.parse(answer)
                     if (parsed != null) {

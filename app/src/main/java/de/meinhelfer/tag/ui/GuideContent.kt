@@ -248,6 +248,12 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
                     "Nur in Stufe 3: „Sunny sagt etwas zur Seite“ – im Blatt über das Gesicht unten gibt es „💬 Was meinst du zu dieser Seite?“; die KI bekommt, was auf der Seite steht (ohne Namen), und Sunny antwortet in zwei, drei Sätzen mit Sprechblase. Mit „Automatisch beim Seitenwechsel“ meldet sie sich von selbst, je Seite höchstens alle 30 Minuten, nicht in der Ruhezeit.",
             ),
             GuideItem(
+                "KI-Aufgaben und Verbrauch",
+                "Unter dem KI-Modus (Einstellungen → „Persönlicher Assistent“) klappst du „KI-Aufgaben und Verbrauch“ auf. Dort siehst du jede Unterfunktion, die KI nutzt: Kommentar zur Seite (nur Stufe 3), Frag mich, Dokumente, Medikamente, Pläne und Berichte lesen, Ziele und Motivation – mit der Zahl der Anfragen heute. " +
+                    "Jede Aufgabe kannst du ausschalten oder einem eigenen KI-Dienst geben, z. B. die häufigen kurzen Kommentare an Groq und die langen Dokumente an Gemini; so reichen mehrere kostenlose Kontingente zusammen weit. " +
+                    "„Bei Limit ausweichen“ nimmt automatisch einen anderen eingerichteten Dienst, wenn einer sein Tageslimit erreicht hat. Für automatische Kommentare gibt es ein Tageslimit (Standard 20). Oben steht der Verbrauch je Dienst mit Hinweis „Limit erreicht“. Gezählt wird nur auf dem Handy.",
+            ),
+            GuideItem(
                 "Rundgang mit Vorlesen",
                 "Im Rundgang (Anleitung → „Rundgang starten“) gibt es unten „▶ Mit Vorlesen“: Der Assistent liest jede Seite vor und blättert danach von selbst weiter, bis zum Ende. „⏸ Anhalten“ oder ein Tipp auf die Einblendung hält an; der Assistent merkt sich den Satz, „▶ Weiterlesen“ macht genau dort weiter. Wischen auf eine andere Seite springt dorthin. Soll der Rundgang immer so starten: Einstellungen → „Persönlicher Assistent“ → „Rundgang mit Vorlesen“.",
             ),

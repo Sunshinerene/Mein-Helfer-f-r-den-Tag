@@ -227,6 +227,7 @@ fun GoalEditorScreen(vm: MainViewModel, initial: Goal?, caregiver: CaregiverProf
                             system = GoalAi.SYSTEM_PROMPT,
                             maxTokens = 2500,
                             prompt = { GoalAi.pathPrompt(title, kind, details, targetDay, caregiver.roleValue?.label, careLevel, personId != 0L, today) },
+                            task = de.meinhelfer.tag.ai.AiTask.Ziele,
                             onAnswer = { answer, _ ->
                                 val path = GoalAi.parsePath(answer)
                                 if (path != null) {
@@ -411,6 +412,7 @@ fun GoalDetailScreen(vm: MainViewModel, goal: Goal, caregiver: CaregiverProfile,
                             system = GoalAi.SYSTEM_PROMPT,
                             maxTokens = 2000,
                             prompt = { GoalAi.checkPrompt(goal, steps, caregiver.roleValue?.label, person?.careLevel, today) },
+                            task = de.meinhelfer.tag.ai.AiTask.Ziele,
                             onAnswer = { answer, provider ->
                                 val parsed = GoalAi.parseCheck(answer, today, provider)
                                 if (parsed != null) vm.setGoalCheck(goal, parsed.toJson())

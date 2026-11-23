@@ -81,6 +81,7 @@ fun AiModeChooser(name: String) {
             }
         }
     }
+    if (mode != AiMode.Off) AiTaskSettings(name, mode == AiMode.Auto)
     if (mode != AiMode.Off && !de.meinhelfer.tag.ai.AiConfig.isConfigured(context)) {
         Text("Noch kein KI-Dienst eingerichtet: Einstellungen → KI und Internet.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
     }
@@ -114,4 +115,99 @@ fun AiModeChooser(name: String) {
             dismissButton = { TextButton(onClick = { asking = null }) { Text("Abbrechen") } },
         )
     }
+}
+
+/**
+ * KI-Aufgaben: welche Unterfunktionen KI nutzen, welcher Dienst je Aufgabe (mehrere freie Kontingente),
+ * Verbrauch heute, Ausweichen bei Limit, Tageslimit für automatische Kommentare.
+ */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+private fun AiTaskSettings(name: String, auto: Boolean) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var tick by remember { mutableStateOf(0) }
+    val ready = remember(tick) { de.meinhelfer.tag.ai.AiProvider.entries.filter { de.meinhelfer.tag.ai.AiConfig.isReady(context, it) } }
+    val standard = de.meinhelfer.tag.ai.AiConfig.provider(context)
+    var open by remember { mutableStateOf(false) }
+    androidx.compose.material3.HorizontalDivider()
+    Row(Modifier.fillMaxWidth().selectable(selected = open, onClick = { open = !open }), verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            Text("KI-Aufgaben und Verbrauch", style = MaterialTheme.typography.labelLarge)
+            val used = remember(tick) { de.meinhelfer.tag.ai.AiUsage.byProvider(context) }
+            Text(
+                if (used.isEmpty()) "Heute noch keine KI-Anfrage." else "Heute: " + used.entries.joinToString(", ") { (p, n) ->
+                    p.label.substringBefore(" (") + " $n" + if (de.meinhelfer.tag.ai.AiUsage.limited(context, p)) " (Limit erreicht)" else ""
+                },
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
+        Text(if (open) "▴" else "▾", style = MaterialTheme.typography.titleMedium)
+    }
+    if (!open) return
+    Text(
+        "Jede Aufgabe kannst du einzeln ausschalten oder einem eigenen KI-Dienst geben – so verteilen sich die Anfragen auf mehrere kostenlose Kontingente (z. B. Kommentare an Groq, Dokumente an Gemini). Weitere Dienste richtest du unter „KI und Internet“ ein.",
+        style = MaterialTheme.typography.bodySmall,
+    )
+    de.meinhelfer.tag.ai.AiTask.entries.filter { it != de.meinhelfer.tag.ai.AiTask.Allgemein }.forEach { t ->
+        if (t == de.meinhelfer.tag.ai.AiTask.Seite && !auto) return@forEach
+        var on by remember(t) { mutableStateOf(de.meinhelfer.tag.ai.AiTask.enabled(context, t)) }
+        var chosen by remember(t) { mutableStateOf(de.meinhelfer.tag.ai.AiTask.provider(context, t)) }
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(t.title + " · heute " + de.meinhelfer.tag.ai.AiUsage.byTask(context, t), style = MaterialTheme.typography.bodyLarge)
+                    Text(t.hint, style = MaterialTheme.typography.bodySmall)
+                }
+                androidx.compose.material3.Switch(checked = on, onCheckedChange = {
+                    on = it
+                    de.meinhelfer.tag.ai.AiTask.setEnabled(context, t, it)
+                })
+            }
+            if (on && ready.size > 1) {
+                androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    androidx.compose.material3.FilterChip(
+                        selected = chosen == null,
+                        onClick = { chosen = null; de.meinhelfer.tag.ai.AiTask.setProvider(context, t, null) },
+                        label = { Text("Standard (" + standard.label.substringBefore(" (") + ")") },
+                    )
+                    ready.forEach { p ->
+                        androidx.compose.material3.FilterChip(
+                            selected = chosen == p,
+                            onClick = { chosen = p; de.meinhelfer.tag.ai.AiTask.setProvider(context, t, p) },
+                            label = { Text(p.label.substringBefore(" (")) },
+                        )
+                    }
+                }
+            }
+        }
+    }
+    var fallback by remember { mutableStateOf(de.meinhelfer.tag.ai.AiTask.fallback(context)) }
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            Text("Bei Limit ausweichen", style = MaterialTheme.typography.bodyLarge)
+            Text("Ist das Tageskontingent eines Dienstes aufgebraucht, nimmt $name automatisch einen anderen eingerichteten Dienst.", style = MaterialTheme.typography.bodySmall)
+        }
+        androidx.compose.material3.Switch(checked = fallback, onCheckedChange = {
+            fallback = it
+            de.meinhelfer.tag.ai.AiTask.setFallback(context, it)
+        })
+    }
+    if (auto) {
+        var limit by remember { mutableStateOf(de.meinhelfer.tag.ai.AiTask.autoLimit(context)) }
+        Text("Automatische Kommentare höchstens pro Tag", style = MaterialTheme.typography.bodyMedium)
+        androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            listOf(10, 20, 40, 999).forEach { n ->
+                androidx.compose.material3.FilterChip(
+                    selected = limit == n,
+                    onClick = { limit = n; de.meinhelfer.tag.ai.AiTask.setAutoLimit(context, n) },
+                    label = { Text(if (n == 999) "ohne Grenze" else "$n") },
+                )
+            }
+        }
+    }
+    TextButton(onClick = { tick++ }) { Text("Verbrauch aktualisieren") }
+    Text(
+        "Gezählt wird nur auf dem Handy. Die echten Grenzen legt jeder Dienst selbst fest und ändert sie manchmal; der Zähler beginnt jeden Tag neu.",
+        style = MaterialTheme.typography.bodySmall,
+    )
 }

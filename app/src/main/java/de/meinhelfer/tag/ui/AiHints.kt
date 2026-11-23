@@ -134,7 +134,7 @@ fun AiHintBox(
                     limitHit = false
                     result = null
                     scope.launch {
-                        AiClient.ask(context, AiClient.SYSTEM_PROMPT, promptText)
+                        AiClient.ask(context, AiClient.SYSTEM_PROMPT, promptText, task = de.meinhelfer.tag.ai.AiTask.Medikamente)
                             .onSuccess { result = AiClient.bullets(it) }
                             .onFailure {
                                 error = it.message ?: "Das hat nicht geklappt."

@@ -605,6 +605,7 @@ fun AssistantSheetContent(vm: MainViewModel, page: String, onOpenGuide: () -> Un
                         "Keine Daten aus der App (keine Namen, Medikamente, Termine). Schreib in die Frage bitte keine Namen.",
                     system = assistantAiSystem(st.name),
                     prompt = { assistantAiPrompt(question, answers + searchGuide(question, 6) + help) },
+                    task = de.meinhelfer.tag.ai.AiTask.Frage,
                     onAnswer = { a, _ ->
                         aiAnswer = a.trim().takeIf { it.isNotBlank() }
                         aiAnswer != null
@@ -1203,12 +1204,13 @@ object ScreenComment {
     val last = kotlinx.coroutines.flow.MutableStateFlow<Pair<String, String>?>(null)
 
     fun allowed(context: android.content.Context) =
-        de.meinhelfer.tag.ai.AiMode.skipConfirm(context) && AppPrefs.screenTalkOn(context) && de.meinhelfer.tag.ai.AiConfig.isConfigured(context)
+        de.meinhelfer.tag.ai.AiMode.skipConfirm(context) && AppPrefs.screenTalkOn(context) && de.meinhelfer.tag.ai.AiConfig.isConfigured(context) &&
+            de.meinhelfer.tag.ai.AiTask.enabled(context, de.meinhelfer.tag.ai.AiTask.Seite)
 
     /** KI fragen, Antwort merken und von Sunny sprechen lassen (mit Sprechblase). */
     suspend fun ask(context: android.content.Context, name: String, page: String, data: String): Result<String> {
         asked[page] = System.currentTimeMillis()
-        return de.meinhelfer.tag.ai.AiClient.ask(context, screenSystem(name), data, 400).map { it.trim().removePrefix("- ") }.onSuccess {
+        return de.meinhelfer.tag.ai.AiClient.ask(context, screenSystem(name), data, 400, de.meinhelfer.tag.ai.AiTask.Seite).map { it.trim().removePrefix("- ") }.onSuccess {
             last.value = page to it
             SunnyAvatar.caption.value = it
             Speech.speak(context, "assistent-seite", it)
@@ -1229,6 +1231,8 @@ fun ScreenCommentAuto(vm: MainViewModel, page: String) {
         if (!ScreenComment.allowed(context) || !AppPrefs.screenTalkAuto(context) || AppPrefs.isQuietNow(context)) return@LaunchedEffect
         kotlinx.coroutines.delay(2500)
         if (!ScreenComment.due(page) || Speech.speaking.value != null) return@LaunchedEffect
+        // Tageslimit für automatische Kommentare (schont das freie Kontingent)
+        if (de.meinhelfer.tag.ai.AiUsage.byTask(context, de.meinhelfer.tag.ai.AiTask.Seite) >= de.meinhelfer.tag.ai.AiTask.autoLimit(context)) return@LaunchedEffect
         ScreenComment.ask(context, st.name, page, data)
     }
 }

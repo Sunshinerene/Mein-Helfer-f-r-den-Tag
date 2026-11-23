@@ -47,6 +47,7 @@ fun AiActionButton(
     modifier: Modifier = Modifier,
     filled: Boolean = false,
     maxTokens: Int = 1500,
+    task: de.meinhelfer.tag.ai.AiTask = de.meinhelfer.tag.ai.AiTask.Allgemein,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -106,7 +107,7 @@ fun AiActionButton(
                     limitHit = false
                     val used = provider
                     scope.launch {
-                        AiClient.ask(context, system, text, maxTokens)
+                        AiClient.ask(context, system, text, maxTokens, task)
                             .onSuccess { answer ->
                                 if (!onAnswer(answer, used.label.substringBefore(" ("))) {
                                     error = "Die Antwort der KI konnte nicht ausgewertet werden. Versuche es nochmal oder wähle ein anderes Modell."

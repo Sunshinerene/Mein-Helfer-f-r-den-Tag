@@ -45,19 +45,53 @@ object AiClient {
         }.getOrDefault(de.meinhelfer.tag.summary.Anonymizer.known).also { de.meinhelfer.tag.summary.Anonymizer.known = it }
     }
 
-    suspend fun ask(context: Context, system: String, user: String, maxTokens: Int = 1500): Result<String> = withContext(Dispatchers.IO) {
+    /**
+     * KI fragen. [task] bestimmt den Dienst (eigene Zuordnung je Aufgabe, sonst Standard).
+     * Bei Limit wird – wenn erlaubt – automatisch ein anderer eingerichteter Dienst versucht.
+     */
+    suspend fun ask(
+        context: Context,
+        system: String,
+        user: String,
+        maxTokens: Int = 1500,
+        task: AiTask = AiTask.Allgemein,
+    ): Result<String> = withContext(Dispatchers.IO) {
         if (AiMode.isOff(context)) return@withContext Result.failure(IllegalStateException(AiMode.OFF_TEXT))
+        if (!AiTask.enabled(context, task)) {
+            return@withContext Result.failure(IllegalStateException("„${task.title}“ ist bei den KI-Aufgaben ausgeschaltet (Einstellungen → Persönlicher Assistent)."))
+        }
         // In jedem Modus: personenbezogene Angaben vor dem Senden entfernen
         val user = de.meinhelfer.tag.summary.Anonymizer.scrub(user, knownNames(context))
-        val provider = AiConfig.provider(context)
+        val chosen = AiTask.provider(context, task)?.takeIf { AiConfig.isReady(context, it) } ?: AiConfig.provider(context)
+        val order = buildList {
+            add(chosen)
+            if (AiTask.fallback(context)) {
+                addAll(AiProvider.entries.filter { it != chosen && AiConfig.isReady(context, it) }.sortedBy { AiUsage.limited(context, it) })
+            }
+        }
+        var last: Result<String> = Result.failure(IllegalStateException("Kein KI-Dienst eingerichtet."))
+        for (provider in order) {
+            last = askOnce(context, provider, system, user, maxTokens)
+            AiUsage.count(context, provider, task, last.isSuccess)
+            val e = last.exceptionOrNull()
+            if (e is AiLimitException) {
+                AiUsage.limitHit(context, provider)
+                continue
+            }
+            break
+        }
+        last
+    }
+
+    private fun askOnce(context: Context, provider: AiProvider, system: String, user: String, maxTokens: Int): Result<String> {
         val key = AiConfig.apiKey(context, provider)
         if (!AiConfig.isReady(context, provider)) {
-            return@withContext Result.failure(
+            return Result.failure(
                 IllegalStateException(if (provider == AiProvider.LOCAL) "Keine gültige Adresse für den eigenen Server eingetragen." else "Kein Schlüssel hinterlegt."),
             )
         }
         val model = AiConfig.model(context, provider)
-        try {
+        return try {
             Result.success(call(AiConfig.baseUrl(context, provider), provider, key, model, system, user, maxTokens))
         } catch (e: java.net.ConnectException) {
             Result.failure(IllegalStateException(if (provider == AiProvider.LOCAL) "Der eigene Server antwortet nicht. Läuft er, und ist das Handy im selben WLAN?" else "Keine Verbindung zum Dienst."))
