@@ -95,20 +95,6 @@ fun CareDiaryTodayCard(vm: MainViewModel, todayDay: Long, onOpen: () -> Unit) {
             }
         }
     }
-    if (showSelfCheck && person != null) {
-        SelfCheckDialog(
-            personName = person.name,
-            initial = selfAnswers,
-            diaryCounts = log.filter { it.day > today - 14 }.groupingBy { it.module }.eachCount(),
-            onDismiss = { showSelfCheck = false },
-            onSave = {
-                selfAnswers = it
-                AppPrefs.setSelfCheck(diaryContext, person.id, it)
-                showSelfCheck = false
-            },
-        )
-    }
-
     if (adding) {
         CareLogDialog(initial = null, day = todayDay, onDismiss = { adding = false }, onSave = {
             vm.saveCareLog(it)
@@ -364,6 +350,20 @@ fun CareDiaryScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit) {
                 )
             }
         }
+    }
+
+    if (showSelfCheck && person != null) {
+        SelfCheckDialog(
+            personName = person.name,
+            initial = selfAnswers,
+            diaryCounts = log.filter { it.day > today - 14 }.groupingBy { it.module }.eachCount(),
+            onDismiss = { showSelfCheck = false },
+            onSave = {
+                selfAnswers = it
+                AppPrefs.setSelfCheck(diaryContext, person.id, it)
+                showSelfCheck = false
+            },
+        )
     }
 
     if (adding) {
