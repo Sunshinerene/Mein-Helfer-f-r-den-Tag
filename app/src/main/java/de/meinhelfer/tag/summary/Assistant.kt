@@ -31,6 +31,10 @@ sealed interface ProposalAction {
     data class SetAlarm(val hour: Int, val minute: Int, val label: String) : ProposalAction
     /** Neue App-Version laden und danach die Installation starten (Android fragt zum Schluss selbst nach). */
     data class StartUpdate(val version: String) : ProposalAction
+    /** Erledigte Aufgaben (älter als 14 Tage) aus der Liste nehmen. */
+    data object Cleanup : ProposalAction
+    /** Steuerwerk: Freiheitsstufe eines Bereichs ändern. */
+    data class SetAutonomy(val area: String, val level: Int) : ProposalAction
 }
 
 /** Ein Vorschlag des Assistenten. Wird nur nach deiner Bestätigung ausgeführt. */

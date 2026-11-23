@@ -1,6 +1,6 @@
 # TODO
 
-Stand: v0.94.1 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.95.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
@@ -19,10 +19,12 @@ Stand: v0.94.1 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 - [ ] Motivator: Pausen-Erinnerung, Stimmungsverlauf in der Auswertung (nur für dich, nicht in geteilten Berichten), Ziel-Schritte als Aufgabe mit Frist übernehmen
 - [ ] KI direkt auf dem Handy: Gemini Nano über ML Kit (nur neuere Geräte, z. B. ab Pixel 9) oder ein eigenes kleines Modell in der App (z. B. Gemma, mehrere GB Download)
 - [ ] Sunny übernimmt App-Aufgaben (immer mit Frage „Soll ich …?“): Sicherung fällig → selbst anlegen; fehlende Android-Freigaben → Schritt für Schritt hinführen; Vorrat knapp → Apotheken-Bestellung/Rezeptanfrage vorbereiten; Aufräumen (erledigte Aufgaben archivieren, abgelaufene Erinnerungen, doppelte Dokumente); Daten-Check (Termin ohne Arzt, Medikament ohne Einnahmezeit, Person ohne Notfallkontakt); nach einem Update „Was ist neu?“ vorlesen; Speicherplatz knapp → alte Fotos/PDFs anbieten
-- [ ] Sunny-„Steuerwerk“ (fast selbstständig, indirekt gesteuert): 1) Signale sammeln (Uhrzeit, Termine, Vorrat, Stimmung, Update, Sicherung …) 2) Regeln mit Wichtigkeit und Risiko (nur lesen / ändert Daten / sendet etwas) 3) je Bereich eine Freiheitsstufe: nur fragen · machen und danach berichten · still erledigen 4) aus „Ja“/„Nein danke“ lernen (oft abgelehnt → seltener fragen, immer angenommen → Stufe höher anbieten) 5) Tagesplan: höchstens ein paar Anstöße am Tag, nie in der Ruhezeit; alles im Protokoll „Was Sunny heute gemacht hat“ und jederzeit zurücknehmbar
+- [ ] Steuerwerk weiter: mehr Bereiche (Sicherung, Freigaben, Nachbestellen vorbereiten, Daten-Check), Tagesplan mit Höchstzahl an Anstößen, Rücknehmen aus dem Protokoll
+- [x] Sunny-„Steuerwerk“ Grundlage (v0.95.0): 1) Signale sammeln (Uhrzeit, Termine, Vorrat, Stimmung, Update, Sicherung …) 2) Regeln mit Wichtigkeit und Risiko (nur lesen / ändert Daten / sendet etwas) 3) je Bereich eine Freiheitsstufe: nur fragen · machen und danach berichten · still erledigen 4) aus „Ja“/„Nein danke“ lernen (oft abgelehnt → seltener fragen, immer angenommen → Stufe höher anbieten) 5) Tagesplan: höchstens ein paar Anstöße am Tag, nie in der Ruhezeit; alles im Protokoll „Was Sunny heute gemacht hat“ und jederzeit zurücknehmbar
 - [ ] Designs verfeinern (Schriftarten, weitere Varianten); Effekte: echte Unschärfe hinter Glas-Karten ab Android 12, Glanz auch auf Knöpfen
 ## Bitte auf dem Handy prüfen (bisher nicht getestet)
 
+- [ ] Steuerwerk: Persönlicher Assistent → Steuerwerk: Stufen je Bereich; Aufräumen-Vorschlag (🧹) bzw. von selbst beim Start; Updates bei „Machen und Bescheid sagen“ von selbst geladen, Sunny sagt Bescheid, „Jetzt installieren“; dreimal „Nein, danke“ → Pause; dreimal Ja → ⚙️-Angebot; Protokoll in der Karte und den Einstellungen
 - [ ] Alltagshelfer-Fenster: deckend im eigenen Design (nichts mehr von der Seite dahinter sichtbar)
 - [ ] Update über Sunny: neue Version → Sunny sagt es an und fragt in ihrer Karte; „Ja, aktualisieren“ → lädt (Fortschritt in der Karte) → startet die Installation selbst; erste Mal Freigabe „Updates installieren“, nach Rückkehr geht es weiter
 
@@ -106,6 +108,11 @@ Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Daten
 - [ ] Sammel-Import: Vorschläge mit echten Scans verfeinern (z. B. gleicher Absender und gleiches Datum als weiterer Hinweis)
 
 - [ ] Eigene KI-Stimme direkt in der App (nur falls SherpaTTS nicht reicht): sherpa-onnx mit Piper-Stimme Thorsten oder Kerstin (CC0) oder apptor-tiny-tts (Apache-2.0, 21 MB); macht die App 25–70 MB größer, Lizenzen der Bibliotheken prüfen
+
+## Version 0.95.0 (fertig)
+
+- Steuerwerk: Freiheitsstufen je Bereich (Updates, Aufräumen, Vorschläge), Lernen aus Ja/Nein, Protokoll „Was Sunny gemacht hat“
+- Aufräumen: erledigte Aufgaben älter als 14 Tage aus der Liste nehmen (Vorschlag oder von selbst)
 
 ## Version 0.94.1 (fertig)
 

@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -137,19 +138,57 @@ private fun rememberAssistantState(vm: MainViewModel): AssistantState {
     }
     // Neue App-Version: Sunny fragt, ob sie laden und installieren soll
     val upd by vm.updateState.collectAsStateWithLifecycle()
-    val updateProposal = (upd as? de.meinhelfer.tag.update.UpdateState.Available)?.info?.version
-        ?.takeIf { AppPrefs.sunnyUpdates(appContext) && "update:$it" !in dismissed }
-        ?.let { v ->
-            listOf(
-                de.meinhelfer.tag.summary.Proposal(
-                    "update:$v",
-                    "📲 Es gibt eine neue Version ($v). Soll ich sie herunterladen und installieren? Android fragt am Ende noch einmal nach – dann einfach „Installieren“ tippen. Deine Daten bleiben erhalten.",
-                    "Ja, aktualisieren",
-                    de.meinhelfer.tag.summary.ProposalAction.StartUpdate(v),
-                ),
-            )
-        }.orEmpty()
-    val proposals = updateProposal + wake + birthdays + householdHints + Assistant.proposals(persons, todos, meds, duties, doctors, today, dismissed, recent, rates.first, rates.second)
+    val sunnyBusy by vm.sunnyInstall.collectAsStateWithLifecycle()
+    val autoTick by vm.autoTick.collectAsStateWithLifecycle()
+    val cleanupCount by vm.cleanupCount.collectAsStateWithLifecycle()
+    val updateProposal = if (!AppPrefs.sunnyUpdates(appContext) || sunnyBusy) emptyList() else when (val u = upd) {
+        is de.meinhelfer.tag.update.UpdateState.Available -> listOf(
+            de.meinhelfer.tag.summary.Proposal(
+                "update:${u.info.version}",
+                "📲 Es gibt eine neue Version (${u.info.version}). Soll ich sie herunterladen und installieren? Android fragt am Ende noch einmal nach – dann einfach „Installieren“ tippen. Deine Daten bleiben erhalten.",
+                "Ja, aktualisieren",
+                de.meinhelfer.tag.summary.ProposalAction.StartUpdate(u.info.version),
+            ),
+        )
+        is de.meinhelfer.tag.update.UpdateState.Ready -> listOf(
+            de.meinhelfer.tag.summary.Proposal(
+                "update:bereit:${u.info.version}",
+                "📲 Version ${u.info.version} ist schon geladen. Jetzt installieren? Android fragt noch einmal nach – deine Daten bleiben erhalten.",
+                "Jetzt installieren",
+                de.meinhelfer.tag.summary.ProposalAction.StartUpdate(u.info.version),
+            ),
+        )
+        else -> emptyList()
+    }.filter { it.key !in dismissed }
+    // Steuerwerk: Aufräumen anbieten (nur bei „Nur fragen“; sonst erledigt Sunny es selbst)
+    val cleanupProposal = if (cleanupCount > 0 && autoTick >= 0 &&
+        AppPrefs.autoLevel(appContext, de.meinhelfer.tag.summary.AutoArea.Cleanup) == de.meinhelfer.tag.summary.AutoLevel.Ask
+    ) {
+        listOf(
+            de.meinhelfer.tag.summary.Proposal(
+                "aufraeumen:${today / 7}",
+                "🧹 $cleanupCount erledigte Aufgabe" + (if (cleanupCount == 1) " ist" else "n sind") + " älter als 14 Tage. Soll ich sie aus der Liste nehmen? Im Verlauf bleiben sie.",
+                "Ja, aufräumen",
+                de.meinhelfer.tag.summary.ProposalAction.Cleanup,
+            ),
+        ).filter { it.key !in dismissed }
+    } else {
+        emptyList()
+    }
+    // Steuerwerk: immer „Ja“ → mehr Selbstständigkeit anbieten
+    val upgrades = listOf(de.meinhelfer.tag.summary.AutoArea.Updates to "update", de.meinhelfer.tag.summary.AutoArea.Cleanup to "aufraeumen").mapNotNull { (area, cat) ->
+        val level = AppPrefs.autoLevel(appContext, area)
+        if (!de.meinhelfer.tag.summary.Steuerwerk.offerUpgrade(area, level, AppPrefs.autoStat(appContext, cat))) return@mapNotNull null
+        de.meinhelfer.tag.summary.Proposal(
+            "stufe:${area.key}",
+            "⚙️ Bei „${area.title}“ sagst du immer Ja. Soll ich das künftig ohne Frage machen und dir danach Bescheid sagen? Ändern kannst du das jederzeit unter Persönlicher Assistent → Steuerwerk.",
+            "Ja, gern",
+            de.meinhelfer.tag.summary.ProposalAction.SetAutonomy(area.key, de.meinhelfer.tag.summary.AutoLevel.Report.key),
+        ).takeIf { it.key !in dismissed }
+    }
+    val now0 = System.currentTimeMillis()
+    val proposals = (updateProposal + cleanupProposal + upgrades + wake + birthdays + householdHints + Assistant.proposals(persons, todos, meds, duties, doctors, today, dismissed, recent, rates.first, rates.second))
+        .filter { !de.meinhelfer.tag.summary.Steuerwerk.paused(AppPrefs.autoStat(appContext, de.meinhelfer.tag.summary.Steuerwerk.category(it.key)), now0) }
     val measured = persons.associate { p ->
         p.id to vitals.any { it.personId == p.id && it.kind != VitalKind.Trinken.key && it.day >= today - 14 }
     }
@@ -373,6 +412,7 @@ fun AssistantCard(vm: MainViewModel, onOpen: (tab: Int) -> Unit, onMood: () -> U
                     st.proposals.take(3).forEach { ProposalBox(it, vm) }
                 }
                 SunnyUpdateStatus(vm, st.name)
+                SunnyReportBox(vm, st.name)
                 if (p != null) {
                     HorizontalDivider()
                     Text("Für dich", style = MaterialTheme.typography.labelLarge)
@@ -770,6 +810,9 @@ fun AssistantSettingsCard(vm: MainViewModel) {
                 sunnyUpd = it
                 AppPrefs.setSunnyUpdates(context, it)
             }
+            HorizontalDivider()
+            SteuerwerkSettings(vm, name)
+            HorizontalDivider()
             var tourAuto by remember { mutableStateOf(AppPrefs.tourAutoRead(context)) }
             SwitchLine("Rundgang mit Vorlesen", "Beim Rundgang (Einstellungen → Hilfe) liest $name jede Seite vor und blättert von selbst weiter. Im Rundgang jederzeit „⏸ Anhalten“ oder „▶ Mit Vorlesen“.", tourAuto) {
                 tourAuto = it
@@ -1345,10 +1388,43 @@ fun SunnyUpdateAgent(vm: MainViewModel) {
         onPauseOrDispose { }
     }
     val name = AppPrefs.assistantName(context)
+    // Steuerwerk: bei „Machen und Bescheid sagen“ / „Still erledigen“ lädt Sunny selbst (installieren bleibt deine Entscheidung)
+    androidx.compose.runtime.LaunchedEffect(upd) {
+        val u = upd as? de.meinhelfer.tag.update.UpdateState.Available ?: return@LaunchedEffect
+        if (!AppPrefs.sunnyUpdates(context)) return@LaunchedEffect
+        if (AppPrefs.autoLevel(context, de.meinhelfer.tag.summary.AutoArea.Updates) == de.meinhelfer.tag.summary.AutoLevel.Ask) return@LaunchedEffect
+        if (AppPrefs.autoLoadedVersion(context) == u.info.version) return@LaunchedEffect
+        AppPrefs.setAutoLoadedVersion(context, u.info.version)
+        vm.downloadUpdate()
+    }
+    androidx.compose.runtime.LaunchedEffect(upd) {
+        val u = upd as? de.meinhelfer.tag.update.UpdateState.Ready ?: return@LaunchedEffect
+        if (AppPrefs.autoLoadedVersion(context) != u.info.version || mine) return@LaunchedEffect
+        if (AppPrefs.sunnyUpdateAnnounced(context) == "geladen:" + u.info.version) return@LaunchedEffect
+        AppPrefs.setSunnyUpdateAnnounced(context, "geladen:" + u.info.version)
+        AppPrefs.addJournal(context, "update", "Version ${u.info.version} von selbst geladen – wartet auf „Jetzt installieren“.")
+        vm.bumpAuto()
+        if (AppPrefs.autoLevel(context, de.meinhelfer.tag.summary.AutoArea.Updates) == de.meinhelfer.tag.summary.AutoLevel.Report) {
+            vm.reportAuto("Ich habe die neue Version ${u.info.version} schon geladen. Wenn du magst, tipp in meiner Karte auf „Jetzt installieren“.")
+        }
+    }
+    // Berichte vorlesen (einmal je Bericht, nicht in der Ruhezeit, nicht bei stummem Handy)
+    val report by vm.autoReport.collectAsStateWithLifecycle()
+    androidx.compose.runtime.LaunchedEffect(report) {
+        val r = report ?: return@LaunchedEffect
+        if (AppPrefs.isQuietNow(context)) return@LaunchedEffect
+        val audio = context.getSystemService(android.content.Context.AUDIO_SERVICE) as? android.media.AudioManager
+        if (audio != null && audio.ringerMode != android.media.AudioManager.RINGER_MODE_NORMAL) return@LaunchedEffect
+        kotlinx.coroutines.delay(3000)
+        var waited = 0
+        while (Speech.speaking.value != null && waited < 60) { kotlinx.coroutines.delay(1000); waited++ }
+        Speech.speak(context, "assistent_steuer", r)
+    }
     // Ansage: einmal pro Version, nicht in der Ruhezeit, nicht bei stummem Handy
     androidx.compose.runtime.LaunchedEffect(upd) {
         val u = upd as? de.meinhelfer.tag.update.UpdateState.Available ?: return@LaunchedEffect
         if (!AppPrefs.sunnyUpdates(context) || AppPrefs.sunnyUpdateAnnounced(context) == u.info.version) return@LaunchedEffect
+        if (AppPrefs.autoLevel(context, de.meinhelfer.tag.summary.AutoArea.Updates) != de.meinhelfer.tag.summary.AutoLevel.Ask) return@LaunchedEffect
         if (AppPrefs.isQuietNow(context)) return@LaunchedEffect
         val audio = context.getSystemService(android.content.Context.AUDIO_SERVICE) as? android.media.AudioManager
         if (audio != null && audio.ringerMode != android.media.AudioManager.RINGER_MODE_NORMAL) return@LaunchedEffect
@@ -1368,6 +1444,7 @@ fun SunnyUpdateAgent(vm: MainViewModel) {
             is de.meinhelfer.tag.update.UpdateState.Ready -> {
                 if (de.meinhelfer.tag.update.UpdateChecker.canInstall(context)) {
                     vm.clearSunnyInstall()
+                    AppPrefs.addJournal(context, "update", "Installation von Version ${u.info.version} gestartet.")
                     Speech.speak(context, "assistent_update", "Fertig geladen. Android fragt jetzt noch einmal – tipp bitte auf Installieren. Danach startet die App neu, deine Daten bleiben erhalten.")
                     kotlinx.coroutines.delay(1500)
                     runCatching { de.meinhelfer.tag.update.UpdateChecker.install(context, u.file) }
@@ -1385,4 +1462,100 @@ fun SunnyUpdateAgent(vm: MainViewModel) {
             else -> Unit
         }
     }
+}
+
+
+/** Bericht nach „Machen und Bescheid sagen“ und Zugang zum Protokoll. */
+@Composable
+private fun SunnyReportBox(vm: MainViewModel, name: String) {
+    val report by vm.autoReport.collectAsStateWithLifecycle()
+    var showJournal by remember { mutableStateOf(false) }
+    report?.let { r ->
+        HorizontalDivider()
+        Text("📝 $r", style = MaterialTheme.typography.bodyMedium)
+        TextButton(onClick = { vm.clearAutoReport() }) { Text("OK") }
+    }
+    TextButton(onClick = { showJournal = true }) { Text("📝 Was $name gemacht hat") }
+    if (showJournal) SunnyJournalDialog(vm, name) { showJournal = false }
+}
+
+/** Protokoll der letzten 7 Tage. */
+@Composable
+fun SunnyJournalDialog(vm: MainViewModel, name: String, onClose: () -> Unit) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val tick by vm.autoTick.collectAsStateWithLifecycle()
+    val entries = remember(tick) { AppPrefs.journal(context).reversed() }
+    val fmt = remember { java.time.format.DateTimeFormatter.ofPattern("EE dd.MM. HH:mm", java.util.Locale.GERMAN) }
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onClose,
+        title = { Text("Was $name gemacht hat") },
+        text = {
+            Column(
+                Modifier.heightIn(max = 460.dp).verticalScroll(androidx.compose.foundation.rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Text("Die letzten 7 Tage. Bleibt nur auf diesem Handy.", style = MaterialTheme.typography.bodySmall)
+                if (entries.isEmpty()) Text("Noch nichts.", style = MaterialTheme.typography.bodyMedium)
+                entries.forEach { e ->
+                    val t = java.time.Instant.ofEpochMilli(e.millis).atZone(java.time.ZoneId.systemDefault()).format(fmt)
+                    Text(t, style = MaterialTheme.typography.labelSmall)
+                    Text(e.text, style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onClose) { Text("Schließen") } },
+        dismissButton = {
+            TextButton(onClick = {
+                Speech.speak(context, "assistent_protokoll", if (entries.isEmpty()) "Ich habe noch nichts gemacht." else entries.take(8).joinToString(" ") { it.text })
+            }) { Text("🔊 Vorlesen") }
+        },
+    )
+}
+
+/** Einstellungen: wie selbstständig Sunny je Bereich sein darf, was sie gelernt hat, Protokoll. */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+private fun SteuerwerkSettings(vm: MainViewModel, name: String) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val tick by vm.autoTick.collectAsStateWithLifecycle()
+    var showJournal by remember { mutableStateOf(false) }
+    Text("⚙️ Steuerwerk: Wie selbstständig darf $name sein?", style = MaterialTheme.typography.titleSmall)
+    Text(
+        "Je Bereich: nur fragen, machen und danach Bescheid sagen, oder still erledigen. Was Daten ändert oder etwas sendet, fragt $name immer. " +
+            "Sagst du dreimal „Nein, danke“ zu einer Art Vorschlag, fragt sie eine Woche lang nicht mehr; sagst du immer Ja, bietet sie mehr Selbstständigkeit an.",
+        style = MaterialTheme.typography.bodySmall,
+    )
+    de.meinhelfer.tag.summary.AutoArea.entries.forEach { area ->
+        val current = remember(tick) { AppPrefs.autoLevel(context, area) }
+        Text(area.title, style = MaterialTheme.typography.labelLarge)
+        Text(area.text, style = MaterialTheme.typography.bodySmall)
+        androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            area.levels.forEach { l ->
+                FilterChip(
+                    selected = l == current,
+                    onClick = {
+                        AppPrefs.setAutoLevel(context, area, l)
+                        AppPrefs.addJournal(context, area.key, "„${area.title}“ steht jetzt auf „${l.label}“ (von dir eingestellt).")
+                        vm.bumpAuto()
+                        if (area == de.meinhelfer.tag.summary.AutoArea.Cleanup) vm.refreshCleanup()
+                    },
+                    label = { Text(l.label) },
+                )
+            }
+        }
+    }
+    val now = System.currentTimeMillis()
+    val paused = remember(tick) { AppPrefs.autoStats(context).filter { de.meinhelfer.tag.summary.Steuerwerk.paused(it.value, now) } }
+    if (paused.isNotEmpty()) {
+        Text("Gerade Pause (zu oft abgelehnt): " + paused.keys.joinToString { de.meinhelfer.tag.summary.Steuerwerk.categoryName(it) }, style = MaterialTheme.typography.bodySmall)
+    }
+    androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedButton(shape = buttonShape(), onClick = { showJournal = true }) { Text("📝 Protokoll") }
+        TextButton(onClick = {
+            AppPrefs.resetAutoStats(context)
+            AppPrefs.addJournal(context, "steuer", "Gelerntes zurückgesetzt – ich frage wieder zu allem.")
+            vm.bumpAuto()
+        }) { Text("Gelerntes zurücksetzen") }
+    }
+    if (showJournal) SunnyJournalDialog(vm, name) { showJournal = false }
 }

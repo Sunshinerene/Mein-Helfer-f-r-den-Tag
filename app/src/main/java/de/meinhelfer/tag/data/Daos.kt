@@ -180,6 +180,13 @@ interface TodoDao {
     /** Erledigte aus der Liste ausblenden (bleiben im Verlauf). */
     @Query("UPDATE Todo SET archived = 1 WHERE personId = :personId AND done = 1")
     suspend fun archiveDone(personId: Long)
+
+    /** Steuerwerk: erledigte Aufgaben, die vor [before] erledigt wurden und noch in der Liste stehen. */
+    @Query("SELECT COUNT(*) FROM Todo WHERE done = 1 AND archived = 0 AND doneMillis IS NOT NULL AND doneMillis < :before")
+    suspend fun countDoneBefore(before: Long): Int
+
+    @Query("UPDATE Todo SET archived = 1 WHERE done = 1 AND archived = 0 AND doneMillis IS NOT NULL AND doneMillis < :before")
+    suspend fun archiveDoneBefore(before: Long): Int
 }
 
 @Dao

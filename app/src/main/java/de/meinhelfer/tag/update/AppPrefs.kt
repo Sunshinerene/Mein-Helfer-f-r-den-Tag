@@ -186,6 +186,46 @@ object AppPrefs {
         prefs(context).edit().putBoolean("assistent_bild", on).apply()
     }
 
+    // ---- Steuerwerk: Freiheitsstufen, Gelerntes, Protokoll
+    fun autoLevel(context: Context, area: de.meinhelfer.tag.summary.AutoArea): de.meinhelfer.tag.summary.AutoLevel {
+        val l = de.meinhelfer.tag.summary.AutoLevel.of(prefs(context).getInt("steuer_stufe_" + area.key, 0))
+        return if (l in area.levels) l else de.meinhelfer.tag.summary.AutoLevel.Ask
+    }
+    fun setAutoLevel(context: Context, area: de.meinhelfer.tag.summary.AutoArea, level: de.meinhelfer.tag.summary.AutoLevel) {
+        prefs(context).edit().putInt("steuer_stufe_" + area.key, level.key).apply()
+    }
+    fun autoStat(context: Context, cat: String): de.meinhelfer.tag.summary.AutoStat =
+        de.meinhelfer.tag.summary.AutoStat.decode(prefs(context).getString("steuer_stat_$cat", null))
+    fun setAutoStat(context: Context, cat: String, s: de.meinhelfer.tag.summary.AutoStat) {
+        prefs(context).edit().putString("steuer_stat_$cat", s.encode()).apply()
+    }
+    fun autoStats(context: Context): Map<String, de.meinhelfer.tag.summary.AutoStat> =
+        prefs(context).all.filterKeys { it.startsWith("steuer_stat_") }
+            .map { (k, v) -> k.removePrefix("steuer_stat_") to de.meinhelfer.tag.summary.AutoStat.decode(v as? String) }.toMap()
+    fun resetAutoStats(context: Context) {
+        val e = prefs(context).edit()
+        prefs(context).all.keys.filter { it.startsWith("steuer_stat_") }.forEach { e.remove(it) }
+        e.apply()
+    }
+    fun journal(context: Context): List<de.meinhelfer.tag.summary.JournalEntry> =
+        de.meinhelfer.tag.summary.JournalEntry.decodeAll(prefs(context).getString("sunny_protokoll", "") ?: "")
+    fun addJournal(context: Context, area: String, text: String) {
+        val list = de.meinhelfer.tag.summary.JournalEntry.append(journal(context), de.meinhelfer.tag.summary.JournalEntry(System.currentTimeMillis(), area, text))
+        prefs(context).edit().putString("sunny_protokoll", list.joinToString("\n") { it.encode() }).apply()
+    }
+    fun clearJournal(context: Context) {
+        prefs(context).edit().remove("sunny_protokoll").apply()
+    }
+    fun lastCleanupDay(context: Context): Long = prefs(context).getLong("steuer_aufgeraeumt", 0L)
+    fun setLastCleanupDay(context: Context, day: Long) {
+        prefs(context).edit().putLong("steuer_aufgeraeumt", day).apply()
+    }
+    /** Version, die Sunny schon von selbst geladen hat. */
+    fun autoLoadedVersion(context: Context): String = prefs(context).getString("steuer_update_geladen", "") ?: ""
+    fun setAutoLoadedVersion(context: Context, v: String) {
+        prefs(context).edit().putString("steuer_update_geladen", v).apply()
+    }
+
     /** Sunny meldet neue Versionen, fragt nach und übernimmt auf Wunsch Download und Installation. */
     fun sunnyUpdates(context: Context): Boolean = prefs(context).getBoolean("sunny_updates", true)
     fun setSunnyUpdates(context: Context, on: Boolean) {

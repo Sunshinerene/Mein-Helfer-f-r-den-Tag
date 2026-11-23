@@ -559,10 +559,77 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun dismissProposal(key: String) {
         AppPrefs.addAssistantDismissed(getApplication(), key)
         _assistantDismissed.value = AppPrefs.assistantDismissed(getApplication())
+        // Steuerwerk: aus dem „Nein“ lernen
+        val app = getApplication<Application>()
+        val cat = de.meinhelfer.tag.summary.Steuerwerk.category(key)
+        val before = AppPrefs.autoStat(app, cat)
+        val after = de.meinhelfer.tag.summary.Steuerwerk.declined(before, System.currentTimeMillis())
+        AppPrefs.setAutoStat(app, cat, after)
+        if (de.meinhelfer.tag.summary.Steuerwerk.justPaused(before, after)) {
+            AppPrefs.addJournal(app, cat, "Zu „${de.meinhelfer.tag.summary.Steuerwerk.categoryName(cat)}“ frage ich eine Woche lang nicht mehr (dreimal abgelehnt).")
+        }
+        _autoTick.value++
+    }
+
+    // ---------------------------------------------------------------- Steuerwerk
+    private val _autoTick = MutableStateFlow(0)
+    /** Zählt hoch, wenn sich Stufen, Gelerntes oder das Protokoll ändern. */
+    val autoTick: StateFlow<Int> = _autoTick
+    fun bumpAuto() { _autoTick.value++ }
+
+    private val _cleanupCount = MutableStateFlow(0)
+    /** Erledigte Aufgaben, die älter als 14 Tage noch in der Liste stehen. */
+    val cleanupCount: StateFlow<Int> = _cleanupCount
+
+    private val _autoReport = MutableStateFlow<String?>(null)
+    /** Bericht nach „Machen und Bescheid sagen“ (Sunny liest ihn vor, Karte zeigt ihn bis „OK“). */
+    val autoReport: StateFlow<String?> = _autoReport
+    fun clearAutoReport() { _autoReport.value = null }
+    fun reportAuto(text: String) { _autoReport.value = text }
+
+    private fun cleanupBefore() = System.currentTimeMillis() - 14L * 24 * 3600 * 1000
+
+    fun refreshCleanup() = viewModelScope.launch {
+        _cleanupCount.value = runCatching { db.todoDao().countDoneBefore(cleanupBefore()) }.getOrDefault(0)
+    }
+
+    fun runCleanup() = viewModelScope.launch {
+        val app = getApplication<Application>()
+        val n = db.todoDao().archiveDoneBefore(cleanupBefore())
+        AppPrefs.setLastCleanupDay(app, LocalDate.now().toEpochDay())
+        if (n > 0) AppPrefs.addJournal(app, "aufraeumen", "$n erledigte Aufgabe(n) aus der Liste genommen (im Verlauf weiter da).")
+        _cleanupCount.value = 0
+        _autoTick.value++
+    }
+
+    /** Beim Start: Aufräumen von selbst, wenn die Stufe es erlaubt (höchstens einmal am Tag). */
+    private suspend fun autoCleanup() {
+        val app = getApplication<Application>()
+        val level = AppPrefs.autoLevel(app, de.meinhelfer.tag.summary.AutoArea.Cleanup)
+        val n = runCatching { db.todoDao().countDoneBefore(cleanupBefore()) }.getOrDefault(0)
+        _cleanupCount.value = n
+        val today = LocalDate.now().toEpochDay()
+        if (level == de.meinhelfer.tag.summary.AutoLevel.Ask || n == 0 || AppPrefs.lastCleanupDay(app) >= today) return
+        val done = db.todoDao().archiveDoneBefore(cleanupBefore())
+        AppPrefs.setLastCleanupDay(app, today)
+        AppPrefs.addJournal(app, "aufraeumen", "Von selbst aufgeräumt: $done erledigte Aufgabe(n) aus der Liste genommen (im Verlauf weiter da).")
+        _cleanupCount.value = 0
+        if (level == de.meinhelfer.tag.summary.AutoLevel.Report) {
+            _autoReport.value = "Ich habe aufgeräumt: $done erledigte Aufgabe" + (if (done == 1) "" else "n") + " aus der Liste genommen. Im Verlauf sind sie weiter da."
+        }
+        _autoTick.value++
     }
 
     /** Vorschlag übernehmen (nur nach Tipp auf den Knopf). */
     fun applyProposal(p: de.meinhelfer.tag.summary.Proposal) = viewModelScope.launch {
+        // Steuerwerk: aus dem „Ja“ lernen und ins Protokoll schreiben
+        run {
+            val app = getApplication<Application>()
+            val cat = de.meinhelfer.tag.summary.Steuerwerk.category(p.key)
+            AppPrefs.setAutoStat(app, cat, de.meinhelfer.tag.summary.Steuerwerk.accepted(AppPrefs.autoStat(app, cat)))
+            AppPrefs.addJournal(app, cat, "Auf deinen Tipp („${p.confirmLabel}“): " + p.text.take(140))
+            _autoTick.value++
+        }
         when (val a = p.action) {
             is de.meinhelfer.tag.summary.ProposalAction.RaisePriority -> {
                 val t = db.todoDao().byId(a.todoId) ?: return@launch
@@ -590,6 +657,15 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             de.meinhelfer.tag.summary.ProposalAction.Acknowledge -> Unit
             is de.meinhelfer.tag.summary.ProposalAction.SetAlarm -> Unit // stellt die Karte selbst (braucht die Activity)
             is de.meinhelfer.tag.summary.ProposalAction.StartUpdate -> startUpdateBySunny()
+            de.meinhelfer.tag.summary.ProposalAction.Cleanup -> runCleanup()
+            is de.meinhelfer.tag.summary.ProposalAction.SetAutonomy -> {
+                val app = getApplication<Application>()
+                val area = de.meinhelfer.tag.summary.AutoArea.of(a.area) ?: return@launch
+                val level = de.meinhelfer.tag.summary.AutoLevel.of(a.level)
+                AppPrefs.setAutoLevel(app, area, level)
+                AppPrefs.addJournal(app, area.key, "„${area.title}“ steht jetzt auf „${level.label}“.")
+                _autoTick.value++
+            }
             is de.meinhelfer.tag.summary.ProposalAction.OpenedToday -> {
                 val m = db.medicationDao().byId(a.medId) ?: return@launch
                 db.medicationDao().update(m.copy(openedDay = LocalDate.now().toEpochDay()))
@@ -721,6 +797,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             extendSeries()
             ReminderScheduler.rescheduleAll(app)
         }
+        viewModelScope.launch { autoCleanup() }
         if (AppPrefs.autoUpdateCheck(app)) {
             checkForUpdate()
             refreshRates()
