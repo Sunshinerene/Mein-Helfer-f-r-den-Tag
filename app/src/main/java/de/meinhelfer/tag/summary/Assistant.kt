@@ -108,25 +108,47 @@ object Assistant {
                     action = ProposalAction.Postpone(t.id, today + 3),
                 )
             }
-        // Knapper Vorrat ohne offene Aufgabe dazu
-        meds.forEach { m ->
-            val left = m.daysLeft(today) ?: return@forEach
-            if (left > 7) return@forEach
-            val name = m.name.trim()
-            if (name.isEmpty()) return@forEach
-            val hasTask = open.any { it.personId == m.personId && it.text.contains(name, ignoreCase = true) }
-            if (hasTask) return@forEach
+        // Knapper Vorrat ohne offene Aufgabe dazu; beim selben Arzt werden Rezepte gebündelt
+        // (was dort in den nächsten zwei Wochen ohnehin knapp wird, gleich mitbestellen)
+        data class Need(val m: Medication, val name: String, val left: Long, val doctorId: Long?, val substitute: Boolean)
+        val needs = meds.mapNotNull { m ->
+            val left = m.daysLeft(today) ?: return@mapNotNull null
+            if (left > 14) return@mapNotNull null
+            val name = m.name.trim().ifEmpty { return@mapNotNull null }
+            if (open.any { it.personId == m.personId && it.text.contains(name, ignoreCase = true) }) return@mapNotNull null
             val resolved = Duties.resolve(duties, m.doctorId, m.personId, Duties.REZEPT, today)
-            val doctor = doctors.firstOrNull { it.id == resolved.id }
-            val text = "Rezept für $name" + (doctor?.let { " bei ${it.name}" } ?: "") + " bestellen"
-            val due = if (left <= 3) today else today + 1
-            out += Proposal(
-                key = "bestellen:${m.id}:${today / 7}",
-                text = "$name${who(m.personId)} reicht nur noch " + (if (left <= 0) "heute" else if (left == 1) "einen Tag" else "$left Tage") +
-                    ". Aufgabe „$text“ anlegen?" + (resolved.substitute?.let { " (Vertretung ist eingetragen.)" } ?: ""),
-                confirmLabel = "Aufgabe anlegen",
-                action = ProposalAction.ReorderTask(m.personId, text, resolved.id, due),
-            )
+            Need(m, name, left.toLong(), resolved.id, resolved.substitute != null)
+        }
+        val groups = needs.groupBy { it.doctorId ?: -it.m.id }.values.filter { g -> g.any { it.left <= 7 } }
+        groups.forEach { g ->
+            val urgent = g.filter { it.left <= 7 }.sortedBy { it.left }
+            val first = urgent.first()
+            val doctor = doctors.firstOrNull { it.id == first.doctorId }
+            val due = if (first.left <= 3) today else today + 1
+            fun leftText(n: Need) = if (n.left <= 0) "heute" else if (n.left == 1L) "einen Tag" else "${n.left} Tage"
+            if (g.size == 1) {
+                val text = "Rezept für ${first.name}" + (doctor?.let { " bei ${it.name}" } ?: "") + " bestellen"
+                out += Proposal(
+                    key = "bestellen:${first.m.id}:${today / 7}",
+                    text = "${first.name}${who(first.m.personId)} reicht nur noch ${leftText(first)}. Aufgabe „$text“ anlegen?" +
+                        (if (first.substitute) " (Vertretung ist eingetragen.)" else ""),
+                    confirmLabel = "Aufgabe anlegen",
+                    action = ProposalAction.ReorderTask(first.m.personId, text, first.doctorId, due),
+                )
+            } else {
+                val names = g.sortedBy { it.left }.map { it.name + who(it.m.personId) }
+                val later = g.filter { it.left > 7 }
+                val text = "Rezepte" + (doctor?.let { " bei ${it.name}" } ?: "") + " bestellen: " + g.sortedBy { it.left }.joinToString(", ") { it.name }
+                out += Proposal(
+                    key = "bestellen:" + g.map { it.m.id }.sorted().joinToString("-") + ":${today / 7}",
+                    text = "${first.name}${who(first.m.personId)} reicht nur noch ${leftText(first)}" +
+                        (if (later.isNotEmpty()) ", " + later.joinToString(", ") { "${it.name} noch ${it.left} Tage" } else "") +
+                        ". In einem Weg bestellen und abholen: " + names.joinToString(", ") + ". Aufgabe anlegen?" +
+                        (if (g.any { it.substitute }) " (Vertretung ist eingetragen.)" else ""),
+                    confirmLabel = "Eine Aufgabe für alle",
+                    action = ProposalAction.ReorderTask(first.m.personId, text, first.doctorId, due),
+                )
+            }
         }
         // Angebrochen: Haltbarkeit läuft ab (Packungsbeilage), dann neuen anbrechen
         meds.forEach { m ->

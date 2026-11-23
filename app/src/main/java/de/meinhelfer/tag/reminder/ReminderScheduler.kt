@@ -3,6 +3,7 @@ package de.meinhelfer.tag.reminder
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
+import de.meinhelfer.tag.update.AppPrefs
 import android.content.Intent
 import android.os.Build
 import de.meinhelfer.tag.data.AppDatabase
@@ -32,6 +33,7 @@ object ReminderScheduler {
     const val TYPE_ASSIST = "assistent"
     const val TYPE_MEASURE = "messen"
     const val TYPE_OPENED = "anbruch"
+    const val TYPE_LEAVE = "losfahren"
 
     /** Uhrzeiten der Trink-Erinnerung je Abstand */
     fun drinkHours(interval: Int): List<Int> = when (interval) {
@@ -213,7 +215,24 @@ object ReminderScheduler {
         )
     }
 
+    /** Wegzeit zu diesem Termin in Minuten (Kontakt oder Standard). */
+    fun travelFor(context: Context, appointment: Appointment): Int =
+        appointment.doctorId?.let { AppPrefs.travelTo(context, it) }?.takeIf { it >= 0 } ?: AppPrefs.leaveMinutes(context)
+
+    /** Erinnerung ans Losfahren: nur bei Terminen mit Ort oder Kontakt, nur mit Assistent. */
+    fun scheduleLeave(context: Context, appointment: Appointment) {
+        if (!AppPrefs.leaveOn(context) || !AppPrefs.assistantEnabled(context)) return
+        if (appointment.place.isBlank() && appointment.doctorId == null) return
+        val travel = travelFor(context, appointment)
+        if (travel <= 0) return
+        val trigger = de.meinhelfer.tag.summary.Leave.at(appointment.whenMillis, travel, AppPrefs.leaveBuffer(context))
+        if (trigger <= System.currentTimeMillis()) return
+        if (trigger > System.currentTimeMillis() + 60L * 24 * 60 * 60 * 1000) return
+        setAlarm(context = context, requestCode = "leave:${appointment.id}".hashCode(), triggerAt = trigger, type = TYPE_LEAVE, id = appointment.id, time = null)
+    }
+
     fun scheduleAppointment(context: Context, appointment: Appointment) {
+        scheduleLeave(context, appointment)
         if (appointment.reminderMinutes < 0) return
         val trigger = appointment.whenMillis - appointment.reminderMinutes * 60_000L
         if (trigger <= System.currentTimeMillis()) return

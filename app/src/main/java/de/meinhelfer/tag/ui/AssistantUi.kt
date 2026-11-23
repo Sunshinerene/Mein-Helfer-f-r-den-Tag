@@ -92,11 +92,42 @@ private fun rememberAssistantState(vm: MainViewModel): AssistantState {
     } else {
         emptyList()
     }
-    val proposals = wake + Assistant.proposals(persons, todos, meds, duties, doctors, today, dismissed, recent, rates.first, rates.second)
+    val birthdays = if (AppPrefs.birthdaysOn(appContext)) {
+        val entries = de.meinhelfer.tag.reminder.birthdayEntries(appContext, persons)
+        de.meinhelfer.tag.summary.Birthdays.upcoming(entries, now.toLocalDate(), 7).mapNotNull { u ->
+            val key = "geburtstag:${u.entry.name}:${u.date}:" + if (u.daysUntil <= 1) "tag" else "vorher"
+            if (key in dismissed) return@mapNotNull null
+            if (u.daysUntil <= 1) {
+                de.meinhelfer.tag.summary.Proposal(key, "🎂 " + de.meinhelfer.tag.summary.Birthdays.sentence(u), "Danke", de.meinhelfer.tag.summary.ProposalAction.Acknowledge)
+            } else {
+                val forPerson = persons.firstOrNull { it.name == u.entry.name }?.id ?: persons.firstOrNull()?.id ?: return@mapNotNull null
+                val text = "Karte oder Geschenk für ${u.entry.name} besorgen"
+                de.meinhelfer.tag.summary.Proposal(
+                    key,
+                    "🎂 " + de.meinhelfer.tag.summary.Birthdays.sentence(u) + " Aufgabe „$text“ anlegen?",
+                    "Aufgabe anlegen",
+                    de.meinhelfer.tag.summary.ProposalAction.ReorderTask(forPerson, text, null, u.date.toEpochDay() - 2),
+                )
+            }
+        }
+    } else {
+        emptyList()
+    }
+    val proposals = wake + birthdays + Assistant.proposals(persons, todos, meds, duties, doctors, today, dismissed, recent, rates.first, rates.second)
     val measured = persons.associate { p ->
         p.id to vitals.any { it.personId == p.id && it.kind != VitalKind.Trinken.key && it.day >= today - 14 }
     }
-    val preps = Assistant.preps(persons, appointments, checkins, meds, doctors, measured, now, zone)
+    // Wetter zum Termin (nur wenn eingeschaltet; höchstens alle 3 Stunden neu geholt)
+    var weatherTick by remember { mutableStateOf(0) }
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        val before = AppPrefs.weatherFetched(appContext)
+        de.meinhelfer.tag.info.Weather.refresh(appContext)
+        if (AppPrefs.weatherFetched(appContext) != before) weatherTick++
+    }
+    val preps = Assistant.preps(persons, appointments, checkins, meds, doctors, measured, now, zone).map { p ->
+        val w = if (weatherTick >= 0) de.meinhelfer.tag.info.Weather.hintAt(appContext, p.appointment.whenMillis, zone) else ""
+        if (w.isBlank()) p else p.copy(hints = listOf(w) + p.hints)
+    }
     val doneToday = checkins.count { it.day == today && it.done } +
         todos.count { it.done && it.doneMillis != null && Instant.ofEpochMilli(it.doneMillis).atZone(zone).toLocalDate().toEpochDay() == today }
     val expression = Assistant.expression(line, plan?.support ?: SupportLevel.None, doneToday, now)
@@ -200,8 +231,9 @@ fun AssistantCard(vm: MainViewModel, onOpen: (tab: Int) -> Unit, onMood: () -> U
         val todayPreps = st.preps.filter { it.whenText.startsWith("Heute") }
         return AssistantBrief.talk(
             st.name, java.time.LocalTime.now().hour, st.line, todayPreps,
-            st.proposals.count { it.action !is de.meinhelfer.tag.summary.ProposalAction.SetAlarm },
-            st.proposals.filter { it.action is de.meinhelfer.tag.summary.ProposalAction.SetAlarm }.map { it.text } + selfHints,
+            st.proposals.count { it.action !is de.meinhelfer.tag.summary.ProposalAction.SetAlarm && !it.text.startsWith("🎂") },
+            st.proposals.filter { it.action is de.meinhelfer.tag.summary.ProposalAction.SetAlarm || it.text.startsWith("🎂") }
+                .map { it.text.removePrefix("🎂 ") } + selfHints,
             item?.let { it.title to it.source }, st.multi,
         )
     }
@@ -681,6 +713,12 @@ fun AssistantSettingsCard(vm: MainViewModel) {
             HorizontalDivider()
             WakeSettings(name)
             HorizontalDivider()
+            LeaveSettings(name)
+            HorizontalDivider()
+            WeatherSettings(name)
+            HorizontalDivider()
+            BirthdaySettings(name)
+            HorizontalDivider()
             Text("Benachrichtigungen von $name", style = MaterialTheme.typography.labelLarge)
             OptionalTimeRow(
                 label = "Morgenüberblick",
@@ -987,4 +1025,111 @@ private fun WakeSettings(name: String) {
             FilterChip(selected = lead == m, onClick = { lead = m; save() }, label = { Text(if (m % 60 == 0) "${m / 60} Std." else if (m > 60) "${m / 60}½ Std." else "$m Min.") })
         }
     }
+}
+
+/** Erinnerung ans Losfahren: an/aus, Standard-Wegzeit und Puffer. */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+private fun LeaveSettings(name: String) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var on by remember { mutableStateOf(AppPrefs.leaveOn(context)) }
+    var minutes by remember { mutableStateOf(AppPrefs.leaveMinutes(context)) }
+    var buffer by remember { mutableStateOf(AppPrefs.leaveBuffer(context)) }
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    fun save() {
+        AppPrefs.setLeave(context, on, minutes, buffer)
+        scope.launch { de.meinhelfer.tag.reminder.ReminderScheduler.rescheduleAll(context) }
+    }
+    SwitchLine(
+        "🚗 Erinnerung ans Losfahren",
+        "Vor Terminen mit Ort oder Kontakt sagt $name rechtzeitig Bescheid, mit Wetter (wenn eingeschaltet) und „Route“ für die Karten-App. Die Wegzeit je Kontakt trägst du beim Kontakt ein (Bearbeiten → Wegzeit).",
+        on,
+    ) {
+        on = it
+        save()
+    }
+    if (!on) return
+    Text("Wegzeit, wenn beim Kontakt nichts steht", style = MaterialTheme.typography.bodyMedium)
+    androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        listOf(15, 20, 30, 45, 60).forEach { m -> FilterChip(selected = minutes == m, onClick = { minutes = m; save() }, label = { Text("$m Min.") }) }
+    }
+    Text("Erinnern so viel früher", style = MaterialTheme.typography.bodyMedium)
+    androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        listOf(5, 10, 15, 20).forEach { m -> FilterChip(selected = buffer == m, onClick = { buffer = m; save() }, label = { Text("$m Min.") }) }
+    }
+}
+
+/** Wetter vor Terminen: an/aus und Ort (nur der Ort wird an Open-Meteo gesendet). */
+@Composable
+private fun WeatherSettings(name: String) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    var on by remember { mutableStateOf(AppPrefs.weatherOn(context)) }
+    var place by remember { mutableStateOf(AppPrefs.weatherPlace(context)) }
+    var input by remember { mutableStateOf("") }
+    var status by remember { mutableStateOf<String?>(null) }
+    SwitchLine(
+        "🌦 Wetter vor Terminen",
+        "$name nennt bei Terminen Regen, Schnee, Glätte, Kälte oder Hitze und was mit sollte. Dafür wird nur der Ort an Open-Meteo gesendet (frei, ohne Konto), nie Termine oder Namen. Nur ein Anhaltspunkt.",
+        on,
+    ) {
+        on = it
+        AppPrefs.setWeather(context, it)
+        if (it) scope.launch { de.meinhelfer.tag.info.Weather.refresh(context, force = true) }
+    }
+    if (!on) return
+    Text(if (place.isBlank()) "Noch kein Ort gewählt." else "Ort: $place", style = MaterialTheme.typography.bodyMedium)
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedTextField(
+            value = input,
+            onValueChange = { input = it.take(60) },
+            label = { Text("Ort oder PLZ") },
+            singleLine = true,
+            modifier = Modifier.weight(1f),
+        )
+        OutlinedButton(shape = buttonShape(), enabled = input.isNotBlank(), onClick = {
+            status = "Suche …"
+            scope.launch {
+                de.meinhelfer.tag.info.Weather.find(input).onSuccess { (label, lat, lon) ->
+                    AppPrefs.setWeatherPlace(context, label, lat, lon)
+                    place = label
+                    input = ""
+                    de.meinhelfer.tag.info.Weather.refresh(context, force = true)
+                    status = if (AppPrefs.weatherData(context).isNotBlank()) "Vorhersage geladen." else "Ort gespeichert, Vorhersage folgt."
+                }.onFailure { status = "Nicht gefunden oder keine Verbindung." }
+            }
+        }) { Text("Übernehmen") }
+    }
+    status?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
+}
+
+/** Geburtstage: an/aus und eigene Einträge; die der betreuten Personen kommen aus dem Profil. */
+@Composable
+private fun BirthdaySettings(name: String) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var on by remember { mutableStateOf(AppPrefs.birthdaysOn(context)) }
+    var list by remember { mutableStateOf(AppPrefs.birthdayList(context)) }
+    SwitchLine(
+        "🎂 Geburtstage",
+        "Eine Woche vorher schlägt $name vor, Karte oder Geschenk zu besorgen, am Tag selbst erinnert $name ans Gratulieren. Die Geburtstage der betreuten Personen kommen aus ihrem Profil.",
+        on,
+    ) {
+        on = it
+        AppPrefs.setBirthdays(context, it, list)
+    }
+    if (!on) return
+    OutlinedTextField(
+        value = list,
+        onValueChange = {
+            list = it.take(2000)
+            AppPrefs.setBirthdays(context, true, list)
+        },
+        label = { Text("Weitere Geburtstage (eine Zeile je Person)") },
+        placeholder = { Text("Oma Erna, 14.03.1936\nNachbarin Gabi, 02.07.") },
+        minLines = 2,
+        modifier = Modifier.fillMaxWidth(),
+    )
+    val n = de.meinhelfer.tag.summary.Birthdays.parse(list).size
+    val lines = list.lines().count { it.isNotBlank() }
+    if (lines > n) Text("${lines - n} Zeile(n) nicht erkannt – Format: Name, TT.MM. oder TT.MM.JJJJ", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
 }

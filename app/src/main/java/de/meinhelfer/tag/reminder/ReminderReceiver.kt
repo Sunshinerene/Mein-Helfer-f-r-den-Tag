@@ -248,7 +248,12 @@ class ReminderReceiver : BroadcastReceiver() {
                         persons, todos, meds, db.responsibilityDao().list(), doctors, today, de.meinhelfer.tag.update.AppPrefs.assistantDismissed(context),
                         db.checkinDao().rangeList(today - 15, today),
                     ).size
+                    val bdays = if (de.meinhelfer.tag.update.AppPrefs.birthdaysOn(context)) {
+                        de.meinhelfer.tag.summary.Birthdays.upcoming(birthdayEntries(context, persons), java.time.LocalDate.now(), 0)
+                            .joinToString(" ") { de.meinhelfer.tag.summary.Birthdays.sentence(it) }
+                    } else ""
                     de.meinhelfer.tag.summary.AssistantBrief.morning(name, line, preps.filter { dayOf(it.appointment.whenMillis) == today }, proposals, multi)
+                        .let { (t, x) -> t to if (bdays.isBlank()) x else "$x $bdays" }
                 } else {
                     val done = checkins.count { it.day == today && it.done } +
                         todos.count { it.done && it.doneMillis != null && dayOf(it.doneMillis) == today }
@@ -296,6 +301,36 @@ class ReminderReceiver : BroadcastReceiver() {
                 )
             }
 
+            ReminderScheduler.TYPE_LEAVE -> {
+                val appointment = db.appointmentDao().byId(id) ?: return
+                if (!de.meinhelfer.tag.update.AppPrefs.leaveOn(context) || !de.meinhelfer.tag.update.AppPrefs.assistantEnabled(context)) return
+                val travel = ReminderScheduler.travelFor(context, appointment)
+                val buffer = de.meinhelfer.tag.update.AppPrefs.leaveBuffer(context)
+                val expected = de.meinhelfer.tag.summary.Leave.at(appointment.whenMillis, travel, buffer)
+                // Termin verschoben oder Wegzeit geändert: alter Alarm
+                if (kotlin.math.abs(System.currentTimeMillis() - expected) > 6 * 60 * 1000L) return
+                val day = java.time.LocalDate.now().toEpochDay()
+                if (de.meinhelfer.tag.summary.Tageslage.skipped(appointment, db.checkinDao().rangeList(day - 1, day + 1))) return
+                val doctor = appointment.doctorId?.let { did -> db.doctorDao().all().first().firstOrNull { it.id == did } }
+                val address = appointment.place.ifBlank { doctor?.address.orEmpty() }
+                val whenText = SimpleDateFormat("HH:mm", Locale.GERMANY).format(appointment.whenMillis)
+                val weather = de.meinhelfer.tag.info.Weather.hintAt(context, appointment.whenMillis)
+                val actions = if (address.isNotBlank()) {
+                    val route = Intent(Intent.ACTION_VIEW, android.net.Uri.parse("geo:0,0?q=" + android.net.Uri.encode(address)))
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    listOf("Route" to android.app.PendingIntent.getActivity(context, "route:$id".hashCode(), route, android.app.PendingIntent.FLAG_IMMUTABLE or android.app.PendingIntent.FLAG_UPDATE_CURRENT))
+                } else emptyList()
+                Notifications.show(
+                    context,
+                    "leave:$id".hashCode(),
+                    de.meinhelfer.tag.update.AppPrefs.assistantName(context) + ": Gleich losfahren" + forPerson(appointment.personId),
+                    de.meinhelfer.tag.summary.Leave.text(appointment.title, whenText, travel, buffer, address) + (if (weather.isNotBlank()) " $weather." else ""),
+                    actions = actions,
+                    personId = appointment.personId,
+                    channel = Notifications.CHANNEL_ASSISTANT,
+                )
+            }
+
             ReminderScheduler.TYPE_APPT -> {
                 val appointment = db.appointmentDao().byId(id) ?: return
                 // Termin wurde verschoben oder liegt in der Vergangenheit: alter Alarm, nichts anzeigen.
@@ -318,7 +353,8 @@ class ReminderReceiver : BroadcastReceiver() {
                         val prep = de.meinhelfer.tag.summary.Assistant.preps(
                             persons, listOf(appointment), emptyList(), db.medicationDao().list(), db.doctorDao().all().first(), measured, now.minusMinutes(1),
                         ).firstOrNull()
-                        de.meinhelfer.tag.summary.AssistantBrief.appointmentAddon(prep)
+                        de.meinhelfer.tag.summary.AssistantBrief.appointmentAddon(prep) +
+                            de.meinhelfer.tag.info.Weather.hintAt(context, appointment.whenMillis).let { if (it.isBlank()) "" else " $it." }
                     }.getOrDefault("")
                 } else ""
                 val name = if (assistant) de.meinhelfer.tag.update.AppPrefs.assistantName(context) + ": " else ""
@@ -333,3 +369,9 @@ class ReminderReceiver : BroadcastReceiver() {
         }
     }
 }
+
+/** Geburtstage der betreuten Personen und die eigenen Einträge. */
+internal fun birthdayEntries(context: Context, persons: List<de.meinhelfer.tag.data.Person>): List<de.meinhelfer.tag.summary.Birthdays.Entry> =
+    persons.mapNotNull { p ->
+        p.birthDate?.let { java.time.LocalDate.ofEpochDay(it) }?.let { d -> de.meinhelfer.tag.summary.Birthdays.Entry(p.name, d.monthValue, d.dayOfMonth, d.year) }
+    } + de.meinhelfer.tag.summary.Birthdays.parse(de.meinhelfer.tag.update.AppPrefs.birthdayList(context))

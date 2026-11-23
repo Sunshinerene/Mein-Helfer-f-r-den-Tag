@@ -786,6 +786,8 @@ fun DoctorDialog(initial: Doctor?, onDismiss: () -> Unit, onSave: (Doctor) -> Un
     var floor by remember { mutableStateOf(initial?.floor ?: "") }
     var elevator by remember { mutableStateOf(initial?.elevator ?: 0) }
     var access by remember { mutableStateOf(initial?.access ?: "") }
+    val travelContext = androidx.compose.ui.platform.LocalContext.current
+    var travel by remember { mutableStateOf(initial?.let { AppPrefs.travelTo(travelContext, it.id) }?.takeIf { it >= 0 }?.toString() ?: "") }
 
     DialogForm(
         title = if (initial == null) "Kontakt hinzufügen" else "Kontakt bearbeiten",
@@ -805,6 +807,11 @@ fun DoctorDialog(initial: Doctor?, onDismiss: () -> Unit, onSave: (Doctor) -> Un
                     access = access.trim(),
                 ),
             )
+            initial?.let {
+                AppPrefs.setTravelTo(travelContext, it.id, travel.toIntOrNull()?.coerceIn(0, 600) ?: -1)
+                val app = travelContext.applicationContext
+                kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch { de.meinhelfer.tag.reminder.ReminderScheduler.rescheduleAll(app) }
+            }
         },
     ) {
         OutlinedTextField(
@@ -849,5 +856,16 @@ fun DoctorDialog(initial: Doctor?, onDismiss: () -> Unit, onSave: (Doctor) -> Un
             access = access, onAccess = { access = it },
             hint = "Zum Beispiel Praxis im 2. Stock, Aufzug ja. Das wird bei jeder Fahrdienst-Anfrage zu diesem Ziel mit angegeben.",
         )
+        if (initial != null) {
+            OutlinedTextField(
+                value = travel,
+                onValueChange = { travel = it.filter { c -> c.isDigit() }.take(3) },
+                label = { Text("Wegzeit dorthin in Minuten (leer = Standard)") },
+                supportingText = { Text("Für die Erinnerung ans Losfahren vor Terminen bei diesem Kontakt.") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
     }
 }

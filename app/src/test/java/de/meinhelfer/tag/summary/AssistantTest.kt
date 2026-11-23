@@ -95,4 +95,18 @@ class AssistantTest {
         assertEquals(Expression.Happy, Assistant.expression(emptyList(), SupportLevel.None, 0, now))
         assertEquals(Expression.Calm, Assistant.expression(listOf(NextUp(NextKind.Task, null, "x", 1, "", false)), SupportLevel.None, 0, LocalDateTime.of(2026, 11, 23, 22, 0)))
     }
+
+    @Test
+    fun reorderIsBundledPerDoctor() {
+        val meds = listOf(
+            Medication(id = 1, name = "Ramipril", personId = 1, stock = 6.0, stockKnown = true, dailyUse = 2.0, stockDay = d, doctorId = 9),
+            Medication(id = 2, name = "Torasemid", personId = 1, stock = 10.0, stockKnown = true, dailyUse = 1.0, stockDay = d, doctorId = 9),
+            Medication(id = 3, name = "Metformin", personId = 1, stock = 60.0, stockKnown = true, dailyUse = 2.0, stockDay = d, doctorId = 9),
+        )
+        val doctors = listOf(Doctor(id = 9, name = "Dr. Müller"))
+        val list = Assistant.proposals(persons.take(1), emptyList(), meds, emptyList(), doctors, d, emptySet())
+        val reorder = list.single { it.action is ProposalAction.ReorderTask }
+        assertEquals("Rezepte bei Dr. Müller bestellen: Ramipril, Torasemid", (reorder.action as ProposalAction.ReorderTask).text)
+        assertTrue(reorder.text.contains("Torasemid noch 10 Tage"))
+    }
 }

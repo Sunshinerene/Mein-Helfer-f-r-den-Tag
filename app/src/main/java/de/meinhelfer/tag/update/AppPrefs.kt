@@ -108,6 +108,55 @@ object AppPrefs {
         prefs(context).edit().putBoolean("wecker_an", on).putInt("wecker_frueh", early).putInt("wecker_vorlauf", lead).apply()
     }
 
+    /** Losfahren: Erinnerung vor Terminen mit Ort; Wegzeit (Standard und je Kontakt) und Puffer in Minuten. */
+    fun leaveOn(context: Context): Boolean = prefs(context).getBoolean("losfahren_an", true)
+    fun leaveMinutes(context: Context): Int = prefs(context).getInt("losfahren_weg", 30)
+    fun leaveBuffer(context: Context): Int = prefs(context).getInt("losfahren_puffer", 10)
+
+    fun setLeave(context: Context, on: Boolean, minutes: Int, buffer: Int) {
+        prefs(context).edit().putBoolean("losfahren_an", on).putInt("losfahren_weg", minutes).putInt("losfahren_puffer", buffer).apply()
+    }
+
+    /** Wegzeit zu einem Kontakt in Minuten, -1 = Standard. */
+    fun travelTo(context: Context, doctorId: Long): Int = prefs(context).getInt("wegzeit_$doctorId", -1)
+
+    fun setTravelTo(context: Context, doctorId: Long, minutes: Int) {
+        prefs(context).edit().putInt("wegzeit_$doctorId", minutes).apply()
+    }
+
+    /** Wetter vor Terminen (Open-Meteo): an/aus, Ort mit Koordinaten, gemerkte Vorhersage. */
+    fun weatherOn(context: Context): Boolean = prefs(context).getBoolean("wetter_an", false)
+    fun weatherPlace(context: Context): String = prefs(context).getString("wetter_ort", "")!!
+    fun weatherCoords(context: Context): Pair<Double, Double>? {
+        val p = prefs(context)
+        if (!p.contains("wetter_lat")) return null
+        return p.getFloat("wetter_lat", 0f).toDouble() to p.getFloat("wetter_lon", 0f).toDouble()
+    }
+
+    fun setWeather(context: Context, on: Boolean) {
+        prefs(context).edit().putBoolean("wetter_an", on).apply()
+    }
+
+    fun setWeatherPlace(context: Context, label: String, lat: Double, lon: Double) {
+        prefs(context).edit().putString("wetter_ort", label).putFloat("wetter_lat", lat.toFloat()).putFloat("wetter_lon", lon.toFloat())
+            .putLong("wetter_zeit", 0L).apply()
+    }
+
+    fun weatherFetched(context: Context): Long = prefs(context).getLong("wetter_zeit", 0L)
+    fun weatherData(context: Context): String = prefs(context).getString("wetter_daten", "")!!
+
+    fun setWeatherData(context: Context, json: String) {
+        prefs(context).edit().putString("wetter_daten", json).putLong("wetter_zeit", System.currentTimeMillis()).apply()
+    }
+
+    /** Geburtstage: an/aus und eigene Einträge (eine Zeile je Person, z. B. „Oma Erna, 14.03.1936“). */
+    fun birthdaysOn(context: Context): Boolean = prefs(context).getBoolean("geburtstage_an", true)
+    fun birthdayList(context: Context): String = prefs(context).getString("geburtstage_liste", "")!!
+
+    fun setBirthdays(context: Context, on: Boolean, list: String) {
+        prefs(context).edit().putBoolean("geburtstage_an", on).putString("geburtstage_liste", list).apply()
+    }
+
     fun assistantImage(context: Context): Boolean = prefs(context).getBoolean("assistent_bild", true)
 
     fun setAssistantImage(context: Context, on: Boolean) {

@@ -1,6 +1,6 @@
 # TODO
 
-Stand: v0.75.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.76.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
@@ -9,7 +9,6 @@ Stand: v0.75.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Ideen und Optimierungen
 
-- [ ] Weitere kleine Helfer von Sunny: z. B. Erinnerung ans Losfahren mit Wegzeit, Wetterhinweis vor Terminen, Geburtstage im Umfeld, Rezept-Abholung bündeln
 
 - [ ] Packungsfoto: Erkennung verbessern (Wirkstoff, Packungsbeilage), Barcode live mit der Kamera
 - [ ] Widget: zweite Größe mit Tagesübersicht
@@ -24,6 +23,7 @@ Stand: v0.75.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Datenbank prüfen, Beispiel-PDFs mit erfundenen Daten, Beispiel-Grafiken, Test-Benachrichtigungen). Die Datenbank-Umstellungen von Version 5 bis 29 prüft seit v0.54.0 bei jedem Bauen ein automatischer Test gegen das Schema (Tabellen, Spalten, Typen); auf dem Handy bleibt zu prüfen, dass die eigenen Daten nach dem Update vollständig da sind.
 
+- [ ] Kleine Helfer: Losfahren-Benachrichtigung zur richtigen Zeit mit „Route“; Wegzeit beim Kontakt; Wetter nach Ort-Eingabe in Karte und Erinnerung; Geburtstage (Profil und Liste) eine Woche vorher und am Tag; mehrere knappe Medikamente beim selben Arzt als eine Aufgabe
 - [ ] Wecker: Termin morgen vor 10 Uhr → ab 14 Uhr Vorschlag in Sunnys Karte; „Wecker stellen“ stellt ihn in der Uhr-App (Toast), „Andere Zeit …“ öffnet die Uhr-App; Abendüberblick nennt den Wecker
 - [ ] Stimmung „sehr schlecht“ speichern → Sunny erscheint und liest die Unterstützung vor; „Weiter“ stoppt; Schalter „Empfehlungen gleich vorlesen“ aus → nur Knopf
 - [ ] Einblendung: Video jetzt rund ausgeschnitten? Ort, Größe, Deckkraft, Rand und Hintergrund wirken sofort; „Bei jedem Vorlesen“ zeigt Sunny auch im Tagesplan, bei Dokumenten und in der Anleitung; Stimme mit Regler unter Persönlicher Assistent
@@ -83,6 +83,13 @@ Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Daten
 - [ ] Sammel-Import: Vorschläge mit echten Scans verfeinern (z. B. gleicher Absender und gleiches Datum als weiterer Hinweis)
 
 - [ ] Eigene KI-Stimme direkt in der App (nur falls SherpaTTS nicht reicht): sherpa-onnx mit Piper-Stimme Thorsten oder Kerstin (CC0) oder apptor-tiny-tts (Apache-2.0, 21 MB); macht die App 25–70 MB größer, Lizenzen der Bibliotheken prüfen
+
+## Version 0.76.0 (fertig)
+
+- Erinnerung ans Losfahren mit Wegzeit je Kontakt und „Route“
+- Wetter zum Termin (Open-Meteo, nur Ort, Standard aus)
+- Geburtstage: Vorschlag eine Woche vorher, Erinnerung am Tag
+- Rezepte beim selben Arzt gebündelt
 
 ## Version 0.75.0 (fertig)
 
