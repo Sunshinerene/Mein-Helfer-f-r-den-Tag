@@ -63,12 +63,36 @@ object BenefitRates {
      * [current] liefert je Jahr (Monatsbetrag, Jahresbetrag, Übertrag bis Monat) wie in der App eingestellt.
      */
     fun changes(rates: Rates, thisYear: Int, current: (Int) -> Triple<Double, Double, Int>): List<RateChange> =
-        rates.years.filter { it.year in thisYear..thisYear + 1 && (it.status == "gilt" || it.status == "beschlossen") }
+        // Spätere Zeilen gewinnen (z. B. die selbst gelesene Übersicht des Ministeriums nach der Liste im Repo)
+        rates.years.associateBy { it.year }.values.filter { it.year in thisYear..thisYear + 1 && (it.status == "gilt" || it.status == "beschlossen") }
             .mapNotNull { r ->
                 val (m, j, c) = current(r.year)
                 if (kotlin.math.abs(m - r.monthly) < 0.005 && kotlin.math.abs(j - r.yearly) < 0.005 && c == r.carryMonth) null
                 else RateChange(r.year, m, r.monthly, j, r.yearly, c, r.carryMonth, r.source)
             }
+
+    /** Adresse der jährlichen „Übersicht Leistungsbeträge“ des Bundesgesundheitsministeriums. */
+    fun officialUrl(year: Int): String =
+        "https://www.bundesgesundheitsministerium.de/fileadmin/Dateien/3_Downloads/P/Pflegeversicherung_Leistungsbeitraege/Uebersicht_Leistungsbetraege_$year.pdf"
+
+    private val RELIEF = Regex("""Entlastungsbetrag[^0-9]{0,80}?(\d{2,3}(?:,\d{2})?)\s*(?:Euro|€)""", RegexOption.IGNORE_CASE)
+    private val YEARLY = Regex("""Gemeinsame[nrs]?\s+Jahresbetrag[^0-9]{0,120}?(\d{1,2}\.?\d{3}(?:,\d{2})?)\s*(?:Euro|€)""", RegexOption.IGNORE_CASE)
+
+    private fun euro(s: String): Double? = s.replace(".", "").replace(',', '.').toDoubleOrNull()
+
+    /**
+     * Beträge aus dem Text der Übersicht des Ministeriums. Nur wenn beide Zahlen gefunden und plausibel sind,
+     * sonst null (dann bleibt es bei der Liste im Repo). Für ein künftiges Jahr gilt die Übersicht als „beschlossen“.
+     */
+    fun fromOfficialText(text: String, year: Int, thisYear: Int): RateYear? {
+        val flat = text.replace(Regex("\\s+"), " ")
+        val monthly = RELIEF.findAll(flat).mapNotNull { euro(it.groupValues[1]) }.firstOrNull { it in 50.0..500.0 } ?: return null
+        val yearly = YEARLY.findAll(flat).mapNotNull { euro(it.groupValues[1]) }.firstOrNull { it in 1000.0..10000.0 } ?: return null
+        return RateYear(year, monthly, yearly, 6, if (year <= thisYear) "gilt" else "beschlossen", "BMG, Übersicht Leistungsbeträge $year")
+    }
+
+    /** Eine Zeile im Format der Liste, z. B. „jahr;2027;131;3539;6;beschlossen;Quelle“. */
+    fun line(r: RateYear): String = listOf("jahr", r.year, Amounts.fmt(r.monthly).replace(',', '.'), Amounts.fmt(r.yearly).replace(',', '.'), r.carryMonth, r.status, r.source).joinToString(";")
 
     /** Offene Hinweise (geplant oder beschlossen), höchstens die letzten drei. */
     fun openNotes(rates: Rates): List<RateNote> = rates.notes.takeLast(3)

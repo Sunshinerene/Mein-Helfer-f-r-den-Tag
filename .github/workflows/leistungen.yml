@@ -1,0 +1,32 @@
+name: Beträge der Pflegekasse prüfen
+
+# Jeden Montag beim Bundesgesundheitsministerium nachsehen und daten/leistungen.txt aktualisieren.
+# Die App fragt vor dem Übernehmen neuer Beträge immer nach.
+on:
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  pruefen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Werkzeug für PDF-Text
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils
+      - name: Übersicht prüfen
+        run: python3 .github/scripts/leistungen_pruefen.py
+      - name: Änderung speichern
+        run: |
+          if git diff --quiet -- daten/leistungen.txt; then
+            echo "Keine Änderung."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add daten/leistungen.txt
+            git commit -m "Beträge der Pflegekasse: automatisch aktualisiert"
+            git push
+          fi

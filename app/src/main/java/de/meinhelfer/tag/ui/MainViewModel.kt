@@ -83,7 +83,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     // ---- Beträge der Pflegekasse (Datei im Repo), Abgleich mit den eingestellten Beträgen
-    private val _ratesText = MutableStateFlow(AppPrefs.ratesText(app))
+    private val _ratesText = MutableStateFlow(AppPrefs.ratesText(app) + "\n" + AppPrefs.officialRates(app))
     val ratesText: StateFlow<String> = _ratesText
     private val _ratesTick = MutableStateFlow(0)
     /** Zählt hoch, wenn Beträge übernommen wurden. */
@@ -92,10 +92,25 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /** Lädt die Beträge neu (höchstens alle 20 Stunden, außer [force]). */
     fun refreshRates(force: Boolean = false) = viewModelScope.launch {
         val app = getApplication<Application>()
-        if (!force && System.currentTimeMillis() - AppPrefs.ratesTime(app) < 20 * 3600_000L) return@launch
-        val text = de.meinhelfer.tag.update.UpdateChecker.fetchRates() ?: return@launch
-        AppPrefs.setRates(app, text)
-        _ratesText.value = text
+        if (force || System.currentTimeMillis() - AppPrefs.ratesTime(app) >= 20 * 3600_000L) {
+            de.meinhelfer.tag.update.UpdateChecker.fetchRates()?.let { AppPrefs.setRates(app, it) }
+        }
+        // Zusätzlich selbst beim Ministerium nachsehen (alle 3 Tage): Übersicht für dieses und nächstes Jahr
+        if (force || System.currentTimeMillis() - AppPrefs.officialTime(app) >= 3 * 24 * 3600_000L) {
+            val thisYear = LocalDate.now().year
+            val found = mutableListOf<String>()
+            for (y in listOf(thisYear, thisYear + 1)) {
+                val file = java.io.File(app.cacheDir, "leistungen_$y.pdf")
+                if (de.meinhelfer.tag.update.UpdateChecker.download(de.meinhelfer.tag.summary.BenefitRates.officialUrl(y), file)) {
+                    val text = runCatching { de.meinhelfer.tag.media.DocumentReader.extractText(file, "application/pdf") }.getOrDefault("")
+                    de.meinhelfer.tag.summary.BenefitRates.fromOfficialText(text, y, thisYear)?.let { found += de.meinhelfer.tag.summary.BenefitRates.line(it) }
+                }
+                file.delete()
+            }
+            // Nichts gefunden (z. B. kein Internet): Bisheriges behalten
+            if (found.isNotEmpty() || AppPrefs.officialRates(app).isBlank()) AppPrefs.setOfficialRates(app, found.joinToString("\n"))
+        }
+        _ratesText.value = AppPrefs.ratesText(app) + "\n" + AppPrefs.officialRates(app)
     }
 
     /** Abweichungen und Hinweise für dieses und nächstes Jahr. */

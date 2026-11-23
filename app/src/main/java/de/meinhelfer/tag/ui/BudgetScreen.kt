@@ -142,7 +142,7 @@ fun BudgetScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit) {
                             Text("Hinweis (" + n.status + ", Stand " + n.date + "): " + n.text, style = MaterialTheme.typography.bodySmall)
                         }
                         Text(
-                            if (ratesText.isBlank()) "Die App vergleicht die Beträge mit einer Liste, die mit der App gepflegt wird (nach den Leistungsübersichten des Bundesgesundheitsministeriums). Noch nicht geladen."
+                            if (ratesText.isBlank()) "Die App liest die jährliche Übersicht des Bundesgesundheitsministeriums selbst und vergleicht zusätzlich mit einer Liste im Repo. Noch nicht geprüft."
                             else if (rates.first.isEmpty()) "Die eingestellten Beträge entsprechen dem Stand " + de.meinhelfer.tag.summary.BenefitRates.parse(ratesText).stand + ". Ändert sich etwas, fragt die App (bzw. dein Assistent) vor dem Übernehmen."
                             else "Erst nach deinem Tipp werden die Beträge geändert. Im Zweifel bei der Pflegekasse nachfragen.",
                             style = MaterialTheme.typography.bodySmall,

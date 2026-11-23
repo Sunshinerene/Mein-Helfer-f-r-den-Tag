@@ -586,6 +586,14 @@ object AppPrefs {
         prefs(context).edit().putString("leistungen_text", text).putLong("leistungen_zeit", System.currentTimeMillis()).apply()
     }
 
+    /** Selbst gelesene Beträge aus der Übersicht des Ministeriums (Zeilen im Format der Liste) und wann zuletzt geprüft. */
+    fun officialRates(context: Context): String = prefs(context).getString("leistungen_bmg", "") ?: ""
+    fun officialTime(context: Context): Long = prefs(context).getLong("leistungen_bmg_zeit", 0L)
+
+    fun setOfficialRates(context: Context, text: String) {
+        prefs(context).edit().putString("leistungen_bmg", text).putLong("leistungen_bmg_zeit", System.currentTimeMillis()).apply()
+    }
+
     /** Gemeinsamer Jahresbetrag fuer Verhinderungs- und Kurzzeitpflege im Jahr. */
     fun budgetYearly(context: Context, year: Int): Double =
         prefs(context).getFloat("budget_jahr_$year", de.meinhelfer.tag.summary.Budgets.DEFAULT_YEARLY.toFloat()).toDouble()

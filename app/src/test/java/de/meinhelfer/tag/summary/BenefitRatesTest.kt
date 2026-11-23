@@ -44,4 +44,19 @@ class BenefitRatesTest {
         val r = BenefitRates.parse(f.readText())
         assertTrue(r.years.any { it.year == 2026 && it.monthly == 131.0 && it.yearly == 3539.0 })
     }
+
+    @Test
+    fun readsOfficialOverview() {
+        val text = "Pflegeaufwendungen 721,00* 1.357,00* * Pflegebedürftige können (zusätzlich) den Entlastungsbetrag in Höhe von bis zu " +
+            "131 Euro pro Monat unter bestimmten Voraussetzungen einsetzen. Der Gemeinsame\nJahresbetrag in Höhe von bis zu 3.539,00 Euro steht insgesamt zur Verfügung."
+        val r = BenefitRates.fromOfficialText(text, 2027, 2026)!!
+        assertEquals(131.0, r.monthly, 1e-9)
+        assertEquals(3539.0, r.yearly, 1e-9)
+        assertEquals("beschlossen", r.status)
+        assertEquals("jahr;2027;131;3539;6;beschlossen;BMG, Übersicht Leistungsbeträge 2027", BenefitRates.line(r))
+        assertEquals(null, BenefitRates.fromOfficialText("Kein Betrag hier", 2027, 2026))
+        // Spätere Zeile gewinnt
+        val merged = BenefitRates.parse("jahr;2027;131;3539;6;gilt;Repo\n" + BenefitRates.line(r.copy(monthly = 140.0)))
+        assertEquals(140.0, BenefitRates.changes(merged, 2026) { Triple(131.0, 3539.0, 6) }.single().monthlyNew, 1e-9)
+    }
 }

@@ -133,6 +133,22 @@ object UpdateChecker {
         runCatching { httpGet("https://raw.githubusercontent.com/$REPO/main/daten/leistungen.txt") }.getOrNull()
     }
 
+    /** Lädt eine Datei (z. B. die Übersicht des Ministeriums als PDF) nach [target]; false bei Fehler oder 404. */
+    suspend fun download(url: String, target: File): Boolean = withContext(Dispatchers.IO) {
+        runCatching {
+            val c = URL(url).openConnection() as HttpURLConnection
+            c.connectTimeout = 15_000
+            c.readTimeout = 30_000
+            c.instanceFollowRedirects = true
+            c.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android) MeinHelfer-App")
+            if (c.responseCode !in 200..299) return@runCatching false
+            val type = c.contentType.orEmpty()
+            if (type.isNotEmpty() && !type.contains("pdf", ignoreCase = true)) return@runCatching false
+            c.inputStream.use { input -> target.outputStream().use { input.copyTo(it) } }
+            target.length() > 1000
+        }.getOrDefault(false)
+    }
+
     /** Liest die Roadmap live aus TODO.md im Repo. */
     suspend fun fetchRoadmap(): List<RoadmapLine> = withContext(Dispatchers.IO) {
         val body = httpGet(ROADMAP_RAW) ?: return@withContext emptyList()

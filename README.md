@@ -4,7 +4,7 @@ by Sunshine@R
 
 Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbezogenen Daten bleiben lokal auf dem Gerät.
 
-## Stand: v0.70.0
+## Stand: v0.71.0
 
 ### Funktionsübersicht
 
@@ -47,7 +47,7 @@ Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbe
 - Werte von Uhr, Fitnessband, Waage oder Blutdruckgerät über Health Connect übernehmen (Beta): nur lesen, Quelle je Person wählen, Vorschau und Bestätigung, keine Doppelten
 - Pflegetagebuch für die Begutachtung (sechs Bereiche, Art der Hilfe, wie oft, nachts), „wie am Vortag“, PDF-Bericht
 - Erinnerungen ans Trinken (nur wenn unter Plan) und abends ans Pflegetagebuch
-- Budgets der Pflegekasse (Entlastungsbetrag mit Übertrag, Gemeinsamer Jahresbetrag für Verhinderungs- und Kurzzeitpflege); Beträge werden mit einer gepflegten Liste (daten/leistungen.txt) abgeglichen und nach Bestätigung übernommen
+- Budgets der Pflegekasse (Entlastungsbetrag mit Übertrag, Gemeinsamer Jahresbetrag für Verhinderungs- und Kurzzeitpflege); Beträge prüft die App selbst in der jährlichen Übersicht des Bundesgesundheitsministeriums und mit einer Liste im Repo (wöchentlich automatisch aktualisiert), übernommen wird nach Bestätigung
 - Übergabe-Bericht als PDF für Vertretung oder Urlaub
 
 **Tages-Motivator**

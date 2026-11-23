@@ -1,6 +1,6 @@
 # TODO
 
-Stand: v0.70.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.71.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
@@ -77,6 +77,11 @@ Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Daten
 - [ ] Sammel-Import: Vorschläge mit echten Scans verfeinern (z. B. gleicher Absender und gleiches Datum als weiterer Hinweis)
 
 - [ ] Eigene KI-Stimme direkt in der App (nur falls SherpaTTS nicht reicht): sherpa-onnx mit Piper-Stimme Thorsten oder Kerstin (CC0) oder apptor-tiny-tts (Apache-2.0, 21 MB); macht die App 25–70 MB größer, Lizenzen der Bibliotheken prüfen
+
+## Version 0.71.0 (fertig)
+
+- [x] Beträge der Pflegekasse: Die App liest selbst die jährliche „Übersicht Leistungsbeträge“ des Bundesgesundheitsministeriums (dieses und nächstes Jahr, alle 3 Tage), die selbst gelesenen Werte haben Vorrang vor der Liste im Repo; Übernahme nur nach Bestätigung
+- [x] Automatische Prüfung im Repo: GitHub-Ablauf jeden Montag liest dieselbe Übersicht und aktualisiert daten/leistungen.txt (nur bei eindeutig gefundenen, plausiblen Beträgen)
 
 ## Version 0.70.0 (fertig)
 
