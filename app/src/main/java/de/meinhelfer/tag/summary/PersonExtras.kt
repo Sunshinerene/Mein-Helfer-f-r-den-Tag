@@ -156,6 +156,8 @@ data class Household(
     val transport: Boolean = false,
     /** Wohnform, Schlüssel aus [LIVING] */
     val living: String = "",
+    /** Verwandtschaft bzw. Beziehung zu dir, z. B. „Mutter“ */
+    val relation: String = "",
 ) {
     val others get() = under6 + age6to17 + age18to64 + age65plus
     val hasDaytime get() = daytime.isNotBlank() && daytime != "zuhause" && days.isNotEmpty() && from.isNotBlank() && to.isNotBlank()
@@ -175,11 +177,13 @@ data class Household(
             "bis" to to,
             "fahrt" to if (transport) "1" else null,
             "wohnt" to living,
+            "bez" to relation,
         ),
     )
 
     /** Kurzbeschreibung für Profil, Übergabe und Sunny. */
     fun short(nameOf: (Long) -> String?): String = listOfNotNull(
+        relation.takeIf { it.isNotBlank() }?.let { "deine $it".replace("deine Vater", "dein Vater").let(::article) },
         LIVING[living],
         others.takeIf { it > 0 }?.let { n ->
             "$n weitere im Haushalt (" + listOfNotNull(
@@ -210,6 +214,23 @@ data class Household(
             "arbeit" to "Arbeit / Ausbildung",
             "sonstiges" to "andere Betreuung",
         )
+        /** Beziehung zur pflegenden Person (Auswahl, eigene Angabe möglich). */
+        val RELATIONS = listOf(
+            "Mutter", "Vater", "Ehepartner/in", "Lebenspartner/in", "Sohn", "Tochter", "Bruder", "Schwester", "Oma", "Opa",
+            "Tante", "Onkel", "Schwiegermutter", "Schwiegervater", "Enkel/in", "Freund/in", "Nachbar/in", "Klient/in",
+        )
+        private val MALE = setOf("Vater", "Sohn", "Bruder", "Opa", "Onkel", "Schwiegervater")
+
+        /** „deine Mutter“, „dein Vater“, „dein/e Freund/in“ */
+        fun article(text: String): String {
+            val rel = text.removePrefix("deine ").removePrefix("dein ")
+            return when {
+                rel in MALE -> "dein $rel"
+                rel.contains("/") -> "dein/e $rel"
+                else -> "deine $rel"
+            }
+        }
+
         val LIVING: Map<String, String> = linkedMapOf(
             "allein" to "lebt allein",
             "familie" to "lebt mit Familie",
@@ -239,6 +260,7 @@ data class Household(
                 to = m["bis"].orEmpty(),
                 transport = m["fahrt"] == "1",
                 living = m["wohnt"].orEmpty(),
+                relation = m["bez"].orEmpty(),
             )
         }
     }

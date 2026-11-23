@@ -30,6 +30,8 @@ class DailyHelpersTest {
         assertFalse(p.contains("Mama"))
         assertTrue(p, p.contains("Zu Hause zu dieser Zeit: Person A (2 weitere sind unterwegs)"))
         assertTrue(p, p.contains("Person A: etwa 82 Jahre; Diabetes Typ 2; weiche Kost (Kauen schwierig)"))
+        assertEquals("deine Mutter", Household.article("Mutter"))
+        assertEquals("dein Opa", Household.article("Opa"))
         assertFalse(p.contains("Nüsse"))
         assertTrue(p.contains("Foto ist angehängt"))
         assertEquals(Nutrition(diabetes = "2", flags = setOf("weich"), allergies = "Nüsse; Kiwi"), Nutrition.decode(Nutrition(diabetes = "2", flags = setOf("weich"), allergies = "Nüsse; Kiwi").encode()))
@@ -39,7 +41,9 @@ class DailyHelpersTest {
     fun parseAnswer() {
         val r = HelperPrompt.parse("{\"kurz\": \"Heute passt eine Kartoffelsuppe.\", \"punkte\": [{\"titel\": \"Kartoffelsuppe\", \"text\": \"weich, sättigend\"}, {\"titel\": \"Quarkkeulchen\"}], \"hinweis\": \"Bei Diabetes kleine Portion.\"}")
         assertEquals("Heute passt eine Kartoffelsuppe.", r.short)
-        assertEquals(listOf("Kartoffelsuppe" to "weich, sättigend", "Quarkkeulchen" to ""), r.items)
+        assertEquals(listOf(HelperPrompt.Item("Kartoffelsuppe", "weich, sättigend"), HelperPrompt.Item("Quarkkeulchen")), r.items)
+        val shop = HelperPrompt.parse("{\"kurz\": \"x\", \"punkte\": [{\"titel\": \"Milch 1 l\", \"art\": \"allgemein\"}, {\"titel\": \"Inkontinenzvorlagen\", \"text\": \"fast leer\", \"art\": \"apotheke\"}]}")
+        assertEquals(listOf(false, true), shop.items.map { it.pharmacy })
         assertEquals("Bei Diabetes kleine Portion.", r.note)
         assertEquals(2, HelperPrompt.parse("Milch\n- Brot\n- Äpfel").items.size)
     }

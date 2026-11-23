@@ -116,14 +116,61 @@ object HelperStore {
 
     fun setLastResult(context: Context, id: String, answer: String) = prefs(context).edit().putString("ergebnis_$id", answer).apply()
 
+    /** Listen: allgemeine Einkäufe und getrennt Apotheke/Sanitätshaus. */
+    const val GENERAL = "einkauf"
+    const val PHARMACY = "einkauf_apotheke"
+
     /** Einkaufsliste: Einträge mit Haken. */
-    fun shopping(context: Context): List<Pair<String, Boolean>> = runCatching {
-        val arr = JSONArray(prefs(context).getString("einkauf", "[]"))
+    fun shopping(context: Context, list: String = GENERAL): List<Pair<String, Boolean>> = runCatching {
+        val arr = JSONArray(prefs(context).getString(list, "[]"))
         (0 until arr.length()).map { arr.getJSONObject(it).let { o -> o.getString("t") to o.optBoolean("ok") } }
     }.getOrDefault(emptyList())
 
-    fun setShopping(context: Context, list: List<Pair<String, Boolean>>) {
-        prefs(context).edit().putString("einkauf", JSONArray().apply { list.forEach { (t, ok) -> put(JSONObject().put("t", t).put("ok", ok)) } }.toString()).apply()
+    fun setShopping(context: Context, list: List<Pair<String, Boolean>>, name: String = GENERAL) {
+        prefs(context).edit().putString(name, JSONArray().apply { list.forEach { (t, ok) -> put(JSONObject().put("t", t).put("ok", ok)) } }.toString()).apply()
+    }
+
+    /** Neue Einträge anhängen (Doppeltes überspringen). Gibt die Zahl der neuen zurück. */
+    fun addShopping(context: Context, items: List<String>, name: String = GENERAL): Int {
+        val existing = shopping(context, name)
+        val fresh = items.map { it.trim() }.filter { it.isNotBlank() }.distinct().filter { n -> existing.none { it.first.equals(n, true) } }
+        setShopping(context, existing + fresh.map { it to false }, name)
+        return fresh.size
+    }
+
+    /** Grundvorrat: was immer da sein soll, mit Ort (Kühlschrank, Vorratsschrank, Tiefkühler, Bad / Drogerie). */
+    val PLACES = listOf("Kühlschrank", "Vorratsschrank", "Tiefkühler", "Bad / Drogerie")
+
+    fun baseStock(context: Context): List<Pair<String, String>> = runCatching {
+        val arr = JSONArray(prefs(context).getString("grundvorrat", "[]"))
+        (0 until arr.length()).map { arr.getJSONObject(it).let { o -> o.getString("t") to o.optString("ort", PLACES[0]) } }
+    }.getOrDefault(emptyList())
+
+    fun setBaseStock(context: Context, list: List<Pair<String, String>>) {
+        prefs(context).edit().putString("grundvorrat", JSONArray().apply { list.forEach { (t, o) -> put(JSONObject().put("t", t).put("ort", o)) } }.toString()).apply()
+    }
+
+    /** Gemerkte Rezepte und Vorschläge (Titel, Text). */
+    fun recipes(context: Context): List<Pair<String, String>> = runCatching {
+        val arr = JSONArray(prefs(context).getString("rezepte", "[]"))
+        (0 until arr.length()).map { arr.getJSONObject(it).let { o -> o.getString("t") to o.optString("x") } }
+    }.getOrDefault(emptyList())
+
+    fun setRecipes(context: Context, list: List<Pair<String, String>>) {
+        prefs(context).edit().putString("rezepte", JSONArray().apply { list.forEach { (t, x) -> put(JSONObject().put("t", t).put("x", x)) } }.toString()).apply()
+    }
+
+    /** Werkzeug zum Teilen als Text (JSON) und wieder einlesen. */
+    fun exportTool(t: HelperTool): String = "MeinHelfer-Werkzeug " + toJson(t).toString()
+
+    fun importTool(context: Context, text: String): HelperTool? {
+        val json = text.substringAfter("MeinHelfer-Werkzeug", text).trim()
+        val start = json.indexOf('{')
+        val end = json.lastIndexOf('}')
+        if (start < 0 || end <= start) return null
+        val tool = runCatching { fromJson(JSONObject(json.substring(start, end + 1)), "eigen_" + System.currentTimeMillis()) }.getOrNull() ?: return null
+        saveCustom(context, custom(context) + tool)
+        return tool
     }
 
     /** Neues Werkzeug zu einem Thema: mit KI nach dem gemeinsamen Grundgerüst, sonst das einfache Gerüst. */
@@ -173,6 +220,9 @@ fun HelperHub(vm: MainViewModel, onClose: () -> Unit) {
     var topic by remember { mutableStateOf("") }
     var creating by remember { mutableStateOf(false) }
     var showList by remember { mutableStateOf(false) }
+    var showRecipes by remember { mutableStateOf(false) }
+    var importText by remember { mutableStateOf("") }
+    var importInfo by remember { mutableStateOf<String?>(null) }
     val aiReady = !AiMode.isOff(context) && AiConfig.isConfigured(context)
     androidx.compose.ui.window.Dialog(onDismissRequest = onClose, properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false)) {
         Surface(Modifier.fillMaxSize().padding(8.dp), shape = MaterialTheme.shapes.large) {
@@ -198,15 +248,23 @@ fun HelperHub(vm: MainViewModel, onClose: () -> Unit) {
                                 pinned = if (t.id in pinned) pinned - t.id else pinned + t.id
                                 HelperStore.setPinned(context, pinned)
                             }) { Text(if (t.id in pinned) "📌 an" else "📌") }
-                            if (!t.builtin) TextButton(onClick = {
-                                HelperStore.saveCustom(context, HelperStore.custom(context).filter { it.id != t.id })
-                                tick++
-                            }) { Text("✕") }
+                            if (!t.builtin) {
+                                TextButton(onClick = { shareHelperText(context, HelperStore.exportTool(t)) }) { Text("Teilen") }
+                                TextButton(onClick = {
+                                    HelperStore.saveCustom(context, HelperStore.custom(context).filter { it.id != t.id })
+                                    tick++
+                                }) { Text("✕") }
+                            }
                         }
                     }
                 }
                 OutlinedButton(shape = buttonShape(), onClick = { showList = true }, modifier = Modifier.fillMaxWidth()) {
-                    Text("🛒 Einkaufsliste ansehen (${HelperStore.shopping(context).count { !it.second }} offen)")
+                    Text(
+                        "🛒 Listen: Einkauf ${HelperStore.shopping(context).count { !it.second }} · Apotheke ${HelperStore.shopping(context, HelperStore.PHARMACY).count { !it.second }} offen",
+                    )
+                }
+                OutlinedButton(shape = buttonShape(), onClick = { showRecipes = true }, modifier = Modifier.fillMaxWidth()) {
+                    Text("⭐ Gemerkte Rezepte und Pläne (${HelperStore.recipes(context).size})")
                 }
                 HorizontalDivider()
                 Text("Neues Werkzeug von Sunny", style = MaterialTheme.typography.titleSmall)
@@ -230,11 +288,25 @@ fun HelperHub(vm: MainViewModel, onClose: () -> Unit) {
                         }
                     }) { Text(if (creating) "Sunny baut …" else "Werkzeug erstellen") }
                 }
+                Text("Werkzeug von jemand anderem? Den geteilten Text hier einfügen:", style = MaterialTheme.typography.bodySmall)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedTextField(value = importText, onValueChange = { importText = it.take(6000) }, label = { Text("Geteiltes Werkzeug") }, singleLine = true, modifier = Modifier.weight(1f))
+                    TextButton(enabled = importText.isNotBlank(), onClick = {
+                        val t = HelperStore.importTool(context, importText)
+                        importInfo = if (t != null) "„${t.title}“ übernommen." else "Das ist kein Werkzeug-Text."
+                        if (t != null) {
+                            importText = ""
+                            tick++
+                        }
+                    }) { Text("Übernehmen") }
+                }
+                importInfo?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
             }
         }
     }
     open?.let { t -> ToolDialog(t, vm) { open = null } }
     if (showList) ShoppingListDialog { showList = false }
+    if (showRecipes) RecipesDialog { showRecipes = false }
 }
 
 /** Ein Werkzeug ausführen: Felder ausfüllen, Zeitpunkt, Foto, KI fragen, Ergebnis anzeigen und vorlesen. */
@@ -287,7 +359,28 @@ fun ToolDialog(tool: HelperTool, vm: MainViewModel, onClose: () -> Unit) {
     fun prompt(): String {
         val extra = mutableMapOf<String, String>()
         if ("vorrat" in tool.context) {
-            extra["Bald knapp"] = lowStockMeds(meds).joinToString(", ") { it.name }.ifBlank { "nichts" }
+            extra["Medikamente bald knapp (gehören auf die Apotheken-Liste, art apotheke)"] = lowStockMeds(meds).joinToString(", ") { it.name }.ifBlank { "nichts" }
+        }
+        if ("medikamente" in tool.context) {
+            val ids = persons.map { it.id }
+            extra["Medikamente"] = meds.filter { it.personId in ids }.groupBy { it.personId }.entries.joinToString("; ") { (pid, l) ->
+                Presence.label(ids.indexOf(pid)) + ": " + l.joinToString(", ") { m -> m.name + (m.doseSummary()?.let { " ($it)" } ?: "") }
+            }.ifBlank { "keine eingetragen" }
+        }
+        if ("grundvorrat" in tool.context) {
+            val base = HelperStore.baseStock(context)
+            val area = values["bereich"].orEmpty()
+            val relevant = if (area.isNotBlank()) base.filter { it.second == area } else base
+            extra["Grundvorrat (soll immer da sein" + (if (area.isNotBlank()) ", Bereich $area" else "") + ")"] =
+                relevant.groupBy { it.second }.entries.joinToString("; ") { (place, l) -> place + ": " + l.joinToString(", ") { it.first } }.ifBlank { "nicht festgelegt" }
+        }
+        if ("woche" in tool.context) {
+            extra["Wochenübersicht (wer zu Hause ist)"] = (0..6).joinToString("; ") { d ->
+                val day = now.toLocalDate().plusDays(d.toLong())
+                val name = listOf("Mo", "Di", "Mi", "Do", "Fr", "Sa", "So")[day.dayOfWeek.value - 1]
+                fun who(t: LocalDateTime) = Presence.homeAt(people, t, apptMap).joinToString(", ") { p -> Presence.label(people.indexOf(p)) }.ifBlank { "niemand" }
+                "$name mittags ${who(day.atTime(12, 30))}, abends ${who(day.atTime(18, 30))}"
+            }
         }
         if ("termine" in tool.context) {
             extra["Termine der nächsten Tage"] = appointments.filter { it.whenMillis in System.currentTimeMillis()..System.currentTimeMillis() + 5 * 86_400_000L }
@@ -384,25 +477,43 @@ fun ToolDialog(tool: HelperTool, vm: MainViewModel, onClose: () -> Unit) {
                     val r = remember(raw) { HelperPrompt.parse(raw) }
                     HorizontalDivider()
                     if (r.short.isNotBlank()) Text("🤖 " + r.short, style = MaterialTheme.typography.bodyLarge)
-                    r.items.forEach { (t, x) ->
+                    r.items.forEach { item ->
                         Column {
-                            Text("• $t", style = MaterialTheme.typography.titleSmall)
-                            if (x.isNotBlank()) Text(x, style = MaterialTheme.typography.bodyMedium)
+                            Text((if (item.pharmacy) "💊 " else "• ") + item.title, style = MaterialTheme.typography.titleSmall)
+                            if (item.text.isNotBlank()) Text(item.text, style = MaterialTheme.typography.bodyMedium)
+                            if (tool.output != "checkliste") {
+                                Row {
+                                    TextButton(onClick = {
+                                        HelperStore.setRecipes(context, HelperStore.recipes(context).filterNot { it.first == item.title } + (item.title to item.text))
+                                        android.widget.Toast.makeText(context, "Gemerkt", android.widget.Toast.LENGTH_SHORT).show()
+                                    }) { Text("⭐ Merken") }
+                                    TextButton(onClick = {
+                                        vm.addTodo(tool.emoji + " " + item.title)
+                                        android.widget.Toast.makeText(context, "Als Aufgabe angelegt", android.widget.Toast.LENGTH_SHORT).show()
+                                    }) { Text("＋ Aufgabe") }
+                                    if (item.title.equals("Einkauf", true) && item.text.isNotBlank()) {
+                                        TextButton(onClick = {
+                                            val n = HelperStore.addShopping(context, item.text.split(',', ';', '\n'))
+                                            android.widget.Toast.makeText(context, "$n auf die Einkaufsliste", android.widget.Toast.LENGTH_SHORT).show()
+                                        }) { Text("🛒 Auf die Liste") }
+                                    }
+                                }
+                            }
                         }
                     }
                     if (r.note.isNotBlank()) Text("ℹ " + r.note, style = MaterialTheme.typography.bodySmall)
                     if ("anwesend" in tool.context || "ernaehrung" in tool.context) Text(legend, style = MaterialTheme.typography.bodySmall)
-                    HintReader("helfer-${tool.id}-${raw.hashCode()}") { r.short + " " + r.items.joinToString(". ") { it.first } }
+                    HintReader("helfer-${tool.id}-${raw.hashCode()}") { r.short + " " + r.items.joinToString(". ") { it.title } }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         if (tool.output == "checkliste") {
                             OutlinedButton(shape = buttonShape(), enabled = !added && r.items.isNotEmpty(), onClick = {
-                                val existing = HelperStore.shopping(context)
-                                val items = r.items.map { it.first }
-                                HelperStore.setShopping(context, existing + items.filter { n -> existing.none { it.first.equals(n, true) } }.map { it to false })
+                                // Apotheke/Sanitätshaus getrennt von der allgemeinen Liste
+                                HelperStore.addShopping(context, r.items.filterNot { it.pharmacy }.map { it.title })
+                                HelperStore.addShopping(context, r.items.filter { it.pharmacy }.map { it.title }, HelperStore.PHARMACY)
                                 added = true
-                            }) { Text(if (added) "✓ Auf der Liste" else "🛒 Auf die Einkaufsliste") }
+                            }) { Text(if (added) "✓ Auf den Listen" else "🛒 Auf die Listen") }
                         }
-                        OutlinedButton(shape = buttonShape(), onClick = { shareHelperText(context, tool.title + "\n\n" + r.short + "\n\n" + r.items.joinToString("\n") { "• " + it.first + (if (it.second.isNotBlank()) ": " + it.second else "") }) }) { Text("Teilen") }
+                        OutlinedButton(shape = buttonShape(), onClick = { shareHelperText(context, tool.title + "\n\n" + r.short + "\n\n" + r.items.joinToString("\n") { "• " + it.title + (if (it.text.isNotBlank()) ": " + it.text else "") }) }) { Text("Teilen") }
                     }
                     Text("KI-Vorschlag, nur ein Anhaltspunkt. Bei Gesundheitsfragen zählt, was Arzt, Apotheke oder Ernährungsberatung sagen.", style = MaterialTheme.typography.bodySmall)
                 }
@@ -426,46 +537,139 @@ fun ToolDialog(tool: HelperTool, vm: MainViewModel, onClose: () -> Unit) {
     }
 }
 
-/** Einkaufsliste mit Haken, Hinzufügen, Erledigte entfernen, Teilen. */
+/** Listen: allgemeiner Einkauf, getrennt Apotheke/Sanitätshaus, und der Grundvorrat (was immer da sein soll). */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ShoppingListDialog(onClose: () -> Unit) {
     val context = LocalContext.current
-    var list by remember { mutableStateOf(HelperStore.shopping(context)) }
+    var tab by remember { mutableStateOf(0) }
+    val name = if (tab == 1) HelperStore.PHARMACY else HelperStore.GENERAL
+    var list by remember(tab) { mutableStateOf(HelperStore.shopping(context, name)) }
+    var base by remember { mutableStateOf(HelperStore.baseStock(context)) }
     var input by remember { mutableStateOf("") }
+    var place by remember { mutableStateOf(HelperStore.PLACES[0]) }
+    val missing = remember { androidx.compose.runtime.mutableStateListOf<String>() }
     fun save(l: List<Pair<String, Boolean>>) {
         list = l
-        HelperStore.setShopping(context, l)
+        HelperStore.setShopping(context, l, name)
+    }
+    fun saveBase(l: List<Pair<String, String>>) {
+        base = l
+        HelperStore.setBaseStock(context, l)
     }
     AlertDialog(
         properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onClose,
-        title = { Text("🛒 Einkaufsliste") },
+        title = { Text("🛒 Listen") },
         text = {
-            Column(Modifier.heightIn(max = 460.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    OutlinedTextField(value = input, onValueChange = { input = it.take(80) }, label = { Text("Hinzufügen") }, singleLine = true, modifier = Modifier.weight(1f))
-                    TextButton(enabled = input.isNotBlank(), onClick = {
-                        save(list + (input.trim() to false))
-                        input = ""
-                    }) { Text("+") }
+            Column(Modifier.heightIn(max = 520.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    listOf("Einkauf", "Apotheke & Sanitätshaus", "Grundvorrat").forEachIndexed { i, l -> FilterChip(selected = tab == i, onClick = { tab = i }, label = { Text(l) }) }
                 }
-                if (list.isEmpty()) Text("Noch leer. Im Helfer „Einkaufsliste“ macht Sunny Vorschläge.", style = MaterialTheme.typography.bodySmall)
-                list.forEachIndexed { i, (t, ok) ->
+                if (tab < 2) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(checked = ok, onCheckedChange = { c -> save(list.mapIndexed { j, e -> if (j == i) e.first to c else e }) })
-                        Text(t, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-                        TextButton(onClick = { save(list.filterIndexed { j, _ -> j != i }) }) { Text("✕") }
+                        OutlinedTextField(value = input, onValueChange = { input = it.take(80) }, label = { Text("Hinzufügen") }, singleLine = true, modifier = Modifier.weight(1f))
+                        TextButton(enabled = input.isNotBlank(), onClick = {
+                            save(list + (input.trim() to false))
+                            input = ""
+                        }) { Text("+") }
+                    }
+                    if (list.isEmpty()) {
+                        Text(
+                            if (tab == 0) "Noch leer. Im Helfer „Einkaufsliste“ macht Sunny Vorschläge, auch aus einem Foto im Vergleich mit dem Grundvorrat."
+                            else "Medikamente, Verbandsmaterial und Pflegehilfsmittel landen hier, getrennt vom normalen Einkauf. Nachbestellungen mit Rezept laufen weiter über „Nachbestellung“ bei den Medikamenten.",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                    list.forEachIndexed { i, (t, ok) ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(checked = ok, onCheckedChange = { c -> save(list.mapIndexed { j, e -> if (j == i) e.first to c else e }) })
+                            Text(t, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+                            TextButton(onClick = { save(list.filterIndexed { j, _ -> j != i }) }) { Text("✕") }
+                        }
+                    }
+                } else {
+                    Text(
+                        "Was immer da sein soll. Beim Foto vom Kühlschrank oder Vorratsschrank vergleicht Sunny damit und setzt Fehlendes auf die Liste. Ohne KI: unten abhaken, was fehlt.",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        HelperStore.PLACES.forEach { p -> FilterChip(selected = place == p, onClick = { place = p }, label = { Text(p) }) }
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        OutlinedTextField(value = input, onValueChange = { input = it.take(60) }, label = { Text("z. B. Milch, Butter, Eier") }, singleLine = true, modifier = Modifier.weight(1f))
+                        TextButton(enabled = input.isNotBlank(), onClick = {
+                            val add = input.split(',').map { it.trim() }.filter { it.isNotBlank() && base.none { b -> b.first.equals(it, true) } }
+                            saveBase(base + add.map { it to place })
+                            input = ""
+                        }) { Text("+") }
+                    }
+                    HelperStore.PLACES.forEach { p ->
+                        val items = base.filter { it.second == p }
+                        if (items.isNotEmpty()) {
+                            Text(p, style = MaterialTheme.typography.labelLarge)
+                            items.forEach { (t, _) ->
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Checkbox(checked = t in missing, onCheckedChange = { c -> if (c) missing += t else missing -= t })
+                                    Text(t + if (t in missing) " – fehlt" else "", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+                                    TextButton(onClick = { saveBase(base.filterNot { it.first == t }) }) { Text("✕") }
+                                }
+                            }
+                        }
+                    }
+                    if (missing.isNotEmpty()) {
+                        Button(shape = buttonShape(), onClick = {
+                            val n = HelperStore.addShopping(context, missing.toList())
+                            missing.clear()
+                            android.widget.Toast.makeText(context, "$n auf die Einkaufsliste", android.widget.Toast.LENGTH_SHORT).show()
+                        }) { Text("Fehlendes auf die Einkaufsliste") }
                     }
                 }
             }
         },
         confirmButton = {
-            Row {
+            if (tab < 2) Row {
                 TextButton(enabled = list.any { it.second }, onClick = { save(list.filterNot { it.second }) }) { Text("Erledigte weg") }
-                TextButton(enabled = list.isNotEmpty(), onClick = { shareHelperText(context, "Einkaufsliste\n" + list.filterNot { it.second }.joinToString("\n") { "• " + it.first }) }) { Text("Teilen") }
+                TextButton(enabled = list.isNotEmpty(), onClick = {
+                    shareHelperText(context, (if (tab == 1) "Apotheke / Sanitätshaus\n" else "Einkaufsliste\n") + list.filterNot { it.second }.joinToString("\n") { "• " + it.first })
+                }) { Text("Teilen") }
             }
         },
         dismissButton = { TextButton(onClick = onClose) { Text("Schließen") } },
+    )
+}
+
+/** Gemerkte Rezepte und Pläne: ansehen, teilen, löschen. */
+@Composable
+fun RecipesDialog(onClose: () -> Unit) {
+    val context = LocalContext.current
+    var list by remember { mutableStateOf(HelperStore.recipes(context)) }
+    var open by remember { mutableStateOf<String?>(null) }
+    AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
+        onDismissRequest = onClose,
+        title = { Text("⭐ Gemerkt") },
+        text = {
+            Column(Modifier.heightIn(max = 480.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                if (list.isEmpty()) Text("Noch nichts gemerkt. In den Ergebnissen der Helfer „⭐ Merken“ tippen.", style = MaterialTheme.typography.bodySmall)
+                list.forEach { (t, x) ->
+                    Column(Modifier.fillMaxWidth().clickable { open = if (open == t) null else t }) {
+                        Text((if (open == t) "▴ " else "▾ ") + t, style = MaterialTheme.typography.titleSmall)
+                        if (open == t) {
+                            if (x.isNotBlank()) Text(x, style = MaterialTheme.typography.bodyMedium)
+                            Row {
+                                TextButton(onClick = { shareHelperText(context, t + "\n\n" + x) }) { Text("Teilen") }
+                                TextButton(onClick = {
+                                    list = list.filterNot { it.first == t }
+                                    HelperStore.setRecipes(context, list)
+                                }) { Text("Löschen") }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onClose) { Text("Schließen") } },
     )
 }
 

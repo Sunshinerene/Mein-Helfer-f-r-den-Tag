@@ -66,7 +66,9 @@ data class Nutrition(
 
 /** Wer ist wann zu Hause (nach Tagesstruktur und Terminen)? */
 object Presence {
-    data class Who(val id: Long, val name: String, val household: Household, val nutrition: Nutrition, val age: Int? = null)
+    data class Who(val id: Long, val name: String, val household: Household, val nutrition: Nutrition, val age: Int? = null) {
+        val relation get() = household.relation
+    }
 
     /** Zu Hause um [at]: nicht in der Werkstatt/Tagespflege usw. und kein Termin ±90 Minuten. */
     fun homeAt(people: List<Who>, at: LocalDateTime, appointmentsMillisByPerson: Map<Long, List<LocalDateTime>> = emptyMap()): List<Who> = people.filter { p ->
@@ -109,6 +111,9 @@ data class HelperTool(
             "haushalt" to "Wie viele Menschen im Haushalt leben und welches Alter",
             "vorrat" to "Medikamente und Hilfsmittel, die bald knapp werden",
             "termine" to "Termine der nächsten Tage",
+            "grundvorrat" to "Was immer da sein soll (Grundvorrat, im Kühlschrank oder außerhalb)",
+            "woche" to "Wer an welchem Tag mittags und abends zu Hause ist (sieben Tage)",
+            "medikamente" to "Aktuelle Medikamente mit Einnahmezeiten (ohne Namen der Personen)",
         )
 
         val COOK = HelperTool(
@@ -132,15 +137,43 @@ data class HelperTool(
             "Eine Einkaufsliste für den Alltag – mit Vorschlägen, was im Pflegealltag oft gebraucht wird.",
             listOf(
                 Field("fehlt", "Was fehlt sicher?", "text", hint = "z. B. Milch, Brot, Toilettenpapier"),
-                Field("foto", "Oder Foto vom Vorrat/Kühlschrank", "foto"),
-                Field("anlass", "Für", "auswahl", listOf("Wocheneinkauf", "Drogerie", "Apotheke/Sanitätshaus", "Kleiner Einkauf")),
+                Field("bereich", "Was zeigt das Foto?", "auswahl", listOf("Kühlschrank", "Vorratsschrank", "Tiefkühler", "Bad / Drogerie")),
+                Field("foto", "Foto machen", "foto"),
+                Field("anlass", "Für", "auswahl", listOf("Wocheneinkauf", "Drogerie", "Kleiner Einkauf")),
             ),
-            "Erstelle eine sinnvolle Einkaufsliste: zuerst das Genannte, dann wenige passende Ergänzungen für den Haushalt und den Pflegealltag " +
-                "(z. B. Pflegeprodukte, Getränke, leicht zu essende Lebensmittel), passend zu den Hinweisen je Person. Jeder Punkt kurz mit Menge.",
-            "checkliste", setOf("haushalt", "ernaehrung", "vorrat"), builtin = true,
+            "Erstelle eine sinnvolle Einkaufsliste. Ist ein Foto angehängt: erkenne, was darauf vorhanden ist, und vergleiche es mit dem Grundvorrat " +
+                "für den gezeigten Bereich – was vom Grundvorrat nicht zu sehen ist oder fast leer ist, kommt auf die Liste (im text kurz „fehlt auf dem Foto“). " +
+                "Dann das ausdrücklich Genannte, dann wenige passende Ergänzungen für Haushalt und Pflegealltag, passend zu den Hinweisen je Person. " +
+                "Medikamente, Verbandsmaterial, Inkontinenz- und Pflegehilfsmittel aus Apotheke oder Sanitätshaus bekommen \"art\": \"apotheke\", alles andere \"art\": \"allgemein\". Jeder Punkt kurz mit Menge.",
+            "checkliste", setOf("haushalt", "ernaehrung", "vorrat", "grundvorrat"), builtin = true,
         )
 
-        val BUILTIN = listOf(COOK, SHOPPING)
+        val WEEK = HelperTool(
+            "wochenplan", "Essensplan für die Woche", "📅",
+            "Ein einfacher Plan für sieben Tage – je Tag passend dazu, wer mittags und abends zu Hause ist.",
+            listOf(
+                Field("mahlzeiten", "Welche Mahlzeiten?", "mehrfach", listOf("Frühstück", "Mittagessen", "Abendessen")),
+                Field("wunsch", "Wünsche", "text", hint = "z. B. einmal Fisch, günstig, Reste verwerten"),
+            ),
+            "Erstelle einen einfachen Essensplan für die nächsten sieben Tage. Beachte je Tag, wer zu Hause ist (Wochenübersicht), und die Hinweise je Person. " +
+                "Abwechslungsreich, alltagstauglich, Reste sinnvoll weiterverwenden. Je Tag ein Punkt: titel = Wochentag, text = Gerichte je Mahlzeit. " +
+                "Zum Schluss ein Punkt mit titel „Einkauf“ und den wichtigsten Zutaten als Text, durch Kommas getrennt.",
+            "liste", setOf("ernaehrung", "woche"), builtin = true,
+        )
+
+        val DOCTOR = HelperTool(
+            "arztfragen", "Fragen für den Arztbesuch", "🩺",
+            "Eine kurze Liste, was du beim nächsten Termin ansprechen könntest – damit nichts vergessen wird.",
+            listOf(
+                Field("termin", "Welcher Termin?", "text", hint = "z. B. Hausarzt am Donnerstag"),
+                Field("aufgefallen", "Was ist dir aufgefallen?", "text", hint = "z. B. schläft schlecht, mehr Schwindel, Rezept fehlt"),
+            ),
+            "Stelle eine kurze Liste mit Fragen und Punkten zusammen, die man beim Arzttermin ansprechen kann: Beobachtungen, Medikamente (Rezepte, Nebenwirkungen, Überschneidungen nur als Frage), " +
+                "Hilfsmittel, Verordnungen, Bescheinigungen. Keine Diagnosen, keine Empfehlungen zu Dosierungen – nur Fragen, die der Arzt beantworten soll.",
+            "liste", setOf("medikamente", "termine"), builtin = true,
+        )
+
+        val BUILTIN = listOf(COOK, WEEK, SHOPPING, DOCTOR)
 
         /** Grundgerüst für ein neues Werkzeug ohne KI: ein Textfeld und die Bitte als Anweisung. */
         fun basic(id: String, topic: String) = HelperTool(
@@ -156,7 +189,7 @@ data class HelperTool(
             "Du bist Sunny, Alltagshelferin in der App „Mein Helfer für den Tag“ für pflegende Angehörige. Personen heißen „Person A, B …“, Namen kennst du nicht. " +
                 "Antworte auf Deutsch, Du-Form, freundlich und praktisch. Keine Diagnosen, keine Dosierungen, keine medizinischen oder rechtlichen Ratschläge. " +
                 "Antworte nur als JSON: {\"kurz\": \"ein bis zwei Sätze zum Vorlesen, natürliche gesprochene Sprache\", " +
-                "\"punkte\": [{\"titel\": \"...\", \"text\": \"...\"}], \"hinweis\": \"optional ein kurzer Hinweis\"}."
+                "\"punkte\": [{\"titel\": \"...\", \"text\": \"...\", \"art\": \"optional\"}], \"hinweis\": \"optional ein kurzer Hinweis\"}."
     }
 }
 
@@ -188,7 +221,7 @@ object HelperPrompt {
             relevant.forEach { p ->
                 val n = p.nutrition.aiText()
                 val age = p.age?.let { "etwa $it Jahre" }
-                val line = listOfNotNull(age, n.ifBlank { null }).joinToString("; ")
+                val line = listOfNotNull(p.relation.ifBlank { null }?.let { "für dich: $it" }, age, n.ifBlank { null }).joinToString("; ")
                 if (line.isNotBlank()) appendLine("${index[p.id]}: $line")
             }
         }
@@ -200,7 +233,11 @@ object HelperPrompt {
         extra.forEach { (k, v) -> if (v.isNotBlank()) appendLine("$k: $v") }
     }.trim()
 
-    data class Result(val short: String, val items: List<Pair<String, String>>, val note: String)
+    data class Item(val title: String, val text: String = "", val kind: String = "") {
+        val pharmacy get() = kind.equals("apotheke", true)
+    }
+
+    data class Result(val short: String, val items: List<Item>, val note: String)
 
     private const val STR = "\"((?:[^\"\\\\]|\\\\.)*)\""
     private fun un(s: String) = s.replace("\\n", "\n").replace("\\\"", "\"").replace("\\\\", "\\").trim()
@@ -210,10 +247,13 @@ object HelperPrompt {
         val text = answer.trim().removePrefix("```json").removePrefix("```").removeSuffix("```").trim()
         val short = Regex("\"kurz\"\\s*:\\s*$STR").find(text)?.groupValues?.get(1)?.let(::un)
         val note = Regex("\"hinweis\"\\s*:\\s*$STR").find(text)?.groupValues?.get(1)?.let(::un).orEmpty()
-        val items = Regex("\\{\\s*\"titel\"\\s*:\\s*$STR\\s*(?:,\\s*\"text\"\\s*:\\s*$STR)?\\s*}").findAll(text)
-            .map { un(it.groupValues[1]) to un(it.groupValues[2]) }.toList()
-        if (short != null || items.isNotEmpty()) return Result(short ?: items.firstOrNull()?.first.orEmpty(), items, note)
+        val items = Regex("\\{[^{}]*}").findAll(text).mapNotNull { m ->
+            val o = m.value
+            val t = Regex("\"titel\"\\s*:\\s*$STR").find(o)?.groupValues?.get(1)?.let(::un) ?: return@mapNotNull null
+            Item(t, Regex("\"text\"\\s*:\\s*$STR").find(o)?.groupValues?.get(1)?.let(::un).orEmpty(), Regex("\"art\"\\s*:\\s*$STR").find(o)?.groupValues?.get(1)?.let(::un).orEmpty())
+        }.toList()
+        if (short != null || items.isNotEmpty()) return Result(short ?: items.firstOrNull()?.title.orEmpty(), items, note)
         val lines = text.lines().map { it.trim().removePrefix("- ").removePrefix("* ") }.filter { it.isNotBlank() }
-        return Result(lines.firstOrNull().orEmpty(), lines.drop(1).map { it to "" }, "")
+        return Result(lines.firstOrNull().orEmpty(), lines.drop(1).map { Item(it) }, "")
     }
 }

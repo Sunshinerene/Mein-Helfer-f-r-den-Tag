@@ -376,6 +376,17 @@ private fun DisabilityFields(d: de.meinhelfer.tag.summary.Disability, onChange: 
 @Composable
 private fun HouseholdFields(h: de.meinhelfer.tag.summary.Household, others: List<Person>, onChange: (de.meinhelfer.tag.summary.Household) -> Unit) {
     val H = de.meinhelfer.tag.summary.Household
+    Text("Wer ist das für dich?", style = MaterialTheme.typography.labelLarge)
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        H.RELATIONS.forEach { r -> FilterChip(selected = h.relation == r, onClick = { onChange(h.copy(relation = if (h.relation == r) "" else r)) }, label = { Text(r) }) }
+    }
+    OutlinedTextField(
+        value = h.relation,
+        onValueChange = { onChange(h.copy(relation = it.take(30))) },
+        label = { Text("oder selbst eintragen") },
+        singleLine = true,
+        modifier = Modifier.fillMaxWidth(),
+    )
     Text("Wohnsituation und Tagesstruktur", style = MaterialTheme.typography.labelLarge)
     FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         H.LIVING.forEach { (k, v) -> FilterChip(selected = h.living == k, onClick = { onChange(h.copy(living = if (h.living == k) "" else k)) }, label = { Text(v) }) }
