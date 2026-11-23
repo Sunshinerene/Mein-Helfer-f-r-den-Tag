@@ -23,6 +23,10 @@ sealed interface ProposalAction {
     data class AdjustDailyUse(val medId: Long, val daily: Double) : ProposalAction
     /** Heute neu angebrochen (Haltbarkeit beginnt neu). */
     data class OpenedToday(val medId: Long) : ProposalAction
+    /** Neue Beträge der Pflegekasse für ein Jahr übernehmen. */
+    data class SetBenefits(val year: Int, val monthly: Double, val yearly: Double, val carryMonth: Int) : ProposalAction
+    /** Nur ein Hinweis: gelesen. */
+    data object Acknowledge : ProposalAction
 }
 
 /** Ein Vorschlag des Assistenten. Wird nur nach deiner Bestätigung ausgeführt. */
@@ -61,8 +65,20 @@ object Assistant {
         dismissed: Set<String>,
         /** Abhak-Einträge der letzten zwei Wochen (für die tatsächlich gegebenen Mengen) */
         checkins: List<de.meinhelfer.tag.data.Checkin> = emptyList(),
+        /** Abweichende Beträge der Pflegekasse und Hinweise ([BenefitRates]) */
+        rateChanges: List<RateChange> = emptyList(),
+        rateNotes: List<RateNote> = emptyList(),
     ): List<Proposal> {
         val out = mutableListOf<Proposal>()
+        // Beträge der Pflegekasse: nur mit Pflegegrad interessant
+        if (persons.any { (it.careLevel ?: 0) in 1..5 }) {
+            rateChanges.forEach { c ->
+                out += Proposal(c.key, BenefitRates.changeText(c), "Übernehmen", ProposalAction.SetBenefits(c.year, c.monthlyNew, c.yearlyNew, c.carryNew))
+            }
+            rateNotes.forEach { n ->
+                out += Proposal(n.key, "Pflegekasse: " + n.text, "Gelesen", ProposalAction.Acknowledge)
+            }
+        }
         val open = todos.filter { !it.done && !it.archived }
         val multi = persons.size > 1
         fun who(personId: Long) = if (multi) persons.firstOrNull { it.id == personId }?.name?.let { " ($it)" }.orEmpty() else ""

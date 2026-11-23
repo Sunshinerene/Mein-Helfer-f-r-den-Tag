@@ -82,6 +82,34 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         _sharedUris.value = null
     }
 
+    // ---- Beträge der Pflegekasse (Datei im Repo), Abgleich mit den eingestellten Beträgen
+    private val _ratesText = MutableStateFlow(AppPrefs.ratesText(app))
+    val ratesText: StateFlow<String> = _ratesText
+    private val _ratesTick = MutableStateFlow(0)
+    /** Zählt hoch, wenn Beträge übernommen wurden. */
+    val ratesTick: StateFlow<Int> = _ratesTick
+
+    /** Lädt die Beträge neu (höchstens alle 20 Stunden, außer [force]). */
+    fun refreshRates(force: Boolean = false) = viewModelScope.launch {
+        val app = getApplication<Application>()
+        if (!force && System.currentTimeMillis() - AppPrefs.ratesTime(app) < 20 * 3600_000L) return@launch
+        val text = de.meinhelfer.tag.update.UpdateChecker.fetchRates() ?: return@launch
+        AppPrefs.setRates(app, text)
+        _ratesText.value = text
+    }
+
+    /** Abweichungen und Hinweise für dieses und nächstes Jahr. */
+    fun rateChanges(): Pair<List<de.meinhelfer.tag.summary.RateChange>, List<de.meinhelfer.tag.summary.RateNote>> {
+        val text = _ratesText.value
+        if (text.isBlank()) return emptyList<de.meinhelfer.tag.summary.RateChange>() to emptyList()
+        val app = getApplication<Application>()
+        val rates = de.meinhelfer.tag.summary.BenefitRates.parse(text)
+        val changes = de.meinhelfer.tag.summary.BenefitRates.changes(rates, LocalDate.now().year) { y ->
+            Triple(AppPrefs.budgetMonthly(app, y), AppPrefs.budgetYearly(app, y), AppPrefs.budgetCarryMonth(app, y))
+        }
+        return changes to de.meinhelfer.tag.summary.BenefitRates.openNotes(rates)
+    }
+
     // Einnahme-Fenster aus der Erinnerung öffnen (Uhrzeit "08:00"), die Heute-Seite zeigt es dann
     private val _intakeRequest = MutableStateFlow<String?>(null)
     val intakeRequest: StateFlow<String?> = _intakeRequest
@@ -238,7 +266,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     /** Abhak-Einträge der letzten zwei Wochen (für gegebene Mengen und Vorschläge des Assistenten). */
-    val recentCheckins: StateFlow<List<Checkin>> = _today
+    val twoWeekCheckins: StateFlow<List<Checkin>> = _today
         .flatMapLatest { d -> db.checkinDao().range(d - 15, d) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -507,6 +535,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 // Vorrat auf heute umrechnen, damit der neue Verbrauch nicht rückwirkend zählt
                 db.medicationDao().update(m.copy(stock = m.currentStock(today), stockDay = today, dailyUse = a.daily))
             }
+            is de.meinhelfer.tag.summary.ProposalAction.SetBenefits -> {
+                val app = getApplication<Application>()
+                AppPrefs.setBudgetMonthly(app, a.year, a.monthly)
+                AppPrefs.setBudgetYearly(app, a.year, a.yearly)
+                AppPrefs.setBudgetCarryMonth(app, a.year, a.carryMonth)
+                _ratesTick.value++
+            }
+            de.meinhelfer.tag.summary.ProposalAction.Acknowledge -> Unit
             is de.meinhelfer.tag.summary.ProposalAction.OpenedToday -> {
                 val m = db.medicationDao().byId(a.medId) ?: return@launch
                 db.medicationDao().update(m.copy(openedDay = LocalDate.now().toEpochDay()))
@@ -630,7 +666,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             extendSeries()
             ReminderScheduler.rescheduleAll(app)
         }
-        if (AppPrefs.autoUpdateCheck(app)) checkForUpdate()
+        if (AppPrefs.autoUpdateCheck(app)) {
+            checkForUpdate()
+            refreshRates()
+        }
     }
 
     // ---------------------------------------------------------------- Medikamente

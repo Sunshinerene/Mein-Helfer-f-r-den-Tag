@@ -4,7 +4,7 @@ by Sunshine@R
 
 Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbezogenen Daten bleiben lokal auf dem Gerät.
 
-## Stand: v0.69.0
+## Stand: v0.70.0
 
 ### Funktionsübersicht
 
@@ -33,7 +33,7 @@ Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbe
 **Logo, Einspieler und Widget**
 - Eigenes Logo (Hand, Herz, Sonne) als App-Symbol (auch als einfarbiges Themensymbol ab Android 13), in der Kopfzeile, auf dem Sperrbildschirm und im Rundgang
 - Kurzer Einspieler (10 Sekunden) beim Start: Tippen oder „Überspringen“ beendet ihn, Ton ein/aus, in den Einstellungen abschaltbar
-- Widget für den Startbildschirm: nächste Einnahme (auch „offen seit …“) und nächster Termin, Namen auf Wunsch ausgeblendet
+- Widget für den Startbildschirm: nächste Einnahme (auch „offen seit …“) und nächster Termin, Namen auf Wunsch ausgeblendet; „✓ Eingenommen“ mit Rückfrage bzw. „Eintragen …“ für das Einnahme-Fenster
 
 **Heute (Tag · Woche · Monat)**
 - Tagesansicht: Kurz nachgefragt (offene Antworten), Wichtig und demnächst (dringend, überfällig, Termine heute zum Abhaken, nächste 3 Tage, Termine bis 7 Tage), Bald nachbestellen, Heute einnehmen (Abhaken im Zeitfenster, früher/später/vergessen/bewusst nicht gegeben), Aufgaben, Bemerkung zum Tag, Auswertung
@@ -47,7 +47,7 @@ Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbe
 - Werte von Uhr, Fitnessband, Waage oder Blutdruckgerät über Health Connect übernehmen (Beta): nur lesen, Quelle je Person wählen, Vorschau und Bestätigung, keine Doppelten
 - Pflegetagebuch für die Begutachtung (sechs Bereiche, Art der Hilfe, wie oft, nachts), „wie am Vortag“, PDF-Bericht
 - Erinnerungen ans Trinken (nur wenn unter Plan) und abends ans Pflegetagebuch
-- Budgets der Pflegekasse (Entlastungsbetrag mit Übertrag, Gemeinsamer Jahresbetrag für Verhinderungs- und Kurzzeitpflege)
+- Budgets der Pflegekasse (Entlastungsbetrag mit Übertrag, Gemeinsamer Jahresbetrag für Verhinderungs- und Kurzzeitpflege); Beträge werden mit einer gepflegten Liste (daten/leistungen.txt) abgeglichen und nach Bestätigung übernommen
 - Übergabe-Bericht als PDF für Vertretung oder Urlaub
 
 **Tages-Motivator**

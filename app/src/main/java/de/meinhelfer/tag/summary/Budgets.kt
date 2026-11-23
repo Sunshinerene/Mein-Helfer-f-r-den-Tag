@@ -66,7 +66,15 @@ object Budgets {
      * Entlastungsbetrag fuer [year], mit Uebertrag aus den Vorjahren. [months] liefert je Jahr die Monate mit Anspruch
      * (z. B. 12, oder weniger, wenn der Pflegegrad erst im Laufe des Jahres kam), [monthly] den Monatsbetrag je Jahr.
      */
-    fun relief(entries: List<BudgetEntry>, year: Int, today: LocalDate, months: (Int) -> Int, monthly: (Int) -> Double): Relief {
+    fun relief(
+        entries: List<BudgetEntry>,
+        year: Int,
+        today: LocalDate,
+        months: (Int) -> Int,
+        /** Rest aus dem Vorjahr nutzbar bis einschließlich Monat im Jahr (6 = 30. Juni, 0 = verfallen) */
+        carryUntil: (Int) -> Int = { 6 },
+        monthly: (Int) -> Double,
+    ): Relief {
         val own = entries.filter { it.kind == BudgetKind.Entlastung.key && counts(it) }
         val first = (own.minOfOrNull { LocalDate.ofEpochDay(it.day).year } ?: year).coerceAtMost(year - 1).coerceAtLeast(year - 5)
         var carryPrev = 0.0
@@ -78,8 +86,8 @@ object Budgets {
             var usedCurrent = 0.0
             own.filter { LocalDate.ofEpochDay(it.day).year == y }.sortedBy { it.day }.forEach { e ->
                 val d = LocalDate.ofEpochDay(e.day)
-                // Bis 30. Juni zuerst den Uebertrag aus dem Vorjahr verbrauchen
-                val fromCarry = if (d.monthValue <= 6) minOf(e.amount, carryIn - usedCarry).coerceAtLeast(0.0) else 0.0
+                // Bis 30. Juni (bzw. wie eingestellt) zuerst den Uebertrag aus dem Vorjahr verbrauchen
+                val fromCarry = if (d.monthValue <= carryUntil(y)) minOf(e.amount, carryIn - usedCarry).coerceAtLeast(0.0) else 0.0
                 usedCarry += fromCarry
                 usedCurrent += e.amount - fromCarry
             }
@@ -87,7 +95,7 @@ object Budgets {
             if (y == year) {
                 val monthsSoFar = if (today.year > year) months(y) else if (today.year < year) 0 else minOf(months(y), monthsUntil(y, today, months(y)))
                 val accrued = monthsSoFar * monthly(y)
-                val carryUsable = if (today.year == year && today.monthValue <= 6) carryIn - usedCarry else 0.0
+                val carryUsable = if (today.year == year && today.monthValue <= carryUntil(y)) carryIn - usedCarry else 0.0
                 result = Relief(
                     year = y,
                     yearTotal = total,

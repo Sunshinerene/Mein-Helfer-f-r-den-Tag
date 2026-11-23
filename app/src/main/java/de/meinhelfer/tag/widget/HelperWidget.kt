@@ -77,6 +77,7 @@ object HelperWidget {
             val intake = WidgetInfo.nextIntake(meds, checkins, now, AppPrefs.intakeWindow(context).toLong())
             val appointment = WidgetInfo.nextAppointment(appointments, checkins, now)
             views.setTextViewText(R.id.widget_intake, WidgetInfo.intakeLine(intake, now.toLocalDate(), details))
+            takeButtons(context, views, intake, now, person.id)
             views.setTextViewText(R.id.widget_appointment, WidgetInfo.appointmentLine(appointment, now, details))
         }
         views.setTextViewText(R.id.widget_stamp, "Stand " + now.format(STAMP))
@@ -90,5 +91,63 @@ object HelperWidget {
         val pi = PendingIntent.getActivity(context, 4711, open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         views.setOnClickPendingIntent(R.id.widget_root, pi)
         return views
+    }
+
+    /**
+     * „✓ Eingenommen“ nur für heute und erst ab Beginn des Zeitfensters. Mit Einnahme-Fenster (z. B. Insulin)
+     * öffnet der Knopf die App zum Eintragen von Menge und Werten, sonst kommt erst die Rückfrage im Widget.
+     */
+    private fun takeButtons(context: Context, views: RemoteViews, intake: de.meinhelfer.tag.summary.NextIntake?, now: LocalDateTime, personId: Long) {
+        val window = AppPrefs.intakeWindow(context).toLong()
+        val slot = intake?.let { runCatching { java.time.LocalTime.parse(it.time) }.getOrNull() }
+        val show = intake != null && slot != null && intake.medIds.isNotEmpty() && intake.day == now.toLocalDate().toEpochDay() &&
+            !now.isBefore(now.toLocalDate().atTime(slot).minusMinutes(window))
+        if (!show) {
+            views.setViewVisibility(R.id.widget_take_row, android.view.View.GONE)
+            return
+        }
+        views.setViewVisibility(R.id.widget_take_row, android.view.View.VISIBLE)
+        fun broadcast(action: String, code: Int, extras: Intent.() -> Unit = {}): PendingIntent =
+            PendingIntent.getBroadcast(
+                context, code,
+                Intent(context, WidgetActionReceiver::class.java).setAction(action).apply(extras),
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+            )
+        if (intake!!.ask) {
+            views.setTextViewText(R.id.widget_take, "✎ Eintragen …")
+            val open = Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                putExtra(MainActivity.EXTRA_PERSON, personId)
+                putExtra(MainActivity.EXTRA_SCREEN, "einnahme:" + intake.time)
+            }
+            views.setOnClickPendingIntent(R.id.widget_take, PendingIntent.getActivity(context, 4712, open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))
+            views.setViewVisibility(R.id.widget_take, android.view.View.VISIBLE)
+            listOf(R.id.widget_confirm_text, R.id.widget_yes, R.id.widget_no).forEach { views.setViewVisibility(it, android.view.View.GONE) }
+            return
+        }
+        val asking = System.currentTimeMillis() < AppPrefs.widgetConfirm(context)
+        views.setViewVisibility(R.id.widget_take, if (asking) android.view.View.GONE else android.view.View.VISIBLE)
+        listOf(R.id.widget_confirm_text, R.id.widget_yes, R.id.widget_no).forEach {
+            views.setViewVisibility(it, if (asking) android.view.View.VISIBLE else android.view.View.GONE)
+        }
+        views.setTextViewText(R.id.widget_take, "✓ Eingenommen")
+        views.setTextViewText(R.id.widget_confirm_text, "${intake.time} Uhr: alle genommen?")
+        views.setOnClickPendingIntent(R.id.widget_take, broadcast(WidgetActionReceiver.ACTION_ASK, 4720))
+        views.setOnClickPendingIntent(R.id.widget_no, broadcast(WidgetActionReceiver.ACTION_NO, 4721))
+        views.setOnClickPendingIntent(
+            R.id.widget_yes,
+            broadcast(WidgetActionReceiver.ACTION_YES, 4722) {
+                putExtra(WidgetActionReceiver.EXTRA_DAY, intake.day)
+                putExtra(WidgetActionReceiver.EXTRA_TIME, intake.time)
+                putExtra(WidgetActionReceiver.EXTRA_MEDS, intake.medIds.toLongArray())
+            },
+        )
+        // Rückfrage läuft ab: danach wieder den normalen Knopf zeigen
+        if (asking) {
+            CoroutineScope(Dispatchers.IO).launch {
+                kotlinx.coroutines.delay(WidgetActionReceiver.CONFIRM_MS + 500)
+                refresh(context)
+            }
+        }
     }
 }

@@ -128,6 +128,11 @@ object UpdateChecker {
         context.startActivity(intent)
     }
 
+    /** Beträge der Pflegekasse aus dem Repo (daten/leistungen.txt), null bei Fehler. */
+    suspend fun fetchRates(): String? = withContext(Dispatchers.IO) {
+        runCatching { httpGet("https://raw.githubusercontent.com/$REPO/main/daten/leistungen.txt") }.getOrNull()
+    }
+
     /** Liest die Roadmap live aus TODO.md im Repo. */
     suspend fun fetchRoadmap(): List<RoadmapLine> = withContext(Dispatchers.IO) {
         val body = httpGet(ROADMAP_RAW) ?: return@withContext emptyList()

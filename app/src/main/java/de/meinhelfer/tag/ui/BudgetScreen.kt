@@ -84,8 +84,14 @@ fun BudgetScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit) {
         y == since.year -> 13 - since.monthValue
         else -> 12
     }
-    val relief = remember(entries, year, tick, since) { Budgets.relief(entries, year, today, { y -> months(y) }) { y -> AppPrefs.budgetMonthly(context, y) } }
-    val yearly = remember(entries, year, tick) { Budgets.yearly(entries, year, if (careLevel == 1) 0.0 else AppPrefs.budgetYearly(context, year)) }
+    val ratesTick by vm.ratesTick.collectAsStateWithLifecycle()
+    val ratesText by vm.ratesText.collectAsStateWithLifecycle()
+    val dismissed by vm.assistantDismissed.collectAsStateWithLifecycle()
+    val rates = remember(ratesText, ratesTick, tick) { vm.rateChanges() }
+    val relief = remember(entries, year, tick, since, ratesTick) {
+        Budgets.relief(entries, year, today, { y -> months(y) }, { y -> AppPrefs.budgetCarryMonth(context, y) }) { y -> AppPrefs.budgetMonthly(context, y) }
+    }
+    val yearly = remember(entries, year, tick, ratesTick) { Budgets.yearly(entries, year, if (careLevel == 1) 0.0 else AppPrefs.budgetYearly(context, year)) }
     val inYear = entries.filter { LocalDate.ofEpochDay(it.day).year == year }
 
     Scaffold(
@@ -116,8 +122,37 @@ fun BudgetScreen(vm: MainViewModel, person: Person?, onBack: () -> Unit) {
                     )
                 }
             }
-            // ---- Hinweis zur geplanten Reform (Stand 22.11.2026)
-            if (year >= 2026 && today.year <= 2027) {
+            // ---- Beträge der Pflegekasse: Abgleich mit der Datei im Repo (nur nach Bestätigung)
+            jumpItem(budgetJumps, "Beträge aktuell?") {
+                HCard(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text("Beträge aktuell?", style = MaterialTheme.typography.titleSmall)
+                        rates.first.forEach { c ->
+                            Text(de.meinhelfer.tag.summary.BenefitRates.changeText(c), style = MaterialTheme.typography.bodyMedium)
+                            Button(shape = buttonShape(), onClick = {
+                                vm.applyProposal(
+                                    de.meinhelfer.tag.summary.Proposal(
+                                        c.key, "", "", de.meinhelfer.tag.summary.ProposalAction.SetBenefits(c.year, c.monthlyNew, c.yearlyNew, c.carryNew),
+                                    ),
+                                )
+                                tick++
+                            }) { Text("Für ${c.year} übernehmen") }
+                        }
+                        rates.second.filter { it.key !in dismissed }.forEach { n ->
+                            Text("Hinweis (" + n.status + ", Stand " + n.date + "): " + n.text, style = MaterialTheme.typography.bodySmall)
+                        }
+                        Text(
+                            if (ratesText.isBlank()) "Die App vergleicht die Beträge mit einer Liste, die mit der App gepflegt wird (nach den Leistungsübersichten des Bundesgesundheitsministeriums). Noch nicht geladen."
+                            else if (rates.first.isEmpty()) "Die eingestellten Beträge entsprechen dem Stand " + de.meinhelfer.tag.summary.BenefitRates.parse(ratesText).stand + ". Ändert sich etwas, fragt die App (bzw. dein Assistent) vor dem Übernehmen."
+                            else "Erst nach deinem Tipp werden die Beträge geändert. Im Zweifel bei der Pflegekasse nachfragen.",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                        TextButton(onClick = { vm.refreshRates(force = true) }) { Text("Jetzt prüfen") }
+                    }
+                }
+            }
+            // ---- Hinweis zur geplanten Reform (Stand 22.11.2026), nur solange keine Liste geladen ist
+            if (ratesText.isBlank() && year >= 2026 && today.year <= 2027) {
                 jumpItem(budgetJumps, "Hinweis: Reform 2027") {
                     HCard(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
                         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {

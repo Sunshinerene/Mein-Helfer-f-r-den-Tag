@@ -80,8 +80,11 @@ private fun rememberAssistantState(vm: MainViewModel): AssistantState {
     }
     val measures = de.meinhelfer.tag.summary.MeasurePlans.openToday(plans, vitals, now, zone)
     val line = Tageslage.dayLine(persons, meds, checkins, appointments, todos, now, zone, window, measures)
-    val recent by vm.recentCheckins.collectAsStateWithLifecycle()
-    val proposals = Assistant.proposals(persons, todos, meds, duties, doctors, today, dismissed, recent)
+    val recent by vm.twoWeekCheckins.collectAsStateWithLifecycle()
+    val ratesText by vm.ratesText.collectAsStateWithLifecycle()
+    val ratesTick by vm.ratesTick.collectAsStateWithLifecycle()
+    val rates = remember(ratesText, ratesTick, today) { vm.rateChanges() }
+    val proposals = Assistant.proposals(persons, todos, meds, duties, doctors, today, dismissed, recent, rates.first, rates.second)
     val measured = persons.associate { p ->
         p.id to vitals.any { it.personId == p.id && it.kind != VitalKind.Trinken.key && it.day >= today - 14 }
     }

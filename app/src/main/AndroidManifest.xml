@@ -113,6 +113,11 @@
             </intent-filter>
         </activity-alias>
 
+        <!-- Widget: „Eingenommen“ mit Rückfrage -->
+        <receiver
+            android:name=".widget.WidgetActionReceiver"
+            android:exported="false" />
+
         <receiver
             android:name=".reminder.ReminderReceiver"
             android:exported="false" />

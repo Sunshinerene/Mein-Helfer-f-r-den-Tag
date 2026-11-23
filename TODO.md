@@ -1,17 +1,17 @@
 # TODO
 
-Stand: v0.69.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.70.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
 - [ ] Health-Connect-Bibliothek auf 1.1.0 stabil heben, sobald die App auf compileSdk 36 und Android Gradle Plugin 8.9 umgestellt ist
-- [ ] Budgets: Beträge prüfen und anpassen, sobald die Pflegereform 2027 (Pflegeneuordnungsgesetz) beschlossen ist
+- [ ] Pflegereform 2027: sobald beschlossen, daten/leistungen.txt anpassen (Beträge, Übertrag, Hinweis); für die neuen Budgets ggf. neue Bereiche in der App
 
 ## Ideen und Optimierungen
 
 - [ ] Pflegetagebuch: Selbsteinschätzung je Bereich als Vorbereitung auf die Begutachtung
 - [ ] Packungsfoto: Erkennung verbessern (Wirkstoff, Packungsbeilage), Barcode live mit der Kamera
-- [ ] Widget: „Eingenommen“ direkt im Widget (mit Rückfrage), zweite Größe mit Tagesübersicht
+- [ ] Widget: zweite Größe mit Tagesübersicht
 - [ ] Barrierefreiheit: „Heute vorlesen“ direkt auf der Heute-Seite, Vorlesen für Schreiben und Medikamentenplan
 - [ ] Health Connect: eigene Werte der pflegenden Person (Schlaf, Schritte) freiwillig im Tages-Motivator, Abruf im Hintergrund
 - [ ] Mehrsprachigkeit für Betreuungskräfte (z. B. Polnisch, Rumänisch)
@@ -23,6 +23,7 @@ Stand: v0.69.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Datenbank prüfen, Beispiel-PDFs mit erfundenen Daten, Beispiel-Grafiken, Test-Benachrichtigungen). Die Datenbank-Umstellungen von Version 5 bis 29 prüft seit v0.54.0 bei jedem Bauen ein automatischer Test gegen das Schema (Tabellen, Spalten, Typen); auf dem Handy bleibt zu prüfen, dass die eigenen Daten nach dem Update vollständig da sind.
 
+- [ ] Widget „✓ Eingenommen“ → „Ja“ hakt ab, „Nein“ und Ablauf nach 30 Sekunden; bei Insulin „Eintragen …“; Budgets „Beträge aktuell?“ und Hinweis zur Reform, Assistent fragt nach
 - [ ] Einnahme-Fenster (Datenbank 29): Insulin antippen → Menge ändern, Blutzucker dazu, „+ Messwert“, Speichern; Erinnerung öffnet das Fenster; Haltbarkeit nach Anbruch mit „Neu angebrochen“ und Erinnerung am letzten Tag
 - [ ] Fenster schließen nicht mehr beim Tippen daneben (alle Eingabe- und Info-Fenster, Datum und Uhrzeit); Ordner mit Unterordnern laden; Dateien aus „Dateien“, Drive oder Dropbox über „Teilen“ → „Mein Helfer“ übernehmen (auch bei gesperrter App erst nach dem Entsperren)
 - [ ] Messwerte (Datenbank 28): neue Werte (Atemfrequenz, Schmerz, INR, Urin), Angabe wie „nüchtern“ oder „Ohr“, Schnellknöpfe auf der Heute-Seite, Messzeiten mit Erinnerung (kommt sie nur, wenn noch nicht gemessen? Antippen öffnet das Eintragen), „Heute zu messen“, Assistent und Tagesplan; Bericht mit eigenem Zeitraum, Grafik, E-Mail an den Arzt und „In Dokumente ablegen“; Pflegetagebuch-PDF mit Messungen
@@ -77,7 +78,13 @@ Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Daten
 
 - [ ] Eigene KI-Stimme direkt in der App (nur falls SherpaTTS nicht reicht): sherpa-onnx mit Piper-Stimme Thorsten oder Kerstin (CC0) oder apptor-tiny-tts (Apache-2.0, 21 MB); macht die App 25–70 MB größer, Lizenzen der Bibliotheken prüfen
 
-## Version 0.69.0 (fertig)
+## Version 0.70.0 (fertig)
+
+- [x] Widget: „✓ Eingenommen“ mit Rückfrage („alle genommen?“ → Ja/Nein), nur wenn die Einnahme dran ist; bei Einnahme-Fenster „Eintragen …“ direkt in die App
+- [x] Budget-Beträge aktuell halten: Liste im Repo (daten/leistungen.txt, nach BMG), Abgleich mit den eingestellten Beträgen; Assistent fragt vor dem Übernehmen, Hinweise zu geplanten Änderungen; Übertrag aus dem Vorjahr einstellbar (z. B. verfällt am 31.12.)
+- [x] Automatischer Test (BenefitRatesTest, auch für die Datei im Repo)
+
+## Version 0.69.0 (im Build 0.70.0 enthalten)
 
 - [x] Einnahme-Fenster je Uhrzeit: alle Medikamente abhaken, gegebene Menge eintragen (z. B. Insulin nach Korrekturschema), Messwerte wie Blutzucker gleich dazu, weitere hinzufügbar, Bemerkung; Erinnerung öffnet das Fenster (Datenbank 29)
 - [x] Assistent: Vorschlag, den Verbrauch anzupassen, wenn die gegebenen Mengen an mindestens 5 Tagen deutlich abweichen; „Pro Tag“ bleibt dafür frei änderbar

@@ -11,7 +11,16 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 /** Nächste Einnahme: Tag, Uhrzeit, Medikamente; [overdue] = Zeit ist vorbei, aber noch nicht abgehakt. */
-data class NextIntake(val day: Long, val time: String, val names: List<String>, val overdue: Boolean)
+data class NextIntake(
+    val day: Long,
+    val time: String,
+    val names: List<String>,
+    val overdue: Boolean,
+    /** Offene Medikamente dieser Uhrzeit (zum Abhaken im Widget) */
+    val medIds: List<Long> = emptyList(),
+    /** Mindestens eines mit Einnahme-Fenster (Menge und Werte): dann öffnet das Widget die App */
+    val ask: Boolean = false,
+)
 
 /** Inhalt des Startbildschirm-Widgets (nur Text, ohne Android). */
 object WidgetInfo {
@@ -28,7 +37,10 @@ object WidgetInfo {
             if (s.open.isEmpty()) continue
             val at = now.toLocalDate().atTime(s.time)
             if (at.plusMinutes(graceMinutes).isBefore(now)) continue
-            return NextIntake(today, s.timeText, s.open.map { it.name }.distinct(), overdue = at.isBefore(now))
+            return NextIntake(
+                today, s.timeText, s.open.map { it.name }.distinct(), overdue = at.isBefore(now),
+                medIds = s.open.map { it.id }.distinct(), ask = s.open.any { it.askAtIntake },
+            )
         }
         // Morgen: erste Einnahme des Tages
         val first = Tageslage.intakeSlots(meds, checkins, today + 1).firstOrNull() ?: return null

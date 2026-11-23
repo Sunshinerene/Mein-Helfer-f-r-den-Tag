@@ -1,0 +1,8 @@
+# Beträge der Pflegekasse für "Mein Helfer für den Tag" (Budgets).
+# Die App liest diese Datei und schlägt Änderungen vor; übernommen wird nur nach Bestätigung.
+# Format: jahr;Jahr;Entlastungsbetrag je Monat;Gemeinsamer Jahresbetrag;Rest aus dem Vorjahr nutzbar bis Monat (6 = 30. Juni, 0 = verfällt am 31.12.);Status (gilt|beschlossen|geplant);Quelle
+# Hinweise: hinweis;Datum;Status;Text
+stand;2026-11-23
+jahr;2025;131;3539;6;gilt;BMG, Leistungsbeträge 2025 (Jahresbetrag ab 1. Juli 2025)
+jahr;2026;131;3539;6;gilt;BMG, Übersicht Leistungsbeträge 2026
+hinweis;2026-11-23;geplant;Pflegereform 2027 (Pflegeneuordnungsgesetz) ist noch nicht beschlossen. Laut Entwurf sollen ab 1. Januar 2027 Entlastungsbetrag, Verhinderungs- und Kurzzeitpflege in neue Budgets übergehen; Pflegegrad 1 bekäme keinen Entlastungsbetrag mehr, und nicht genutzte Beträge aus 2026 könnten schon am 31.12.2026 verfallen. Tipp: Budgets für 2026 möglichst bis Jahresende nutzen und bei der Pflegekasse nachfragen. Sobald etwas beschlossen ist, melde ich mich mit den neuen Beträgen.

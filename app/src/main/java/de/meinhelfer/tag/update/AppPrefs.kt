@@ -564,6 +564,28 @@ object AppPrefs {
         prefs(context).edit().putFloat("budget_monat_$year", value.toFloat()).apply()
     }
 
+    /** Widget: Rückfrage „Alle genommen?“ gilt bis (Millisekunden), 0 = keine. */
+    fun widgetConfirm(context: Context): Long = prefs(context).getLong("widget_rueckfrage", 0L)
+
+    fun setWidgetConfirm(context: Context, until: Long) {
+        prefs(context).edit().putLong("widget_rueckfrage", until).apply()
+    }
+
+    /** Rest des Entlastungsbetrags aus dem Vorjahr nutzbar bis einschliesslich Monat im Jahr (6 = 30. Juni, 0 = verfallen). */
+    fun budgetCarryMonth(context: Context, year: Int): Int = prefs(context).getInt("budget_uebertrag_$year", 6)
+
+    fun setBudgetCarryMonth(context: Context, year: Int, month: Int) {
+        prefs(context).edit().putInt("budget_uebertrag_$year", month.coerceIn(0, 12)).apply()
+    }
+
+    /** Zuletzt geladene Beträge der Pflegekasse (Datei aus dem Repo) und wann. */
+    fun ratesText(context: Context): String = prefs(context).getString("leistungen_text", "") ?: ""
+    fun ratesTime(context: Context): Long = prefs(context).getLong("leistungen_zeit", 0L)
+
+    fun setRates(context: Context, text: String) {
+        prefs(context).edit().putString("leistungen_text", text).putLong("leistungen_zeit", System.currentTimeMillis()).apply()
+    }
+
     /** Gemeinsamer Jahresbetrag fuer Verhinderungs- und Kurzzeitpflege im Jahr. */
     fun budgetYearly(context: Context, year: Int): Double =
         prefs(context).getFloat("budget_jahr_$year", de.meinhelfer.tag.summary.Budgets.DEFAULT_YEARLY.toFloat()).toDouble()
