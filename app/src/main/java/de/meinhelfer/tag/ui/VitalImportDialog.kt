@@ -47,12 +47,12 @@ data class VitalImportJob(val personId: Long, val title: String, val text: Strin
 fun VitalImportDialog(job: VitalImportJob, vm: MainViewModel, onClose: () -> Unit) {
     val context = androidx.compose.ui.platform.LocalContext.current
     var kind by remember { mutableStateOf(job.kind ?: VitalImport.guessKind(job.text) ?: VitalKind.Blutzucker) }
+    var aiText by remember { mutableStateOf<String?>(null) }
     val result = remember(kind, aiText) { VitalImport.parse(aiText ?: job.text, kind, job.docDate) }
     val checked = remember(kind, aiText) { mutableStateListOf<Boolean>().apply { addAll(result.candidates.map { true }) } }
     val edited = remember(kind, aiText) { mutableStateListOf<String>().apply { addAll(result.candidates.map { valueText(it) }) } }
     var saving by remember { mutableStateOf(false) }
     // Optional: KI ordnet den erkannten Text (Handschrift) in eine saubere Liste, die dann wie gewohnt gelesen wird
-    var aiText by remember { mutableStateOf<String?>(null) }
     var aiBusy by remember { mutableStateOf(false) }
     var aiError by remember { mutableStateOf<String?>(null) }
     var aiConfirm by remember { mutableStateOf(false) }
