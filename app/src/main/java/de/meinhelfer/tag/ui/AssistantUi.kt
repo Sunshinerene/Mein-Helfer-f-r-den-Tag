@@ -235,6 +235,7 @@ fun AssistantCard(vm: MainViewModel, onOpen: (tab: Int) -> Unit, onMood: () -> U
             st.proposals.filter { it.action is de.meinhelfer.tag.summary.ProposalAction.SetAlarm || it.text.startsWith("🎂") }
                 .map { it.text.removePrefix("🎂 ") } + selfHints,
             item?.let { it.title to it.source }, st.multi,
+            say = { t, d, n -> de.meinhelfer.tag.ai.SunnyMemory.say(context, t, d, n) },
         )
     }
     suspend fun fetchNews(): de.meinhelfer.tag.info.NewsItem? {
@@ -569,7 +570,7 @@ fun AssistantSheetContent(vm: MainViewModel, page: String, onOpenGuide: () -> Un
                 asking = true
                 failed = null
                 sheetScope.launch {
-                    ScreenComment.ask(context, st.name, page, data).onFailure { failed = it.message ?: "Das hat nicht geklappt." }
+                    ScreenComment.ask(context, st.name, page, data, note).onFailure { failed = (it.message ?: "Das hat nicht geklappt.") + " Ich habe dir vorgelesen, was ich selbst sehe." }
                     asking = false
                 }
             }) { Text(if (asking) "${st.name} denkt nach …" else "💬 Was meinst du zu dieser Seite?") }
@@ -1197,7 +1198,10 @@ internal fun screenSystem(name: String) =
         "Du bekommst, was gerade auf einer Seite der App zu sehen ist (ohne Namen). Sag dazu in höchstens drei kurzen Sätzen etwas Hilfreiches: " +
         "eine Auffälligkeit, eine Erinnerung oder einen praktischen Tipp für den Alltag. Du-Form, freundlich, einfache Sprache, keine Aufzählung. " +
         "Keine Diagnosen, keine Dosierungen, rate nie, Medikamente zu ändern; bei Gesundheitsfragen auf Hausarzt oder Apotheke verweisen. " +
-        "Wenn nichts auffällt, sag etwas kurz Ermutigendes. " + de.meinhelfer.tag.summary.SpeechVariants.FORMAT
+        "Wenn nichts auffällt, sag etwas kurz Ermutigendes. " +
+        "Schreibe für eine Vorlesestimme: natürliche gesprochene Sprache, wie man es einem Menschen sagt; keine Abkürzungen, keine Klammern, " +
+        "keine Emojis, keine Aufzählungszeichen; Uhrzeiten und Einheiten ausgeschrieben, z. B. „acht Uhr dreißig“, „Milligramm“. " +
+        de.meinhelfer.tag.summary.SpeechVariants.FORMAT
 
 object ScreenComment {
     private val asked = java.util.concurrent.ConcurrentHashMap<String, Long>()
@@ -1213,8 +1217,20 @@ object ScreenComment {
      * KI fragen (gleiche Seite mit gleichen Daten kommt aus dem Zwischenspeicher), Kurzform reihum aus den Varianten
      * sprechen (oder die ausführliche Fassung), ausführliche Fassung im Blatt zeigen.
      */
-    suspend fun ask(context: android.content.Context, name: String, page: String, data: String): Result<String> {
+    suspend fun ask(context: android.content.Context, name: String, page: String, data: String, fallback: String = ""): Result<String> {
         asked[page] = System.currentTimeMillis()
+        val result = askAi(context, name, page, data)
+        // Ohne Verbindung oder bei Limit: Sunny liest selbst vor, was sie auf der Seite sieht
+        if (result.isFailure && fallback.isNotBlank() && !de.meinhelfer.tag.ai.AiMode.isOff(context)) {
+            val text = de.meinhelfer.tag.ai.SunnyMemory.say(context, "offline", "Ohne Verbindung sage ich dir, was ich hier sehe.") + " " + fallback
+            last.value = page to text
+            SunnyAvatar.caption.value = fallback
+            Speech.speak(context, "assistent-seite", text)
+        }
+        return result
+    }
+
+    private suspend fun askAi(context: android.content.Context, name: String, page: String, data: String): Result<String> {
         return de.meinhelfer.tag.ai.AiClient.ask(context, screenSystem(name), data, 700, de.meinhelfer.tag.ai.AiTask.Seite).map { answer ->
             val parsed = de.meinhelfer.tag.summary.SpeechVariants.parse(answer)
             val turn = turns.merge(page, 1, Int::plus)!! - 1
@@ -1236,12 +1252,15 @@ fun ScreenCommentAuto(vm: MainViewModel, page: String) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val st = rememberAssistantState(vm)
     val data = pageContext(page, vm, st)
+    val note = pageNote(page, vm, st)
     androidx.compose.runtime.LaunchedEffect(page) {
+        // Abends den Sprachschatz aus den Gesprächen des Tages erweitern (einmal am Tag, Stufe 3)
+        runCatching { de.meinhelfer.tag.ai.SunnyMemory.consolidateIfDue(context) }
         if (!ScreenComment.allowed(context) || !AppPrefs.screenTalkAuto(context) || AppPrefs.isQuietNow(context)) return@LaunchedEffect
         kotlinx.coroutines.delay(2500)
         if (!ScreenComment.due(page) || Speech.speaking.value != null) return@LaunchedEffect
         // Tageslimit für automatische Kommentare (schont das freie Kontingent)
         if (de.meinhelfer.tag.ai.AiUsage.byTask(context, de.meinhelfer.tag.ai.AiTask.Seite) >= de.meinhelfer.tag.ai.AiTask.autoLimit(context)) return@LaunchedEffect
-        ScreenComment.ask(context, st.name, page, data)
+        ScreenComment.ask(context, st.name, page, data, note)
     }
 }

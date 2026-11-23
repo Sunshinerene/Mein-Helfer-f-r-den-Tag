@@ -222,8 +222,20 @@ private fun AiTaskSettings(name: String, auto: Boolean) {
         "Zwischenspeicher: $stored Antworten gemerkt, heute $saved Anfragen gespart. Gleiche Anfrage mit gleichen Daten kommt aus dem Speicher; ändert sich etwas, wird neu gefragt. Nach einem Neustart der App wird aktualisiert.",
         style = MaterialTheme.typography.bodySmall,
     )
-    Row {
+    val phrases = remember(tick) { de.meinhelfer.tag.ai.SunnyMemory.phraseCount(context) }
+    val saidToday = remember(tick) { de.meinhelfer.tag.ai.SunnyMemory.todayCount(context) }
+    val learned = remember(tick) { de.meinhelfer.tag.ai.SunnyMemory.lastLearned(context) }
+    Text(
+        "Sprachschatz: $phrases Formulierungen, heute $saidToday Mal gesprochen." + (if (learned.isNotBlank()) " Zuletzt: $learned." else "") +
+            " Was $name sagt, wird nur für heute auf dem Handy gemerkt. Abends (Stufe 3, Aufgabe „Sprachschatz“) sucht die KI daraus neue Formulierungen mit gleichem Sinn – ohne Namen und Daten –, damit $name abwechslungsreich spricht. Danach wird das Tagesprotokoll gelöscht.",
+        style = MaterialTheme.typography.bodySmall,
+    )
+    androidx.compose.foundation.layout.FlowRow {
         TextButton(onClick = { tick++ }) { Text("Verbrauch aktualisieren") }
+        TextButton(onClick = {
+            de.meinhelfer.tag.ai.SunnyMemory.reset(context)
+            tick++
+        }) { Text("Sprachschatz zurücksetzen") }
         TextButton(onClick = {
             de.meinhelfer.tag.ai.AiCache.clear(context)
             tick++

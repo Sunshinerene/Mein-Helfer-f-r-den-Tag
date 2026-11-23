@@ -1,6 +1,6 @@
 # TODO
 
-Stand: v0.86.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.87.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
@@ -13,6 +13,7 @@ Stand: v0.86.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 - [ ] KI vollumfänglich – nach und nach: Dokument-Zusammenfassung beim Speichern, Messwerte aus Handschrift per KI, Wochenrückblick mit Auffälligkeiten, Fragen an den Arzt vor Terminen, Rückfrage-Chat mit Sunny
 
+- [ ] Sprachschatz: „Erzähl mal“ begrüßt abwechselnd; ohne Internet liest Sunny die Seite selbst vor; abends neue Formulierungen (Anzeige „Zuletzt: … gelernt“)
 - [ ] Zwischenspeicher: zweimal „Was meinst du zu dieser Seite?“ ohne Änderung → keine neue Anfrage, andere Formulierung; nach Neustart neu; „Gespart“-Zähler
 - [ ] KI-Aufgaben: Zuordnung je Aufgabe wirkt (Verbrauch zählt beim richtigen Dienst), Ausweichen bei Limit, Tageslimit Kommentare
 - [ ] Sunny beim Sprechen über Dialogen und dem Blatt unten (z. B. Prüf-Fenster Messwerte, KI-Modus-Hinweise vorlesen)
@@ -99,6 +100,12 @@ Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Daten
 - [ ] Sammel-Import: Vorschläge mit echten Scans verfeinern (z. B. gleicher Absender und gleiches Datum als weiterer Hinweis)
 
 - [ ] Eigene KI-Stimme direkt in der App (nur falls SherpaTTS nicht reicht): sherpa-onnx mit Piper-Stimme Thorsten oder Kerstin (CC0) oder apptor-tiny-tts (Apache-2.0, 21 MB); macht die App 25–70 MB größer, Lizenzen der Bibliotheken prüfen
+
+## Version 0.87.0 (fertig)
+
+- Sprachschatz mit Grundbestand und abendlichem Lernen aus dem Tagesprotokoll (nur heute, nur auf dem Handy)
+- Ohne Verbindung liest Sunny die Seite selbst vor
+- KI-Sprachtexte in natürlicher gesprochener Sprache für die Stimme
 
 ## Version 0.86.0 (fertig)
 

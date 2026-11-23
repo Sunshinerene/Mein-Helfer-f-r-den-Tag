@@ -197,6 +197,10 @@ object Speech {
         val app = context.applicationContext
         val clean = clean(text)
         if (clean.isBlank()) return
+        // Was Sunny sagt, für heute merken (für den Sprachschatz am Abend)
+        if (owner.startsWith("assistent") && !owner.contains("rundgang") && !owner.contains("probe") && !owner.contains("vorschau")) {
+            runCatching { de.meinhelfer.tag.ai.SunnyMemory.log(app, owner, clean) }
+        }
         _speaking.value = owner
         ensure(app) { engine ->
             if (engine == null) {

@@ -101,15 +101,17 @@ object AssistantBrief {
         hints: List<String>,
         news: Pair<String, String>?,
         multi: Boolean,
+        /** Formulierung aus dem Sprachschatz (Thema, Standardsatz, Anzahl); ohne: der Standardsatz. */
+        say: (String, String, Int?) -> String = { _, d, n -> d.replace("{name}", name).let { if (n != null) it.replace("{n}", n.toString()) else it } },
     ): String {
         val greet = when (hour) {
-            in 5..10 -> "Guten Morgen"
-            in 11..17 -> "Hallo"
-            else -> "Guten Abend"
+            in 5..10 -> say("gruss_morgen", "Guten Morgen, hier ist {name}.", null)
+            in 11..17 -> say("gruss_tag", "Hallo, hier ist {name}.", null)
+            else -> say("gruss_abend", "Guten Abend, hier ist {name}.", null)
         }
-        val parts = mutableListOf("$greet, hier ist $name.")
+        val parts = mutableListOf(greet)
         if (line.isEmpty()) {
-            parts += "Gerade steht laut App nichts an."
+            parts += say("nichts_an", "Gerade steht laut App nichts an.", null)
         } else {
             val first = line.first()
             parts += "Als Nächstes: " + first.title + (if (multi && first.personName.isNotBlank()) " für ${first.personName}" else "") + "."
@@ -118,7 +120,8 @@ object AssistantBrief {
         todayPreps.firstOrNull { it.hints.isNotEmpty() }?.let { p ->
             parts += "Für ${p.appointment.title} um ${p.whenText.substringAfterLast(' ')}: ${prepShort(p)}."
         }
-        if (proposals > 0) parts += "Ich habe ${count(proposals, "Vorschlag", "Vorschläge")} für dich, schau gern in meine Karte."
+        if (proposals == 1) parts += say("vorschlag_eins", "Ich habe einen Vorschlag für dich, schau gern in meine Karte.", null)
+        if (proposals > 1) parts += say("vorschlaege", "Ich habe {n} Vorschläge für dich, schau gern in meine Karte.", proposals)
         hints.firstOrNull()?.let { parts += it }
         news?.let { (title, source) -> parts += "Neu in den Nachrichten" + (if (source.isNotBlank()) " bei $source" else "") + ": $title." }
         return parts.joinToString(" ")
