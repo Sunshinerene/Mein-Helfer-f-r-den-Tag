@@ -359,7 +359,7 @@ fun TodayScreen(
                     key = "profil",
                     title = person.name,
                     summary = person.careLevel.takeIf { it in 1..5 }?.let { "Pflegegrad $it" } ?: "Profil",
-                ) { ProfileCard(person, todayDay, onEditProfile, onOpenWegweiser, onOpenBudget, onOpenHandover, onOpenSummary) }
+                ) { ProfileCard(person, todayDay, onEditProfile, onOpenWegweiser, onOpenBudget, onOpenHandover, onOpenSummary, vm.persons.collectAsStateWithLifecycle().value) }
             }
         }
 
@@ -614,6 +614,7 @@ private fun ProfileCard(
     onBudget: () -> Unit = {},
     onHandover: () -> Unit = {},
     onReports: () -> Unit = {},
+    persons: List<Person> = emptyList(),
 ) {
     if (person == null) return
     val age = person.birthDate?.let { java.time.Period.between(LocalDate.ofEpochDay(it), LocalDate.ofEpochDay(todayDay)).years }
@@ -627,6 +628,12 @@ private fun ProfileCard(
             Text(person.name, style = MaterialTheme.typography.titleMedium)
             if (head.isNotEmpty()) Text(head, style = MaterialTheme.typography.bodyMedium)
             if (person.insurer.isNotBlank()) Text("Krankenkasse: ${person.insurer}", style = MaterialTheme.typography.bodyMedium)
+            de.meinhelfer.tag.summary.Disability.decode(person.disability).takeIf { it.isSet }?.let {
+                Text("Schwerbehindertenausweis: ${it.short()}", style = MaterialTheme.typography.bodyMedium)
+            }
+            de.meinhelfer.tag.summary.Household.decode(person.household).short { id -> persons.firstOrNull { it.id == id }?.name }.takeIf { it.isNotBlank() }?.let {
+                Text(it, style = MaterialTheme.typography.bodySmall)
+            }
             if (person.phone.isNotBlank()) {
                 val ctx = androidx.compose.ui.platform.LocalContext.current
                 Row(verticalAlignment = Alignment.CenterVertically) {

@@ -7,7 +7,7 @@ import java.util.Locale
 
 val DOC_CATEGORIES = listOf(
     "Arztbericht", "Krankenhaus / Entlassbericht", "Befund / Labor", "Rezept / Verordnung", "Medikamentenplan", "Pflegegrad / Bescheid",
-    "Vollmacht / Verfügung", "Rechnung / Quittung", "Überweisung", "Messwerte / Tagebuch", "Sonstiges",
+    "Vollmacht / Verfügung", "Rechnung / Quittung", "Überweisung", "Messwerte / Tagebuch", "Schwerbehindertenausweis", "Sonstiges",
 )
 
 /** Vorschlaege fuer ein neues Dokument, aus dem erkannten Text. Alles bleibt aenderbar. */
@@ -57,6 +57,11 @@ object DocumentAnalyzer {
     }
 
     private val RULES: List<Rule> = listOf(
+        Rule(
+            "Schwerbehindertenausweis",
+            "Schwerbehindertenausweis|Grad der Behinderung|Feststellungsbescheid|Merkzeichen",
+            "\\bGdB\\b|Versorgungsamt|schwerbehindert|Nachteilsausgleich",
+        ),
         Rule(
             "Krankenhaus / Entlassbericht",
             "Entlass(?:ungs)?(?:brief|bericht)|Entlassung|entlassen|stationär|Krankenhausaufenthalt|Klinikaufenthalt|Aufnahmedatum|Notaufnahme|Rettungsstelle|vorläufiger Arztbrief",

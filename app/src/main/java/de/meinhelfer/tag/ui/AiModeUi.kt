@@ -222,6 +222,20 @@ private fun AiTaskSettings(name: String, auto: Boolean) {
         "Zwischenspeicher: $stored Antworten gemerkt, heute $saved Anfragen gespart. Gleiche Anfrage mit gleichen Daten kommt aus dem Speicher; ändert sich etwas, wird neu gefragt. Nach einem Neustart der App wird aktualisiert.",
         style = MaterialTheme.typography.bodySmall,
     )
+    val exportBook = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.CreateDocument("text/plain")) { uri ->
+        if (uri != null) runCatching {
+            context.contentResolver.openOutputStream(uri)?.use { it.write(de.meinhelfer.tag.ai.SunnyMemory.exportText(context).toByteArray(Charsets.UTF_8)) }
+            android.widget.Toast.makeText(context, "Sprachschatz gesichert", android.widget.Toast.LENGTH_SHORT).show()
+        }
+    }
+    val importBook = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) runCatching {
+            val text = context.contentResolver.openInputStream(uri)?.use { it.readBytes().toString(Charsets.UTF_8).take(200_000) }.orEmpty()
+            val n = de.meinhelfer.tag.ai.SunnyMemory.importText(context, text, replace = false)
+            android.widget.Toast.makeText(context, "Sprachschatz ergänzt: $n Formulierungen", android.widget.Toast.LENGTH_SHORT).show()
+            tick++
+        }
+    }
     val phrases = remember(tick) { de.meinhelfer.tag.ai.SunnyMemory.phraseCount(context) }
     val saidToday = remember(tick) { de.meinhelfer.tag.ai.SunnyMemory.todayCount(context) }
     val learned = remember(tick) { de.meinhelfer.tag.ai.SunnyMemory.lastLearned(context) }
@@ -236,6 +250,8 @@ private fun AiTaskSettings(name: String, auto: Boolean) {
             de.meinhelfer.tag.ai.SunnyMemory.reset(context)
             tick++
         }) { Text("Sprachschatz zurücksetzen") }
+        TextButton(onClick = { exportBook.launch("Sprachschatz_Sunny.txt") }) { Text("Sprachschatz sichern") }
+        TextButton(onClick = { importBook.launch(arrayOf("text/*")) }) { Text("Sprachschatz wiederherstellen") }
         TextButton(onClick = {
             de.meinhelfer.tag.ai.AiCache.clear(context)
             tick++

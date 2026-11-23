@@ -100,6 +100,8 @@ object Backup {
                 prefs.put(k, o)
             }
             entry("prefs.json") { it.write(prefs.toString().toByteArray(Charsets.UTF_8)) }
+            // Sunnys Sprachschatz
+            entry("sprachschatz.txt") { it.write(de.meinhelfer.tag.ai.SunnyMemory.exportText(app).toByteArray(Charsets.UTF_8)) }
 
             val docNames = DocumentStore.storedNames(app)
             docNames.forEachIndexed { i, name ->
@@ -156,7 +158,7 @@ object Backup {
                     val e = zip.nextEntry ?: break
                     if (e.isDirectory) continue
                     val name = e.name
-                    val okName = name == "meta.json" || name == "prefs.json" || name.startsWith("db/") ||
+                    val okName = name == "meta.json" || name == "prefs.json" || name == "sprachschatz.txt" || name.startsWith("db/") ||
                         name.startsWith("docs/") || name.startsWith("photos/")
                     if (!okName) continue
                     val rel = if (name.startsWith("docs/")) "docs_enc/" + name.removePrefix("docs/") else name
@@ -319,6 +321,10 @@ object Backup {
                     }
                 }
                 check(edit.commit()) { "Einstellungen nicht gespeichert" }
+            }
+
+            File(staging, "sprachschatz.txt").takeIf { it.exists() }?.let { f ->
+                runCatching { de.meinhelfer.tag.ai.SunnyMemory.importText(app, f.readText(), replace = true) }
             }
 
             // Erfolg: alte Staende loeschen

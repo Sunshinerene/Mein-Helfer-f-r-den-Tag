@@ -29,6 +29,7 @@ import de.meinhelfer.tag.summary.Period
 import de.meinhelfer.tag.summary.Summary
 import de.meinhelfer.tag.summary.SummaryBuilder
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -1036,11 +1037,27 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /** Neue Person mit Profil anlegen und auswaehlen. */
     fun addPerson(person: Person) = viewModelScope.launch {
         val id = db.personDao().insert(person.copy(id = 0, name = person.name.trim(), important = person.important.trim()))
+        syncHousehold(person.copy(id = id))
         selectPerson(id)
     }
 
     fun updatePerson(person: Person) = viewModelScope.launch {
         db.personDao().update(person.copy(name = person.name.trim(), important = person.important.trim()))
+        syncHousehold(person)
+    }
+
+    /** „Lebt zusammen mit“ in beide Richtungen eintragen bzw. austragen. */
+    private suspend fun syncHousehold(person: Person) {
+        val mine = de.meinhelfer.tag.summary.Household.decode(person.household).withPersons
+        db.personDao().all().first().filter { it.id != person.id }.forEach { other ->
+            val h = de.meinhelfer.tag.summary.Household.decode(other.household)
+            val links = person.id in h.withPersons
+            val should = other.id in mine
+            if (links != should) {
+                val updated = h.copy(withPersons = if (should) h.withPersons + person.id else h.withPersons - person.id)
+                db.personDao().update(other.copy(household = updated.encode()))
+            }
+        }
     }
 
     fun renamePerson(person: Person, name: String) = viewModelScope.launch {

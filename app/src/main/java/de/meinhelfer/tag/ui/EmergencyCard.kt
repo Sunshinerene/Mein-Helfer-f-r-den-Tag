@@ -55,6 +55,7 @@ internal fun emergencyText(
         p.birthDate?.let { append("Geboren am ").append(LocalDate.ofEpochDay(it).format(EMERGENCY_DATE)).append('\n') }
         if (p.careLevel in 1..5) append("Pflegegrad ").append(p.careLevel).append('\n')
         if (p.insurer.isNotBlank()) append("Krankenkasse: ").append(p.insurer).append('\n')
+        de.meinhelfer.tag.summary.Disability.decode(p.disability).takeIf { it.isSet }?.let { append("Schwerbehindertenausweis: ").append(it.short()).append('\n') }
         if (withInsuranceNumber && p.insuranceNumber.isNotBlank()) append("Versichertennummer: ").append(p.insuranceNumber).append('\n')
         val addr = listOf(p.street, listOf(p.zip, p.city).filter { it.isNotBlank() }.joinToString(" ")).filter { it.isNotBlank() }.joinToString(", ")
         if (addr.isNotBlank()) append("Adresse: ").append(addr).append('\n')

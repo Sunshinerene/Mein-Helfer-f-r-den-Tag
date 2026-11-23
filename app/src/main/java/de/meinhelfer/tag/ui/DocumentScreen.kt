@@ -602,6 +602,7 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?
                 drafts = items,
                 onLinkDraft = { vm.markDraftSigned(it) },
                 onVitals = { vitalJobs.add(if (it.personId == 0L) it.copy(personId = vm.personId.value) else it) },
+                onDisability = { d -> person?.let { p -> vm.updatePerson(p.copy(disability = mergeCard(p, d))) } },
                 onSave = { doc ->
                     scope.launch {
                         try {
@@ -675,6 +676,7 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?
             onRemoveLast = {},
             onDismiss = { editItem = null },
             onVitals = { vitalJobs.add(it.copy(personId = doc.personId)) },
+            onDisability = { d -> person?.let { p -> vm.updatePerson(p.copy(disability = mergeCard(p, d))) } },
             onSave = {
                 vm.update(it)
                 editItem = null
@@ -709,6 +711,8 @@ private fun DocumentDialog(
     onLinkDraft: (Document) -> Unit = {},
     /** Messwerte nach dem Speichern prüfen und übernehmen */
     onVitals: ((VitalImportJob) -> Unit)? = null,
+    /** Angaben vom Schwerbehindertenausweis ins Profil übernehmen */
+    onDisability: ((de.meinhelfer.tag.summary.Disability) -> Unit)? = null,
 ) {
     val suggestion = remember { pending?.let { DocumentAnalyzer.analyze(it.text, doctors) } }
     var title by remember { mutableStateOf(initial?.title ?: suggestion?.title ?: "Dokument") }
@@ -818,6 +822,29 @@ private fun DocumentDialog(
                                 }) { Text("Ja, zuordnen") }
                                 TextButton(onClick = { matchDismissed = true }) { Text("Nein") }
                             }
+                        }
+                    }
+                }
+                val card = remember(text) { de.meinhelfer.tag.summary.Disability.fromText(text) }
+                var cardTaken by remember { mutableStateOf(false) }
+                if (card != null && onDisability != null && (card.gdb > 0 || card.marks.isNotEmpty())) {
+                    HCard(Modifier.fillMaxWidth(), colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
+                        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text("♿ Schwerbehindertenausweis erkannt", style = MaterialTheme.typography.titleSmall)
+                            val msg = "Ich lese: ${card.short()}. Soll ich das ins Profil von ${person?.name ?: "der Person"} übernehmen? Bitte prüfen."
+                            Text(msg, style = MaterialTheme.typography.bodyMedium)
+                            if (cardTaken) {
+                                Text("✓ Ins Profil übernommen", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+                            } else {
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Button(shape = buttonShape(), onClick = {
+                                        onDisability(card)
+                                        cardTaken = true
+                                        if (category == "Sonstiges") category = "Schwerbehindertenausweis"
+                                    }) { Text("Übernehmen") }
+                                }
+                            }
+                            HintReader("ausweis-dokument", auto = initial == null) { msg }
                         }
                     }
                 }
@@ -1094,3 +1121,15 @@ internal fun DocumentDetailDialog(
 /** Entlassbericht (nicht der Medikationsplan selbst): eigene Vorschläge für Medikation bei Entlassung und Kontrollen. */
 internal fun isDischargeDoc(doc: Document): Boolean =
     doc.category != "Medikamentenplan" && doc.planCode.isBlank() && Discharge.looksLikeReport(doc.category, doc.text)
+
+/** Ausweis-Angaben übernehmen, ohne Amt und Aktenzeichen zu verlieren. */
+private fun mergeCard(p: Person, d: de.meinhelfer.tag.summary.Disability): String {
+    val old = de.meinhelfer.tag.summary.Disability.decode(p.disability)
+    return d.copy(
+        gdb = if (d.gdb > 0) d.gdb else old.gdb,
+        marks = d.marks.ifEmpty { old.marks },
+        validUntil = d.validUntil ?: old.validUntil,
+        office = old.office,
+        reference = old.reference,
+    ).encode()
+}

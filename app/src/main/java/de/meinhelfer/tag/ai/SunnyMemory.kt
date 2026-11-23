@@ -102,6 +102,18 @@ object SunnyMemory {
         return finish(if (added > 0) "$added neue Formulierungen gelernt" else "nichts Neues")
     }
 
+    /** Sprachschatz als Text (eine Zeile je Formulierung: Thema, Tab, Satz) – für Sicherung und Teilen. */
+    fun exportText(context: Context): String = "# Sprachschatz von Sunny (Mein Helfer für den Tag)\n" + book(context).encode()
+
+    /** Sprachschatz einlesen; [replace] = statt Ergänzen ersetzen. Gibt die Zahl der Formulierungen zurück. */
+    fun importText(context: Context, text: String, replace: Boolean): Int {
+        val incoming = Phrasebook.decode(text.lines().filterNot { it.startsWith("#") }.joinToString("\n"))
+        val target = if (replace) incoming else book(context).also { b -> incoming.themes().forEach { (t, l) -> b.merge(t, l) } }
+        book = target
+        saveBook(context)
+        return target.themes().values.sumOf { it.size }
+    }
+
     /** Sprachschatz auf den Grundbestand zurücksetzen. */
     fun reset(context: Context) {
         book = Phrasebook.withDefaults()

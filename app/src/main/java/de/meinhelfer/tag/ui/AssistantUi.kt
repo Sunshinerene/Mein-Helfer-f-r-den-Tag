@@ -113,7 +113,29 @@ private fun rememberAssistantState(vm: MainViewModel): AssistantState {
     } else {
         emptyList()
     }
-    val proposals = wake + birthdays + Assistant.proposals(persons, todos, meds, duties, doctors, today, dismissed, recent, rates.first, rates.second)
+    // Haushalt: Termine aller Personen abgleichen, Werkstattzeiten, Ausweis-Ablauf
+    val householdHints = run {
+        val members = persons.map { p ->
+            de.meinhelfer.tag.summary.HouseholdPlanner.Member(
+                p.id, p.name,
+                de.meinhelfer.tag.summary.Household.decode(p.household),
+                de.meinhelfer.tag.summary.Disability.decode(p.disability),
+            )
+        }
+        val appts = appointments.filter { !Tageslage.skipped(it, checkins, zone) }.map { a ->
+            de.meinhelfer.tag.summary.HouseholdPlanner.Appt(a.id, a.personId, a.title, a.whenMillis, a.doctorId, doctors.firstOrNull { it.id == a.doctorId }?.name.orEmpty())
+        }
+        de.meinhelfer.tag.summary.HouseholdPlanner.hints(members, appts, System.currentTimeMillis(), zone, travelFor = { a ->
+            a.doctorId?.let { AppPrefs.travelTo(appContext, it) }?.takeIf { it >= 0 } ?: AppPrefs.leaveMinutes(appContext)
+        }).filter { it.key !in dismissed }.map { h ->
+            if (h.task != null) {
+                de.meinhelfer.tag.summary.Proposal(h.key, "🏠 " + h.text, "Aufgabe anlegen", de.meinhelfer.tag.summary.ProposalAction.ReorderTask(h.personId, h.task, h.doctorId, h.due ?: today))
+            } else {
+                de.meinhelfer.tag.summary.Proposal(h.key, "🏠 " + h.text, "Verstanden", de.meinhelfer.tag.summary.ProposalAction.Acknowledge)
+            }
+        }
+    }
+    val proposals = wake + birthdays + householdHints + Assistant.proposals(persons, todos, meds, duties, doctors, today, dismissed, recent, rates.first, rates.second)
     val measured = persons.associate { p ->
         p.id to vitals.any { it.personId == p.id && it.kind != VitalKind.Trinken.key && it.day >= today - 14 }
     }

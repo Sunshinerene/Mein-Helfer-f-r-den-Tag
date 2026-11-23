@@ -599,6 +599,7 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
         persons.firstOrNull { it.id == personId }?.let { p ->
             PersonDialog(
                 initial = p,
+                others = persons.filter { it.id != p.id },
                 onDismiss = { showProfile = false },
                 onSave = {
                     vm.updatePerson(it)

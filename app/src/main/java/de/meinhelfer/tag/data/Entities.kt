@@ -30,6 +30,10 @@ data class Person(
     val access: String = "",
     /** Telefonnummer der Person (Festnetz oder Handy), optional. */
     val phone: String = "",
+    /** Schwerbehindertenausweis (siehe [de.meinhelfer.tag.summary.Disability]) */
+    val disability: String = "",
+    /** Wohnsituation und Tagesstruktur (siehe [de.meinhelfer.tag.summary.Household]) */
+    val household: String = "",
 )
 
 /** Medikament mit Einnahmezeiten und Vorrat (fuer die Nachbestell-Warnung). */
