@@ -559,6 +559,24 @@ fun AssistantSheetContent(vm: MainViewModel, page: String, onOpenGuide: () -> Un
         SpeakButton(owner = "seite_$page", label = "🔊 Vorlesen") {
             note + " " + help.take(6).joinToString(" ") { it.title + ". " + it.text }
         }
+        if (ScreenComment.allowed(context)) {
+            val data = pageContext(page, vm, st)
+            val last by ScreenComment.last.collectAsState()
+            var asking by remember { mutableStateOf(false) }
+            var failed by remember { mutableStateOf<String?>(null) }
+            val sheetScope = androidx.compose.runtime.rememberCoroutineScope()
+            OutlinedButton(shape = buttonShape(), enabled = !asking, modifier = Modifier.fillMaxWidth(), onClick = {
+                asking = true
+                failed = null
+                sheetScope.launch {
+                    ScreenComment.ask(context, st.name, page, data).onFailure { failed = it.message ?: "Das hat nicht geklappt." }
+                    asking = false
+                }
+            }) { Text(if (asking) "${st.name} denkt nach …" else "💬 Was meinst du zu dieser Seite?") }
+            last?.takeIf { it.first == page }?.let { Text("🤖 " + it.second, style = MaterialTheme.typography.bodyMedium) }
+            failed?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
+            Text("KI vollumfänglich: gesendet wird, was auf der Seite steht, ohne Namen. Nur ein Anhaltspunkt.", style = MaterialTheme.typography.bodySmall)
+        }
 
         HorizontalDivider()
         Text("Frag mich", style = MaterialTheme.typography.titleSmall)
@@ -1139,4 +1157,78 @@ private fun BirthdaySettings(name: String) {
     val n = de.meinhelfer.tag.summary.Birthdays.parse(list).size
     val lines = list.lines().count { it.isNotBlank() }
     if (lines > n) Text("${lines - n} Zeile(n) nicht erkannt – Format: Name, TT.MM. oder TT.MM.JJJJ", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+}
+
+// ---------------------------------------------------------------- Stufe 3: Sunny sagt per KI etwas zur Seite
+
+/** Was gerade auf der Seite zu sehen ist, als Text für die KI (Namen werden vor dem Senden entfernt). */
+@Composable
+private fun pageContext(page: String, vm: MainViewModel, st: AssistantState): String {
+    val meds by vm.medications.collectAsStateWithLifecycle()
+    val appointments by vm.appointments.collectAsStateWithLifecycle()
+    val documents by vm.documents.collectAsStateWithLifecycle()
+    val vitals by vm.vitals.collectAsStateWithLifecycle()
+    val today by vm.today.collectAsStateWithLifecycle()
+    val zone = ZoneId.systemDefault()
+    val note = pageNote(page, vm, st)
+    val detail = when (page) {
+        "medikamente", "medikamentenplan", "nachbestellung" -> meds.take(15).joinToString("\n") { m ->
+            "- " + m.name + (m.doseSummary()?.let { " ($it)" } ?: "") + (m.daysLeft(today)?.let { ", Vorrat noch etwa $it Tage" } ?: "")
+        }
+        "termine" -> appointments.filter { it.whenMillis >= System.currentTimeMillis() }.sortedBy { it.whenMillis }.take(6).joinToString("\n") { a ->
+            val d = Instant.ofEpochMilli(a.whenMillis).atZone(zone).toLocalDate().toEpochDay()
+            "- ${Tageslage.dayWord(d, today)} ${Tageslage.time(a.whenMillis, zone)} Uhr: ${a.title}"
+        } + st.preps.take(2).joinToString("") { "\nVorbereitung ${it.appointment.title}: " + it.hints.joinToString("; ") }
+        "dokumente" -> documents.sortedByDescending { it.createdMillis }.take(8).joinToString("\n") { "- ${it.category}: ${it.title}" }
+        "werte", "tagebuch" -> VitalKind.MEASURES.mapNotNull { k ->
+            val list = vitals.filter { it.kind == k.key && it.day > today - 14 }
+            if (list.isEmpty()) null else "- ${k.label} (14 Tage): ${list.size} Werte, " +
+                "min ${de.meinhelfer.tag.summary.Vitals.number(list.minOf { it.value }, k.decimals)}, max ${de.meinhelfer.tag.summary.Vitals.number(list.maxOf { it.value }, k.decimals)}, " +
+                "zuletzt ${de.meinhelfer.tag.summary.Vitals.number(list.maxBy { it.atMillis }.value, k.decimals)} ${k.unit}"
+        }.joinToString("\n")
+        else -> (st.line.take(5).map { "- " + it.title } + st.proposals.take(3).map { "- Vorschlag: " + it.text }).joinToString("\n")
+    }
+    return "Seite: ${PAGE_NAMES[page] ?: page}\nKurzlage: $note" + if (detail.isNotBlank()) "\n$detail" else ""
+}
+
+internal fun screenSystem(name: String) =
+    "Du bist $name, die persönliche Assistentin in der App „Mein Helfer für den Tag“ für pflegende Angehörige. " +
+        "Du bekommst, was gerade auf einer Seite der App zu sehen ist (ohne Namen). Sag dazu in höchstens drei kurzen Sätzen etwas Hilfreiches: " +
+        "eine Auffälligkeit, eine Erinnerung oder einen praktischen Tipp für den Alltag. Du-Form, freundlich, einfache Sprache, keine Aufzählung. " +
+        "Keine Diagnosen, keine Dosierungen, rate nie, Medikamente zu ändern; bei Gesundheitsfragen auf Hausarzt oder Apotheke verweisen. " +
+        "Wenn nichts auffällt, sag etwas kurz Ermutigendes."
+
+object ScreenComment {
+    private val asked = java.util.concurrent.ConcurrentHashMap<String, Long>()
+    val last = kotlinx.coroutines.flow.MutableStateFlow<Pair<String, String>?>(null)
+
+    fun allowed(context: android.content.Context) =
+        de.meinhelfer.tag.ai.AiMode.skipConfirm(context) && AppPrefs.screenTalkOn(context) && de.meinhelfer.tag.ai.AiConfig.isConfigured(context)
+
+    /** KI fragen, Antwort merken und von Sunny sprechen lassen (mit Sprechblase). */
+    suspend fun ask(context: android.content.Context, name: String, page: String, data: String): Result<String> {
+        asked[page] = System.currentTimeMillis()
+        return de.meinhelfer.tag.ai.AiClient.ask(context, screenSystem(name), data, 400).map { it.trim().removePrefix("- ") }.onSuccess {
+            last.value = page to it
+            SunnyAvatar.caption.value = it
+            Speech.speak(context, "assistent-seite", it)
+        }
+    }
+
+    /** Automatisch höchstens alle 30 Minuten je Seite. */
+    fun due(page: String) = System.currentTimeMillis() - (asked[page] ?: 0L) > 30 * 60 * 1000L
+}
+
+/** Ohne Oberfläche: kommentiert beim Seitenwechsel automatisch, wenn in Stufe 3 so eingestellt. */
+@Composable
+fun ScreenCommentAuto(vm: MainViewModel, page: String) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val st = rememberAssistantState(vm)
+    val data = pageContext(page, vm, st)
+    androidx.compose.runtime.LaunchedEffect(page) {
+        if (!ScreenComment.allowed(context) || !AppPrefs.screenTalkAuto(context) || AppPrefs.isQuietNow(context)) return@LaunchedEffect
+        kotlinx.coroutines.delay(2500)
+        if (!ScreenComment.due(page) || Speech.speaking.value != null) return@LaunchedEffect
+        ScreenComment.ask(context, st.name, page, data)
+    }
 }

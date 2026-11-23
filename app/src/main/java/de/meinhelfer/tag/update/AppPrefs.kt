@@ -164,6 +164,14 @@ object AppPrefs {
         prefs(context).edit().putBoolean("rundgang_vorlesen", on).apply()
     }
 
+    /** Stufe 3: Sunny sagt per KI etwas zur aktuellen Seite (Knopf), auf Wunsch automatisch beim Seitenwechsel. */
+    fun screenTalkOn(context: Context): Boolean = prefs(context).getBoolean("seite_kommentar", true)
+    fun screenTalkAuto(context: Context): Boolean = prefs(context).getBoolean("seite_kommentar_auto", false)
+
+    fun setScreenTalk(context: Context, on: Boolean, auto: Boolean) {
+        prefs(context).edit().putBoolean("seite_kommentar", on).putBoolean("seite_kommentar_auto", auto).apply()
+    }
+
     fun assistantImage(context: Context): Boolean = prefs(context).getBoolean("assistent_bild", true)
 
     fun setAssistantImage(context: Context, on: Boolean) {

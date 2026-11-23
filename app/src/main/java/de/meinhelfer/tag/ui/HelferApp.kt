@@ -316,6 +316,7 @@ fun HelferApp(vm: MainViewModel = viewModel()) {
         }
     }
     val assistantOn by vm.assistantOn.collectAsStateWithLifecycle()
+    if (assistantOn) ScreenCommentAuto(vm, pageKey)
 
     // Die Leiste unten ist auf allen Seiten sichtbar; nach oben wischen zeigt die Bereiche der Seite
     Scaffold(

@@ -229,6 +229,9 @@ object SunnyAvatar {
     val useImage = kotlinx.coroutines.flow.MutableStateFlow(true)
     val popup = kotlinx.coroutines.flow.MutableStateFlow(SunnyPopup())
 
+    /** Text, der beim Sprechen als Sprechblase neben Sunny steht (z. B. KI-Kommentar zur Seite). */
+    val caption = kotlinx.coroutines.flow.MutableStateFlow<String?>(null)
+
     fun drawable(e: Expression): Int = when (e) {
         Expression.Friendly -> de.meinhelfer.tag.R.drawable.sunny_freundlich
         Expression.Happy -> de.meinhelfer.tag.R.drawable.sunny_froh

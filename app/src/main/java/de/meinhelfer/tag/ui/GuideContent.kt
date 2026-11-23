@@ -244,7 +244,8 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
                     "Stufe 2 „KI mit Bestätigung“ (Standard): vor jedem Senden siehst du genau den Text, der rausgeht, und bestätigst. " +
                     "Stufe 3 „KI vollumfänglich“: der Assistent nutzt KI ohne Nachfrage. " +
                     "In jedem Modus entfernt er vor dem Senden Namen (Personen, Kontakte, du selbst), Adressen, PLZ und Ort, Telefonnummern, E-Mails, Geburtsdaten, Versicherten- und Kontonummern; Medikamente und Werte bleiben, sonst kann die KI nicht helfen. " +
-                    "Eine höhere Stufe schaltest du erst ein, nachdem du Hinweise und Risiken gelesen und bestätigt hast (z. B. dass die automatische Entfernung etwas übersehen kann, Datenschutz und Kosten des Dienstes). Zurück auf eine sicherere Stufe geht jederzeit ohne Nachfrage. KI-Antworten bleiben ein Anhaltspunkt.",
+                    "Eine höhere Stufe schaltest du erst ein, nachdem du Hinweise und Risiken gelesen und bestätigt hast (z. B. dass die automatische Entfernung etwas übersehen kann, Datenschutz und Kosten des Dienstes). Zurück auf eine sicherere Stufe geht jederzeit ohne Nachfrage. KI-Antworten bleiben ein Anhaltspunkt. " +
+                    "Nur in Stufe 3: „Sunny sagt etwas zur Seite“ – im Blatt über das Gesicht unten gibt es „💬 Was meinst du zu dieser Seite?“; die KI bekommt, was auf der Seite steht (ohne Namen), und Sunny antwortet in zwei, drei Sätzen mit Sprechblase. Mit „Automatisch beim Seitenwechsel“ meldet sie sich von selbst, je Seite höchstens alle 30 Minuten, nicht in der Ruhezeit.",
             ),
             GuideItem(
                 "Rundgang mit Vorlesen",

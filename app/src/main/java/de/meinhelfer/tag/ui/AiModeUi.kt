@@ -55,6 +55,32 @@ fun AiModeChooser(name: String) {
             }
         }
     }
+    if (mode == AiMode.Auto) {
+        var on by remember { mutableStateOf(de.meinhelfer.tag.update.AppPrefs.screenTalkOn(context)) }
+        var auto by remember { mutableStateOf(de.meinhelfer.tag.update.AppPrefs.screenTalkAuto(context)) }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text("$name sagt etwas zur Seite", style = MaterialTheme.typography.bodyLarge)
+                Text("Im Blatt über das Gesicht unten: „💬 Was meinst du zu dieser Seite?“ – die KI bekommt, was auf der Seite steht (ohne Namen).", style = MaterialTheme.typography.bodySmall)
+            }
+            androidx.compose.material3.Switch(checked = on, onCheckedChange = {
+                on = it
+                de.meinhelfer.tag.update.AppPrefs.setScreenTalk(context, on, auto)
+            })
+        }
+        if (on) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("Automatisch beim Seitenwechsel", style = MaterialTheme.typography.bodyLarge)
+                    Text("$name meldet sich von selbst mit einem kurzen Kommentar – je Seite höchstens alle 30 Minuten, nicht in der Ruhezeit. Verbraucht KI-Kontingent.", style = MaterialTheme.typography.bodySmall)
+                }
+                androidx.compose.material3.Switch(checked = auto, onCheckedChange = {
+                    auto = it
+                    de.meinhelfer.tag.update.AppPrefs.setScreenTalk(context, on, auto)
+                })
+            }
+        }
+    }
     if (mode != AiMode.Off && !de.meinhelfer.tag.ai.AiConfig.isConfigured(context)) {
         Text("Noch kein KI-Dienst eingerichtet: Einstellungen → KI und Internet.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
     }

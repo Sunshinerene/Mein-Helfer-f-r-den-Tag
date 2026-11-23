@@ -4,7 +4,7 @@ by Sunshine@R
 
 Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbezogenen Daten bleiben lokal auf dem Gerät.
 
-## Stand: v0.82.0
+## Stand: v0.83.0
 
 ### Funktionsübersicht
 
@@ -16,6 +16,7 @@ Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbe
 - Empfehlungen gleich vorlesen (abschaltbar): Unterstützung nach schlechter Stimmung, KI-Hinweise; überall dort auch „🔊 Vorlesen“
 - Rundgang mit Vorlesen: Sunny liest jede Seite vor und blättert weiter (Knopf oder automatisch), nach einer Pause geht es am selben Satz weiter
 - KI-Modus nach Sicherheitsstufe: Ohne KI, mit Bestätigung, vollumfänglich (nach Lesen der Risiken); persönliche Angaben werden vor jedem Senden entfernt
+- Stufe 3: Sunny sagt per KI etwas zur aktuellen Seite (Knopf oder automatisch beim Seitenwechsel), mit Sprechblase
 - Messwerte aus Dokumenten (z. B. Blutzucker-Heft) erkennen und nach Prüfung als Messwerte übernehmen; Sunny empfiehlt es beim Speichern
 - Meine Designs: eigene Darstellung unter einem Namen speichern und wieder anwenden
 - Sunny-Bild auch in Benachrichtigungen und im Widget (Ausdruck nach Lage)

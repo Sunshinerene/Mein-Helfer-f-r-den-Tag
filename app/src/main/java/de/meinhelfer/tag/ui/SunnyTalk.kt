@@ -18,6 +18,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -107,7 +108,18 @@ fun SunnyTalkOverlay() {
             enter = fadeIn(tween(600)) + scaleIn(initialScale = 0.85f),
             exit = fadeOut(tween(500)) + scaleOut(targetScale = 0.9f),
         ) {
-            SunnyBubble(style, Modifier.padding(12.dp).clickable { Speech.stop() })
+            val caption by SunnyAvatar.caption.collectAsState()
+            androidx.compose.foundation.layout.Column(horizontalAlignment = Alignment.End) {
+                caption?.takeIf { speaking?.startsWith("assistent-seite") == true }?.let { c ->
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        tonalElevation = 6.dp,
+                        shadowElevation = 6.dp,
+                        modifier = Modifier.padding(horizontal = 12.dp).widthIn(max = 280.dp).clickable { Speech.stop() },
+                    ) { Text(c, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(12.dp)) }
+                }
+                SunnyBubble(style, Modifier.padding(12.dp).clickable { Speech.stop() })
+            }
         }
     }
 }
