@@ -318,6 +318,7 @@ fun ToolDialog(tool: HelperTool, vm: MainViewModel, onClose: () -> Unit) {
     val persons by vm.persons.collectAsStateWithLifecycle()
     val appointments by vm.allAppointments.collectAsStateWithLifecycle()
     val meds by vm.allMedications.collectAsStateWithLifecycle()
+    val allVitals by vm.allVitals.collectAsStateWithLifecycle()
     val values = remember { mutableStateMapOf<String, String>() }
     var image by remember { mutableStateOf<String?>(null) }
     var pendingPath by remember { mutableStateOf<String?>(null) }
@@ -366,6 +367,20 @@ fun ToolDialog(tool: HelperTool, vm: MainViewModel, onClose: () -> Unit) {
             extra["Medikamente"] = meds.filter { it.personId in ids }.groupBy { it.personId }.entries.joinToString("; ") { (pid, l) ->
                 Presence.label(ids.indexOf(pid)) + ": " + l.joinToString(", ") { m -> m.name + (m.doseSummary()?.let { " ($it)" } ?: "") }
             }.ifBlank { "keine eingetragen" }
+        }
+        if ("rueckblick" in tool.context) {
+            val ids = persons.map { it.id }
+            val since = LocalDate.now().minusDays(7).toEpochDay()
+            extra["Messwerte (7 Tage)"] = allVitals.filter { it.day > since && it.personId in ids }.groupBy { it.personId }.entries.joinToString("; ") { (pid, l) ->
+                Presence.label(ids.indexOf(pid)) + ": " + l.groupBy { it.kind }.entries.joinToString(", ") { (k, v) ->
+                    val vk = de.meinhelfer.tag.summary.VitalKind.of(k)
+                    (vk?.label ?: k) + " " + v.size + "× (" + de.meinhelfer.tag.summary.Vitals.number(v.minOf { it.value }, vk?.decimals ?: 0) + "–" +
+                        de.meinhelfer.tag.summary.Vitals.number(v.maxOf { it.value }, vk?.decimals ?: 0) + " " + (vk?.unit ?: "") + ")"
+                }
+            }.ifBlank { "keine" }
+            extra["Termine (7 Tage)"] = appointments.filter { it.whenMillis in System.currentTimeMillis() - 7 * 86_400_000L..System.currentTimeMillis() && it.personId in ids }
+                .joinToString("; ") { Presence.label(ids.indexOf(it.personId)) + ": " + it.title }.ifBlank { "keine" }
+            extra["Medikamente knapp"] = lowStockMeds(meds).joinToString(", ") { it.name }.ifBlank { "nichts" }
         }
         if ("grundvorrat" in tool.context) {
             val base = HelperStore.baseStock(context)

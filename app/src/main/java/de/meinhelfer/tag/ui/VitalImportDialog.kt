@@ -31,7 +31,9 @@ import de.meinhelfer.tag.summary.VitalImport
 import de.meinhelfer.tag.summary.VitalKind
 import de.meinhelfer.tag.summary.Vitals
 import java.time.LocalDate
+import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
+import androidx.compose.foundation.verticalScroll
 
 /** Was aus welchem Dokument übernommen werden soll. */
 data class VitalImportJob(val personId: Long, val title: String, val text: String, val docDate: LocalDate?, val kind: VitalKind? = null)
@@ -45,10 +47,26 @@ data class VitalImportJob(val personId: Long, val title: String, val text: Strin
 fun VitalImportDialog(job: VitalImportJob, vm: MainViewModel, onClose: () -> Unit) {
     val context = androidx.compose.ui.platform.LocalContext.current
     var kind by remember { mutableStateOf(job.kind ?: VitalImport.guessKind(job.text) ?: VitalKind.Blutzucker) }
-    val result = remember(kind) { VitalImport.parse(job.text, kind, job.docDate) }
-    val checked = remember(kind) { mutableStateListOf<Boolean>().apply { addAll(result.candidates.map { true }) } }
-    val edited = remember(kind) { mutableStateListOf<String>().apply { addAll(result.candidates.map { valueText(it) }) } }
+    val result = remember(kind, aiText) { VitalImport.parse(aiText ?: job.text, kind, job.docDate) }
+    val checked = remember(kind, aiText) { mutableStateListOf<Boolean>().apply { addAll(result.candidates.map { true }) } }
+    val edited = remember(kind, aiText) { mutableStateListOf<String>().apply { addAll(result.candidates.map { valueText(it) }) } }
     var saving by remember { mutableStateOf(false) }
+    // Optional: KI ordnet den erkannten Text (Handschrift) in eine saubere Liste, die dann wie gewohnt gelesen wird
+    var aiText by remember { mutableStateOf<String?>(null) }
+    var aiBusy by remember { mutableStateOf(false) }
+    var aiError by remember { mutableStateOf<String?>(null) }
+    var aiConfirm by remember { mutableStateOf(false) }
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    fun askAi() {
+        aiBusy = true
+        aiError = null
+        scope.launch {
+            de.meinhelfer.tag.ai.AiClient.ask(context, VITAL_AI_SYSTEM, vitalAiPrompt(kind, job), 2500, de.meinhelfer.tag.ai.AiTask.Dokument)
+                .onSuccess { aiText = it }
+                .onFailure { aiError = it.message ?: "Das hat nicht geklappt." }
+            aiBusy = false
+        }
+    }
     val dayFmt = remember { DateTimeFormatter.ofPattern("dd.MM.yy") }
 
     AlertDialog(
@@ -62,6 +80,15 @@ fun VitalImportDialog(job: VitalImportJob, vm: MainViewModel, onClose: () -> Uni
                     VitalImport.KINDS.forEach { k ->
                         FilterChip(selected = kind == k, onClick = { kind = k }, label = { Text(k.emoji + " " + k.label) })
                     }
+                }
+                if (!de.meinhelfer.tag.ai.AiMode.isOff(context) && de.meinhelfer.tag.ai.AiConfig.isConfigured(context)) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        TextButton(enabled = !aiBusy, onClick = { if (de.meinhelfer.tag.ai.AiMode.skipConfirm(context)) askAi() else aiConfirm = true }) {
+                            Text(if (aiBusy) "KI ordnet …" else if (aiText == null) "🤖 Mit KI ordnen (Handschrift)" else "🤖 Nochmal mit KI")
+                        }
+                        if (aiText != null) TextButton(onClick = { aiText = null }) { Text("Ohne KI") }
+                    }
+                    aiError?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
                 }
                 if (result.candidates.isEmpty()) {
                     Text(
@@ -112,7 +139,32 @@ fun VitalImportDialog(job: VitalImportJob, vm: MainViewModel, onClose: () -> Uni
         },
         dismissButton = { TextButton(onClick = onClose) { Text("Abbrechen") } },
     )
+    if (aiConfirm) {
+        AlertDialog(
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
+            onDismissRequest = { aiConfirm = false },
+            title = { Text("An die KI senden?") },
+            text = {
+                Column(Modifier.heightIn(max = 400.dp).verticalScroll(androidx.compose.foundation.rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Gesendet wird der erkannte Text der Liste (Messwerte), ohne Namen.", style = MaterialTheme.typography.bodySmall)
+                    Text(de.meinhelfer.tag.summary.Anonymizer.scrub(vitalAiPrompt(kind, job)), style = MaterialTheme.typography.bodyMedium)
+                }
+            },
+            confirmButton = { TextButton(onClick = { aiConfirm = false; askAi() }) { Text("Senden") } },
+            dismissButton = { TextButton(onClick = { aiConfirm = false }) { Text("Abbrechen") } },
+        )
+    }
 }
+
+private const val VITAL_AI_SYSTEM =
+    "Du bekommst den automatisch erkannten Text einer handschriftlichen Messwert-Liste (oft unsauber). Ordne die Werte. " +
+        "Gib NUR Zeilen in genau diesem Format aus, eine Messung pro Zeile, ohne weiteren Text: TT.MM.JJJJ HH:MM WERT " +
+        "(bei Blutdruck WERT als OBEN/UNTEN, z. B. 135/85). Fehlt die Uhrzeit, nimm morgens 07:00, mittags 12:00, abends 18:00, spät 22:00. " +
+        "Erfinde keine Werte; Unleserliches weglassen. Insulin-Einheiten sind keine Messwerte."
+
+private fun vitalAiPrompt(kind: VitalKind, job: VitalImportJob): String =
+    "Art: ${kind.label} (${kind.unit})" + (job.docDate?.let { "\nDatum des Dokuments: " + it.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) } ?: "") +
+        "\n\nErkannter Text:\n" + job.text.take(8000)
 
 private fun valueText(c: VitalImport.Candidate): String =
     Vitals.number(c.value, if (c.unit == "mmol/l") 1 else c.kind.decimals) + (c.value2?.let { "/" + Vitals.number(it, 0) } ?: "")

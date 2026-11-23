@@ -114,6 +114,7 @@ data class HelperTool(
             "grundvorrat" to "Was immer da sein soll (Grundvorrat, im Kühlschrank oder außerhalb)",
             "woche" to "Wer an welchem Tag mittags und abends zu Hause ist (sieben Tage)",
             "medikamente" to "Aktuelle Medikamente mit Einnahmezeiten (ohne Namen der Personen)",
+            "rueckblick" to "Messwerte, Einnahmen und Termine der letzten sieben Tage",
         )
 
         val COOK = HelperTool(
@@ -173,7 +174,16 @@ data class HelperTool(
             "liste", setOf("medikamente", "termine"), builtin = true,
         )
 
-        val BUILTIN = listOf(COOK, WEEK, SHOPPING, DOCTOR)
+        val REVIEW = HelperTool(
+            "rueckblick", "Wochenrückblick", "📊",
+            "Was war los in den letzten sieben Tagen – Auffälligkeiten bei Werten und Einnahmen, kurz und verständlich.",
+            listOf(Field("eigenes", "Was ist dir selbst aufgefallen?", "text", hint = "optional")),
+            "Fasse die letzten sieben Tage kurz zusammen: Was lief gut, was fällt bei Werten oder Einnahmen auf (nur beschreiben, nicht bewerten wie ein Arzt), " +
+                "was könnte man mit Hausarzt oder Pflegedienst besprechen, und ein ermutigender Satz für dich. Keine Diagnosen.",
+            "liste", setOf("rueckblick"), builtin = true,
+        )
+
+        val BUILTIN = listOf(COOK, WEEK, SHOPPING, DOCTOR, REVIEW)
 
         /** Grundgerüst für ein neues Werkzeug ohne KI: ein Textfeld und die Bitte als Anweisung. */
         fun basic(id: String, topic: String) = HelperTool(

@@ -1,6 +1,6 @@
 # TODO
 
-Stand: v0.90.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.91.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
@@ -9,22 +9,7 @@ Stand: v0.90.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Ideen und Optimierungen
 
-
-- [ ] Sprach-Varianten auch für „Erzähl mal“, Morgen- und Abendüberblick (Stufe 3, aus dem Zwischenspeicher)
-
-- [ ] KI vollumfänglich – nach und nach: Dokument-Zusammenfassung beim Speichern, Messwerte aus Handschrift per KI, Wochenrückblick mit Auffälligkeiten, Fragen an den Arzt vor Terminen, Rückfrage-Chat mit Sunny
-
-- [ ] Listen: Einkauf/Apotheke getrennt, Grundvorrat mit Ort, Foto-Abgleich „fehlt auf dem Foto“; Essensplan Woche; Arztfragen; ⭐ Merken, ＋ Aufgabe; Werkzeug teilen/übernehmen; Beziehung im Profil
-- [ ] Alltagshelfer: Kochen mit Kühlschrank-Foto (Gemini), „Dann zu Hause“ stimmt mit Werkstattzeiten; Einkaufsliste abhaken/teilen; eigenes Werkzeug aus Thema; 📌 anheften; Profil „Essen und Trinken“; DB-Version 31
-- [ ] Profil: Ausweis-Felder, Wohnsituation (Zähler, Mitbewohner, Tagsüber mit Tagen/Zeiten); Ausweis-Foto unter Dokumente → „Übernehmen“; 🏠-Vorschläge bei Terminen im Haushalt; Sprachschatz sichern/wiederherstellen; DB-Version 30 (Umstellung prüfen)
-- [ ] Sprachschatz: „Erzähl mal“ begrüßt abwechselnd; ohne Internet liest Sunny die Seite selbst vor; abends neue Formulierungen (Anzeige „Zuletzt: … gelernt“)
-- [ ] Zwischenspeicher: zweimal „Was meinst du zu dieser Seite?“ ohne Änderung → keine neue Anfrage, andere Formulierung; nach Neustart neu; „Gespart“-Zähler
-- [ ] KI-Aufgaben: Zuordnung je Aufgabe wirkt (Verbrauch zählt beim richtigen Dienst), Ausweichen bei Limit, Tageslimit Kommentare
-- [ ] Sunny beim Sprechen über Dialogen und dem Blatt unten (z. B. Prüf-Fenster Messwerte, KI-Modus-Hinweise vorlesen)
-- [ ] Stufe 3 → Blatt über Sunny: „💬 Was meinst du zu dieser Seite?“ mit Sprechblase; automatisch beim Seitenwechsel (max. alle 30 Min. je Seite)
-- [ ] KI-Modus: „Ohne KI“ blendet KI-Knöpfe aus; „Mit Bestätigung“ zeigt Text ohne Namen/Adresse/Telefon; „Vollumfänglich“ nur nach Haken bei den Risiken, sendet ohne Fenster
-- [ ] Messwerte aus Dokumenten: auf Wunsch mit KI auslesen (bessere Handschrift-Erkennung), nach Bestätigung
-
+- [ ] KI vollumfänglich – weiter: Rückfrage-Chat mit Sunny, Sprach-Varianten für Morgen- und Abendüberblick
 
 - [ ] Packungsfoto: Erkennung verbessern (Wirkstoff, Packungsbeilage), Barcode live mit der Kamera
 - [ ] Widget: zweite Größe mit Tagesübersicht
@@ -34,8 +19,18 @@ Stand: v0.90.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 - [ ] Motivator: Pausen-Erinnerung, Stimmungsverlauf in der Auswertung (nur für dich, nicht in geteilten Berichten), Ziel-Schritte als Aufgabe mit Frist übernehmen
 - [ ] KI direkt auf dem Handy: Gemini Nano über ML Kit (nur neuere Geräte, z. B. ab Pixel 9) oder ein eigenes kleines Modell in der App (z. B. Gemma, mehrere GB Download)
 - [ ] Designs verfeinern (Schriftarten, weitere Varianten); Effekte: echte Unschärfe hinter Glas-Karten ab Android 12, Glanz auch auf Knöpfen
-
 ## Bitte auf dem Handy prüfen (bisher nicht getestet)
+
+- [ ] Stufe 3: Dokument ohne Zusammenfassung öffnen → Zusammenfassung entsteht von selbst; Messwerte-Prüffenster „🤖 Mit KI ordnen“; Helfer „Wochenrückblick“
+- [ ] Listen: Einkauf/Apotheke getrennt, Grundvorrat mit Ort, Foto-Abgleich „fehlt auf dem Foto“; Essensplan Woche; Arztfragen; ⭐ Merken, ＋ Aufgabe; Werkzeug teilen/übernehmen; Beziehung im Profil
+- [ ] Alltagshelfer: Kochen mit Kühlschrank-Foto (Gemini), „Dann zu Hause“ stimmt mit Werkstattzeiten; Einkaufsliste abhaken/teilen; eigenes Werkzeug aus Thema; 📌 anheften; Profil „Essen und Trinken“; DB-Version 31
+- [ ] Profil: Ausweis-Felder, Wohnsituation (Zähler, Mitbewohner, Tagsüber mit Tagen/Zeiten); Ausweis-Foto unter Dokumente → „Übernehmen“; 🏠-Vorschläge bei Terminen im Haushalt; Sprachschatz sichern/wiederherstellen; DB-Version 30 (Umstellung prüfen)
+- [ ] Sprachschatz: „Erzähl mal“ begrüßt abwechselnd; ohne Internet liest Sunny die Seite selbst vor; abends neue Formulierungen (Anzeige „Zuletzt: … gelernt“)
+- [ ] Zwischenspeicher: zweimal „Was meinst du zu dieser Seite?“ ohne Änderung → keine neue Anfrage, andere Formulierung; nach Neustart neu; „Gespart“-Zähler
+- [ ] KI-Aufgaben: Zuordnung je Aufgabe wirkt (Verbrauch zählt beim richtigen Dienst), Ausweichen bei Limit, Tageslimit Kommentare
+- [ ] Sunny beim Sprechen über Dialogen und dem Blatt unten (z. B. Prüf-Fenster Messwerte, KI-Modus-Hinweise vorlesen)
+- [ ] Stufe 3 → Blatt über Sunny: „💬 Was meinst du zu dieser Seite?“ mit Sprechblase; automatisch beim Seitenwechsel (max. alle 30 Min. je Seite)
+- [ ] KI-Modus: „Ohne KI“ blendet KI-Knöpfe aus; „Mit Bestätigung“ zeigt Text ohne Namen/Adresse/Telefon; „Vollumfänglich“ nur nach Haken bei den Risiken, sendet ohne Fenster
 
 Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Datenbank prüfen, Beispiel-PDFs mit erfundenen Daten, Beispiel-Grafiken, Test-Benachrichtigungen). Die Datenbank-Umstellungen von Version 5 bis 29 prüft seit v0.54.0 bei jedem Bauen ein automatischer Test gegen das Schema (Tabellen, Spalten, Typen); auf dem Handy bleibt zu prüfen, dass die eigenen Daten nach dem Update vollständig da sind.
 
@@ -104,6 +99,12 @@ Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Daten
 - [ ] Sammel-Import: Vorschläge mit echten Scans verfeinern (z. B. gleicher Absender und gleiches Datum als weiterer Hinweis)
 
 - [ ] Eigene KI-Stimme direkt in der App (nur falls SherpaTTS nicht reicht): sherpa-onnx mit Piper-Stimme Thorsten oder Kerstin (CC0) oder apptor-tiny-tts (Apache-2.0, 21 MB); macht die App 25–70 MB größer, Lizenzen der Bibliotheken prüfen
+
+## Version 0.91.0 (fertig)
+
+- Stufe 3: Dokument-Zusammenfassung von selbst
+- Messwerte aus Handschrift mit KI ordnen (Prüffenster)
+- Helfer „Wochenrückblick“
 
 ## Version 0.90.0 (fertig)
 

@@ -113,6 +113,14 @@ fun DocSummaryBox(
         "\n\n" + (if (summary.trim().length >= 20) "Zusammenfassung des Dokuments" else "Text des Dokuments") +
         " (Namen und Nummern der betreuten Person sind durch Platzhalter ersetzt):\n\n" + taskSource
 
+    // Stufe 3: Zusammenfassung von selbst erstellen, wenn noch keine da ist
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        if (de.meinhelfer.tag.ai.AiMode.skipConfirm(context) && configured && enoughText && summary.isBlank() &&
+            de.meinhelfer.tag.ai.AiTask.enabled(context, de.meinhelfer.tag.ai.AiTask.Dokument)
+        ) {
+            confirm = true
+        }
+    }
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text("Zusammenfassung (Anhaltspunkt)", style = MaterialTheme.typography.labelLarge)
         OutlinedTextField(
