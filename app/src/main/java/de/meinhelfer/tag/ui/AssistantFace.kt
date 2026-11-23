@@ -238,3 +238,28 @@ object SunnyAvatar {
         Expression.Calm -> de.meinhelfer.tag.R.drawable.sunny_portrait
     }
 }
+
+/** Runde Bilder von Sunny für Benachrichtigungen und Widget (außerhalb von Compose). */
+object SunnyBitmap {
+    private val cache = HashMap<String, android.graphics.Bitmap>()
+
+    fun circle(context: android.content.Context, res: Int, sizePx: Int): android.graphics.Bitmap? = synchronized(cache) {
+        val key = "$res:$sizePx"
+        cache[key]?.let { return it }
+        val src = runCatching { android.graphics.BitmapFactory.decodeResource(context.resources, res) }.getOrNull() ?: return null
+        val out = android.graphics.Bitmap.createBitmap(sizePx, sizePx, android.graphics.Bitmap.Config.ARGB_8888)
+        val canvas = android.graphics.Canvas(out)
+        val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG or android.graphics.Paint.FILTER_BITMAP_FLAG)
+        canvas.drawCircle(sizePx / 2f, sizePx / 2f, sizePx / 2f, paint)
+        paint.xfermode = android.graphics.PorterDuffXfermode(android.graphics.PorterDuff.Mode.SRC_IN)
+        val side = minOf(src.width, src.height)
+        val from = android.graphics.Rect((src.width - side) / 2, (src.height - side) / 2, (src.width + side) / 2, (src.height + side) / 2)
+        canvas.drawBitmap(src, from, android.graphics.Rect(0, 0, sizePx, sizePx), paint)
+        cache[key] = out
+        out
+    }
+
+    /** Soll Sunny als Bild erscheinen? (Assistent an und Sunny-Bild eingeschaltet) */
+    fun enabled(context: android.content.Context): Boolean =
+        de.meinhelfer.tag.update.AppPrefs.assistantEnabled(context) && de.meinhelfer.tag.update.AppPrefs.assistantImage(context)
+}

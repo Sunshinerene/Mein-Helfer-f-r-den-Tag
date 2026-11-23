@@ -68,6 +68,8 @@ object Notifications {
         personId: Long? = null,
         channel: String? = null,
         screen: String? = null,
+        /** Gesichtsausdruck von Sunny (Drawable), null = freundlich */
+        face: Int? = null,
     ) {
         if (Build.VERSION.SDK_INT >= 33 &&
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
@@ -95,6 +97,12 @@ object Notifications {
             .setPriority(if (updates || channel != null) NotificationCompat.PRIORITY_DEFAULT else NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .setContentIntent(open)
+        // Nachrichten von Sunny mit ihrem Bild
+        val fromAssistant = channel == CHANNEL_ASSISTANT || title.startsWith(de.meinhelfer.tag.update.AppPrefs.assistantName(context) + ":")
+        if (fromAssistant && de.meinhelfer.tag.ui.SunnyBitmap.enabled(context)) {
+            val px = (64 * context.resources.displayMetrics.density).toInt()
+            de.meinhelfer.tag.ui.SunnyBitmap.circle(context, face ?: de.meinhelfer.tag.R.drawable.sunny_freundlich, px)?.let { builder.setLargeIcon(it) }
+        }
         actions.forEach { (label, intent) -> builder.addAction(0, label, intent) }
         NotificationManagerCompat.from(context).notify(id, builder.build())
     }

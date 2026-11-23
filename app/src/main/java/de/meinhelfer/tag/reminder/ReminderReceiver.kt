@@ -282,6 +282,7 @@ class ReminderReceiver : BroadcastReceiver() {
                     title,
                     text,
                     channel = Notifications.CHANNEL_ASSISTANT,
+                    face = if (id == 0L) de.meinhelfer.tag.R.drawable.sunny_froh else de.meinhelfer.tag.R.drawable.sunny_portrait,
                 )
             }
 
@@ -328,6 +329,7 @@ class ReminderReceiver : BroadcastReceiver() {
                     actions = actions,
                     personId = appointment.personId,
                     channel = Notifications.CHANNEL_ASSISTANT,
+                    face = de.meinhelfer.tag.R.drawable.sunny_ernst,
                 )
             }
 
