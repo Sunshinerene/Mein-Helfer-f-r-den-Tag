@@ -194,7 +194,13 @@ object Speech {
         }
     }
 
+    /** Zeitpunkt des letzten Anhaltens (z. B. „⏹ Stopp“), damit automatische Abläufe nicht weiterlaufen. */
+    @Volatile
+    var stoppedAt = 0L
+        private set
+
     fun stop() {
+        stoppedAt = System.currentTimeMillis()
         runCatching { tts?.stop() }
         _speaking.value = null
     }

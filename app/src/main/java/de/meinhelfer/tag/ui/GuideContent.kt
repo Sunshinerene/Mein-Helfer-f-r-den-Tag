@@ -234,6 +234,10 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
                     "Alles einzeln abschaltbar unter Einstellungen → „Persönlicher Assistent“.",
             ),
             GuideItem(
+                "Rundgang mit Vorlesen",
+                "Im Rundgang (Anleitung → „Rundgang starten“) gibt es unten „▶ Mit Vorlesen“: Der Assistent liest jede Seite vor und blättert danach von selbst weiter, bis zum Ende. „⏸ Anhalten“, ein Tipp auf die Einblendung oder Wischen auf eine andere Seite hält an bzw. springt dorthin. Soll der Rundgang immer so starten: Einstellungen → „Persönlicher Assistent“ → „Rundgang mit Vorlesen“.",
+            ),
+            GuideItem(
                 "Sunny erzählt",
                 "„🗣 Erzähl mal“ in der Karte des Assistenten: Er sagt kurz, was als Nächstes ansteht, was für einen Termin heute bereitliegen sollte, ob er Vorschläge hat und einen Hinweis für dich. Mit „Erzählt von sich aus“ (Einstellungen → Persönlicher Assistent) macht er das beim Öffnen der Heute-Seite selbst, höchstens alle 3 Stunden, nie in der Ruhezeit und nicht, wenn das Handy stumm oder auf Vibration ist. Mit „Neuigkeiten einbeziehen“ nennt er dazu eine aktuelle Schlagzeile der letzten 14 Tage zu Pflegeversicherung, Pflegereform, pflegenden Angehörigen oder deinen Themen (z. B. Pflegegrad, Diabetes, Demenz) – jede nur einmal; „Lesen“ öffnet die Quelle. Gesendet wird nur das Suchwort an Google News. Schlagzeilen sind nur ein Anhaltspunkt, keine Beratung. „🔊 Alles vorlesen“ liest die ganze Karte vor.",
             ),

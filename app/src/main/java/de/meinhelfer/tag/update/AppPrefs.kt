@@ -157,6 +157,13 @@ object AppPrefs {
         prefs(context).edit().putBoolean("geburtstage_an", on).putString("geburtstage_liste", list).apply()
     }
 
+    /** Rundgang automatisch: Sunny liest jede Seite vor und blättert weiter. */
+    fun tourAutoRead(context: Context): Boolean = prefs(context).getBoolean("rundgang_vorlesen", false)
+
+    fun setTourAutoRead(context: Context, on: Boolean) {
+        prefs(context).edit().putBoolean("rundgang_vorlesen", on).apply()
+    }
+
     fun assistantImage(context: Context): Boolean = prefs(context).getBoolean("assistent_bild", true)
 
     fun setAssistantImage(context: Context, on: Boolean) {

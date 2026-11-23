@@ -1,5 +1,12 @@
 package de.meinhelfer.tag.ui
 
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.material3.OutlinedButton
+import de.meinhelfer.tag.update.AppPrefs
+import kotlinx.coroutines.flow.first
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -184,6 +191,32 @@ fun TourScreen(onClose: () -> Unit) {
     val pagerState = rememberPagerState(pageCount = { TOUR_PAGES.size })
     val scope = rememberCoroutineScope()
     val last = pagerState.currentPage == TOUR_PAGES.lastIndex
+    val context = androidx.compose.ui.platform.LocalContext.current
+    // Automatisch: Sunny liest jede Seite vor und blättert danach weiter („⏹“ oder Wischen hält bzw. springt)
+    var auto by remember { mutableStateOf(AppPrefs.tourAutoRead(context)) }
+    val owner = "assistent-rundgang"
+    androidx.compose.runtime.LaunchedEffect(auto, pagerState.currentPage) {
+        if (!auto) return@LaunchedEffect
+        val index = pagerState.currentPage
+        kotlinx.coroutines.delay(500)
+        val started = System.currentTimeMillis()
+        Speech.speak(context, owner, tourSpeech(TOUR_PAGES[index], index + 1, TOUR_PAGES.size))
+        val began = kotlinx.coroutines.withTimeoutOrNull(8000) { Speech.speaking.first { it == owner } }
+        if (began == null) {
+            auto = false
+            return@LaunchedEffect
+        }
+        Speech.speaking.first { it != owner }
+        if (Speech.stoppedAt >= started) {
+            auto = false
+            return@LaunchedEffect
+        }
+        kotlinx.coroutines.delay(900)
+        if (index < TOUR_PAGES.lastIndex) pagerState.animateScrollToPage(index + 1) else auto = false
+    }
+    androidx.compose.runtime.DisposableEffect(Unit) {
+        onDispose { if (Speech.speaking.value == owner) Speech.stop() }
+    }
 
     Scaffold(
         topBar = {
@@ -228,6 +261,14 @@ fun TourScreen(onClose: () -> Unit) {
                     onClick = { scope.launch { pagerState.animateScrollToPage(pagerState.currentPage - 1) } },
                     enabled = pagerState.currentPage > 0,
                 ) { Text("Zurück") }
+                OutlinedButton(shape = buttonShape(), onClick = {
+                    if (auto) {
+                        auto = false
+                        Speech.stop()
+                    } else {
+                        auto = true
+                    }
+                }) { Text(if (auto) "⏸ Anhalten" else "▶ Mit Vorlesen") }
                 Button(shape = buttonShape(), 
                     onClick = {
                         if (last) onClose() else scope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) }
@@ -715,4 +756,11 @@ private fun MockNotruf() {
         Text("Wo: Musterstraße 1, 4. Stock, ohne Aufzug", style = MaterialTheme.typography.bodyMedium)
     }
     MockButton("Notfallkarte zeigen")
+}
+
+/** Vorlese-Text einer Seite des Rundgangs. */
+private fun tourSpeech(page: TourPage, number: Int, total: Int): String = buildString {
+    append("Schritt $number von $total. ").append(page.title).append(". ").append(page.text).append(" ")
+    page.tips.forEach { append(it.trimEnd('.')).append(". ") }
+    if (number == total) append("Das war der Rundgang. Viel Freude mit der App!")
 }

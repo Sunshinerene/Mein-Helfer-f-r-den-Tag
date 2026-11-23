@@ -706,6 +706,11 @@ fun AssistantSettingsCard(vm: MainViewModel) {
                 talkNews = it
                 AppPrefs.setAssistantTalkNews(context, it)
             }
+            var tourAuto by remember { mutableStateOf(AppPrefs.tourAutoRead(context)) }
+            SwitchLine("Rundgang mit Vorlesen", "Beim Rundgang (Einstellungen → Hilfe) liest $name jede Seite vor und blättert von selbst weiter. Im Rundgang jederzeit „⏸ Anhalten“ oder „▶ Mit Vorlesen“.", tourAuto) {
+                tourAuto = it
+                AppPrefs.setTourAutoRead(context, it)
+            }
             HorizontalDivider()
             VoiceSettings(name)
             HorizontalDivider()
