@@ -55,6 +55,8 @@ object AiClient {
         user: String,
         maxTokens: Int = 1500,
         task: AiTask = AiTask.Allgemein,
+        /** Antwort aus dem Zwischenspeicher nehmen, wenn dieselbe Anfrage in dieser Sitzung schon gestellt wurde */
+        cache: Boolean = task != AiTask.Allgemein,
     ): Result<String> = withContext(Dispatchers.IO) {
         if (AiMode.isOff(context)) return@withContext Result.failure(IllegalStateException(AiMode.OFF_TEXT))
         if (!AiTask.enabled(context, task)) {
@@ -62,6 +64,13 @@ object AiClient {
         }
         // In jedem Modus: personenbezogene Angaben vor dem Senden entfernen
         val user = de.meinhelfer.tag.summary.Anonymizer.scrub(user, knownNames(context))
+        val cacheKey = AiCache.key(task, system, user)
+        if (cache) {
+            AiCache.get(context, cacheKey)?.let {
+                AiUsage.saved(context)
+                return@withContext Result.success(it)
+            }
+        }
         val chosen = AiTask.provider(context, task)?.takeIf { AiConfig.isReady(context, it) } ?: AiConfig.provider(context)
         val order = buildList {
             add(chosen)
@@ -80,6 +89,7 @@ object AiClient {
             }
             break
         }
+        if (cache) last.onSuccess { AiCache.put(context, cacheKey, it) }
         last
     }
 

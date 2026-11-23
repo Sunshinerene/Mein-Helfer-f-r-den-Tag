@@ -145,6 +145,8 @@ class MainActivity : FragmentActivity() {
 
         de.meinhelfer.tag.ui.SunnyAvatar.useImage.value = AppPrefs.assistantImage(this)
         de.meinhelfer.tag.ui.SunnyAvatar.popup.value = AppPrefs.sunnyPopup(this)
+        // Neustart: KI-Zwischenspeicher gilt als veraltet und wird bei Bedarf aktualisiert
+        if (savedInstanceState == null) de.meinhelfer.tag.ai.AiCache.newSession(this)
         setContent {
             val vm: MainViewModel = viewModel()
             val mode by vm.themeMode.collectAsStateWithLifecycle()

@@ -205,7 +205,30 @@ private fun AiTaskSettings(name: String, auto: Boolean) {
             }
         }
     }
-    TextButton(onClick = { tick++ }) { Text("Verbrauch aktualisieren") }
+    var long by remember { mutableStateOf(de.meinhelfer.tag.ai.AiTask.speakLong(context)) }
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            Text("Ausführlich sprechen", style = MaterialTheme.typography.bodyLarge)
+            Text("Bei Sprach-Themen erstellt die KI eine Kurzform mit Varianten und eine ausführliche Fassung. Aus: $name sagt die Kurzform (reihum anders formuliert). An: die ausführliche.", style = MaterialTheme.typography.bodySmall)
+        }
+        androidx.compose.material3.Switch(checked = long, onCheckedChange = {
+            long = it
+            de.meinhelfer.tag.ai.AiTask.setSpeakLong(context, it)
+        })
+    }
+    val saved = remember(tick) { de.meinhelfer.tag.ai.AiUsage.savedToday(context) }
+    val stored = remember(tick) { de.meinhelfer.tag.ai.AiCache.count(context) }
+    Text(
+        "Zwischenspeicher: $stored Antworten gemerkt, heute $saved Anfragen gespart. Gleiche Anfrage mit gleichen Daten kommt aus dem Speicher; ändert sich etwas, wird neu gefragt. Nach einem Neustart der App wird aktualisiert.",
+        style = MaterialTheme.typography.bodySmall,
+    )
+    Row {
+        TextButton(onClick = { tick++ }) { Text("Verbrauch aktualisieren") }
+        TextButton(onClick = {
+            de.meinhelfer.tag.ai.AiCache.clear(context)
+            tick++
+        }) { Text("Speicher leeren") }
+    }
     Text(
         "Gezählt wird nur auf dem Handy. Die echten Grenzen legt jeder Dienst selbst fest und ändert sie manchmal; der Zähler beginnt jeden Tag neu.",
         style = MaterialTheme.typography.bodySmall,

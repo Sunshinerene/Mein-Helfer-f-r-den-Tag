@@ -36,6 +36,11 @@ enum class AiTask(val key: String, val title: String, val hint: String) {
 
         fun setFallback(context: Context, on: Boolean) = prefs(context).edit().putBoolean("ausweichen", on).apply()
 
+        /** Sunny spricht bei Sprach-Themen die ausführliche statt der kurzen Fassung. */
+        fun speakLong(context: Context) = prefs(context).getBoolean("lang_sprechen", false)
+
+        fun setSpeakLong(context: Context, on: Boolean) = prefs(context).edit().putBoolean("lang_sprechen", on).apply()
+
         /** Tageslimit für automatische Kommentare zur Seite (Schonung des Kontingents). */
         fun autoLimit(context: Context) = prefs(context).getInt("auto_limit", 20)
 
@@ -80,6 +85,18 @@ object AiUsage {
     fun limited(context: Context, provider: AiProvider): Boolean {
         clean(context)
         return prefs(context).getBoolean("l_${provider.name}", false)
+    }
+
+    /** Aus dem Zwischenspeicher beantwortet (keine Anfrage nötig). */
+    fun saved(context: Context) {
+        clean(context)
+        val p = prefs(context)
+        p.edit().putInt("gespart", p.getInt("gespart", 0) + 1).apply()
+    }
+
+    fun savedToday(context: Context): Int {
+        clean(context)
+        return prefs(context).getInt("gespart", 0)
     }
 
     fun byTask(context: Context, task: AiTask): Int {

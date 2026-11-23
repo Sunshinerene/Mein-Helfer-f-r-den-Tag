@@ -1,6 +1,6 @@
 # TODO
 
-Stand: v0.85.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.86.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
@@ -9,8 +9,11 @@ Stand: v0.85.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Ideen und Optimierungen
 
+- [ ] Sprach-Varianten auch für „Erzähl mal“, Morgen- und Abendüberblick (Stufe 3, aus dem Zwischenspeicher)
+
 - [ ] KI vollumfänglich – nach und nach: Dokument-Zusammenfassung beim Speichern, Messwerte aus Handschrift per KI, Wochenrückblick mit Auffälligkeiten, Fragen an den Arzt vor Terminen, Rückfrage-Chat mit Sunny
 
+- [ ] Zwischenspeicher: zweimal „Was meinst du zu dieser Seite?“ ohne Änderung → keine neue Anfrage, andere Formulierung; nach Neustart neu; „Gespart“-Zähler
 - [ ] KI-Aufgaben: Zuordnung je Aufgabe wirkt (Verbrauch zählt beim richtigen Dienst), Ausweichen bei Limit, Tageslimit Kommentare
 - [ ] Sunny beim Sprechen über Dialogen und dem Blatt unten (z. B. Prüf-Fenster Messwerte, KI-Modus-Hinweise vorlesen)
 - [ ] Stufe 3 → Blatt über Sunny: „💬 Was meinst du zu dieser Seite?“ mit Sprechblase; automatisch beim Seitenwechsel (max. alle 30 Min. je Seite)
@@ -96,6 +99,11 @@ Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Daten
 - [ ] Sammel-Import: Vorschläge mit echten Scans verfeinern (z. B. gleicher Absender und gleiches Datum als weiterer Hinweis)
 
 - [ ] Eigene KI-Stimme direkt in der App (nur falls SherpaTTS nicht reicht): sherpa-onnx mit Piper-Stimme Thorsten oder Kerstin (CC0) oder apptor-tiny-tts (Apache-2.0, 21 MB); macht die App 25–70 MB größer, Lizenzen der Bibliotheken prüfen
+
+## Version 0.86.0 (fertig)
+
+- KI-Zwischenspeicher je Sitzung (Aktualisierung bei geänderten Daten und nach Neustart), Zähler „gespart“
+- Sprach-Themen: Kurzform, Varianten und ausführliche Fassung aus einer Anfrage, Schalter „Ausführlich sprechen“
 
 ## Version 0.85.0 (fertig)
 

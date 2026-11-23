@@ -1197,7 +1197,7 @@ internal fun screenSystem(name: String) =
         "Du bekommst, was gerade auf einer Seite der App zu sehen ist (ohne Namen). Sag dazu in höchstens drei kurzen Sätzen etwas Hilfreiches: " +
         "eine Auffälligkeit, eine Erinnerung oder einen praktischen Tipp für den Alltag. Du-Form, freundlich, einfache Sprache, keine Aufzählung. " +
         "Keine Diagnosen, keine Dosierungen, rate nie, Medikamente zu ändern; bei Gesundheitsfragen auf Hausarzt oder Apotheke verweisen. " +
-        "Wenn nichts auffällt, sag etwas kurz Ermutigendes."
+        "Wenn nichts auffällt, sag etwas kurz Ermutigendes. " + de.meinhelfer.tag.summary.SpeechVariants.FORMAT
 
 object ScreenComment {
     private val asked = java.util.concurrent.ConcurrentHashMap<String, Long>()
@@ -1207,13 +1207,22 @@ object ScreenComment {
         de.meinhelfer.tag.ai.AiMode.skipConfirm(context) && AppPrefs.screenTalkOn(context) && de.meinhelfer.tag.ai.AiConfig.isConfigured(context) &&
             de.meinhelfer.tag.ai.AiTask.enabled(context, de.meinhelfer.tag.ai.AiTask.Seite)
 
-    /** KI fragen, Antwort merken und von Sunny sprechen lassen (mit Sprechblase). */
+    private val turns = java.util.concurrent.ConcurrentHashMap<String, Int>()
+
+    /**
+     * KI fragen (gleiche Seite mit gleichen Daten kommt aus dem Zwischenspeicher), Kurzform reihum aus den Varianten
+     * sprechen (oder die ausführliche Fassung), ausführliche Fassung im Blatt zeigen.
+     */
     suspend fun ask(context: android.content.Context, name: String, page: String, data: String): Result<String> {
         asked[page] = System.currentTimeMillis()
-        return de.meinhelfer.tag.ai.AiClient.ask(context, screenSystem(name), data, 400, de.meinhelfer.tag.ai.AiTask.Seite).map { it.trim().removePrefix("- ") }.onSuccess {
-            last.value = page to it
-            SunnyAvatar.caption.value = it
-            Speech.speak(context, "assistent-seite", it)
+        return de.meinhelfer.tag.ai.AiClient.ask(context, screenSystem(name), data, 700, de.meinhelfer.tag.ai.AiTask.Seite).map { answer ->
+            val parsed = de.meinhelfer.tag.summary.SpeechVariants.parse(answer)
+            val turn = turns.merge(page, 1, Int::plus)!! - 1
+            val spoken = de.meinhelfer.tag.summary.SpeechVariants.pick(parsed, turn, de.meinhelfer.tag.ai.AiTask.speakLong(context))
+            last.value = page to parsed.long
+            SunnyAvatar.caption.value = spoken
+            Speech.speak(context, "assistent-seite", spoken)
+            spoken
         }
     }
 

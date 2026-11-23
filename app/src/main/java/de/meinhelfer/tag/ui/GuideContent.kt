@@ -251,7 +251,9 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
                 "KI-Aufgaben und Verbrauch",
                 "Unter dem KI-Modus (Einstellungen → „Persönlicher Assistent“) klappst du „KI-Aufgaben und Verbrauch“ auf. Dort siehst du jede Unterfunktion, die KI nutzt: Kommentar zur Seite (nur Stufe 3), Frag mich, Dokumente, Medikamente, Pläne und Berichte lesen, Ziele und Motivation – mit der Zahl der Anfragen heute. " +
                     "Jede Aufgabe kannst du ausschalten oder einem eigenen KI-Dienst geben, z. B. die häufigen kurzen Kommentare an Groq und die langen Dokumente an Gemini; so reichen mehrere kostenlose Kontingente zusammen weit. " +
-                    "„Bei Limit ausweichen“ nimmt automatisch einen anderen eingerichteten Dienst, wenn einer sein Tageslimit erreicht hat. Für automatische Kommentare gibt es ein Tageslimit (Standard 20). Oben steht der Verbrauch je Dienst mit Hinweis „Limit erreicht“. Gezählt wird nur auf dem Handy.",
+                    "„Bei Limit ausweichen“ nimmt automatisch einen anderen eingerichteten Dienst, wenn einer sein Tageslimit erreicht hat. Für automatische Kommentare gibt es ein Tageslimit (Standard 20). Oben steht der Verbrauch je Dienst mit Hinweis „Limit erreicht“. Gezählt wird nur auf dem Handy. " +
+                    "Zwischenspeicher: Jede KI-Antwort wird gemerkt. Kommt dieselbe Anfrage mit denselben Daten noch einmal, antwortet der Assistent aus dem Speicher, ohne das Kontingent zu belasten; ändert sich etwas, fragt er neu. Nach einem Neustart der App gilt alles als veraltet und wird bei Bedarf aktualisiert. „Speicher leeren“ löscht ihn. " +
+                    "Bei Sprach-Themen (Kommentar zur Seite) erstellt die KI gleich eine Kurzform mit Varianten und eine ausführliche Fassung: Der Assistent spricht die Kurzform, reihum anders formuliert, oder mit „Ausführlich sprechen“ die lange; im Blatt steht die ausführliche.",
             ),
             GuideItem(
                 "Rundgang mit Vorlesen",
