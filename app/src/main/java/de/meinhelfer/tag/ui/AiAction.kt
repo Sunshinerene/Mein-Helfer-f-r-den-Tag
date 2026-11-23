@@ -55,16 +55,16 @@ fun AiActionButton(
     var error by remember { mutableStateOf<String?>(null) }
     var limitHit by remember { mutableStateOf(false) }
     var provider by remember { mutableStateOf(AiConfig.provider(context)) }
-    val configured = AiConfig.isConfigured(context)
-    val otherReady = AiProvider.entries.any { it != provider && AiConfig.isReady(context, it) }
+    val configured = !de.meinhelfer.tag.ai.AiMode.isOff(context) && AiConfig.isConfigured(context)
+    val otherReady = !de.meinhelfer.tag.ai.AiMode.isOff(context) && AiProvider.entries.any { it != provider && AiConfig.isReady(context, it) }
 
     Column(modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
         if (!configured && !otherReady) {
             Text(
-                "KI nicht eingerichtet. Unter Einstellungen → KI und Internet kannst du sie einrichten (z. B. kostenlos mit Google Gemini). Oder teile den Text an eine KI-App auf deinem Handy.",
+                if (de.meinhelfer.tag.ai.AiMode.isOff(context)) de.meinhelfer.tag.ai.AiMode.OFF_TEXT else "KI nicht eingerichtet. Unter Einstellungen → KI und Internet kannst du sie einrichten (z. B. kostenlos mit Google Gemini). Oder teile den Text an eine KI-App auf deinem Handy.",
                 style = MaterialTheme.typography.bodySmall,
             )
-            AiShareButton(system, text = prompt)
+            if (!de.meinhelfer.tag.ai.AiMode.isOff(context)) AiShareButton(system, text = prompt)
             return@Column
         }
         if (!loading) {
@@ -80,14 +80,14 @@ fun AiActionButton(
                 CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
                 Text("${provider.label.substringBefore(" (")} denkt nach …", style = MaterialTheme.typography.bodyMedium)
             }
-        } else if (AiConfig.isConfigured(context)) {
+        } else if (configured) {
             if (filled) {
                 Button(shape = buttonShape(), onClick = { confirmText = prompt() }, modifier = Modifier.fillMaxWidth()) { Text(label) }
             } else {
                 OutlinedButton(shape = buttonShape(), onClick = { confirmText = prompt() }, modifier = Modifier.fillMaxWidth()) { Text(label) }
             }
         }
-        if (!loading) AiShareButton(system, text = prompt)
+        if (!loading && !de.meinhelfer.tag.ai.AiMode.isOff(context)) AiShareButton(system, text = prompt)
         error?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
         if (limitHit) {
             Text(
@@ -99,18 +99,7 @@ fun AiActionButton(
     }
 
     confirmText?.let { text ->
-        AlertDialog(
-            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
-            onDismissRequest = { confirmText = null },
-            title = { Text("An ${provider.label.substringBefore(" (")} senden?") },
-            text = {
-                Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Genau dieser Text wird über das Internet an den Dienst gesendet. $note", style = MaterialTheme.typography.bodySmall)
-                    Text(text, style = MaterialTheme.typography.bodyMedium)
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = {
+        val send0: () -> Unit = {
                     confirmText = null
                     loading = true
                     error = null
@@ -129,7 +118,21 @@ fun AiActionButton(
                             }
                         loading = false
                     }
-                }) { Text("Senden") }
+                }
+        if (de.meinhelfer.tag.ai.AiMode.skipConfirm(context)) {
+            androidx.compose.runtime.LaunchedEffect(Unit) { send0() }
+        } else AlertDialog(
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
+            onDismissRequest = { confirmText = null },
+            title = { Text("An ${provider.label.substringBefore(" (")} senden?") },
+            text = {
+                Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Genau dieser Text wird über das Internet an den Dienst gesendet. $note", style = MaterialTheme.typography.bodySmall)
+                    Text(de.meinhelfer.tag.summary.Anonymizer.scrub(text), style = MaterialTheme.typography.bodyMedium)
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = send0) { Text("Senden") }
             },
             dismissButton = { TextButton(onClick = { confirmText = null }) { Text("Abbrechen") } },
         )

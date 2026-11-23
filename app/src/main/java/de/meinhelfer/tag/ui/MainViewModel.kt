@@ -687,6 +687,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val updateState: StateFlow<UpdateState> = _updateState
 
     init {
+        // Bekannte Namen für das Entfernen vor KI-Anfragen (Vorschau im Bestätigungsfenster)
+        viewModelScope.launch {
+            combine(persons, doctors) { p, d -> (p.map { it.name } + d.map { it.name }).filter { it.isNotBlank() }.toSet() }
+                .collect { de.meinhelfer.tag.summary.Anonymizer.known = it + de.meinhelfer.tag.update.AppPrefs.caregiver(getApplication()).name }
+        }
+    }
+
+    init {
         // Mindestens eine Person muss es geben; die gespeicherte Auswahl muss gueltig sein.
         viewModelScope.launch {
             val dao = db.personDao()

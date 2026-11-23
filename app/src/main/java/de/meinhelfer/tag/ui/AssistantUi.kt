@@ -712,6 +712,8 @@ fun AssistantSettingsCard(vm: MainViewModel) {
                 AppPrefs.setTourAutoRead(context, it)
             }
             HorizontalDivider()
+            AiModeChooser(name)
+            HorizontalDivider()
             VoiceSettings(name)
             HorizontalDivider()
             PopupSettings(name, image)

@@ -100,8 +100,8 @@ fun DocSummaryBox(
     var taskDrafts by remember { mutableStateOf<List<TaskDraft>?>(null) }
     var taskInfo by remember { mutableStateOf<String?>(null) }
 
-    val configured = AiConfig.isConfigured(context)
-    val otherReady = AiProvider.entries.any { it != provider && AiConfig.isReady(context, it) }
+    val configured = !de.meinhelfer.tag.ai.AiMode.isOff(context) && AiConfig.isConfigured(context)
+    val otherReady = !de.meinhelfer.tag.ai.AiMode.isOff(context) && AiProvider.entries.any { it != provider && AiConfig.isReady(context, it) }
     val masked = remember(text, person) { maskPersonal(text.take(MAX_CHARS), person) }
     val promptText = "Text eines Dokuments (Namen und Nummern der betreuten Person sind durch Platzhalter ersetzt):\n\n$masked"
     val enoughText = text.trim().length >= 40
@@ -125,7 +125,7 @@ fun DocSummaryBox(
         )
         if (!configured && !otherReady) {
             Text(
-                "KI nicht eingerichtet. Unter Einstellungen → KI und Internet kannst du sie einrichten, dann erstellt sie hier eine Zusammenfassung.",
+                if (de.meinhelfer.tag.ai.AiMode.isOff(context)) de.meinhelfer.tag.ai.AiMode.OFF_TEXT else "KI nicht eingerichtet. Unter Einstellungen → KI und Internet kannst du sie einrichten, dann erstellt sie hier eine Zusammenfassung.",
                 style = MaterialTheme.typography.bodySmall,
             )
         }
@@ -172,7 +172,25 @@ fun DocSummaryBox(
     }
 
     if (confirm) {
-        AlertDialog(
+        val send0: () -> Unit = {
+                    confirm = false
+                    loading = true
+                    error = null
+                    limitHit = false
+                    scope.launch {
+                        AiClient.ask(context, SUMMARY_SYSTEM, promptText)
+                            .onSuccess { answer -> onSummary(AiClient.bullets(answer).joinToString("\n") { "• $it" }) }
+                            .onFailure {
+                                error = it.message ?: "Das hat nicht geklappt."
+                                limitHit = it is AiLimitException
+                            }
+                        loading = false
+                    }
+                }
+
+        if (de.meinhelfer.tag.ai.AiMode.skipConfirm(context)) {
+            androidx.compose.runtime.LaunchedEffect(Unit) { send0() }
+        } else AlertDialog(
             properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
             onDismissRequest = { confirm = false },
             title = { Text("An ${provider.label} senden?") },
@@ -189,50 +207,18 @@ fun DocSummaryBox(
                     if (text.length > MAX_CHARS) {
                         Text("Der Text ist lang, es werden nur die ersten ${MAX_CHARS / 1000} Tausend Zeichen gesendet.", style = MaterialTheme.typography.bodySmall)
                     }
-                    Text(promptText, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.fillMaxWidth())
+                    Text(de.meinhelfer.tag.summary.Anonymizer.scrub(promptText), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.fillMaxWidth())
                 }
             },
             confirmButton = {
-                TextButton(onClick = {
-                    confirm = false
-                    loading = true
-                    error = null
-                    limitHit = false
-                    scope.launch {
-                        AiClient.ask(context, SUMMARY_SYSTEM, promptText)
-                            .onSuccess { answer -> onSummary(AiClient.bullets(answer).joinToString("\n") { "• $it" }) }
-                            .onFailure {
-                                error = it.message ?: "Das hat nicht geklappt."
-                                limitHit = it is AiLimitException
-                            }
-                        loading = false
-                    }
-                }) { Text("Senden") }
+                TextButton(onClick = send0) { Text("Senden") }
             },
             dismissButton = { TextButton(onClick = { confirm = false }) { Text("Abbrechen") } },
         )
     }
 
     if (confirmTasks) {
-        AlertDialog(
-            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
-            onDismissRequest = { confirmTasks = false },
-            title = { Text("An ${provider.label} senden?") },
-            text = {
-                Column(
-                    Modifier.heightIn(max = 380.dp).verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Text(
-                        "Die KI soll daraus Aufgaben vorschlagen. Genau dieser Text wird über das Internet gesendet. Name, Geburtsdatum, Versichertennummer und Straße der Person sind ersetzt, " +
-                            "Namen deiner Kontakte werden nicht gesendet. Die Zuordnung zum Kontakt passiert nur auf deinem Handy.",
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                    Text(taskPrompt, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.fillMaxWidth())
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = {
+        val send1: () -> Unit = {
                     confirmTasks = false
                     loading = true
                     error = null
@@ -250,7 +236,29 @@ fun DocSummaryBox(
                             }
                         loading = false
                     }
-                }) { Text("Senden") }
+                }
+
+        if (de.meinhelfer.tag.ai.AiMode.skipConfirm(context)) {
+            androidx.compose.runtime.LaunchedEffect(Unit) { send1() }
+        } else AlertDialog(
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
+            onDismissRequest = { confirmTasks = false },
+            title = { Text("An ${provider.label} senden?") },
+            text = {
+                Column(
+                    Modifier.heightIn(max = 380.dp).verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Text(
+                        "Die KI soll daraus Aufgaben vorschlagen. Genau dieser Text wird über das Internet gesendet. Name, Geburtsdatum, Versichertennummer und Straße der Person sind ersetzt, " +
+                            "Namen deiner Kontakte werden nicht gesendet. Die Zuordnung zum Kontakt passiert nur auf deinem Handy.",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    Text(de.meinhelfer.tag.summary.Anonymizer.scrub(taskPrompt), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.fillMaxWidth())
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = send1) { Text("Senden") }
             },
             dismissButton = { TextButton(onClick = { confirmTasks = false }) { Text("Abbrechen") } },
         )

@@ -284,7 +284,7 @@ private fun categorySummary(
     SettingsCategory.Dokumente -> if (AppPrefs.internalViewer(context)) "Öffnen im eingebauten Betrachter" else "Öffnen mit einer anderen App"
     SettingsCategory.Sicherheit -> "App-Sperre " + (if (AppPrefs.lockEnabled(context)) "an" else "aus") + " · Sicherung, Zurücksetzen"
     SettingsCategory.Internet ->
-        if (AiConfig.isConfigured(context)) "KI: " + AiConfig.provider(context).label else "KI nicht eingerichtet · Medikamenten-Infos"
+        de.meinhelfer.tag.ai.AiMode.of(context).title + " · " + (if (AiConfig.isConfigured(context)) AiConfig.provider(context).label else "kein Dienst eingerichtet")
     SettingsCategory.Hilfe -> "Anleitung, Rundgang, Fehler oder Wunsch melden, Selbsttest"
     SettingsCategory.Assistent ->
         vm.assistantName.value + " · " + (if (vm.assistantOn.value) "an" else "aus (Tages-Motivator)")
@@ -757,9 +757,11 @@ private fun AiCard() {
     HCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("KI-Assistent (optional)", style = MaterialTheme.typography.titleMedium)
+            AiModeChooser(AppPrefs.assistantName(context))
+            androidx.compose.material3.HorizontalDivider()
             Text(
                 "Die KI liefert Anhaltspunkte, z. B. „Medikamentenplan vom Hausarzt prüfen lassen“. Sie ist kein Arzt und kein Apotheker. " +
-                    "Du wählst den Dienst und hinterlegst deinen eigenen Schlüssel (API-Key). Gesendet wird nur nach deiner Bestätigung und immer ohne Namen der Person. " +
+                    "Du wählst den Dienst und hinterlegst deinen eigenen Schlüssel (API-Key). Gesendet wird je nach KI-Modus nach deiner Bestätigung oder automatisch – immer ohne Namen und andere persönliche Angaben. " +
                     "Ein Abo bei ChatGPT oder Claude reicht dafür nicht, es braucht einen API-Schlüssel des jeweiligen Anbieters.",
                 style = MaterialTheme.typography.bodySmall,
             )

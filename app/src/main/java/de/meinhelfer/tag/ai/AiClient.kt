@@ -2,6 +2,7 @@ package de.meinhelfer.tag.ai
 
 import android.content.Context
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
@@ -33,7 +34,21 @@ object AiClient {
     }
 
     /** [maxTokens]: Platz fuer die Antwort (laengere Listen wie ein Medikamentenplan brauchen mehr). */
+    /** Namen aus der App (Personen, Kontakte, du selbst), damit sie vor dem Senden entfernt werden. */
+    suspend fun knownNames(context: Context): Set<String> = withContext(Dispatchers.IO) {
+        runCatching {
+            val db = de.meinhelfer.tag.data.AppDatabase.get(context)
+            val names = db.personDao().all().first().map { it.name } +
+                db.doctorDao().all().first().map { it.name } +
+                listOf(de.meinhelfer.tag.update.AppPrefs.caregiver(context).name)
+            names.filter { it.isNotBlank() }.toSet()
+        }.getOrDefault(de.meinhelfer.tag.summary.Anonymizer.known).also { de.meinhelfer.tag.summary.Anonymizer.known = it }
+    }
+
     suspend fun ask(context: Context, system: String, user: String, maxTokens: Int = 1500): Result<String> = withContext(Dispatchers.IO) {
+        if (AiMode.isOff(context)) return@withContext Result.failure(IllegalStateException(AiMode.OFF_TEXT))
+        // In jedem Modus: personenbezogene Angaben vor dem Senden entfernen
+        val user = de.meinhelfer.tag.summary.Anonymizer.scrub(user, knownNames(context))
         val provider = AiConfig.provider(context)
         val key = AiConfig.apiKey(context, provider)
         if (!AiConfig.isReady(context, provider)) {

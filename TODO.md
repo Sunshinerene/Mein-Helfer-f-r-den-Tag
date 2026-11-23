@@ -1,6 +1,6 @@
 # TODO
 
-Stand: v0.81.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.82.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
@@ -9,6 +9,9 @@ Stand: v0.81.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Ideen und Optimierungen
 
+- [ ] KI vollumfänglich – nach und nach: Dokument-Zusammenfassung beim Speichern, Messwerte aus Handschrift per KI, Wochenrückblick mit Auffälligkeiten, Fragen an den Arzt vor Terminen, Rückfrage-Chat mit Sunny
+
+- [ ] KI-Modus: „Ohne KI“ blendet KI-Knöpfe aus; „Mit Bestätigung“ zeigt Text ohne Namen/Adresse/Telefon; „Vollumfänglich“ nur nach Haken bei den Risiken, sendet ohne Fenster
 - [ ] Messwerte aus Dokumenten: auf Wunsch mit KI auslesen (bessere Handschrift-Erkennung), nach Bestätigung
 
 
@@ -90,6 +93,11 @@ Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Daten
 - [ ] Sammel-Import: Vorschläge mit echten Scans verfeinern (z. B. gleicher Absender und gleiches Datum als weiterer Hinweis)
 
 - [ ] Eigene KI-Stimme direkt in der App (nur falls SherpaTTS nicht reicht): sherpa-onnx mit Piper-Stimme Thorsten oder Kerstin (CC0) oder apptor-tiny-tts (Apache-2.0, 21 MB); macht die App 25–70 MB größer, Lizenzen der Bibliotheken prüfen
+
+## Version 0.82.0 (fertig)
+
+- KI-Modus nach Sicherheitsstufe (Ohne KI / mit Bestätigung / vollumfänglich) mit Hinweisen und Risiken
+- Persönliche Angaben werden vor jeder KI-Anfrage automatisch entfernt (auch in der Vorschau sichtbar)
 
 ## Version 0.81.0 (fertig)
 

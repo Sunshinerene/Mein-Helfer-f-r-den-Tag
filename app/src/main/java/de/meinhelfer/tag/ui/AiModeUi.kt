@@ -1,0 +1,91 @@
+package de.meinhelfer.tag.ui
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import de.meinhelfer.tag.ai.AiMode
+
+/**
+ * KI-Modus wählen: Ohne KI, mit Bestätigung, vollumfänglich. Höhere Stufen erst nach Lesen der Hinweise und Bestätigung.
+ */
+@Composable
+fun AiModeChooser(name: String) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var mode by remember { mutableStateOf(AiMode.of(context)) }
+    var asking by remember { mutableStateOf<AiMode?>(null) }
+    Text("KI-Modus: Was darf $name mit KI?", style = MaterialTheme.typography.labelLarge)
+    Text(
+        "In jedem Modus entfernt $name vor dem Senden Namen, Adressen, Telefonnummern, E-Mails, Geburtsdaten, Versicherten- und Kontonummern.",
+        style = MaterialTheme.typography.bodySmall,
+    )
+    AiMode.entries.forEach { m ->
+        Row(
+            Modifier.fillMaxWidth().selectable(selected = mode == m, onClick = {
+                if (m == mode) return@selectable
+                if (m.key > mode.key) asking = m else {
+                    AiMode.set(context, m)
+                    mode = m
+                }
+            }),
+            verticalAlignment = Alignment.Top,
+        ) {
+            RadioButton(selected = mode == m, onClick = null)
+            Column(Modifier.weight(1f)) {
+                Text(m.title + " · " + m.level, style = MaterialTheme.typography.bodyLarge)
+                Text(m.short, style = MaterialTheme.typography.bodySmall)
+            }
+        }
+    }
+    if (mode != AiMode.Off && !de.meinhelfer.tag.ai.AiConfig.isConfigured(context)) {
+        Text("Noch kein KI-Dienst eingerichtet: Einstellungen → KI und Internet.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+    }
+    asking?.let { m ->
+        var read by remember(m) { mutableStateOf(false) }
+        AlertDialog(
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
+            onDismissRequest = { asking = null },
+            title = { Text("„${m.title}“ einschalten?") },
+            text = {
+                Column(Modifier.heightIn(max = 440.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(m.level, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                    Text(m.short, style = MaterialTheme.typography.bodyMedium)
+                    Text("Hinweise und Risiken", style = MaterialTheme.typography.titleSmall)
+                    m.risks.forEach { Text("• $it", style = MaterialTheme.typography.bodyMedium) }
+                    Text("Du kannst jederzeit zurück auf eine sicherere Stufe wechseln.", style = MaterialTheme.typography.bodySmall)
+                    Row(Modifier.fillMaxWidth().selectable(selected = read, onClick = { read = !read }), verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(checked = read, onCheckedChange = null)
+                        Text("Ich habe die Hinweise gelesen und möchte das so.", style = MaterialTheme.typography.bodyMedium)
+                    }
+                    HintReader("ki-modus-${m.key}", auto = false) { "${m.title}. ${m.short} Hinweise und Risiken: " + m.risks.joinToString(" ") }
+                }
+            },
+            confirmButton = {
+                TextButton(enabled = read, onClick = {
+                    AiMode.set(context, m)
+                    mode = m
+                    asking = null
+                }) { Text("Einschalten") }
+            },
+            dismissButton = { TextButton(onClick = { asking = null }) { Text("Abbrechen") } },
+        )
+    }
+}

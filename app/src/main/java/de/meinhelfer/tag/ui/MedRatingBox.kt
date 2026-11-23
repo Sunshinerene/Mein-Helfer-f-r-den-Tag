@@ -102,8 +102,8 @@ fun MedRatingBox(med: Medication, otherNames: List<String>, onUpdate: (Medicatio
     var provider by remember { mutableStateOf(AiConfig.provider(context)) }
 
     val rating = remember(med.rating) { MedRating.fromStored(med.rating) }
-    val configured = AiConfig.isConfigured(context)
-    val otherReady = AiProvider.entries.any { it != provider && AiConfig.isReady(context, it) }
+    val configured = !de.meinhelfer.tag.ai.AiMode.isOff(context) && AiConfig.isConfigured(context)
+    val otherReady = !de.meinhelfer.tag.ai.AiMode.isOff(context) && AiProvider.entries.any { it != provider && AiConfig.isReady(context, it) }
     val medName = MedicationInfo.cleanName(med.name).ifBlank { med.name }
     val others = otherNames.map { MedicationInfo.cleanName(it).ifBlank { it } }.distinct()
     val promptText = MedRating.prompt(medName, others)
@@ -123,7 +123,7 @@ fun MedRatingBox(med: Medication, otherNames: List<String>, onUpdate: (Medicatio
         }
         if (!configured && !otherReady) {
             Text(
-                "KI nicht eingerichtet. Du kannst sie unter Einstellungen → KI und Internet einrichten (z. B. kostenlos mit Google Gemini).",
+                if (de.meinhelfer.tag.ai.AiMode.isOff(context)) de.meinhelfer.tag.ai.AiMode.OFF_TEXT else "KI nicht eingerichtet. Du kannst sie unter Einstellungen → KI und Internet einrichten (z. B. kostenlos mit Google Gemini).",
                 style = MaterialTheme.typography.bodySmall,
             )
         }
@@ -162,25 +162,7 @@ fun MedRatingBox(med: Medication, otherNames: List<String>, onUpdate: (Medicatio
     }
 
     if (confirm) {
-        AlertDialog(
-            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
-            onDismissRequest = { confirm = false },
-            title = { Text("An ${provider.label} senden?") },
-            text = {
-                Column(
-                    Modifier.heightIn(max = 360.dp).verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Text(
-                        "Genau dieser Text wird über das Internet an den Dienst gesendet. Der Name der Person ist nicht enthalten, " +
-                            "aber die Namen der Medikamente (für die Wechselwirkungen).",
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                    Text(promptText, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.fillMaxWidth())
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = {
+        val send0: () -> Unit = {
                     confirm = false
                     loading = true
                     error = null
@@ -199,7 +181,29 @@ fun MedRatingBox(med: Medication, otherNames: List<String>, onUpdate: (Medicatio
                             }
                         loading = false
                     }
-                }) { Text("Senden") }
+                }
+
+        if (de.meinhelfer.tag.ai.AiMode.skipConfirm(context)) {
+            androidx.compose.runtime.LaunchedEffect(Unit) { send0() }
+        } else AlertDialog(
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
+            onDismissRequest = { confirm = false },
+            title = { Text("An ${provider.label} senden?") },
+            text = {
+                Column(
+                    Modifier.heightIn(max = 360.dp).verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Text(
+                        "Genau dieser Text wird über das Internet an den Dienst gesendet. Der Name der Person ist nicht enthalten, " +
+                            "aber die Namen der Medikamente (für die Wechselwirkungen).",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    Text(de.meinhelfer.tag.summary.Anonymizer.scrub(promptText), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.fillMaxWidth())
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = send0) { Text("Senden") }
             },
             dismissButton = { TextButton(onClick = { confirm = false }) { Text("Abbrechen") } },
         )
