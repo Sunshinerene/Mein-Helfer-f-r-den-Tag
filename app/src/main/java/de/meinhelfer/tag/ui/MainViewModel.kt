@@ -166,6 +166,35 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             )
         }
 
+    /**
+     * Messwerte aus einem Dokument übernehmen. Gleiche Werte zur gleichen Zeit werden übersprungen.
+     * [onDone] bekommt (übernommen, übersprungen).
+     */
+    fun importVitals(personId: Long, list: List<de.meinhelfer.tag.summary.VitalImport.Candidate>, note: String, onDone: (Int, Int) -> Unit) =
+        viewModelScope.launch {
+            val zone = java.time.ZoneId.systemDefault()
+            val days = list.map { it.day }
+            val existing = if (days.isEmpty()) emptyList() else db.vitalDao().range(personId, days.min(), days.max())
+            var added = 0
+            var skipped = 0
+            list.forEach { c ->
+                val at = java.time.LocalDate.ofEpochDay(c.day).atStartOfDay(zone).plusMinutes(c.minute.toLong()).toInstant().toEpochMilli()
+                val dup = existing.any { e -> e.kind == c.kind.key && e.value == c.value && kotlin.math.abs(e.atMillis - at) < 60 * 60 * 1000L }
+                if (dup) {
+                    skipped++
+                } else {
+                    db.vitalDao().insert(
+                        de.meinhelfer.tag.data.VitalEntry(
+                            personId = personId, atMillis = at, day = c.day, kind = c.kind.key,
+                            value = c.value, value2 = c.value2, unit = c.unit, note = note, context = c.context,
+                        ),
+                    )
+                    added++
+                }
+            }
+            onDone(added, skipped)
+        }
+
     // ---- Messwerte: Schnellknöpfe und Messzeiten je Person (in den Einstellungen gespeichert)
     private val _measurePlanTick = MutableStateFlow(0)
     /** Zählt hoch, wenn Messzeiten oder Schnellknöpfe geändert wurden (damit Anzeigen neu rechnen). */

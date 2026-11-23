@@ -234,6 +234,10 @@ val GUIDE_SECTIONS: List<GuideSection> = listOf(
                     "Alles einzeln abschaltbar unter Einstellungen → „Persönlicher Assistent“.",
             ),
             GuideItem(
+                "Messwerte aus Dokumenten übernehmen",
+                "Hast du Werte bisher von Hand aufgeschrieben (z. B. Blutzucker-Heft, Blutdruck-Liste, Fieberkurve), fotografiere die Seiten unter Dokumente. Erkennt die App darin Datum und Werte, schlägt der Assistent beim Speichern vor, sie als Messwerte zu übernehmen (mit „Empfehlungen gleich vorlesen“ liest er das vor). Sonst setzt du selbst den Haken „Enthält Messwerte“. Nach dem Speichern zeigt ein Fenster alle gefundenen Werte mit Datum und Uhrzeit: Art wählen (Blutzucker, Blutdruck, Puls, Temperatur, Gewicht, Sauerstoff, INR), Werte an- oder abhaken, Zahlen korrigieren, dann „übernehmen“. Gelesen werden Tabellen mit Kopf wie „nüchtern | mittags | abends“, Zeilen mit Uhrzeit („08:15 135/85“) und Werte in mg/dl oder mmol/l; Insulin-Einheiten (z. B. „8 IE“) werden nicht als Blutzucker genommen. Schon vorhandene gleiche Werte werden übersprungen. Auch bei gespeicherten Dokumenten: Dokument öffnen → „📈 Messwerte daraus übernehmen …“. Handschrift wird nicht immer richtig gelesen, deshalb bitte jeden Wert prüfen.",
+            ),
+            GuideItem(
                 "Rundgang mit Vorlesen",
                 "Im Rundgang (Anleitung → „Rundgang starten“) gibt es unten „▶ Mit Vorlesen“: Der Assistent liest jede Seite vor und blättert danach von selbst weiter, bis zum Ende. „⏸ Anhalten“ oder ein Tipp auf die Einblendung hält an; der Assistent merkt sich den Satz, „▶ Weiterlesen“ macht genau dort weiter. Wischen auf eine andere Seite springt dorthin. Soll der Rundgang immer so starten: Einstellungen → „Persönlicher Assistent“ → „Rundgang mit Vorlesen“.",
             ),

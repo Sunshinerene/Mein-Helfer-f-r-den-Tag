@@ -7,7 +7,7 @@ import java.util.Locale
 
 val DOC_CATEGORIES = listOf(
     "Arztbericht", "Krankenhaus / Entlassbericht", "Befund / Labor", "Rezept / Verordnung", "Medikamentenplan", "Pflegegrad / Bescheid",
-    "Vollmacht / Verfügung", "Rechnung / Quittung", "Überweisung", "Sonstiges",
+    "Vollmacht / Verfügung", "Rechnung / Quittung", "Überweisung", "Messwerte / Tagebuch", "Sonstiges",
 )
 
 /** Vorschlaege fuer ein neues Dokument, aus dem erkannten Text. Alles bleibt aenderbar. */

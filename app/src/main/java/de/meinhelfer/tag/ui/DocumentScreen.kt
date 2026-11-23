@@ -1,5 +1,6 @@
 package de.meinhelfer.tag.ui
 
+import androidx.compose.material3.Checkbox
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.meinhelfer.tag.summary.Discharge
 import de.meinhelfer.tag.summary.MedPlans
@@ -110,6 +111,8 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?
     var showAddPage by remember { mutableStateOf(false) }
     var detailId by remember { mutableStateOf<Long?>(null) }
     var editItem by remember { mutableStateOf<Document?>(null) }
+    // Messwerte aus Dokumenten (nach dem Speichern bzw. aus der Ansicht), eins nach dem anderen
+    val vitalJobs = remember { androidx.compose.runtime.mutableStateListOf<VitalImportJob>() }
     // Neuer Entwurf = neuer Dialog (sonst behielte er Titel und Vorschläge des vorigen)
     var draftSerial by remember { mutableIntStateOf(0) }
     var progress by remember { mutableStateOf<String?>(null) }
@@ -598,6 +601,7 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?
                 },
                 drafts = items,
                 onLinkDraft = { vm.markDraftSigned(it) },
+                onVitals = { vitalJobs.add(if (it.personId == 0L) it.copy(personId = vm.personId.value) else it) },
                 onSave = { doc ->
                     scope.launch {
                         try {
@@ -639,6 +643,16 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?
                 } else if (MedPlans.isPlanDocument(doc)) {
                     MedPlanImportBox(doc, person, meds, vm)
                 }
+                if (doc.text.isNotBlank()) {
+                    val scan = remember(doc.id, doc.text) { de.meinhelfer.tag.summary.VitalImport.parse(doc.text, null, doc.docDate?.let { LocalDate.ofEpochDay(it) }) }
+                    if (de.meinhelfer.tag.summary.VitalImport.worthOffering(scan) || doc.category == "Messwerte / Tagebuch") {
+                        Text("📈 " + (de.meinhelfer.tag.summary.VitalImport.summary(scan).ifBlank { "Messwerte-Dokument" }), style = MaterialTheme.typography.bodyMedium)
+                    }
+                    OutlinedButton(shape = buttonShape(), onClick = {
+                        vitalJobs.add(VitalImportJob(doc.personId, doc.title, doc.text, doc.docDate?.let { LocalDate.ofEpochDay(it) }, scan.kind))
+                        detailId = null
+                    }) { Text("📈 Messwerte daraus übernehmen …") }
+                }
                 if (isLetterDraft(doc)) {
                     OutlinedButton(shape = buttonShape(), onClick = {
                         scope.launch {
@@ -660,11 +674,19 @@ fun DocumentScreen(items: List<Document>, doctors: List<Doctor>, person: Person?
             onAddPage = {},
             onRemoveLast = {},
             onDismiss = { editItem = null },
+            onVitals = { vitalJobs.add(it.copy(personId = doc.personId)) },
             onSave = {
                 vm.update(it)
                 editItem = null
             },
         )
+    }
+    if (draft == null && editItem == null && detailId == null) {
+        vitalJobs.firstOrNull()?.let { job ->
+            androidx.compose.runtime.key(job) {
+                VitalImportDialog(job, vm) { vitalJobs.remove(job) }
+            }
+        }
     }
 }
 
@@ -685,6 +707,8 @@ private fun DocumentDialog(
     onSave: (Document) -> Unit,
     drafts: List<Document> = emptyList(),
     onLinkDraft: (Document) -> Unit = {},
+    /** Messwerte nach dem Speichern prüfen und übernehmen */
+    onVitals: ((VitalImportJob) -> Unit)? = null,
 ) {
     val suggestion = remember { pending?.let { DocumentAnalyzer.analyze(it.text, doctors) } }
     var title by remember { mutableStateOf(initial?.title ?: suggestion?.title ?: "Dokument") }
@@ -705,6 +729,16 @@ private fun DocumentDialog(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var rereading by remember { mutableStateOf(false) }
+    // Messwerte im Dokument (z. B. Blutzucker-Heft)? Dann Übernahme empfehlen
+    val vitalScan = remember(text, date) { de.meinhelfer.tag.summary.VitalImport.parse(text, null, date) }
+    val vitalWorth = de.meinhelfer.tag.summary.VitalImport.worthOffering(vitalScan)
+    var takeVitals by remember { mutableStateOf(false) }
+    LaunchedEffect(vitalWorth) {
+        if (vitalWorth && initial == null) {
+            takeVitals = true
+            if (category == "Sonstiges") category = "Messwerte / Tagebuch"
+        }
+    }
     val knownSuggestion = remember(text) { DocumentAnalyzer.suggestKnownCategory(title, text) }
     val newSuggestion = remember(title, text) { DocumentAnalyzer.suggestNewCategory(title, text) }
 
@@ -784,6 +818,31 @@ private fun DocumentDialog(
                                 }) { Text("Ja, zuordnen") }
                                 TextButton(onClick = { matchDismissed = true }) { Text("Nein") }
                             }
+                        }
+                    }
+                }
+                if (onVitals != null) {
+                    if (vitalWorth) {
+                        HCard(Modifier.fillMaxWidth(), colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
+                            Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Text("📈 Messwerte erkannt", style = MaterialTheme.typography.titleSmall)
+                                val msg = "Das sieht nach Messwerten aus: ${de.meinhelfer.tag.summary.VitalImport.summary(vitalScan)}. " +
+                                    "Beim Speichern kann ich sie als Messwerte übernehmen, dann stehen sie für Verlauf und Auswertung bereit. Du prüfst vorher jeden Wert."
+                                Text(msg, style = MaterialTheme.typography.bodyMedium)
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Checkbox(checked = takeVitals, onCheckedChange = { takeVitals = it })
+                                    Text("Nach dem Speichern übernehmen", style = MaterialTheme.typography.bodyMedium)
+                                }
+                                HintReader("messwerte-dokument", auto = initial == null) { msg }
+                            }
+                        }
+                    } else {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(checked = takeVitals, onCheckedChange = {
+                                takeVitals = it
+                                if (it && category == "Sonstiges") category = "Messwerte / Tagebuch"
+                            })
+                            Text("Enthält Messwerte (z. B. Blutzucker- oder Blutdruck-Heft): nach dem Speichern übernehmen", style = MaterialTheme.typography.bodySmall)
                         }
                     }
                 }
@@ -884,6 +943,9 @@ private fun DocumentDialog(
                 enabled = title.isNotBlank(),
                 onClick = {
                     linked?.let(onLinkDraft)
+                    if (takeVitals && onVitals != null && text.isNotBlank()) {
+                        onVitals(VitalImportJob(person?.id ?: 0L, title.trim(), text.trim(), date, vitalScan.kind))
+                    }
                     onSave(
                         (initial ?: Document(title = title, fileName = "")).copy(
                             title = title.trim(),
