@@ -194,6 +194,24 @@ private fun Modifier.drawBackdrop(backdrop: Backdrop?, phase: State<Float>?): Mo
     }
 }
 
+/**
+ * Hintergrund fuer Vollbild-Fenster (Dialoge): zeichnet denselben Design-Hintergrund wie die App,
+ * damit nichts Durchsichtiges ueber den Seiten darunter liegt.
+ */
+@Composable
+fun DesignSurface(
+    modifier: Modifier = Modifier,
+    shape: Shape = androidx.compose.ui.graphics.RectangleShape,
+    content: @Composable () -> Unit,
+) {
+    val design = LocalDesign.current
+    val scheme = MaterialTheme.colorScheme
+    val solid = if (scheme.background.alpha >= 0.99f) scheme.background else scheme.surfaceContainer.copy(alpha = 1f)
+    androidx.compose.material3.Surface(modifier, shape = shape, color = solid, contentColor = scheme.onBackground) {
+        Box(Modifier.drawBackdrop(design.backdrop, null)) { content() }
+    }
+}
+
 /** Karte, die sich nach dem gewaehlten Design richtet (Farbe, Rand, Form). */
 @Composable
 fun HCard(

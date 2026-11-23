@@ -1,6 +1,6 @@
 # TODO
 
-Stand: v0.94.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
+Stand: v0.94.1 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 
 ## Als Nächstes
 
@@ -23,6 +23,7 @@ Stand: v0.94.0 · Offene Punkte zuerst, darunter der Verlauf aller Versionen.
 - [ ] Designs verfeinern (Schriftarten, weitere Varianten); Effekte: echte Unschärfe hinter Glas-Karten ab Android 12, Glanz auch auf Knöpfen
 ## Bitte auf dem Handy prüfen (bisher nicht getestet)
 
+- [ ] Alltagshelfer-Fenster: deckend im eigenen Design (nichts mehr von der Seite dahinter sichtbar)
 - [ ] Update über Sunny: neue Version → Sunny sagt es an und fragt in ihrer Karte; „Ja, aktualisieren“ → lädt (Fortschritt in der Karte) → startet die Installation selbst; erste Mal Freigabe „Updates installieren“, nach Rückkehr geht es weiter
 
 - [ ] Sunny erscheint wieder beim Sprechen – bei allem, was vorgelesen wird (Erzähl mal, Tagesplan, Dokumente, Anleitung, Empfehlungen, Rundgang), auch über Fenstern
@@ -105,6 +106,10 @@ Hilfe dazu: Einstellungen → Hilfe und Rückmeldung → „Selbsttest“ (Daten
 - [ ] Sammel-Import: Vorschläge mit echten Scans verfeinern (z. B. gleicher Absender und gleiches Datum als weiterer Hinweis)
 
 - [ ] Eigene KI-Stimme direkt in der App (nur falls SherpaTTS nicht reicht): sherpa-onnx mit Piper-Stimme Thorsten oder Kerstin (CC0) oder apptor-tiny-tts (Apache-2.0, 21 MB); macht die App 25–70 MB größer, Lizenzen der Bibliotheken prüfen
+
+## Version 0.94.1 (fertig)
+
+- Fix: Alltagshelfer und andere Vollbild-Fenster (Aufgaben-Verlauf, Dokument-Ansicht, Selbsteinschätzung) bekommen den Design-Hintergrund statt durchsichtig über der Seite zu liegen
 
 ## Version 0.94.0 (fertig)
 

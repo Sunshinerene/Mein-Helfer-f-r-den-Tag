@@ -158,7 +158,7 @@ internal fun DocumentViewer(doc: Document, onClose: () -> Unit) {
     fun toast(text: String) = Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
 
     Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-        Surface(Modifier.fillMaxSize()) {
+        DesignSurface(Modifier.fillMaxSize()) {
             Column(Modifier.fillMaxSize().systemBarsPadding()) {
                 Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(doc.title, style = MaterialTheme.typography.titleMedium, maxLines = 1, modifier = Modifier.weight(1f))

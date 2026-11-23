@@ -4,7 +4,7 @@ by Sunshine@R
 
 Android-App als täglicher Begleiter für pflegende Angehörige. Alle personenbezogenen Daten bleiben lokal auf dem Gerät.
 
-## Stand: v0.94.0
+## Stand: v0.94.1
 
 ### Funktionsübersicht
 

@@ -226,7 +226,7 @@ fun HelperHub(vm: MainViewModel, onClose: () -> Unit) {
     var importInfo by remember { mutableStateOf<String?>(null) }
     val aiReady = !AiMode.isOff(context) && AiConfig.isConfigured(context)
     androidx.compose.ui.window.Dialog(onDismissRequest = onClose, properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false)) {
-        Surface(Modifier.fillMaxSize().padding(8.dp), shape = MaterialTheme.shapes.large) {
+        DesignSurface(Modifier.fillMaxSize().padding(8.dp), shape = MaterialTheme.shapes.large) {
             Column(Modifier.padding(16.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("🧰 Alltagshelfer (Beta)", style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
@@ -426,7 +426,7 @@ fun ToolDialog(tool: HelperTool, vm: MainViewModel, onClose: () -> Unit) {
     }
 
     androidx.compose.ui.window.Dialog(onDismissRequest = onClose, properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false)) {
-        Surface(Modifier.fillMaxSize().padding(8.dp), shape = MaterialTheme.shapes.large) {
+        DesignSurface(Modifier.fillMaxSize().padding(8.dp), shape = MaterialTheme.shapes.large) {
             Column(Modifier.padding(16.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(tool.emoji + " " + tool.title, style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))

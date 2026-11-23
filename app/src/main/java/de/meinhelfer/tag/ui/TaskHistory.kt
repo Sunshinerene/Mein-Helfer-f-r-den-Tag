@@ -215,7 +215,7 @@ internal fun TaskHistoryDialog(
         .sortedByDescending { it.doneMillis ?: it.createdMillis }
 
     Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-        Surface(Modifier.fillMaxSize()) {
+        DesignSurface(Modifier.fillMaxSize()) {
             Column(Modifier.fillMaxSize().systemBarsPadding().padding(horizontal = 16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Aufgaben-Verlauf", style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))

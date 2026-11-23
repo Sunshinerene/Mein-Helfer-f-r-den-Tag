@@ -406,7 +406,7 @@ private fun SelfCheckDialog(
         onDismissRequest = onDismiss,
         properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false),
     ) {
-        androidx.compose.material3.Surface(Modifier.fillMaxWidth().padding(8.dp), shape = MaterialTheme.shapes.large) {
+        DesignSurface(Modifier.fillMaxWidth().padding(8.dp), shape = MaterialTheme.shapes.large) {
             Column(Modifier.padding(12.dp)) {
                 Text("Selbsteinschätzung – $personName", style = MaterialTheme.typography.titleLarge)
                 val g = check.grade(r.total)
