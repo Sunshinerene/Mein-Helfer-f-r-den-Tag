@@ -173,14 +173,21 @@ fun MailDraftDialog(
                     Toast.makeText(context, "Text kopiert", Toast.LENGTH_SHORT).show()
                 }, modifier = Modifier.fillMaxWidth()) { Text("Text kopieren") }
                 Text(
-                    "Hinweis: Normale E-Mails sind nicht verschlüsselt. Schreibe nur, was nötig ist. Du prüfst alles und schickst selbst ab, die App sendet nichts automatisch.",
+                    "Hinweis: Normale E-Mails sind nicht verschlüsselt. Schreibe nur, was nötig ist. Vor der Übergabe bestätigst du deine Identität. Du prüfst alles und schickst selbst ab, die App sendet nichts automatisch.",
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
         },
         confirmButton = {
             TextButton(onClick = {
-                openMailWithFiles(context, recipient.email, subject, body, emptyList())
+                val address = recipient.email
+                val approvedSubject = subject
+                val approvedBody = body
+                de.meinhelfer.tag.security.SunnyActionGuard.authorize(
+                    context, "E-Mail an " + recipient.name + " übergeben",
+                    onDenied = { Toast.makeText(context, it, Toast.LENGTH_SHORT).show() },
+                    onApproved = { openMailWithFiles(context, address, approvedSubject, approvedBody, emptyList()) },
+                )
             }) { Text("In E-Mail-App öffnen") }
         },
         dismissButton = { TextButton(onClick = onClose) { Text("Schließen") } },
