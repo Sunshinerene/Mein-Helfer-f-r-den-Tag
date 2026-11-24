@@ -88,7 +88,7 @@ dependencies {
 
     implementation("net.zetetic:sqlcipher-android:4.6.1@aar")
 
-    val room = "2.6.1"
+    val room = "2.7.2"
     implementation("androidx.room:room-runtime:$room")
     implementation("androidx.room:room-ktx:$room")
     ksp("androidx.room:room-compiler:$room")
