@@ -253,11 +253,11 @@ fun SunnyBubble(style: SunnyPopup, modifier: Modifier = Modifier, video: Boolean
                 },
             )
             .clip(CircleShape)
-        if (video) {
+        if (video && SunnyPresentation.videosAllowed()) {
             TalkVideo(ring)
         } else {
             androidx.compose.foundation.Image(
-                painter = androidx.compose.ui.res.painterResource(R.drawable.sunny_portrait),
+                painter = androidx.compose.ui.res.painterResource(SunnyAvatar.drawable(de.meinhelfer.tag.summary.Expression.Friendly)),
                 contentDescription = "Vorschau Sunny",
                 contentScale = androidx.compose.ui.layout.ContentScale.Crop,
                 modifier = ring,
