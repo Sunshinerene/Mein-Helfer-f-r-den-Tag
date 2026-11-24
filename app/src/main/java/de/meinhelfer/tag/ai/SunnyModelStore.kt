@@ -14,7 +14,7 @@ import java.io.IOException
 object SunnyModelStore {
     private val mutex = Mutex()
     private fun directory(context: Context) = File(context.noBackupFilesDir, "sunny_models")
-    fun model(context: Context): File = File(directory(context), "model.task")
+    fun model(context: Context): File = File(directory(context), "model.litertlm")
     fun installedBytes(context: Context): Long = model(context).takeIf { it.isFile }?.length() ?: 0L
 
     suspend fun importModel(context: Context, uri: Uri): Long = withContext(Dispatchers.IO) {
