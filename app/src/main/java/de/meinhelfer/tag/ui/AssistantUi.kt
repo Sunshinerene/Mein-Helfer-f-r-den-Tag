@@ -792,6 +792,19 @@ fun AssistantSheetContent(vm: MainViewModel, page: String, onOpenGuide: () -> Un
                 }) { Text(if (localBusy) "${st.name} denkt nach …" else "${st.name} offline fragen") }
                 Text("Sunny Brain · lokal, ohne automatische Cloud-Weitergabe", style = MaterialTheme.typography.bodySmall)
                 localError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                if (localBusy || localAnswer != null) {
+                    val emotion = if (localBusy) SunnyEmotion.Thinking else SunnyEmotion.Talking
+                    val avatarImage by SunnyAvatar.useImage.collectAsState()
+                    if (avatarImage) {
+                        val res = SunnyEmotionMedia.image(context, emotion)
+                        androidx.compose.foundation.Image(
+                            painter = androidx.compose.ui.res.painterResource(res),
+                            contentDescription = if (localBusy) "Sunny denkt nach" else "Sunny antwortet",
+                            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                            modifier = Modifier.fillMaxWidth().heightIn(max = 160.dp)
+                        )
+                    }
+                }
                 localAnswer?.let { reply ->
                     Text(reply, style = MaterialTheme.typography.bodyMedium)
                     SpeakButton(owner = "assistent-lokal", label = "🔊 Antwort vorlesen") { reply }
