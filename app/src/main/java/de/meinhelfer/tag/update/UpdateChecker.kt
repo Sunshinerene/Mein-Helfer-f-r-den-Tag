@@ -36,8 +36,16 @@ object UpdateChecker {
     fun installedVersion(context: Context): String =
         context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "0"
 
+    fun developmentChannel(context: Context): Boolean =
+        context.getSharedPreferences("update_channel", Context.MODE_PRIVATE).getBoolean("dev", false)
+
+    fun setDevelopmentChannel(context: Context, enabled: Boolean) {
+        context.getSharedPreferences("update_channel", Context.MODE_PRIVATE).edit().putBoolean("dev", enabled).apply()
+    }
+
     /** true, wenn [remote] (z. B. "0.3.0") neuer ist als [local]. */
     fun isNewer(remote: String, local: String): Boolean {
+        if (remote.substringBefore("-dev.").removePrefix("v") == local.substringBefore("-dev.").removePrefix("v") && remote.contains("-dev.") != local.contains("-dev.")) return !remote.contains("-dev.")
         val r = versionParts(remote)
         val l = versionParts(local)
         for (i in 0 until maxOf(r.size, l.size)) {
@@ -45,18 +53,24 @@ object UpdateChecker {
             val b = l.getOrElse(i) { 0 }
             if (a != b) return a > b
         }
-        return false
+        return !remote.contains("-dev.") && local.contains("-dev.") && remote.substringBefore("-dev.") == local.substringBefore("-dev.")
     }
 
     private fun versionParts(version: String): List<Int> =
-        version.trim().removePrefix("v").split(".").map { part ->
+        version.trim().removePrefix("v").replace("-dev.", ".").split(".").map { part ->
             part.takeWhile { it.isDigit() }.toIntOrNull() ?: 0
         }
 
     /** Neuestes Release oder null, wenn es (noch) keines mit APK gibt. Wirft IOException bei Netzwerkfehlern. */
-    suspend fun fetchLatest(): UpdateInfo? = withContext(Dispatchers.IO) {
-        val body = httpGet(RELEASES_API) ?: return@withContext null
-        val json = JSONObject(body)
+    suspend fun fetchLatest(context: Context): UpdateInfo? = withContext(Dispatchers.IO) {
+        val dev = developmentChannel(context)
+        val body = httpGet(if (dev) "https://api.github.com/repos/$REPO/releases?per_page=100" else RELEASES_API) ?: return@withContext null
+        val json = if (dev) {
+            val releases = org.json.JSONArray(body)
+            (0 until releases.length()).map { releases.getJSONObject(it) }
+                .filter { !it.optBoolean("draft") && it.optBoolean("prerelease") && it.optString("tag_name").matches(Regex("v[0-9]+\\\\.[0-9]+\\\\.[0-9]+-dev\\\\.[0-9]+")) && it.optJSONArray("assets")?.let { a -> (0 until a.length()).any { n -> a.getJSONObject(n).optString("name").endsWith(".apk") } } == true }
+                .reduceOrNull { a, b -> if (isNewer(b.optString("tag_name"), a.optString("tag_name"))) b else a } ?: return@withContext null
+        } else JSONObject(body)
         val tag = json.optString("tag_name")
         val assets = json.optJSONArray("assets") ?: return@withContext null
 
