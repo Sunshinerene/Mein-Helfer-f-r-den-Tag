@@ -13,6 +13,23 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.viewinterop.AndroidView
 import de.meinhelfer.tag.summary.Expression
 
+object SunnyPresentation {
+    private val changes = kotlinx.coroutines.flow.MutableStateFlow(0)
+    fun mode(context: android.content.Context): Int =
+        context.getSharedPreferences("sunny_presentation", 0).getInt("mode", 0).coerceIn(0, 2)
+    fun setMode(context: android.content.Context, mode: Int) {
+        context.getSharedPreferences("sunny_presentation", 0).edit().putInt("mode", mode.coerceIn(0, 2)).apply()
+        changes.value = changes.value + 1
+    }
+    @Composable
+    fun videosAllowed(): Boolean {
+        val context = LocalContext.current
+        val revision by changes.collectAsState()
+        val selected = remember(context, revision) { mode(context) }
+        return selected != 2 && (selected == 1 || LocalEffects.current.animations)
+    }
+}
+
 object SunnyAnimations {
     val names = setOf("idle", "happy", "soft_smile", "concerned", "gentle_nod",
         "listening", "thinking", "calming", "proud", "celebrate", "welcome",
@@ -31,7 +48,7 @@ object SunnyAnimations {
 fun SunnyReactionAnimation(name: String, expression: Expression, size: Dp, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val image by SunnyAvatar.useImage.collectAsState()
-    val enabled = LocalEffects.current.animations
+    val enabled = SunnyPresentation.videosAllowed()
     val res = remember(context, name) { SunnyAnimations.resource(context, name) }
     var finished by remember(name, res, image, enabled) { mutableStateOf(false) }
     if (!image || !enabled || res == 0 || finished) {
