@@ -1711,6 +1711,14 @@ private fun SunnyModelSettings() {
     Text(if (bytes > 0) "Gespeichert: ${bytes / (1024 * 1024)} MB" else "Kein Modell gespeichert.",
         style = MaterialTheme.typography.bodySmall)
     Text("LiteRT-LM: lokaler Test ohne Internet. Bitte keine sensiblen Daten eingeben.", style = MaterialTheme.typography.bodySmall)
+    OutlinedButton(enabled = !busy, onClick = {
+        try {
+            context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW,
+                android.net.Uri.parse("https://huggingface.co/litert-community/Gemma3-1B-IT/resolve/main/Gemma3-1B-IT_multi-prefill-seq_q4_ekv4096.litertlm?download=true")))
+        } catch (e: Exception) { status = "Downloadlink konnte nicht geöffnet werden." }
+    }) { Text("KI-Modell herunterladen") }
+    Text("Gemma 3 1B IT (ca. 584 MB). Bei Hugging Face anmelden und die Gemma-Lizenz akzeptieren. Danach die .litertlm-Datei importieren.",
+        style = MaterialTheme.typography.bodySmall)
     OutlinedButton(enabled = !busy, onClick = { picker.launch(arrayOf("application/octet-stream", "*/*")) }) {
         Text(if (busy) "Bitte warten…" else "Modelldatei importieren")
     }
