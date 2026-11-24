@@ -903,6 +903,8 @@ fun AssistantSettingsCard(vm: MainViewModel) {
                 AppPrefs.setSunnyUpdates(context, it)
             }
             HorizontalDivider()
+            SunnyModelSettings()
+            HorizontalDivider()
             SunnyPersonalitySettings()
             HorizontalDivider()
             SteuerwerkSettings(vm, name)
@@ -1678,4 +1680,46 @@ private fun SunnyPersonalitySettings() {
             Text("Gespeicherte Vorlieben löschen")
         }
     }
+}
+
+
+@Composable
+private fun SunnyModelSettings() {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    var bytes by remember { mutableStateOf(de.meinhelfer.tag.ai.SunnyModelStore.installedBytes(context)) }
+    var busy by remember { mutableStateOf(false) }
+    var status by remember { mutableStateOf("") }
+    val picker = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null && !busy) {
+            busy = true
+            scope.launch {
+                try {
+                    bytes = de.meinhelfer.tag.ai.SunnyModelStore.importModel(context, uri)
+                    status = "Modell gespeichert. KI-Laufzeit noch nicht verfügbar."
+                } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+                catch (e: Exception) { status = "Import fehlgeschlagen: " + (e.message ?: "") }
+                finally { busy = false }
+            }
+        }
+    }
+    Text("Sunny Brain – lokales KI-Modell", style = MaterialTheme.typography.labelLarge)
+    Text(if (bytes > 0) "Gespeichert: ${bytes / (1024 * 1024)} MB" else "Kein Modell gespeichert.",
+        style = MaterialTheme.typography.bodySmall)
+    Text("Vorbereitung: Die lokale KI-Laufzeit ist noch nicht integriert.", style = MaterialTheme.typography.bodySmall)
+    OutlinedButton(enabled = !busy, onClick = { picker.launch(arrayOf("application/octet-stream", "*/*")) }) {
+        Text(if (busy) "Bitte warten…" else "Modelldatei importieren")
+    }
+    if (bytes > 0) TextButton(enabled = !busy, onClick = {
+        busy = true
+        scope.launch {
+            try {
+                if (de.meinhelfer.tag.ai.SunnyModelStore.delete(context)) { bytes = 0L; status = "Modell gelöscht." }
+                else status = "Löschen fehlgeschlagen."
+            } finally { busy = false }
+        }
+    }) { Text("Modell löschen") }
+    if (status.isNotBlank()) Text(status, style = MaterialTheme.typography.bodySmall)
 }
