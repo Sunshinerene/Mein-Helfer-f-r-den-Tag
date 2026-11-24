@@ -414,21 +414,27 @@ fun AssistantCard(vm: MainViewModel, onOpen: (tab: Int) -> Unit, onMood: () -> U
             newsLoading = false
         }
     }
-    fun tell() {
+    fun voluntaryTalkAllowed(): Boolean = de.meinhelfer.tag.summary.SunnyMoodPolicy.mayPrompt(
+        AppPrefs.assistantTalk(context), AppPrefs.isQuietNow(context), false,
+        System.currentTimeMillis(), context.getSharedPreferences("sunny_quiet", android.content.Context.MODE_PRIVATE).getLong("until", 0L),
+    )
+    fun tell(automatic: Boolean = false) {
         talkScope.launch {
+            if (automatic && !voluntaryTalkAllowed()) return@launch
             val item = fetchNews() ?: news
+            if (automatic && (!voluntaryTalkAllowed() || Speech.speaking.value != null)) return@launch
             news = item
             AppPrefs.setAssistantLastTalk(context, System.currentTimeMillis())
             Speech.speak(context, "assistent", talkText(item))
         }
     }
     androidx.compose.runtime.LaunchedEffect(Unit) {
-        if (!AppPrefs.assistantTalk(context) || AppPrefs.isQuietNow(context)) return@LaunchedEffect
+        if (!voluntaryTalkAllowed()) return@LaunchedEffect
         if (System.currentTimeMillis() - AppPrefs.assistantLastTalk(context) < 3L * 3600 * 1000) return@LaunchedEffect
         val audio = context.getSystemService(android.content.Context.AUDIO_SERVICE) as? android.media.AudioManager
         if (audio != null && audio.ringerMode != android.media.AudioManager.RINGER_MODE_NORMAL) return@LaunchedEffect
         kotlinx.coroutines.delay(1200)
-        if (Speech.speaking.value == null) tell()
+        if (Speech.speaking.value == null && voluntaryTalkAllowed()) tell(automatic = true)
     }
     Foldable(
         key = "assistent",
