@@ -913,6 +913,19 @@ fun AssistantSettingsCard(vm: MainViewModel) {
                 AppPrefs.setAssistantImage(context, it)
                 SunnyAvatar.useImage.value = it
             }
+            if (image) {
+                var mode by remember { mutableStateOf(SunnyPresentation.mode(context)) }
+                Text("Sunny-Darstellung", style = MaterialTheme.typography.labelLarge)
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    listOf("Automatik", "Videos", "Bilder").forEachIndexed { index, label ->
+                        FilterChip(selected = mode == index, onClick = {
+                            SunnyPresentation.setMode(context, index)
+                            mode = index
+                        }, label = { Text(label) })
+                    }
+                }
+                Text("Bilder sparen Ressourcen. Fehlende Videos werden durch Bilder ersetzt.", style = MaterialTheme.typography.bodySmall)
+            }
             var readHints by remember { mutableStateOf(AppPrefs.assistantReadHints(context)) }
             SwitchLine("Empfehlungen gleich vorlesen", "Erscheint eine Empfehlung (z. B. Unterstützung nach schlechter Stimmung oder Hinweise der KI), liest $name sie sofort vor. Einen Knopf „🔊 Vorlesen“ gibt es dort immer.", readHints) {
                 readHints = it
