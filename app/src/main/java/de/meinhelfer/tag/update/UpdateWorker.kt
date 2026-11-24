@@ -20,7 +20,7 @@ class UpdateWorker(context: Context, params: WorkerParameters) : CoroutineWorker
         if (!AppPrefs.autoUpdateCheck(context)) return Result.success()
 
         return try {
-            val info = UpdateChecker.fetchLatest()
+            val info = UpdateChecker.fetchLatest(context)
             if (info != null &&
                 UpdateChecker.isNewer(info.version, UpdateChecker.installedVersion(context)) &&
                 AppPrefs.lastNotifiedVersion(context) != info.version
