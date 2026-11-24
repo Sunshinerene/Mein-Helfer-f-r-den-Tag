@@ -30,13 +30,8 @@ object SunnyMemory {
 
     /** Was Sunny gesagt hat, für den heutigen Tag merken. */
     fun log(context: Context, owner: String, text: String) {
-        if (text.isBlank()) return
-        val p = prefs(context)
-        val today = LocalDate.now().toString()
-        val arr = if (p.getString("tag", "") == today) runCatching { JSONArray(p.getString("heute", "[]")) }.getOrDefault(JSONArray()) else JSONArray()
-        if (arr.length() >= 300) return
-        arr.put("$owner\t${text.take(600)}")
-        p.edit().putString("tag", today).putString("heute", arr.toString()).apply()
+        // Spoken care content must not be retained for vocabulary training.
+        prefs(context).edit().remove("heute").remove("tag").apply()
     }
 
     fun todayCount(context: Context): Int = runCatching {
@@ -68,8 +63,9 @@ object SunnyMemory {
         val today = LocalDate.now().toString()
         val due = (logDay == today && LocalTime.now().hour >= 19 && p.getString("gelernt_am", "") != today) || logDay < today
         if (!due) return null
-        val lines = runCatching { JSONArray(p.getString("heute", "[]")) }.getOrDefault(JSONArray())
-        val said = (0 until lines.length()).map { lines.getString(it).substringAfter('\t') }.distinct()
+        // Never send historical spoken content to a learning provider.
+        p.edit().remove("heute").remove("tag").apply()
+        val said = emptyList<String>()
         fun finish(msg: String?): String? {
             p.edit().putString("gelernt_am", today).apply {
                 if (logDay < today) remove("heute").remove("tag")
@@ -117,6 +113,6 @@ object SunnyMemory {
     /** Sprachschatz auf den Grundbestand zurücksetzen. */
     fun reset(context: Context) {
         book = Phrasebook.withDefaults()
-        prefs(context).edit().remove("sprachschatz").remove("gelernt_info").apply()
+        prefs(context).edit().remove("sprachschatz").remove("gelernt_info").remove("heute").remove("tag").remove("gelernt_am").apply()
     }
 }
