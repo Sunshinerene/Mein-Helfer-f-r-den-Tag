@@ -111,7 +111,7 @@ fun SunnyTalkOverlay() {
 
     fun add() {
         remove()
-        val token = view.applicationWindowToken ?: return
+        val token = view.windowToken ?: return
         val (gravity, offsetDp) = when (style.place) {
             1 -> (android.view.Gravity.BOTTOM or android.view.Gravity.START) to 96
             2 -> (android.view.Gravity.BOTTOM or android.view.Gravity.CENTER_HORIZONTAL) to 96
@@ -123,7 +123,7 @@ fun SunnyTalkOverlay() {
         val lp = android.view.WindowManager.LayoutParams(
             android.view.WindowManager.LayoutParams.WRAP_CONTENT,
             android.view.WindowManager.LayoutParams.WRAP_CONTENT,
-            android.view.WindowManager.LayoutParams.TYPE_APPLICATION,
+            android.view.WindowManager.LayoutParams.TYPE_APPLICATION_PANEL,
             android.view.WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                 android.view.WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
                 android.view.WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
@@ -212,7 +212,9 @@ fun SunnyTalkOverlay() {
 fun SunnyBubble(style: SunnyPopup, modifier: Modifier = Modifier, video: Boolean = true) {
     val context = LocalContext.current
     val design by SunnyFrameDesign.state.collectAsState()
-    val primary = SunnyFrameDesign.colors.getOrNull(design.color) ?: MaterialTheme.colorScheme.primary
+    val speaking by Speech.speaking.collectAsState()
+    val primary = if (design.color == 6 && speaking != null) Color(0xFF43D8DF)
+        else SunnyFrameDesign.colors.getOrNull(design.color) ?: MaterialTheme.colorScheme.primary
     val avatarShape = when (design.shape) {
         1 -> RoundedCornerShape(22.dp)
         2 -> RoundedCornerShape(0.dp)
@@ -242,22 +244,16 @@ fun SunnyBubble(style: SunnyPopup, modifier: Modifier = Modifier, video: Boolean
     Box(modifier.alpha(style.alpha).then(back).padding(if (style.back == 3) 0.dp else 6.dp)) {
         val ring = Modifier
             .size(style.size.dp)
+            .then(if (style.frame == 1 || style.frame == 3) Modifier.shadow((12f * design.glow * (if (design.pulse) pulse else 1f)).dp, avatarShape, clip = false, ambientColor = primary, spotColor = primary) else Modifier)
             .then(
                 when (style.frame) {
-                    1 -> Modifier.drawBehind {
-                        drawCircle(primary.copy(alpha = 0.35f * design.glow * (if (design.pulse) pulse else 1f)), radius = size.minDimension / 2 + 6.dp.toPx())
-                    }.border(design.width.dp, primary, avatarShape)
+                    1 -> Modifier.border(design.width.dp, primary, avatarShape)
                     2 -> Modifier.border(
                         design.width.dp,
-                        Brush.linearGradient(listOf(Color.White.copy(alpha = 0.85f), Color.White.copy(alpha = 0.15f), Color.White.copy(alpha = 0.6f))),
+                        Brush.linearGradient(listOf(Color.White.copy(alpha = 0.85f), primary.copy(alpha = 0.25f), Color.White.copy(alpha = 0.6f))),
                         avatarShape,
                     )
-                    3 -> Modifier.drawBehind {
-                        rotate(angle) {
-                            drawCircle(liquid, radius = size.minDimension / 2 + 1.dp.toPx(), style = Stroke(width = (design.width + 2).dp.toPx()))
-                        }
-                        drawCircle(tertiary.copy(alpha = 0.18f * design.glow * (if (design.pulse) pulse else 1f)), radius = size.minDimension / 2 + 8.dp.toPx(), center = Offset(size.width / 2, size.height / 2))
-                    }
+                    3 -> Modifier.border((design.width + 2).dp, liquid, avatarShape)
                     else -> Modifier
                 },
             )
