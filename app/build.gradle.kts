@@ -63,6 +63,7 @@ ksp {
 }
 
 dependencies {
+    implementation("com.google.ai.edge.litertlm:litertlm-android:0.16.1")
     val composeBom = platform("androidx.compose:compose-bom:2024.12.01")
     implementation(composeBom)
     implementation("androidx.compose.ui:ui")
