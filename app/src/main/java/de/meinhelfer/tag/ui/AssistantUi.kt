@@ -702,6 +702,7 @@ fun AssistantSheetContent(vm: MainViewModel, page: String, onOpenGuide: () -> Un
     var aiAnswer by remember { mutableStateOf<String?>(null) }
     val context = androidx.compose.ui.platform.LocalContext.current
     val localScope = androidx.compose.runtime.rememberCoroutineScope()
+    var localHistory by remember { mutableStateOf(listOf<Pair<String, String>>()) }
     var localBusy by remember { mutableStateOf(false) }
     var localError by remember { mutableStateOf<String?>(null) }
     var localAnswer by remember { mutableStateOf<String?>(null) }
@@ -782,8 +783,16 @@ fun AssistantSheetContent(vm: MainViewModel, page: String, onOpenGuide: () -> Un
                     localAnswer = null
                     localScope.launch {
                         try {
-                            localAnswer = de.meinhelfer.tag.ai.SunnyLiteRtTest.answer(context,
-                                "Sei freundlich, motivierend und respektvoll. Sprich mich mit Du an. Erfinde keine App-Funktionen und führe keine Aktionen aus. " + prompt)
+                            val history = localHistory.takeLast(2).joinToString("\n") { (q, a) ->
+                                "Nutzer: " + q.take(80) + "\nSunny: " + a.take(100)
+                            }.takeLast(320)
+                            val request = "Sei freundlich, motivierend und respektvoll. Du-Form. Keine App-Aktionen. " +
+                                (if (history.isBlank()) "" else "Bisheriges Gespräch:\n" + history + "\n") +
+                                "Aktuelle Frage: " + prompt
+                            val reply = de.meinhelfer.tag.ai.SunnyLiteRtTest.answer(context, request.take(1000))
+                            localAnswer = reply
+                            localHistory = (localHistory + (prompt to reply)).takeLast(2)
+
                         } catch (e: kotlinx.coroutines.CancellationException) { throw e }
                         catch (e: Exception) { localError = "Lokale KI konnte nicht antworten. Bitte versuche es erneut." }
                         catch (e: LinkageError) { localError = "Lokale KI-Laufzeit nicht verfügbar." }
@@ -791,6 +800,14 @@ fun AssistantSheetContent(vm: MainViewModel, page: String, onOpenGuide: () -> Un
                     }
                 }) { Text(if (localBusy) "${st.name} denkt nach …" else "${st.name} offline fragen") }
                 Text("Sunny Brain · lokal, ohne automatische Cloud-Weitergabe", style = MaterialTheme.typography.bodySmall)
+                if (localHistory.isNotEmpty()) {
+                    TextButton(enabled = !localBusy, onClick = {
+                        localHistory = emptyList()
+                        localAnswer = null
+                        localError = null
+                        question = ""
+                    }) { Text("Neues Gespräch") }
+                }
                 localError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
                 if (localBusy || localAnswer != null) {
                     val emotion = if (localBusy) SunnyEmotion.Thinking else SunnyEmotion.Talking
