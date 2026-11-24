@@ -226,17 +226,24 @@ fun SunnyBubble(style: SunnyPopup, modifier: Modifier = Modifier, video: Boolean
     val angle by turn.animateFloat(0f, 360f, infiniteRepeatable(tween(6000, easing = LinearEasing)), label = "winkel")
     val pulse by turn.animateFloat(0.55f, 1f, infiniteRepeatable(tween(1400), RepeatMode.Reverse), label = "puls")
     val liquid = Brush.sweepGradient(listOf(primary, tertiary, Color(0xFFFFC857), primary))
-    val shape = if (design.shape == 0) RoundedCornerShape(28.dp) else avatarShape
+    val shape = when (design.backShape) {
+        1 -> CircleShape
+        2 -> RoundedCornerShape(22.dp)
+        3 -> RoundedCornerShape(0.dp)
+        else -> if (design.shape == 0) RoundedCornerShape(28.dp) else avatarShape
+    }
+    val backColor = SunnyFrameDesign.colors.getOrNull(design.backColor) ?: primary
+    val backGlow = design.backGlow.coerceIn(0f, 1f)
     val back: Modifier = when (style.back) {
-        0 -> Modifier.shadow(8.dp, shape).background(surface, shape)
+        0 -> Modifier.shadow(8.dp, shape).background(if (design.backColor < 0) surface else backColor.copy(alpha = 0.35f), shape)
         1 -> Modifier
-            .background(Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.28f), Color.White.copy(alpha = 0.08f))), shape)
+            .background(Brush.verticalGradient(listOf((if (design.backColor < 0) Color.White else backColor).copy(alpha = 0.28f), Color.White.copy(alpha = 0.08f))), shape)
             .border(1.dp, Brush.linearGradient(listOf(Color.White.copy(alpha = 0.7f), Color.White.copy(alpha = 0.1f))), shape)
         2 -> Modifier
-            .background(Brush.radialGradient(listOf(primary.copy(alpha = 0.35f), tertiary.copy(alpha = 0.15f), Color.Transparent)), shape)
+            .background(Brush.radialGradient(listOf(backColor.copy(alpha = 0.35f * backGlow), tertiary.copy(alpha = 0.15f * backGlow), Color.Transparent)), shape)
             .drawBehind {
-                rotate(angle) {
-                    drawCircle(Brush.sweepGradient(listOf(primary.copy(alpha = 0.0f), primary.copy(alpha = 0.35f), tertiary.copy(alpha = 0.0f))), radius = size.minDimension * 0.62f)
+                rotate(if (design.backPulse) angle else 0f) {
+                    drawCircle(Brush.sweepGradient(listOf(primary.copy(alpha = 0.0f), backColor.copy(alpha = 0.35f * backGlow), tertiary.copy(alpha = 0.0f))), radius = size.minDimension * 0.62f)
                 }
             }
         else -> Modifier
@@ -321,16 +328,16 @@ private fun TalkVideo(modifier: Modifier) {
     )
 }
 
-data class SunnyFrameOptions(val shape: Int = 0, val color: Int = -1, val width: Int = 3, val glow: Float = 1f, val pulse: Boolean = true)
+data class SunnyFrameOptions(val shape: Int = 0, val color: Int = -1, val width: Int = 3, val glow: Float = 1f, val pulse: Boolean = true, val backShape: Int = 0, val backColor: Int = -1, val backGlow: Float = 1f, val backPulse: Boolean = true)
 object SunnyFrameDesign {
     val colors = listOf(Color(0xFF43D8DF), Color(0xFF8C6DE9), Color(0xFFEF77B8), Color(0xFFEAB957), Color(0xFF65CC89), Color.White)
     val state = kotlinx.coroutines.flow.MutableStateFlow(SunnyFrameOptions())
     fun load(context: android.content.Context) {
         val p = context.getSharedPreferences("sunny_frame_design", 0)
-        state.value = SunnyFrameOptions(p.getInt("shape",0), p.getInt("color",-1), p.getInt("width",3), p.getFloat("glow",1f), p.getBoolean("pulse",true))
+        state.value = SunnyFrameOptions(p.getInt("shape",0), p.getInt("color",-1), p.getInt("width",3), p.getFloat("glow",1f), p.getBoolean("pulse",true), p.getInt("backShape",0), p.getInt("backColor",-1), p.getFloat("backGlow",1f), p.getBoolean("backPulse",true))
     }
     fun save(context: android.content.Context, value: SunnyFrameOptions) {
         state.value = value
-        context.getSharedPreferences("sunny_frame_design",0).edit().putInt("shape",value.shape).putInt("color",value.color).putInt("width",value.width).putFloat("glow",value.glow).putBoolean("pulse",value.pulse).apply()
+        context.getSharedPreferences("sunny_frame_design",0).edit().putInt("shape",value.shape).putInt("color",value.color).putInt("width",value.width).putFloat("glow",value.glow).putBoolean("pulse",value.pulse).putInt("backShape",value.backShape).putInt("backColor",value.backColor).putFloat("backGlow",value.backGlow).putBoolean("backPulse",value.backPulse).apply()
     }
 }
