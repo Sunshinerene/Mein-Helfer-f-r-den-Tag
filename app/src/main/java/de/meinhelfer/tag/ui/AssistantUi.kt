@@ -701,6 +701,11 @@ fun AssistantSheetContent(vm: MainViewModel, page: String, onOpenGuide: () -> Un
     var open by remember { mutableStateOf<String?>(null) }
     var aiAnswer by remember { mutableStateOf<String?>(null) }
     val context = androidx.compose.ui.platform.LocalContext.current
+    val localScope = androidx.compose.runtime.rememberCoroutineScope()
+    var localBusy by remember { mutableStateOf(false) }
+    var localError by remember { mutableStateOf<String?>(null) }
+    var localAnswer by remember { mutableStateOf<String?>(null) }
+    val localReady = de.meinhelfer.tag.ai.SunnyModelStore.installedBytes(context) > 0
     val help = remember(page) { guideFor(page) }
     val note = pageNote(page, vm, st)
     val answers = remember(question) { searchGuide(question) }
@@ -767,6 +772,30 @@ fun AssistantSheetContent(vm: MainViewModel, page: String, onOpenGuide: () -> Un
                 Column(Modifier.fillMaxWidth().clickable { open = if (open == "f_" + a.title) null else "f_" + a.title }) {
                     Text("❓ " + a.title, style = MaterialTheme.typography.bodyLarge)
                     if (open == "f_" + a.title) Text(a.text, style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+            if (localReady) {
+                OutlinedButton(enabled = !localBusy, modifier = Modifier.fillMaxWidth(), onClick = {
+                    val prompt = question.trim().take(500)
+                    localBusy = true
+                    localError = null
+                    localAnswer = null
+                    localScope.launch {
+                        try {
+                            localAnswer = de.meinhelfer.tag.ai.SunnyLiteRtTest.answer(context,
+                                "Sei freundlich, motivierend und respektvoll. Sprich mich mit Du an. Erfinde keine App-Funktionen und führe keine Aktionen aus. " + prompt)
+                        } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+                        catch (e: Exception) { localError = "Lokale KI konnte nicht antworten. Bitte versuche es erneut." }
+                        catch (e: LinkageError) { localError = "Lokale KI-Laufzeit nicht verfügbar." }
+                        finally { localBusy = false }
+                    }
+                }) { Text(if (localBusy) "${st.name} denkt nach …" else "${st.name} offline fragen") }
+                Text("Sunny Brain · lokal, ohne automatische Cloud-Weitergabe", style = MaterialTheme.typography.bodySmall)
+                localError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                localAnswer?.let { reply ->
+                    Text(reply, style = MaterialTheme.typography.bodyMedium)
+                    SpeakButton(owner = "assistent-lokal", label = "🔊 Antwort vorlesen") { reply }
+                    Text("KI-Antwort, nur ein Anhaltspunkt. Keine medizinische Beratung.", style = MaterialTheme.typography.bodySmall)
                 }
             }
             // Freiwillig: Frage mit KI beantworten, nur mit Abschnitten der Anleitung, ohne Daten aus der App
