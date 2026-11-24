@@ -1268,6 +1268,31 @@ private fun PopupSettings(name: String, image: Boolean) {
     )
     chips("Rand", SunnyPopup.FRAMES, style.frame) { set(style.copy(frame = it)) }
     chips("Hintergrund", SunnyPopup.BACKS, style.back) { set(style.copy(back = it)) }
+    val design by SunnyFrameDesign.state.collectAsState()
+    androidx.compose.runtime.LaunchedEffect(context) { SunnyFrameDesign.load(context) }
+    chips("Rahmenform", listOf("Rund", "Abgerundet", "Eckig"), design.shape) {
+        SunnyFrameDesign.save(context, design.copy(shape = it))
+    }
+    chips("Rahmenfarbe", listOf("App-Farbe", "Türkis", "Violett", "Pink", "Gold", "Grün", "Weiß"), design.color + 1) {
+        SunnyFrameDesign.save(context, design.copy(color = it - 1))
+    }
+    Text("Rahmenstärke: ${design.width} dp")
+    androidx.compose.material3.Slider(value = design.width.toFloat(), onValueChange = {
+        SunnyFrameDesign.save(context, design.copy(width = it.toInt()))
+    }, valueRange = 1f..8f, steps = 6)
+    Text("Leuchtintensität: ${(design.glow * 100).toInt()} %")
+    androidx.compose.material3.Slider(value = design.glow, onValueChange = {
+        SunnyFrameDesign.save(context, design.copy(glow = it))
+    }, valueRange = 0f..1f)
+    chips("Leuchteffekt", listOf("Statisch", "Pulsierend"), if (design.pulse) 1 else 0) {
+        SunnyFrameDesign.save(context, design.copy(pulse = it == 1))
+    }
+    var mediaMode by remember { mutableStateOf(SunnyPresentation.mode(context)) }
+    chips("Mediendarstellung", listOf("Automatik", "Videos", "Bilder"), mediaMode) {
+        SunnyPresentation.setMode(context, it)
+        mediaMode = it
+    }
+
     Text("Vorschau", style = MaterialTheme.typography.bodyMedium)
     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
         SunnyBubble(style.copy(size = size.toInt(), alpha = alpha), Modifier.padding(8.dp), video = false)
