@@ -116,7 +116,7 @@ fun MoodCheckScreen(
         if (low != null) {
             val reaction = SunnyMoodPolicy.react(low, tags.toList(), professional)
             if (de.meinhelfer.tag.update.AppPrefs.assistantEnabled(LocalContext.current)) {
-                AssistantFace(Expression.valueOf(reaction.expression.name), size = 96.dp, modifier = Modifier.align(Alignment.CenterHorizontally))
+                SunnyReactionAnimation(reaction.animation, Expression.valueOf(reaction.expression.name), size = 96.dp, modifier = Modifier.align(Alignment.CenterHorizontally))
             }
             Text("Danke, dass du es festhältst.", style = MaterialTheme.typography.headlineSmall)
             Text(reaction.message, style = MaterialTheme.typography.bodyLarge)
