@@ -95,6 +95,7 @@ fun MoodCheckScreen(
     onSave: (mood: Int, tags: List<String>, note: String) -> Unit,
     onClose: () -> Unit,
 ) {
+    val context = LocalContext.current
     var mood by remember { mutableStateOf<Int?>(null) }
     val tags = remember { mutableStateListOf<String>() }
     var note by remember { mutableStateOf("") }
@@ -126,6 +127,14 @@ fun MoodCheckScreen(
             }
             HintReader("stimmung", modifier = Modifier.fillMaxWidth(), auto = false) {
                 reaction.message + " " + reaction.relief
+            }
+            if (de.meinhelfer.tag.update.AppPrefs.assistantEnabled(context)) {
+                OutlinedButton(shape = buttonShape(), onClick = {
+                    context.getSharedPreferences("sunny_quiet", Context.MODE_PRIVATE).edit()
+                        .putLong("until", System.currentTimeMillis() + reaction.quietMinutes * 60_000L).apply()
+                    Speech.stop()
+                    onClose()
+                }, modifier = Modifier.fillMaxWidth()) { Text("Sunny: ${reaction.quietMinutes} Minuten Ruhe") }
             }
             Button(shape = buttonShape(), onClick = { Speech.stop(); onClose() }, modifier = Modifier.fillMaxWidth()) { Text("Weiter") }
             return@Column
