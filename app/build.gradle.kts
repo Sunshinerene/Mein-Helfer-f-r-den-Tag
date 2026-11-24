@@ -13,8 +13,8 @@ android {
         applicationId = "de.meinhelfer.tag"
         minSdk = 26
         targetSdk = 35
-        versionCode = 101
-        versionName = "0.96.1"
+        versionCode = 102
+        versionName = "0.97.0-dev.1"
     }
 
     // Fester Test-Schluessel, damit spaetere APK-Updates ueber die alte Version installiert werden koennen.
