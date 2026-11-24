@@ -275,7 +275,10 @@ fun SunnyBubble(style: SunnyPopup, modifier: Modifier = Modifier, video: Boolean
 @Composable
 private fun TalkVideo(modifier: Modifier) {
     val context = LocalContext.current
-    val res = remember { if (Math.random() < 0.5) R.raw.sunny_talk1 else R.raw.sunny_talk2 }
+    val res = remember(context) {
+        listOf(R.raw.sunny_talk1, R.raw.sunny_talk2, SunnyAnimations.resource(context, "talk3"), SunnyAnimations.resource(context, "talk4"))
+            .filter { it != 0 }.random()
+    }
     val player = remember { arrayOfNulls<android.media.MediaPlayer>(1) }
     androidx.compose.runtime.DisposableEffect(Unit) {
         onDispose {
