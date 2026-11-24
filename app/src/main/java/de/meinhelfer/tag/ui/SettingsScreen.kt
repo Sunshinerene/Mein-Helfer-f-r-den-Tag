@@ -325,6 +325,17 @@ private fun UpdateCard(
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("App-Updates", style = MaterialTheme.typography.titleMedium)
             Text("Installierte Version: ${UpdateChecker.installedVersion(context)}")
+            var devChannel by remember { mutableStateOf(UpdateChecker.developmentChannel(context)) }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Entwicklung – Sunny 2.0 (Testversionen)", modifier = Modifier.weight(1f))
+                Switch(checked = devChannel, enabled = state !is UpdateState.Checking && state !is UpdateState.Downloading,
+                    onCheckedChange = {
+                        devChannel = it
+                        UpdateChecker.setDevelopmentChannel(context, it)
+                        onCheck()
+                    })
+            }
+            if (devChannel) Text("Testversionen können Fehler enthalten. Vor Updates Daten sichern.", style = MaterialTheme.typography.bodySmall)
 
             when (state) {
                 UpdateState.Idle -> Text("Noch nicht geprüft.")
