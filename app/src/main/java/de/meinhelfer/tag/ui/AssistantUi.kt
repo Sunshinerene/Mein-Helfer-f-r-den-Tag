@@ -903,6 +903,8 @@ fun AssistantSettingsCard(vm: MainViewModel) {
                 AppPrefs.setSunnyUpdates(context, it)
             }
             HorizontalDivider()
+            SunnyPersonalitySettings()
+            HorizontalDivider()
             SteuerwerkSettings(vm, name)
             HorizontalDivider()
             var tourAuto by remember { mutableStateOf(AppPrefs.tourAutoRead(context)) }
@@ -1650,4 +1652,30 @@ private fun SteuerwerkSettings(vm: MainViewModel, name: String) {
         }) { Text("Gelerntes zurücksetzen") }
     }
     if (showJournal) SunnyJournalDialog(vm, name) { showJournal = false }
+}
+
+
+@Composable
+private fun SunnyPersonalitySettings() {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var profile by remember { mutableStateOf(de.meinhelfer.tag.ai.SunnyPreferences.load(context)) }
+    fun save(value: de.meinhelfer.tag.ai.SunnyPreferences.Profile) {
+        de.meinhelfer.tag.ai.SunnyPreferences.save(context, value)
+        profile = de.meinhelfer.tag.ai.SunnyPreferences.load(context)
+    }
+    Text("Persönlichkeit und Gedächtnis", style = MaterialTheme.typography.labelLarge)
+    SwitchLine("Vorlieben lokal merken", "Nur deine ausgewählten Einstellungen, keine Gesprächsprotokolle.", profile.enabled) {
+        save(profile.copy(enabled = it))
+    }
+    if (profile.enabled) {
+        SwitchLine("Motivierende Aussagen", "Persönliche Ermutigung nach der Stimmungsabfrage.", profile.encouragement) {
+            save(profile.copy(encouragement = it))
+        }
+        SwitchLine("Entlastungsvorschläge", "Freiwillige Alltagstipps nach der Stimmungsabfrage.", profile.relief) {
+            save(profile.copy(relief = it))
+        }
+        TextButton(onClick = { save(de.meinhelfer.tag.ai.SunnyPreferences.Profile()) }) {
+            Text("Gespeicherte Vorlieben löschen")
+        }
+    }
 }
