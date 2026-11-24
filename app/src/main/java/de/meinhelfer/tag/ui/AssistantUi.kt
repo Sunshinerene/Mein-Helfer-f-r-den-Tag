@@ -1690,6 +1690,8 @@ private fun SunnyModelSettings() {
     var bytes by remember { mutableStateOf(de.meinhelfer.tag.ai.SunnyModelStore.installedBytes(context)) }
     var busy by remember { mutableStateOf(false) }
     var status by remember { mutableStateOf("") }
+    var question by remember { mutableStateOf("Hallo Sunny, stell dich kurz vor.") }
+    var answer by remember { mutableStateOf("") }
     val picker = androidx.activity.compose.rememberLauncherForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.OpenDocument()
     ) { uri ->
@@ -1698,7 +1700,7 @@ private fun SunnyModelSettings() {
             scope.launch {
                 try {
                     bytes = de.meinhelfer.tag.ai.SunnyModelStore.importModel(context, uri)
-                    status = "Modell gespeichert. KI-Laufzeit noch nicht verfügbar."
+                    status = "Modell gespeichert. Bitte lokal testen."
                 } catch (e: kotlinx.coroutines.CancellationException) { throw e }
                 catch (e: Exception) { status = "Import fehlgeschlagen: " + (e.message ?: "") }
                 finally { busy = false }
@@ -1708,7 +1710,7 @@ private fun SunnyModelSettings() {
     Text("Sunny Brain – lokales KI-Modell", style = MaterialTheme.typography.labelLarge)
     Text(if (bytes > 0) "Gespeichert: ${bytes / (1024 * 1024)} MB" else "Kein Modell gespeichert.",
         style = MaterialTheme.typography.bodySmall)
-    Text("Vorbereitung: Die lokale KI-Laufzeit ist noch nicht integriert.", style = MaterialTheme.typography.bodySmall)
+    Text("LiteRT-LM: lokaler Test ohne Internet. Bitte keine sensiblen Daten eingeben.", style = MaterialTheme.typography.bodySmall)
     OutlinedButton(enabled = !busy, onClick = { picker.launch(arrayOf("application/octet-stream", "*/*")) }) {
         Text(if (busy) "Bitte warten…" else "Modelldatei importieren")
     }
@@ -1721,5 +1723,27 @@ private fun SunnyModelSettings() {
             } finally { busy = false }
         }
     }) { Text("Modell löschen") }
+    if (bytes > 0) {
+        androidx.compose.material3.OutlinedTextField(
+            value = question, onValueChange = { if (it.length <= 1000) question = it },
+            enabled = !busy, label = { Text("Lokale Testfrage") }
+        )
+        OutlinedButton(enabled = !busy && question.isNotBlank(), onClick = {
+            busy = true
+            answer = ""
+            status = "Lokales Modell wird geladen…"
+            val prompt = question
+            scope.launch {
+                try {
+                    answer = de.meinhelfer.tag.ai.SunnyLiteRtTest.answer(context, prompt)
+                    status = "Lokale Antwort erhalten."
+                } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+                catch (e: Exception) { status = "KI-Test fehlgeschlagen: " + (e.message ?: "") }
+                catch (e: LinkageError) { status = "KI-Laufzeit auf diesem Gerät nicht verfügbar." }
+                finally { busy = false }
+            }
+        }) { Text("Offline-KI testen") }
+        if (answer.isNotBlank()) Text(answer)
+    }
     if (status.isNotBlank()) Text(status, style = MaterialTheme.typography.bodySmall)
 }
