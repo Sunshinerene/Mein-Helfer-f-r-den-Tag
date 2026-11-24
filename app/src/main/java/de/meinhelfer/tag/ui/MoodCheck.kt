@@ -43,6 +43,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.meinhelfer.tag.summary.Motivator
 import de.meinhelfer.tag.summary.SupportLevel
+import de.meinhelfer.tag.summary.SunnyMoodPolicy
+import de.meinhelfer.tag.summary.Expression
 
 /** Fuenf Smileys zur Auswahl (5 = sehr gut links, 1 = schlecht rechts). */
 @Composable
@@ -96,7 +98,7 @@ fun MoodCheckScreen(
     var mood by remember { mutableStateOf<Int?>(null) }
     val tags = remember { mutableStateListOf<String>() }
     var note by remember { mutableStateOf("") }
-    var savedLow by remember { mutableStateOf<Int?>(null) }
+    var savedMood by remember { mutableStateOf<Int?>(null) }
     val first = name.trim().split(" ").firstOrNull().orEmpty()
 
     Column(
@@ -109,18 +111,21 @@ fun MoodCheckScreen(
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         Spacer(Modifier.height(12.dp))
-        val low = savedLow
+        val low = savedMood
         if (low != null) {
+            val reaction = SunnyMoodPolicy.react(low, tags.toList(), professional)
+            if (de.meinhelfer.tag.update.AppPrefs.assistantEnabled(LocalContext.current)) {
+                AssistantFace(Expression.valueOf(reaction.expression.name), size = 96.dp, modifier = Modifier.align(Alignment.CenterHorizontally))
+            }
             Text("Danke, dass du es festhältst.", style = MaterialTheme.typography.headlineSmall)
-            Text(
-                "Schwere Momente gehören dazu, und du musst sie nicht allein tragen. Vielleicht hilft dir etwas davon:",
-                style = MaterialTheme.typography.bodyLarge,
-            )
-            val level = if (low <= 1) SupportLevel.Strong else SupportLevel.Relief
-            SupportBox(level, professional, read = false)
-            HintReader("stimmung", modifier = Modifier.fillMaxWidth()) {
-                "Danke, dass du es festhältst. Schwere Momente gehören dazu, und du musst sie nicht allein tragen. Vielleicht hilft dir etwas davon. " +
-                    supportSpeech(level, professional)
+            Text(reaction.message, style = MaterialTheme.typography.bodyLarge)
+            Text(reaction.relief, style = MaterialTheme.typography.bodyMedium)
+            if (low <= 2) {
+                val level = if (low == 1) SupportLevel.Strong else SupportLevel.Relief
+                SupportBox(level, professional, read = false)
+            }
+            HintReader("stimmung", modifier = Modifier.fillMaxWidth(), auto = false) {
+                reaction.message + " " + reaction.relief
             }
             Button(shape = buttonShape(), onClick = { Speech.stop(); onClose() }, modifier = Modifier.fillMaxWidth()) { Text("Weiter") }
             return@Column
@@ -152,7 +157,7 @@ fun MoodCheckScreen(
             onClick = {
                 val m = mood ?: return@Button
                 onSave(m, tags.toList(), note)
-                if (m <= 2) savedLow = m else onClose()
+                savedMood = m
             },
             modifier = Modifier.fillMaxWidth(),
         ) { Text("Speichern") }
