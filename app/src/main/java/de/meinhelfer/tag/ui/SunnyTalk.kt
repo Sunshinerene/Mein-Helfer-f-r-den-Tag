@@ -93,6 +93,8 @@ fun SunnyTalkOverlay() {
     val image by SunnyAvatar.useImage.collectAsState()
     val style by SunnyAvatar.popup.collectAsState()
     val visible = image && style.showsFor(speaking)
+    val appContext = LocalContext.current
+    androidx.compose.runtime.LaunchedEffect(appContext) { SunnyFrameDesign.load(appContext) }
     val view = androidx.compose.ui.platform.LocalView.current
     val density = LocalDensity.current
     val colors = MaterialTheme.colorScheme
@@ -208,14 +210,21 @@ fun SunnyTalkOverlay() {
 /** Sunny im Rahmen mit Hintergrund nach [style]; auch als Vorschau in den Einstellungen. */
 @Composable
 fun SunnyBubble(style: SunnyPopup, modifier: Modifier = Modifier, video: Boolean = true) {
-    val primary = MaterialTheme.colorScheme.primary
+    val context = LocalContext.current
+    val design by SunnyFrameDesign.state.collectAsState()
+    val primary = SunnyFrameDesign.colors.getOrNull(design.color) ?: MaterialTheme.colorScheme.primary
+    val avatarShape = when (design.shape) {
+        1 -> RoundedCornerShape(22.dp)
+        2 -> RoundedCornerShape(0.dp)
+        else -> CircleShape
+    }
     val tertiary = MaterialTheme.colorScheme.tertiary
     val surface = MaterialTheme.colorScheme.surface
     val turn = rememberInfiniteTransition(label = "liquid")
     val angle by turn.animateFloat(0f, 360f, infiniteRepeatable(tween(6000, easing = LinearEasing)), label = "winkel")
     val pulse by turn.animateFloat(0.55f, 1f, infiniteRepeatable(tween(1400), RepeatMode.Reverse), label = "puls")
     val liquid = Brush.sweepGradient(listOf(primary, tertiary, Color(0xFFFFC857), primary))
-    val shape = RoundedCornerShape(28.dp)
+    val shape = if (design.shape == 0) RoundedCornerShape(28.dp) else avatarShape
     val back: Modifier = when (style.back) {
         0 -> Modifier.shadow(8.dp, shape).background(surface, shape)
         1 -> Modifier
@@ -236,23 +245,23 @@ fun SunnyBubble(style: SunnyPopup, modifier: Modifier = Modifier, video: Boolean
             .then(
                 when (style.frame) {
                     1 -> Modifier.drawBehind {
-                        drawCircle(primary.copy(alpha = 0.35f * pulse), radius = size.minDimension / 2 + 6.dp.toPx())
-                    }.border(3.dp, primary, CircleShape)
+                        drawCircle(primary.copy(alpha = 0.35f * design.glow * (if (design.pulse) pulse else 1f)), radius = size.minDimension / 2 + 6.dp.toPx())
+                    }.border(design.width.dp, primary, avatarShape)
                     2 -> Modifier.border(
-                        3.dp,
+                        design.width.dp,
                         Brush.linearGradient(listOf(Color.White.copy(alpha = 0.85f), Color.White.copy(alpha = 0.15f), Color.White.copy(alpha = 0.6f))),
-                        CircleShape,
+                        avatarShape,
                     )
                     3 -> Modifier.drawBehind {
                         rotate(angle) {
-                            drawCircle(liquid, radius = size.minDimension / 2 + 1.dp.toPx(), style = Stroke(width = 5.dp.toPx()))
+                            drawCircle(liquid, radius = size.minDimension / 2 + 1.dp.toPx(), style = Stroke(width = (design.width + 2).dp.toPx()))
                         }
-                        drawCircle(tertiary.copy(alpha = 0.18f * pulse), radius = size.minDimension / 2 + 8.dp.toPx(), center = Offset(size.width / 2, size.height / 2))
+                        drawCircle(tertiary.copy(alpha = 0.18f * design.glow * (if (design.pulse) pulse else 1f)), radius = size.minDimension / 2 + 8.dp.toPx(), center = Offset(size.width / 2, size.height / 2))
                     }
                     else -> Modifier
                 },
             )
-            .clip(CircleShape)
+            .clip(avatarShape)
         if (video && SunnyPresentation.videosAllowed()) {
             TalkVideo(ring)
         } else {
@@ -314,4 +323,18 @@ private fun TalkVideo(modifier: Modifier) {
             }
         },
     )
+}
+
+data class SunnyFrameOptions(val shape: Int = 0, val color: Int = -1, val width: Int = 3, val glow: Float = 1f, val pulse: Boolean = true)
+object SunnyFrameDesign {
+    val colors = listOf(Color(0xFF43D8DF), Color(0xFF8C6DE9), Color(0xFFEF77B8), Color(0xFFEAB957), Color(0xFF65CC89), Color.White)
+    val state = kotlinx.coroutines.flow.MutableStateFlow(SunnyFrameOptions())
+    fun load(context: android.content.Context) {
+        val p = context.getSharedPreferences("sunny_frame_design", 0)
+        state.value = SunnyFrameOptions(p.getInt("shape",0), p.getInt("color",-1), p.getInt("width",3), p.getFloat("glow",1f), p.getBoolean("pulse",true))
+    }
+    fun save(context: android.content.Context, value: SunnyFrameOptions) {
+        state.value = value
+        context.getSharedPreferences("sunny_frame_design",0).edit().putInt("shape",value.shape).putInt("color",value.color).putInt("width",value.width).putFloat("glow",value.glow).putBoolean("pulse",value.pulse).apply()
+    }
 }
