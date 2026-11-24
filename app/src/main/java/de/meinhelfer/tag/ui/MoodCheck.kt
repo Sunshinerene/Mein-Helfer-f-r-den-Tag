@@ -119,14 +119,17 @@ fun MoodCheckScreen(
                 SunnyReactionAnimation(reaction.animation, Expression.valueOf(reaction.expression.name), size = 96.dp, modifier = Modifier.align(Alignment.CenterHorizontally))
             }
             Text("Danke, dass du es festhältst.", style = MaterialTheme.typography.headlineSmall)
-            Text(reaction.message, style = MaterialTheme.typography.bodyLarge)
-            Text(reaction.relief, style = MaterialTheme.typography.bodyMedium)
+            val preferences = de.meinhelfer.tag.ai.SunnyPreferences.load(context)
+            if (preferences.encouragement) Text(reaction.message, style = MaterialTheme.typography.bodyLarge)
+            if (preferences.relief) Text(reaction.relief, style = MaterialTheme.typography.bodyMedium)
             if (low <= 2) {
                 val level = if (low == 1) SupportLevel.Strong else SupportLevel.Relief
                 SupportBox(level, professional, read = false)
             }
-            HintReader("stimmung", modifier = Modifier.fillMaxWidth(), auto = false) {
-                reaction.message + " " + reaction.relief
+            if (preferences.encouragement || preferences.relief) {
+                HintReader("stimmung", modifier = Modifier.fillMaxWidth(), auto = false) {
+                    listOfNotNull(reaction.message.takeIf { preferences.encouragement }, reaction.relief.takeIf { preferences.relief }).joinToString(" ")
+                }
             }
             if (de.meinhelfer.tag.update.AppPrefs.assistantEnabled(context)) {
                 OutlinedButton(shape = buttonShape(), onClick = {
