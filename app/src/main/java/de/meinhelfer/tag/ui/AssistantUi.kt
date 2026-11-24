@@ -1287,6 +1287,24 @@ private fun PopupSettings(name: String, image: Boolean) {
     chips("Leuchteffekt", listOf("Statisch", "Pulsierend"), if (design.pulse) 1 else 0) {
         SunnyFrameDesign.save(context, design.copy(pulse = it == 1))
     }
+    if (style.back != 3) {
+        Text("Hintergrund gestalten", style = MaterialTheme.typography.labelLarge)
+        chips("Hintergrundform", listOf("Wie bisher", "Rund", "Abgerundet", "Eckig"), design.backShape) {
+            SunnyFrameDesign.save(context, design.copy(backShape = it))
+        }
+        chips("Hintergrundfarbe", listOf("Standard", "Türkis", "Violett", "Pink", "Gold", "Grün", "Weiß"), design.backColor + 1) {
+            SunnyFrameDesign.save(context, design.copy(backColor = it - 1))
+        }
+        if (style.back == 2) {
+            Text("Hintergrund-Leuchtintensität: ${(design.backGlow * 100).toInt()} %")
+            androidx.compose.material3.Slider(value = design.backGlow, onValueChange = {
+                SunnyFrameDesign.save(context, design.copy(backGlow = it))
+            }, valueRange = 0f..1f)
+            chips("Hintergrundeffekt", listOf("Statisch", "Bewegt"), if (design.backPulse) 1 else 0) {
+                SunnyFrameDesign.save(context, design.copy(backPulse = it == 1))
+            }
+        }
+    }
     var mediaMode by remember { mutableStateOf(SunnyPresentation.mode(context)) }
     chips("Mediendarstellung", listOf("Automatik", "Videos", "Bilder"), mediaMode) {
         SunnyPresentation.setMode(context, it)
