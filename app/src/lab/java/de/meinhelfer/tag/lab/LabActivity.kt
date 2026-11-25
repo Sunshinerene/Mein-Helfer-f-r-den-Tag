@@ -86,6 +86,8 @@ private fun LabHome(fixtures: LabFixtures, database: LabDatabase, abort: LabAbor
                 clipboard.setPrimaryClip(android.content.ClipData.newPlainText("Sunny Restore", restore.report()))
             }, enabled = !busy) { Text("Echte Wiederherstellung: Ergebnisse kopieren") }
             Text("Phase 3: Room und Backup", style = MaterialTheme.typography.titleLarge)
+            Button(onClick = { runTest { restore.start("REPEAT_ROLLBACK") } }, enabled = !busy && !restore.pending() && !abort.pending()) { Text("Mehrfachabbruch während Rücksicherung") }
+            Text("Bei diesem Test die App nach jedem Abbruch erneut öffnen (insgesamt vier Abbrüche).")
             Button(onClick = { runTest { LabRoundTrip(context.applicationContext).run() } },
                 enabled = !busy && !restore.pending() && !abort.pending()) { Text("Vollständigen Backup-Roundtrip testen") }
             Text("Paket: de.meinhelfer.tag.lab")
