@@ -332,6 +332,7 @@ object Backup {
                 }
             }
             check(edit.commit())
+            if (metadata.has("vocabulary")) de.meinhelfer.tag.ai.SunnyMemory.importText(app, metadata.getString("vocabulary"), replace = true)
             java.io.FileOutputStream(File(staging, "ROLLED_BACK")).use { marker ->
                 marker.write(1)
                 marker.fd.sync()
@@ -390,6 +391,7 @@ object Backup {
             DbCrypto.saveRestoreKey(app)
             DbCrypto.saveRestoreMetadata(app, JSONObject()
                 .put("prefs", originalPrefs)
+                .put("vocabulary", de.meinhelfer.tag.ai.SunnyMemory.exportText(app))
                 .put("presence", originalPresence)
                 .toString())
             java.io.FileOutputStream(interrupted).use { marker -> marker.write(1); marker.fd.sync() }
@@ -434,7 +436,7 @@ object Backup {
             }
 
             File(staging, "sprachschatz.txt").takeIf { it.exists() }?.let { f ->
-                runCatching { de.meinhelfer.tag.ai.SunnyMemory.importText(app, f.readText(), replace = true) }
+                de.meinhelfer.tag.ai.SunnyMemory.importText(app, f.readText(), replace = true)
             }
 
             check(dbFile.isFile) { "Wiederhergestellte Datenbank fehlt" }
@@ -472,6 +474,10 @@ object Backup {
                     }
                 }
                 check(edit.commit()) { "Einstellungen konnten nicht zurückgesetzt werden" }
+                DbCrypto.restoreMetadata(app)?.let { saved ->
+                    val metadata = JSONObject(saved)
+                    if (metadata.has("vocabulary")) de.meinhelfer.tag.ai.SunnyMemory.importText(app, metadata.getString("vocabulary"), replace = true)
+                }
             }
             if (rollback.isSuccess) {
                 java.io.FileOutputStream(File(staging, "ROLLED_BACK")).use { marker ->
