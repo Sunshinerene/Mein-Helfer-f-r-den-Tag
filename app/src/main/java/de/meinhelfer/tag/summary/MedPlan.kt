@@ -32,7 +32,7 @@ data class PlanMed(
 
     fun dosage(): String = listOf(strength, listOf(schemaText(), unit).filter { it.isNotBlank() }.joinToString(" ")).filter { it.isNotBlank() }.joinToString(" · ")
 
-    fun dailyUse(): Double = if (!hasSchema) 1.0 else amounts.sumOf { value(it) }.coerceAtLeast(0.0)
+    fun dailyUse(): Double = if (!hasSchema) 0.0 else amounts.sumOf { value(it) }.coerceAtLeast(0.0)
 
     /** Einheit für Vorrat und Mengen (Stück, ml, IE …) aus der Spalte „Einheit“ bzw. der Darreichungsform; null = unbekannt. */
     fun medUnit(): MedUnit? = MedUnit.fromText(unit) ?: when {
@@ -170,7 +170,7 @@ object MedPlans {
                     strength = strength,
                     form = form,
                     amounts = amounts,
-                    unit = if (form.isNotBlank()) "Stück" else "",
+                    unit = "",
                     notes = after.takeIf { it.count(Char::isLetter) >= 3 }?.take(120).orEmpty(),
                 )
                 pending = null
@@ -247,9 +247,16 @@ object MedPlans {
     fun match(plan: MedPlan, meds: List<Medication>): Pair<List<PlanMatch>, List<Medication>> {
         val used = mutableSetOf<Long>()
         val matches = plan.meds.map { pm ->
-            val k = key(pm.name)
-            val existing = meds.firstOrNull { m -> m.id !in used && ((pm.pzn.isNotBlank() && m.pzn == pm.pzn) || (k.isNotBlank() && key(m.name) == k)) }
-                ?: meds.firstOrNull { m -> m.id !in used && k.length >= 5 && m.name.lowercase().contains(k) }
+            val available = meds.filter { it.id !in used }
+            val existing = if (pm.pzn.isNotBlank()) {
+                available.filter { it.pzn == pm.pzn }.singleOrNull()
+            } else {
+                available.filter { m ->
+                    m.name.trim().equals(pm.name.trim(), ignoreCase = true) &&
+                        pm.strength.isNotBlank() &&
+                        STRENGTH.find(m.dosage)?.value?.replace(" ", "")?.equals(pm.strength.replace(" ", ""), ignoreCase = true) == true
+                }.singleOrNull()
+            }
             existing?.let { used += it.id }
             val status = when {
                 existing == null -> PlanStatus.New
