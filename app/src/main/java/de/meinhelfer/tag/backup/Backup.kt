@@ -277,6 +277,12 @@ object Backup {
         val prefsFile = app.getSharedPreferences(AppPrefs.FILE, Context.MODE_PRIVATE)
         // Never retry a partially applied restore automatically.
         val interrupted = File(staging, "APPLYING")
+        if (File(staging, "ROLLED_BACK").exists()) {
+            DbCrypto.clearRestoreKey(app)
+            staging.deleteRecursively()
+            AppPrefs.setRestoreResult(app, "fehler:" + System.currentTimeMillis())
+            return
+        }
         if (File(staging, "COMMITTED").exists()) {
             val originals = SUFFIXES.map { File(dbFile.path + it) } +
                 listOf(File(dbFile.path + ".klartext"), docsDir, photosDir)
@@ -287,7 +293,53 @@ object Backup {
             return
         }
         if (interrupted.exists()) {
-            throw IllegalStateException("Unterbrochene Wiederherstellung: Originaldateien müssen geprüft werden.")
+            val metadata = JSONObject(checkNotNull(DbCrypto.restoreMetadata(app)) {
+                "Wiederherstellungsprotokoll fehlt"
+            })
+            val originals = SUFFIXES.map { File(dbFile.path + it) } +
+                SUFFIXES.map { File(dbFile.path + it + ".klartext") } +
+                listOf(docsDir, photosDir)
+            val presence = metadata.getJSONArray("presence")
+            check(presence.length() == originals.size)
+            originals.forEachIndexed { index, original ->
+                val previous = File(original.path + ".vorher")
+                if (previous.exists()) {
+                    check(presence.getBoolean(index))
+                    check(original.deleteRecursively())
+                    check(previous.renameTo(original))
+                } else if (!presence.getBoolean(index)) {
+                    check(original.deleteRecursively())
+                } else {
+                    check(original.exists()) { "Original fehlt: ${original.name}" }
+                }
+            }
+            DbCrypto.restoreSavedKey(app)
+            val json = metadata.getJSONObject("prefs")
+            val edit = prefsFile.edit().clear()
+            json.keys().forEach { k ->
+                val o = json.getJSONObject(k)
+                when (o.getString("t")) {
+                    "b" -> edit.putBoolean(k, o.getBoolean("v"))
+                    "i" -> edit.putInt(k, o.getInt("v"))
+                    "l" -> edit.putLong(k, o.getLong("v"))
+                    "f" -> edit.putFloat(k, o.getDouble("v").toFloat())
+                    "s" -> edit.putString(k, o.getString("v"))
+                    "set" -> {
+                        val arr = o.getJSONArray("v")
+                        edit.putStringSet(k, (0 until arr.length()).map { arr.getString(it) }.toSet())
+                    }
+                    else -> error("Unbekannter Einstellungstyp")
+                }
+            }
+            check(edit.commit())
+            java.io.FileOutputStream(File(staging, "ROLLED_BACK")).use { marker ->
+                marker.write(1)
+                marker.fd.sync()
+            }
+            DbCrypto.clearRestoreKey(app)
+            staging.deleteRecursively()
+            AppPrefs.setRestoreResult(app, "fehler:" + System.currentTimeMillis())
+            return
         }
         val oldPass = DbCrypto.storedPassphrase(app)
         val oldPrefs = prefsFile.all.toMap()
