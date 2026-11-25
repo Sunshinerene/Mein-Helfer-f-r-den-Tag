@@ -23,7 +23,7 @@ internal class LabRestore(private val context: Context) {
     private val photos get() = File(context.filesDir, "photos")
     private fun key(s: String) = "synthetic-lab-key-$s"
     private val password get() = "synthetic-lab-backup".toCharArray()
-    val points = listOf("APPLYING", "ASIDE:" + DbCrypto.DB_NAME, "PLACE:" + DbCrypto.DB_NAME,
+    val points = listOf("READY", "APPLYING", "ASIDE:" + DbCrypto.DB_NAME, "PLACE:" + DbCrypto.DB_NAME,
         "PLACE:docs_enc", "PLACE:photos", "KEY", "PREFS", "COMMITTED", "CLEAN:" + DbCrypto.DB_NAME + ".vorher")
     fun pending() = log.getBoolean("pending", false)
     fun report() = points.joinToString("\n") { "$it: ${log.getString("result_$it", "Nicht getestet")}" }
@@ -90,8 +90,13 @@ internal class LabRestore(private val context: Context) {
             entry("meta.json", JSONObject().put("format", 1).put("encrypted", true).put("dbVersion", 0).put("documents", 1).put("photos", 1).toString().toByteArray())
         }
         runBlocking { archive.inputStream().use { Backup.stage(context, it, password) {} } }
+        check(log.edit().putBoolean("pending", true).putBoolean("reached", false).putString("point", point).commit())
         Backup.confirmStaged(context)
-        check(log.edit().putBoolean("pending", true).putString("point", point).commit())
+        if (point == "READY") {
+            check(log.edit().putBoolean("reached", true).commit())
+            Process.killProcess(Process.myPid())
+            error("Prozessabbruch nicht erfolgt")
+        }
         Backup.labCheckpoint = { reached ->
             if (reached == point) {
                 check(log.edit().putBoolean("reached", true).commit())
@@ -109,7 +114,7 @@ internal class LabRestore(private val context: Context) {
         val result = runCatching {
             check(log.getBoolean("reached", false)) { "Abbruchpunkt nicht erreicht" }
             Backup.applyPending(context)
-            val expected = if (point == "COMMITTED" || point.startsWith("CLEAN:")) "B" else "A"
+            val expected = if (point == "READY" || point == "COMMITTED" || point.startsWith("CLEAN:")) "B" else "A"
             verify(expected)
             "BESTANDEN – Zustand $expected"
         }.getOrElse { "FEHLER – ${it.message}" }
