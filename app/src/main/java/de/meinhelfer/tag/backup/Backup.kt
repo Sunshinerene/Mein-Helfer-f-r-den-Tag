@@ -272,8 +272,20 @@ object Backup {
     fun applyPending(context: Context) {
         val app = context.applicationContext
         val staging = File(app.filesDir, STAGING)
+        val cleanup = File(app.filesDir, STAGING + "_cleanup")
+        if (cleanup.exists()) {
+            check(!staging.exists()) { "Mehrere Wiederherstellungsstände vorhanden" }
+            DbCrypto.clearRestoreKey(app)
+            check(cleanup.deleteRecursively())
+        }
         if (!staging.exists()) return
-        if (!File(staging, READY).exists()) {
+        fun finishCleanup() {
+            check(!cleanup.exists())
+            check(staging.renameTo(cleanup)) { "Wiederherstellungsprotokoll konnte nicht archiviert werden" }
+            DbCrypto.clearRestoreKey(app)
+            check(cleanup.deleteRecursively())
+        }
+        if (!File(staging, READY).exists() && listOf("APPLYING", "COMMITTED", "ROLLED_BACK").none { File(staging, it).exists() }) {
             staging.deleteRecursively()
             return
         }
@@ -285,17 +297,15 @@ object Backup {
         // Never retry a partially applied restore automatically.
         val interrupted = File(staging, "APPLYING")
         if (File(staging, "ROLLED_BACK").exists()) {
-            DbCrypto.clearRestoreKey(app)
-            staging.deleteRecursively()
+            finishCleanup()
             AppPrefs.setRestoreResult(app, "fehler:" + System.currentTimeMillis())
             return
         }
         if (File(staging, "COMMITTED").exists()) {
             val originals = SUFFIXES.map { File(dbFile.path + it) } +
                 SUFFIXES.map { File(dbFile.path + it + ".klartext") } + listOf(docsDir, photosDir)
-            originals.forEach { File(it.path + ".vorher").deleteRecursively() }
-            DbCrypto.clearRestoreKey(app)
-            staging.deleteRecursively()
+            originals.forEach { check(File(it.path + ".vorher").deleteRecursively()) }
+            finishCleanup()
             AppPrefs.setRestoreResult(app, "ok:" + System.currentTimeMillis())
             return
         }
@@ -344,8 +354,7 @@ object Backup {
                 marker.write(1)
                 marker.fd.sync()
             }
-            DbCrypto.clearRestoreKey(app)
-            staging.deleteRecursively()
+            finishCleanup()
             AppPrefs.setRestoreResult(app, "fehler:" + System.currentTimeMillis())
             return
         }
@@ -455,12 +464,11 @@ object Backup {
                 marker.fd.sync()
             }
             // Erfolg: alte Staende loeschen
-            moved.forEach { (vorher, _) -> vorher.deleteRecursively() }
-            DbCrypto.clearRestoreKey(app)
-            staging.deleteRecursively()
+            moved.forEach { (vorher, _) -> check(vorher.deleteRecursively()) }
+            finishCleanup()
             AppPrefs.setRestoreResult(app, "ok:" + System.currentTimeMillis())
         } catch (t: Throwable) {
-            if (File(staging, "COMMITTED").exists()) throw t
+            if (cleanup.exists() || !staging.exists() || File(staging, "COMMITTED").exists()) throw t
             // Zurueck zum alten Stand
             val rollback = runCatching {
                 placed.forEach { it.deleteRecursively() }
@@ -491,8 +499,7 @@ object Backup {
                     marker.write(1)
                     marker.fd.sync()
                 }
-                DbCrypto.clearRestoreKey(app)
-                staging.deleteRecursively()
+                finishCleanup()
             }
             else throw IllegalStateException("Wiederherstellung unterbrochen; Sicherungsstände bleiben erhalten", rollback.exceptionOrNull())
             AppPrefs.setRestoreResult(app, "fehler:" + System.currentTimeMillis())
