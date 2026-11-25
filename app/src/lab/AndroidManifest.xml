@@ -27,7 +27,7 @@
         <receiver android:name=".reminder.ReminderReceiver" tools:node="remove"/>
         <receiver android:name=".reminder.TakenReceiver" tools:node="remove"/>
         <receiver android:name=".reminder.BootReceiver" tools:node="remove"/>
-        <activity android:name=".lab.LabActivity" android:exported="true">
+        <activity android:name=".lab.LabActivity" android:exported="true" android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
