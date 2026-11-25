@@ -44,6 +44,7 @@ import de.meinhelfer.tag.media.CardScanner
 import de.meinhelfer.tag.media.PhotoStore
 import de.meinhelfer.tag.summary.Discharge
 import de.meinhelfer.tag.summary.MedPlan
+import de.meinhelfer.tag.summary.MedUnit
 import de.meinhelfer.tag.summary.MedPlans
 import de.meinhelfer.tag.summary.PlanMatch
 import de.meinhelfer.tag.summary.PlanStatus
@@ -76,6 +77,7 @@ private class ReviewRow(val match: PlanMatch) {
     var use by mutableStateOf(false)
     var name by mutableStateOf(match.med.name.takeUnless { match.med.nameMissing }.orEmpty())
     var dosage by mutableStateOf(match.med.dosage())
+    var unit by mutableStateOf(match.med.medUnit()?.key.orEmpty())
 }
 
 private class RemoveRow(val med: Medication) {
@@ -155,6 +157,16 @@ fun MedPlanReviewDialog(
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                     )
+                    Text("Mengeneinheit: " + r.unit.ifBlank { "Bitte auswählen" }, style = MaterialTheme.typography.bodySmall)
+                    MedUnit.entries.forEach { option ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            androidx.compose.material3.RadioButton(selected = r.unit == option.key, onClick = { r.unit = option.key })
+                            Text(option.key + " – " + option.examples)
+                        }
+                    }
+                    if (r.match.existing?.let { it.unit != r.unit } == true) {
+                        Text("Bei Einheitenwechsel muss der Vorrat neu eingetragen werden.", style = MaterialTheme.typography.bodySmall)
+                    }
                     val times = r.match.med.times()
                     Text(
                         if (times.isNotEmpty()) {
@@ -194,7 +206,7 @@ fun MedPlanReviewDialog(
         confirmButton = {
             val chosen = rows.count { it.use } + removeRows.count { it.remove }
             TextButton(
-                enabled = chosen > 0 && rows.none { it.use && it.name.isBlank() },
+                enabled = chosen > 0 && rows.none { it.use && (it.name.isBlank() || MedUnit.entries.none { u -> u.key == it.unit }) },
                 onClick = {
                     val adds = mutableListOf<Medication>()
                     val updates = mutableListOf<Medication>()
@@ -210,7 +222,7 @@ fun MedPlanReviewDialog(
                                 stock = 0.0,
                                 stockKnown = false,
                                 dailyUse = pm.dailyUse(),
-                                unit = pm.medUnit()?.key ?: "Stück",
+                                unit = r.unit,
                                 doses = pm.doses(),
                                 notes = pm.noteText(),
                                 pzn = pm.pzn,
@@ -224,10 +236,12 @@ fun MedPlanReviewDialog(
                                 times = times,
                                 dailyUse = pm.dailyUse(),
                                 // Einheit nur übernehmen, wenn bisher keine eigene gewählt war; Mengen nur, wenn die Einheit passt
-                                unit = pm.medUnit()?.key?.takeIf { e.unit == "Stück" } ?: e.unit,
-                                doses = if (!pm.hasSchema) "" else if (pm.hasSchema && (pm.medUnit() == null || pm.medUnit()?.key == (pm.medUnit()?.key?.takeIf { e.unit == "Stück" } ?: e.unit))) pm.doses() else e.doses,
+                                unit = r.unit,
+                                doses = pm.doses(),
                                 // Vorrat auf heute umrechnen, damit der neue Verbrauch nicht rueckwirkend zaehlt
-                                stock = e.currentStock(today),
+                                stock = if (e.unit == r.unit) e.currentStock(today) else 0.0,
+                                stockKnown = e.stockKnown && e.unit == r.unit,
+                                packSize = if (e.unit == r.unit) e.packSize else 0.0,
                                 stockDay = today,
                                 notes = notes,
                                 pzn = e.pzn.ifBlank { pm.pzn },
