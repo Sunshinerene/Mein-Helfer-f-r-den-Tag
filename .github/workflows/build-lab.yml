@@ -6,6 +6,7 @@ on:
     branches: [entwicklung/sunny-2]
     paths:
       - 'app/src/lab/**'
+      - 'app/src/main/**'
       - 'app/build.gradle.kts'
       - '.github/workflows/build-lab.yml'
 
