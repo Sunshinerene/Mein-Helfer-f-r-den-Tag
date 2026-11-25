@@ -9,8 +9,8 @@ Separate application ID and APK, separate private storage and encryption keys. S
 ## Restore interruption tests
 Inject process termination after verification (before approval), after approval, after rollback metadata persistence, after APPLYING marker, after each file move, after key/prefs changes, after integrity check, after COMMITTED/ROLLED_BACK and during cleanup. Reopen and verify original or committed fixture, key consistency, no unapproved restore, idempotent repeated startup, and no database access during failed recovery. Process termination is not equivalent to power loss.
 
-## Design contract
-Reuse HelferTheme and existing style settings for setup, recovery and lab screens. Preserve light/dark, font scale, shapes, colors and effects; safe fallback when settings unavailable. No new independent design system. Existing Sunny artwork remains unchanged; archived assets require explicit inventory and format/alpha/resource checks before integration. Test portrait/landscape and large fonts. No production asset replacement in this milestone.
+## Developer UI
+Plain Material UI is sufficient. No Sunny artwork or custom design integration required. Prioritize readable controls, explicit test status and reproducible results. Production design requirements remain unchanged.
 
 ## Release gate
 Verify separate package IDs and absence of fault injection in normal APK. Build both variants and execute tests with synthetic data before any restore test on a real device. Report actual results and limitations. Future extensions: model, voice, storage, performance and database diagnostics.
