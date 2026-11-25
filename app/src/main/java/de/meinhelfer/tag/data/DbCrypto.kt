@@ -60,6 +60,28 @@ object DbCrypto {
         check(edit.commit()) { "Schluessel nicht gespeichert" }
     }
 
+    /** Saves the original key in encrypted preferences before a restore changes it. */
+    fun saveRestoreKey(context: Context) {
+        val prefs = keyPrefs(context)
+        check(!prefs.getBoolean("restore_key_pending", false)) { "Alter Wiederherstellungsschluessel vorhanden" }
+        check(prefs.edit().putString("restore_old_key", prefs.getString(KEY, null))
+            .putBoolean("restore_key_pending", true).commit())
+    }
+
+    /** Idempotent: retain the recovery key until the entire rollback is complete. */
+    fun restoreSavedKey(context: Context) {
+        val prefs = keyPrefs(context)
+        check(prefs.getBoolean("restore_key_pending", false)) { "Wiederherstellungsschluessel fehlt" }
+        val old = prefs.getString("restore_old_key", null)
+        val edit = prefs.edit()
+        if (old == null) edit.remove(KEY) else edit.putString(KEY, old)
+        check(edit.commit())
+    }
+
+    fun clearRestoreKey(context: Context) {
+        check(keyPrefs(context).edit().remove("restore_old_key").remove("restore_key_pending").commit())
+    }
+
     /** Laedt die SQLCipher-Bibliothek, falls noetig. */
     fun ensureLoaded(): Boolean = load()
 
