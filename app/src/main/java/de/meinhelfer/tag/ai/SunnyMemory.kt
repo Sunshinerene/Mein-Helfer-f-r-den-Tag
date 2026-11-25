@@ -106,7 +106,7 @@ object SunnyMemory {
         val incoming = Phrasebook.decode(text.lines().filterNot { it.startsWith("#") }.joinToString("\n"))
         val target = if (replace) incoming else book(context).also { b -> incoming.themes().forEach { (t, l) -> b.merge(t, l) } }
         book = target
-        saveBook(context)
+        check(prefs(context).edit().putString("sprachschatz", target.encode()).commit()) { "Sprachschatz nicht gespeichert" }
         return target.themes().values.sumOf { it.size }
     }
 
