@@ -77,9 +77,16 @@ object Backup {
                 zip.closeEntry()
             }
 
-            entry(DB_ENTRY) { out -> dbFile.inputStream().use { it.copyTo(out) } }
-            val wal = File(dbFile.path + "-wal")
-            if (wal.exists() && wal.length() > 0) entry("db/" + DbCrypto.DB_NAME + "-wal") { out -> wal.inputStream().use { it.copyTo(out) } }
+            // Hold the SQLite writer lock while copying the database and its WAL.
+            helperDb.beginTransactionNonExclusive()
+            try {
+                entry(DB_ENTRY) { out -> dbFile.inputStream().use { it.copyTo(out) } }
+                val wal = File(dbFile.path + "-wal")
+                if (wal.exists() && wal.length() > 0) entry("db/" + DbCrypto.DB_NAME + "-wal") { out -> wal.inputStream().use { it.copyTo(out) } }
+                helperDb.setTransactionSuccessful()
+            } finally {
+                helperDb.endTransaction()
+            }
             if (encrypted) {
                 val pass = DbCrypto.storedPassphrase(app) ?: throw IllegalStateException("Datenbankschluessel fehlt")
                 entry("db/passphrase.txt") { it.write(pass.toByteArray(Charsets.UTF_8)) }
