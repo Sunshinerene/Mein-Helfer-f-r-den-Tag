@@ -1,7 +1,6 @@
 package de.meinhelfer.tag.lab
 
 import android.os.Bundle
-import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
@@ -19,7 +18,6 @@ class LabActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         check(packageName == "de.meinhelfer.tag.lab")
-        window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         val database = LabDatabase(this)
         val abort = LabAbort(this, database)
         setContent { MaterialTheme { LabHome(LabFixtures(this@LabActivity), database, abort) } }
@@ -61,6 +59,11 @@ private fun LabHome(fixtures: LabFixtures, database: LabDatabase, abort: LabAbor
             Text("Die App beendet sich absichtlich. Danach erneut öffnen.")
             OutlinedButton(onClick = { runTest(abort::evaluate) }, enabled = !busy) { Text("Letzten Abbruchtest auswerten") }
             Text(result)
+            val context = androidx.compose.ui.platform.LocalContext.current
+            OutlinedButton(onClick = {
+                val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                clipboard.setPrimaryClip(android.content.ClipData.newPlainText("Sunny Test Lab", abort.report()))
+            }, enabled = !busy) { Text("Testergebnisse kopieren") }
             OutlinedButton(onClick = { runTest(abort::report) }, enabled = !busy) { Text("Ergebnisübersicht aller Abbruchtests") }
             listOf("Datensicherung und Wiederherstellung",
                 "Systemdiagnose"
