@@ -90,6 +90,11 @@ private fun LabHome(fixtures: LabFixtures, database: LabDatabase, abort: LabAbor
             Text("Bei diesem Test die App nach jedem Abbruch erneut öffnen (insgesamt vier Abbrüche).")
             Button(onClick = { runTest { LabRoundTrip(context.applicationContext).run() } },
                 enabled = !busy && !restore.pending() && !abort.pending()) { Text("Vollständigen Backup-Roundtrip testen") }
+            Text(result)
+            OutlinedButton(onClick = {
+                val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                clipboard.setPrimaryClip(android.content.ClipData.newPlainText("Sunny Phase 3", result + "\n" + restore.report()))
+            }, enabled = !busy) { Text("Phase 3: Ergebnisse kopieren") }
             Text("Paket: de.meinhelfer.tag.lab")
         }
     }
