@@ -85,6 +85,9 @@ private fun LabHome(fixtures: LabFixtures, database: LabDatabase, abort: LabAbor
                 val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
                 clipboard.setPrimaryClip(android.content.ClipData.newPlainText("Sunny Restore", restore.report()))
             }, enabled = !busy) { Text("Echte Wiederherstellung: Ergebnisse kopieren") }
+            Text("Phase 3: Room und Backup", style = MaterialTheme.typography.titleLarge)
+            Button(onClick = { runTest { LabRoundTrip(context.applicationContext).run() } },
+                enabled = !busy && !restore.pending() && !abort.pending()) { Text("Vollständigen Backup-Roundtrip testen") }
             Text("Paket: de.meinhelfer.tag.lab")
         }
     }
