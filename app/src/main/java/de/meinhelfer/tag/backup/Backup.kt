@@ -270,6 +270,14 @@ object Backup {
         val prefsFile = app.getSharedPreferences(AppPrefs.FILE, Context.MODE_PRIVATE)
         // Never retry a partially applied restore automatically.
         val interrupted = File(staging, "APPLYING")
+        if (File(staging, "COMMITTED").exists()) {
+            val originals = SUFFIXES.map { File(dbFile.path + it) } +
+                listOf(File(dbFile.path + ".klartext"), docsDir, photosDir)
+            originals.forEach { File(it.path + ".vorher").deleteRecursively() }
+            staging.deleteRecursively()
+            AppPrefs.setRestoreResult(app, "ok:" + System.currentTimeMillis())
+            return
+        }
         if (interrupted.exists()) {
             throw IllegalStateException("Unterbrochene Wiederherstellung: Originaldateien müssen geprüft werden.")
         }
@@ -343,11 +351,17 @@ object Backup {
                 runCatching { de.meinhelfer.tag.ai.SunnyMemory.importText(app, f.readText(), replace = true) }
             }
 
+            // Commit marker must be durable before deleting any original files.
+            java.io.FileOutputStream(File(staging, "COMMITTED")).use { marker ->
+                marker.write(1)
+                marker.fd.sync()
+            }
             // Erfolg: alte Staende loeschen
             moved.forEach { (vorher, _) -> vorher.deleteRecursively() }
             staging.deleteRecursively()
             AppPrefs.setRestoreResult(app, "ok:" + System.currentTimeMillis())
         } catch (t: Throwable) {
+            if (File(staging, "COMMITTED").exists()) throw t
             // Zurueck zum alten Stand
             val rollback = runCatching {
                 placed.forEach { it.deleteRecursively() }
