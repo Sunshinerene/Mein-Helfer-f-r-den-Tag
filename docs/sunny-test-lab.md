@@ -14,3 +14,7 @@ Plain Material UI is sufficient. No Sunny artwork or custom design integration r
 
 ## Release gate
 Verify separate package IDs and absence of fault injection in normal APK. Build both variants and execute tests with synthetic data before any restore test on a real device. Report actual results and limitations. Future extensions: model, voice, storage, performance and database diagnostics.
+
+
+## Praxistest 2026-11-25
+Build #2, Commit 7142d18: erfolgreich. Nutzer bestätigt Installation, Auswertung und alle fünf synthetischen Abbruchszenarien bestanden. Kein Screenshot wegen FLAG_SECURE. Dies ist kein Nachweis der produktiven verschlüsselten Wiederherstellung. Nächster Meilenstein: echte Restore-Logik mit isolierten synthetischen Daten testen.
