@@ -16,6 +16,7 @@ import kotlinx.coroutines.launch
  */
 class WidgetActionReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
+        if (!de.meinhelfer.tag.HelferApplication.startupReady) return
         val app = context.applicationContext
         val pending = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
