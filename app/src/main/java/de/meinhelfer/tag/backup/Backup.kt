@@ -60,10 +60,20 @@ object Backup {
         target: OutputStream,
         password: CharArray,
         onProgress: (String) -> Unit,
+    ): BackupInfo = createFromDatabase(context, target, password, onProgress, null)
+
+    internal suspend fun createForLab(context: Context, target: OutputStream, password: CharArray, db: AppDatabase): BackupInfo {
+        check(context.packageName == "de.meinhelfer.tag.lab")
+        return createFromDatabase(context, target, password, {}, db)
+    }
+
+    private suspend fun createFromDatabase(
+        context: Context, target: OutputStream, password: CharArray,
+        onProgress: (String) -> Unit, labDb: AppDatabase?,
     ): BackupInfo = withContext(Dispatchers.IO) {
         val app = context.applicationContext
         onProgress("Datenbank wird vorbereitet …")
-        val db = AppDatabase.get(app)
+        val db = labDb ?: AppDatabase.get(app)
         val helperDb = db.openHelper.writableDatabase
         helperDb.query("PRAGMA wal_checkpoint(TRUNCATE)").use { it.moveToFirst() }
         val dbVersion = helperDb.version
