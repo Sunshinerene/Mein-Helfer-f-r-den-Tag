@@ -25,8 +25,9 @@ internal class LabRestore(private val context: Context) {
     private val password get() = "synthetic-lab-backup".toCharArray()
     val points = listOf("READY", "APPLYING", "ASIDE:" + DbCrypto.DB_NAME, "PLACE:" + DbCrypto.DB_NAME,
         "PLACE:docs_enc", "PLACE:photos", "KEY", "PREFS", "COMMITTED", "CLEAN:" + DbCrypto.DB_NAME + ".vorher")
+    private val repeatPoint = "REPEAT_ROLLBACK"
     fun pending() = log.getBoolean("pending", false)
-    fun report() = points.joinToString("\n") { "$it: ${log.getString("result_$it", "Nicht getestet")}" }
+    fun report() = (points + repeatPoint).joinToString("\n") { "$it: ${log.getString("result_$it", "Nicht getestet")}" }
 
     private fun makeDb(file: File, state: String) {
         check(DbCrypto.ensureLoaded())
@@ -62,7 +63,7 @@ internal class LabRestore(private val context: Context) {
     }
 
     fun start(point: String): String {
-        check(point in points && !pending())
+        check((point in points || point == repeatPoint) && !pending())
         check(!File(context.filesDir, "restore_staging").exists())
         check(!File(context.filesDir, "restore_staging_cleanup").exists())
         check(listOf(db, docs, photos).none { File(it.path + ".vorher").exists() })
@@ -91,7 +92,7 @@ internal class LabRestore(private val context: Context) {
             entry("meta.json", JSONObject().put("format", 1).put("encrypted", true).put("dbVersion", 0).put("documents", 1).put("photos", 1).toString().toByteArray())
         }
         runBlocking { archive.inputStream().use { Backup.stage(context, it, password) {} } }
-        check(log.edit().putBoolean("pending", true).putBoolean("reached", false).putString("point", point).commit())
+        check(log.edit().putBoolean("pending", true).putBoolean("reached", false).putInt("rollbackStep", 0).putString("point", point).commit())
         Backup.confirmStaged(context)
         if (point == "READY") {
             check(log.edit().putBoolean("reached", true).commit())
@@ -99,7 +100,7 @@ internal class LabRestore(private val context: Context) {
             error("Prozessabbruch nicht erfolgt")
         }
         Backup.labCheckpoint = { reached ->
-            if (reached == point) {
+            if (reached == point || (point == repeatPoint && reached == "PREFS")) {
                 check(log.edit().putBoolean("reached", true).commit())
                 Process.killProcess(Process.myPid())
                 error("Prozessabbruch nicht erfolgt")
@@ -115,6 +116,21 @@ internal class LabRestore(private val context: Context) {
         val result = runCatching {
             check(log.getBoolean("reached", false)) { "Abbruchpunkt nicht erreicht" }
             check(DbCrypto.ensureLoaded()) { "SQLCipher konnte nicht geladen werden" }
+            if (point == repeatPoint) {
+                val targets = listOf("ROLLBACK:" + DbCrypto.DB_NAME, "ROLLBACK_KEY", "ROLLBACK_PREFS")
+                val step = log.getInt("rollbackStep", 0)
+                if (step < targets.size) {
+                    Backup.labCheckpoint = { reached ->
+                        if (reached == targets[step]) {
+                            check(log.edit().putInt("rollbackStep", step + 1).commit())
+                            Process.killProcess(Process.myPid())
+                            error("Prozessabbruch nicht erfolgt")
+                        }
+                    }
+                    try { Backup.applyPending(context) } finally { Backup.labCheckpoint = null }
+                    error("Rücksicherungs-Abbruchpunkt nicht erreicht")
+                }
+            }
             Backup.applyPending(context)
             val expected = if (point == "READY" || point == "COMMITTED" || point.startsWith("CLEAN:")) "B" else "A"
             verify(expected)
