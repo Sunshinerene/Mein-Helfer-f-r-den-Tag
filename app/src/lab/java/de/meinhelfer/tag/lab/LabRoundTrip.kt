@@ -27,6 +27,14 @@ internal class LabRoundTrip(private val context: Context) {
             .openHelperFactory(SupportOpenHelperFactory(DbCrypto.passphrase(context).toByteArray()))
             .build()
     }
+    private inline fun <T> withRoom(block: (AppDatabase) -> T): T {
+        val db = room()
+        try {
+            return block(db)
+        } finally {
+            db.close()
+        }
+    }
     private fun clearFixture() {
         check(!staging.exists() && !File(context.filesDir, "restore_staging_cleanup").exists())
         check(DbCrypto.restoreMetadata(context) == null)
@@ -41,7 +49,7 @@ internal class LabRoundTrip(private val context: Context) {
         val archive = File(context.cacheDir, "room-roundtrip.mhbackup")
         val originalKey = DbCrypto.passphrase(context)
         val vocabulary = SunnyMemory.exportText(context)
-        room().use { db ->
+        withRoom { db ->
             val sql = db.openHelper.writableDatabase
             sql.execSQL("CREATE TABLE IF NOT EXISTS lab_roundtrip (value TEXT NOT NULL)")
             sql.execSQL("INSERT INTO lab_roundtrip VALUES ('SYNTHETIC_ROOM_A')")
@@ -71,7 +79,7 @@ internal class LabRoundTrip(private val context: Context) {
         Backup.applyPending(context)
         check(DbCrypto.storedPassphrase(context) == originalKey)
         check(DbCrypto.isEncrypted(context))
-        room().use { db ->
+        withRoom { db ->
             db.openHelper.writableDatabase.query("SELECT value FROM lab_roundtrip").use {
                 check(it.moveToFirst() && it.getString(0) == "SYNTHETIC_ROOM_A" && !it.moveToNext())
             }
