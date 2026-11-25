@@ -20,12 +20,12 @@ class LabActivity : ComponentActivity() {
         check(packageName == "de.meinhelfer.tag.lab")
         val database = LabDatabase(this)
         val abort = LabAbort(this, database)
-        setContent { MaterialTheme { LabHome(LabFixtures(this@LabActivity), database, abort) } }
+        setContent { MaterialTheme { LabHome(LabFixtures(this@LabActivity), database, abort, LabRestore(this@LabActivity)) } }
     }
 }
 
 @Composable
-private fun LabHome(fixtures: LabFixtures, database: LabDatabase, abort: LabAbort) {
+private fun LabHome(fixtures: LabFixtures, database: LabDatabase, abort: LabAbort, restore: LabRestore) {
     var result by remember { mutableStateOf("Noch kein Test ausgeführt") }
     var busy by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -38,7 +38,7 @@ private fun LabHome(fixtures: LabFixtures, database: LabDatabase, abort: LabAbor
             } finally { busy = false }
         }
     }
-    LaunchedEffect(Unit) { runTest(abort::evaluate) }
+    LaunchedEffect(Unit) { runTest { if (restore.pending()) restore.evaluate() else abort.evaluate() } }
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
@@ -75,6 +75,12 @@ private fun LabHome(fixtures: LabFixtures, database: LabDatabase, abort: LabAbor
                     }
                 }
             }
+            Text("Echte Wiederherstellung (synthetisch)", style = MaterialTheme.typography.titleLarge)
+            restore.points.forEach { point ->
+                Button(onClick = { runTest { restore.start(point) } }, enabled = !busy && !restore.pending()) { Text(point) }
+            }
+            OutlinedButton(onClick = { runTest(restore::evaluate) }, enabled = !busy) { Text("Echte Wiederherstellung auswerten") }
+            OutlinedButton(onClick = { runTest(restore::report) }, enabled = !busy) { Text("Ergebnisse echte Wiederherstellung") }
             Text("Paket: de.meinhelfer.tag.lab")
         }
     }
