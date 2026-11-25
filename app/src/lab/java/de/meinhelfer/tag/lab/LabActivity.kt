@@ -51,9 +51,13 @@ private fun LabHome(fixtures: LabFixtures, database: LabDatabase, abort: LabAbor
             Text("Separater App-Start. Produktive Dienste werden hier nicht gestartet.")
             Button(onClick = { runTest(fixtures::create) }, enabled = !busy) { Text("Künstliche Testdaten erzeugen") }
             OutlinedButton(onClick = { runTest(fixtures::verify) }, enabled = !busy) { Text("Testdaten prüfen") }
-            Button(onClick = { runTest(database::prepare) }, enabled = !busy) { Text("Testdatenbanken A/B vorbereiten") }
+            Button(onClick = { runTest(database::prepare) }, enabled = !busy && !abort.pending()) { Text("Testdatenbanken A/B vorbereiten") }
             OutlinedButton(onClick = { runTest(database::verify) }, enabled = !busy) { Text("Aktive Testdatenbank prüfen") }
-            Button(onClick = { runTest(abort::start) }, enabled = !busy) { Text("Prozessabbruch: Zustand A") }
+            listOf("A_PREPARED" to "Vor Datenaustausch", "ASIDE" to "Nach Weglegen von A",
+                "PLACED" to "Nach Einsetzen von B", "COMMITTED" to "Nach Bestätigung",
+                "CLEANED" to "Nach Bereinigung").forEach { (point, label) ->
+                Button(onClick = { runTest { abort.startAt(point) } }, enabled = !busy && !abort.pending()) { Text("Abbruch: $label") }
+            }
             Text("Die App beendet sich absichtlich. Danach erneut öffnen.")
             OutlinedButton(onClick = { runTest(abort::evaluate) }, enabled = !busy) { Text("Letzten Abbruchtest auswerten") }
             Text(result)
