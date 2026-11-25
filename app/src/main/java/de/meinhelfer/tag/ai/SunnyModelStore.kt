@@ -12,7 +12,7 @@ import java.io.IOException
 
 /** Stores an optional model privately. Import does not imply runtime compatibility. */
 object SunnyModelStore {
-    private val mutex = Mutex()
+    internal val mutex = Mutex()
     private fun directory(context: Context) = File(context.noBackupFilesDir, "sunny_models")
     fun model(context: Context): File = File(directory(context), "model.litertlm")
     fun installedBytes(context: Context): Long = model(context).takeIf { it.isFile }?.length() ?: 0L
@@ -21,7 +21,7 @@ object SunnyModelStore {
         mutex.withLock {
             val dir = directory(context)
             check(dir.isDirectory || dir.mkdirs()) { "Modellordner nicht verfügbar." }
-            val temp = File(dir, "import.part")
+            val temp = File(dir, "import.litertlm")
             try {
                 val reserve = 256L * 1024 * 1024
                 val limit = 4L * 1024 * 1024 * 1024
@@ -43,6 +43,11 @@ object SunnyModelStore {
                     }
                 }
                 require(total > 0) { "Die Datei ist leer." }
+                com.google.ai.edge.litertlm.Engine(com.google.ai.edge.litertlm.EngineConfig(
+                    modelPath = temp.absolutePath, backend = com.google.ai.edge.litertlm.Backend.CPU(),
+                    cacheDir = context.cacheDir.absolutePath, maxNumTokens = 1024
+                )).use { engine -> engine.initialize(); engine.createConversation().use { conversation -> conversation.sendMessage("Antworte mit OK.") } }
+                kotlinx.coroutines.currentCoroutineContext().ensureActive()
                 android.system.Os.rename(temp.absolutePath, model(context).absolutePath)
                 total
             } finally {
