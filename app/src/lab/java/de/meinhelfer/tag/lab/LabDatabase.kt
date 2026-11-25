@@ -24,6 +24,7 @@ internal class LabDatabase(context: Context) {
 
     fun prepare(): String {
         check(root.isDirectory || root.mkdirs())
+        check(!File(root, "previous.db").exists()) { "Offene Wiederherstellung zuerst auswerten" }
         create(File(root, "active.db"), "A")
         create(File(root, "candidate.db"), "B")
         check(inspect(File(root, "active.db")) == "A")
@@ -44,6 +45,42 @@ internal class LabDatabase(context: Context) {
             return listOf("A", "B").singleOrNull { expected(it) == rows }
                 ?: error("Unvollständiger oder vermischter Datenbestand")
         }
+    }
+
+    private val active get() = File(root, "active.db")
+    private val candidate get() = File(root, "candidate.db")
+    private val previous get() = File(root, "previous.db")
+
+    fun moveAside() {
+        check(!previous.exists())
+        check(inspect(active) == "A")
+        check(active.renameTo(previous))
+    }
+
+    fun placeCandidate() {
+        check(!active.exists())
+        check(inspect(candidate) == "B")
+        check(candidate.renameTo(active))
+    }
+
+    fun cleanup() {
+        check(inspect(active) == "B")
+        check(!previous.exists() || previous.delete())
+    }
+
+    fun recover(committed: Boolean): String {
+        if (committed) {
+            cleanup()
+            check(inspect(active) == "B")
+        } else {
+            if (previous.exists()) {
+                check(inspect(previous) == "A")
+                // Atomic replacement preserves the rollback source until rename succeeds.
+                android.system.Os.rename(previous.path, active.path)
+            }
+            check(inspect(active) == "A")
+        }
+        return verify()
     }
 
     fun verify(): String = "OK – aktive Testdatenbank entspricht vollständig Zustand ${inspect(File(root, "active.db"))}"
