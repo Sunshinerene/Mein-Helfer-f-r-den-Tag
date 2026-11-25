@@ -268,6 +268,11 @@ object Backup {
         val docsDir = File(app.filesDir, "docs_enc")
         val photosDir = File(app.filesDir, "photos")
         val prefsFile = app.getSharedPreferences(AppPrefs.FILE, Context.MODE_PRIVATE)
+        // Never retry a partially applied restore automatically.
+        val interrupted = File(staging, "APPLYING")
+        if (interrupted.exists()) {
+            throw IllegalStateException("Unterbrochene Wiederherstellung: Originaldateien müssen geprüft werden.")
+        }
         val oldPass = DbCrypto.storedPassphrase(app)
         val oldPrefs = prefsFile.all.toMap()
         val moved = mutableListOf<Pair<File, File>>() // (alt vorher-Name, urspruenglicher Ort)
@@ -293,6 +298,7 @@ object Backup {
             val meta = JSONObject(File(staging, "meta.json").readText())
             val encrypted = meta.optBoolean("encrypted", true)
 
+            java.io.FileOutputStream(interrupted).use { marker -> marker.write(1); marker.fd.sync() }
             SUFFIXES.forEach { aside(File(dbFile.path + it)) }
             aside(File(dbFile.path + ".klartext"))
             aside(docsDir)
@@ -343,7 +349,7 @@ object Backup {
             AppPrefs.setRestoreResult(app, "ok:" + System.currentTimeMillis())
         } catch (t: Throwable) {
             // Zurueck zum alten Stand
-            runCatching {
+            val rollback = runCatching {
                 placed.forEach { it.deleteRecursively() }
                 moved.asReversed().forEach { (vorher, original) ->
                     original.deleteRecursively()
@@ -361,9 +367,10 @@ object Backup {
                         is Set<*> -> edit.putStringSet(k, v.map { it.toString() }.toSet())
                     }
                 }
-                edit.commit()
+                check(edit.commit()) { "Einstellungen konnten nicht zurückgesetzt werden" }
             }
-            runCatching { staging.deleteRecursively() }
+            if (rollback.isSuccess) staging.deleteRecursively()
+            else throw IllegalStateException("Wiederherstellung unterbrochen; Sicherungsstände bleiben erhalten", rollback.exceptionOrNull())
             AppPrefs.setRestoreResult(app, "fehler:" + System.currentTimeMillis())
         }
     }
