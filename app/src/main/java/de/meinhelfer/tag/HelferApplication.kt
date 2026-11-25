@@ -5,6 +5,11 @@ import de.meinhelfer.tag.backup.Backup
 
 /** Tauscht vor allem anderen eine vorbereitete Wiederherstellung ein, bevor die Datenbank geoeffnet wird. */
 class HelferApplication : Application() {
+    companion object {
+        @Volatile var startupReady: Boolean = false
+            private set
+    }
+
     override fun onCreate() {
         super.onCreate()
         CrashReport.install(this)
@@ -15,5 +20,6 @@ class HelferApplication : Application() {
         }
         // Fail closed: opening Room after a failed rollback could mutate incomplete data.
         Backup.applyPending(this)
+        startupReady = true
     }
 }
