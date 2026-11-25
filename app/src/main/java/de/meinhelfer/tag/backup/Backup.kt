@@ -37,6 +37,11 @@ class BackupInfo(
  * erst entpacken und pruefen ([stage]), dann beim naechsten App-Start austauschen ([applyPending]).
  */
 object Backup {
+    // Only the separately installed lab can arm this in-memory callback.
+    internal var labCheckpoint: ((String) -> Unit)? = null
+    private fun checkpoint(context: Context, name: String) {
+        if (context.packageName == "de.meinhelfer.tag.lab") labCheckpoint?.invoke(name)
+    }
     private const val STAGING = "restore_staging"
     private const val READY = "READY"
     private const val DB_ENTRY = "db/" + DbCrypto.DB_NAME
@@ -370,6 +375,7 @@ object Backup {
             check(!to.exists()) { "Vorheriger Wiederherstellungsstand vorhanden" }
             check(f.renameTo(to)) { "Umbenennen fehlgeschlagen" }
             moved.add(to to f)
+            checkpoint(app, "ASIDE:" + f.name)
         }
 
         fun place(from: File, to: File) {
@@ -377,6 +383,7 @@ object Backup {
             to.parentFile?.mkdirs()
             placed.add(to)
             check(from.renameTo(to)) { "Wiederherstellung konnte Datei nicht verschieben" }
+            checkpoint(app, "PLACE:" + to.name)
         }
 
         try {
@@ -413,6 +420,7 @@ object Backup {
                 .put("presence", originalPresence)
                 .toString())
             java.io.FileOutputStream(interrupted).use { marker -> marker.write(1); marker.fd.sync() }
+            checkpoint(app, "APPLYING")
             SUFFIXES.forEach { aside(File(dbFile.path + it)) }
             SUFFIXES.forEach { aside(File(dbFile.path + it + ".klartext")) }
             aside(docsDir)
@@ -432,6 +440,7 @@ object Backup {
                 DbCrypto.setPassphrase(app, File(staging, "db/passphrase.txt").readText())
             }
 
+            checkpoint(app, "KEY")
             val prefsJson = File(staging, "prefs.json")
             if (prefsJson.exists()) {
                 val json = JSONObject(prefsJson.readText())
@@ -453,6 +462,7 @@ object Backup {
                 check(edit.commit()) { "Einstellungen nicht gespeichert" }
             }
 
+            checkpoint(app, "PREFS")
             File(staging, "sprachschatz.txt").takeIf { it.exists() }?.let { f ->
                 de.meinhelfer.tag.ai.SunnyMemory.importText(app, f.readText(), replace = true)
             }
@@ -465,8 +475,9 @@ object Backup {
                 marker.write(1)
                 marker.fd.sync()
             }
+            checkpoint(app, "COMMITTED")
             // Erfolg: alte Staende loeschen
-            moved.forEach { (vorher, _) -> check(vorher.deleteRecursively()) }
+            moved.forEach { (vorher, _) -> check(vorher.deleteRecursively()); checkpoint(app, "CLEAN:" + vorher.name) }
             finishCleanup()
             AppPrefs.setRestoreResult(app, "ok:" + System.currentTimeMillis())
         } catch (t: Throwable) {
