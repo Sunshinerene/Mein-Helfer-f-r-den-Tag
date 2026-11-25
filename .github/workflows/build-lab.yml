@@ -2,6 +2,12 @@ name: Sunny Test Lab bauen
 
 on:
   workflow_dispatch:
+  push:
+    branches: [entwicklung/sunny-2]
+    paths:
+      - 'app/src/lab/**'
+      - 'app/build.gradle.kts'
+      - '.github/workflows/build-lab.yml'
 
 permissions:
   contents: read
@@ -22,10 +28,16 @@ jobs:
         run: gradle :app:assembleLab --stacktrace
       - name: Paket und Berechtigungen prüfen
         run: |
+          set -euo pipefail
           APK=app/build/outputs/apk/lab/app-lab.apk
           AAPT=$(find "$ANDROID_HOME/build-tools" -name aapt -type f | sort -V | tail -1)
           "$AAPT" dump badging "$APK" | grep -F "package: name='de.meinhelfer.tag.lab'"
           "$AAPT" dump badging "$APK" | grep -F "launchable-activity: name='de.meinhelfer.tag.lab.LabActivity'"
+          test -n "$AAPT"
+          "$AAPT" dump xmltree "$APK" AndroidManifest.xml > lab-manifest.txt
+          if grep -E 'de\.meinhelfer\.tag\.(MainActivity|reminder\.(BootReceiver|ReminderReceiver|TakenReceiver)|widget\.(HelperWidgetProvider|WidgetActionReceiver))' lab-manifest.txt; then
+            echo "Produktiver Einstieg im Lab-Manifest"; exit 1
+          fi
           "$AAPT" dump permissions "$APK" > lab-permissions.txt
           if grep -E 'android.permission.(INTERNET|REQUEST_INSTALL_PACKAGES|POST_NOTIFICATIONS|RECEIVE_BOOT_COMPLETED|USE_EXACT_ALARM|SCHEDULE_EXACT_ALARM|health\.)' lab-permissions.txt; then
             echo "Unerwartete produktive Berechtigung"; exit 1
@@ -36,4 +48,5 @@ jobs:
           path: |
             app/build/outputs/apk/lab/app-lab.apk
             lab-permissions.txt
+            lab-manifest.txt
           if-no-files-found: error
