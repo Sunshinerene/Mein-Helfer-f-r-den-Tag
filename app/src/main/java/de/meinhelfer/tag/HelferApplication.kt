@@ -13,10 +13,7 @@ class HelferApplication : Application() {
         } catch (_: Throwable) {
             // weiter mit dem normalen Start
         }
-        try {
-            Backup.applyPending(this)
-        } catch (_: Throwable) {
-            // Die App muss auf jeden Fall starten
-        }
+        // Fail closed: opening Room after a failed rollback could mutate incomplete data.
+        Backup.applyPending(this)
     }
 }
