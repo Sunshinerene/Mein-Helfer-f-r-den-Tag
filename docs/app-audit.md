@@ -13,3 +13,17 @@ Stand: 2026-11-25. Entwicklungsbranch entwicklung/sunny-2. Keine Laufzeittests d
 Positiv: Modellimport mit temporärer Datei, atomarem rename, Größenlimit, Speicherreserve und Bereinigung.
 
 Offen: vollständiges Dateiinventar, Stammdaten, Medikamente, Termine, Aufgaben, Pflege, Dokumente, Datenbank, Backup, Benachrichtigungen, Sunny-Module, Datenschutz, UI, Performance, Tests und Build-Workflow. P2-Risiken sind noch nicht praktisch reproduziert. Keine Aussage über Fehlerfreiheit ungeprüfter Module.
+
+## Zweiter Prüfblock
+
+| ID | Priorität | Fundstelle | Befund / Maßnahme |
+|---|---|---|---|
+| AUD-006 | P0 | backup/Backup.kt applyPending | Catch löscht alle Originalpfade auch wenn aside vorher scheiterte und nicht alle Pfade gesichert wurden. Nur tatsächlich ersetzte Pfade zurückrollen; persistentes Wiederherstellungsjournal und Fehler-Injektionstests. |
+| AUD-007 | P1 | backup/Backup.kt create | Live-Kopie DB und WAL nach Checkpoint ohne Schreibsperre; konsistenten Snapshot sicherstellen. |
+| AUD-008 | P1 | backup/Backup.kt probeVersion | Nur Versionsabfrage, keine vollständige Integritätsprüfung vor Austausch. |
+| AUD-009 | P1 | summary/MedPlan.kt match | Namensschlüssel und Teilstring können trotz abweichender PZN/Stärke falsche Zuordnung erzeugen; eindeutige Identität und Bestätigung prüfen. |
+| AUD-010 | P1 | summary/MedPlan.kt dailyUse | Freitext/Bedarf ohne Schema liefert 1.0; unbekannten Verbrauch separat behandeln. Auswirkungen auf Import und Bestand noch prüfen. |
+| AUD-011 | P1 | summary/MedPlan.kt parseText | Jede erkannte Darreichungsform erhält Stück, auch Tropfen/Spray; Einheit nicht ungeprüft ableiten. UI-Bestätigung prüfen. |
+| AUD-012 | P2 | backup/Backup.kt create | lastBackup auch bei skipped > 0 gesetzt; vollständige und teilweise Sicherung unterscheiden. |
+
+Statische Prüfung von Backup.kt, MedPlan.kt und ausgewählten DAO-Deklarationen. Keine Reproduktion am Gerät, keine Codekorrekturen. AppDatabase, DbCrypto, BackupCrypto, Import-UI, Einnahmebuchungen und tatsächliche Bestandslogik noch offen. Prioritäten vorläufig anhand möglicher Auswirkungen.
