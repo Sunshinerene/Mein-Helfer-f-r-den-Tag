@@ -1,6 +1,9 @@
 package de.meinhelfer.tag
 
 import android.app.Application
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import de.meinhelfer.tag.backup.Backup
 
 /** Tauscht vor allem anderen eine vorbereitete Wiederherstellung ein, bevor die Datenbank geoeffnet wird. */
@@ -22,8 +25,12 @@ class HelferApplication : Application() {
         try {
             Backup.applyPending(this)
             startupReady = true
+            CoroutineScope(Dispatchers.IO).launch {
+                runCatching { de.meinhelfer.tag.reminder.ReminderScheduler.rescheduleAll(this@HelferApplication) }
+            }
         } catch (_: Exception) {
             // Keep Room closed; MainActivity offers a database-free recovery screen.
+            de.meinhelfer.tag.widget.HelperWidget.refresh(this)
         }
     }
 }
