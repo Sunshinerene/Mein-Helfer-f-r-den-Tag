@@ -78,8 +78,16 @@ object DbCrypto {
         check(edit.commit())
     }
 
+    /** Keep rollback metadata encrypted with the same Android-backed key store. */
+    fun saveRestoreMetadata(context: Context, metadata: String) {
+        check(keyPrefs(context).edit().putString("restore_metadata", metadata).commit())
+    }
+
+    fun restoreMetadata(context: Context): String? =
+        keyPrefs(context).getString("restore_metadata", null)
+
     fun clearRestoreKey(context: Context) {
-        check(keyPrefs(context).edit().remove("restore_old_key").remove("restore_key_pending").commit())
+        check(keyPrefs(context).edit().remove("restore_old_key").remove("restore_key_pending").remove("restore_metadata").commit())
     }
 
     /** Laedt die SQLCipher-Bibliothek, falls noetig. */
