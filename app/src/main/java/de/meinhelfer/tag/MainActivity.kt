@@ -104,8 +104,44 @@ class MainActivity : FragmentActivity() {
     private val notificationPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
+    @androidx.compose.runtime.Composable
+    private fun RecoveryScreen() {
+        val style = runCatching { AppPrefs.designStyle(this) }.getOrDefault("schlicht")
+        val mode = runCatching { AppPrefs.themeMode(this) }.getOrDefault("system")
+        val dark = when (mode) {
+            "dark" -> true
+            "light" -> false
+            else -> isSystemInDarkTheme()
+        }
+        val density = LocalDensity.current
+        val scale = runCatching { AppPrefs.uiScale(this) }.getOrDefault(1f)
+        val font = runCatching { AppPrefs.fontFactor(this) }.getOrDefault(1f)
+        CompositionLocalProvider(LocalDensity provides Density(density.density * scale, density.fontScale * font)) {
+            HelferTheme(style = style, dark = dark,
+                tweak = runCatching { AppPrefs.designTweak(this, style) }.getOrNull(),
+                corners = runCatching { AppPrefs.cornerStyle(this) }.getOrDefault("design"),
+                effects = runCatching { AppPrefs.effects(this) }.getOrElse { de.meinhelfer.tag.ui.Effects() }) {
+                androidx.compose.material3.AlertDialog(
+                    onDismissRequest = {},
+                    title = { androidx.compose.material3.Text("Geschützter Wiederherstellungsmodus") },
+                    text = { androidx.compose.material3.Text("Die Wiederherstellung konnte nicht abgeschlossen werden. Der normale App-Betrieb bleibt zum Schutz deiner Daten gesperrt. Bitte lösche keine App-Daten und deinstalliere die App nicht. Öffne die App nach einem vollständigen Beenden erneut, um die Wiederherstellung erneut zu versuchen.") },
+                    confirmButton = {
+                        androidx.compose.material3.TextButton(onClick = { finishAndRemoveTask(); android.os.Process.killProcess(android.os.Process.myPid()) }) {
+                            androidx.compose.material3.Text("App beenden")
+                        }
+                    }
+                )
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (!HelferApplication.startupReady) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+            setContent { RecoveryScreen() }
+            return
+        }
         if (savedInstanceState == null) {
             intent?.getLongExtra(EXTRA_PERSON, -1L)?.takeIf { it > 0 }?.let { pendingPerson = it }
             pendingScreen = intent?.getStringExtra(EXTRA_SCREEN)
