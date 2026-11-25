@@ -19,7 +19,11 @@ class HelferApplication : Application() {
             // weiter mit dem normalen Start
         }
         // Fail closed: opening Room after a failed rollback could mutate incomplete data.
-        Backup.applyPending(this)
-        startupReady = true
+        try {
+            Backup.applyPending(this)
+            startupReady = true
+        } catch (_: Exception) {
+            // Keep Room closed; MainActivity offers a database-free recovery screen.
+        }
     }
 }
