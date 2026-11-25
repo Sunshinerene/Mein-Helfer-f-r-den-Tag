@@ -40,6 +40,7 @@ internal class LabRestore(private val context: Context) {
     }
 
     private fun verify(state: String) {
+        check(DbCrypto.ensureLoaded()) { "SQLCipher konnte nicht geladen werden" }
         check(db.isFile && DbCrypto.isEncrypted(context))
         check(DbCrypto.storedPassphrase(context) == key(state))
         val sql = SQLiteDatabase.openOrCreateDatabase(db, key(state), null, null, null)
@@ -113,6 +114,7 @@ internal class LabRestore(private val context: Context) {
         val point = checkNotNull(log.getString("point", null))
         val result = runCatching {
             check(log.getBoolean("reached", false)) { "Abbruchpunkt nicht erreicht" }
+            check(DbCrypto.ensureLoaded()) { "SQLCipher konnte nicht geladen werden" }
             Backup.applyPending(context)
             val expected = if (point == "READY" || point == "COMMITTED" || point.startsWith("CLEAN:")) "B" else "A"
             verify(expected)
