@@ -8,3 +8,7 @@
 - [ ] Update: Entwicklungskanal praktisch prüfen, für jede veröffentlichte Testversion eindeutigen Versionsnamen und höheren versionCode vergeben.
 
 Vor jedem neuen Testrelease: Build und Tests erfolgreich, vorhandene Daten und Einstellungen erhalten, keine ungeprüfte Veröffentlichung auf main. Emotion Studio bleibt optionale spätere Erweiterung (siehe sunny-emotion-studio-backlog.md).
+
+## Priorität: Sunny Brain als paralleler Hauptentwicklungsstrang
+
+Sunny Brain bleibt während der Entwicklung der Emotion Engine und weiterer Module ein aktiver Kernbereich. Lokale Inferenz und Modellkompatibilität sind noch praktisch zu prüfen. Eine gemeinsame Schnittstelle für Absichtserkennung, Funktionskatalog, Emotion, Sprache und kontrollierte Aktionen soll schrittweise entstehen. Deterministische Funktionen bleiben ohne KI-Modell nutzbar; keine eigenmächtigen sensiblen Aktionen oder ungefragte Cloud-Übertragung. Emotion und Brain werden unabhängig testbar entwickelt.
