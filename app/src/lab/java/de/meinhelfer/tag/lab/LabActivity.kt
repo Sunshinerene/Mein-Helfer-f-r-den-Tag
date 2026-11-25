@@ -61,8 +61,9 @@ private fun LabHome(fixtures: LabFixtures, database: LabDatabase, abort: LabAbor
             Text("Die App beendet sich absichtlich. Danach erneut öffnen.")
             OutlinedButton(onClick = { runTest(abort::evaluate) }, enabled = !busy) { Text("Letzten Abbruchtest auswerten") }
             Text(result)
+            OutlinedButton(onClick = { runTest(abort::report) }, enabled = !busy) { Text("Ergebnisübersicht aller Abbruchtests") }
             listOf("Datensicherung und Wiederherstellung",
-                "Testprotokolle", "Systemdiagnose"
+                "Systemdiagnose"
             ).forEach { name ->
                 OutlinedCard(modifier = Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp)) {
