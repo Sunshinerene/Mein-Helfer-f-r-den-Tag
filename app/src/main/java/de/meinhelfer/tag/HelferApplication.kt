@@ -25,7 +25,8 @@ class HelferApplication : Application() {
         try {
             Backup.applyPending(this)
             startupReady = true
-            CoroutineScope(Dispatchers.IO).launch {
+            // Do not create an empty database before first-run setup.
+            if (getDatabasePath(de.meinhelfer.tag.data.DbCrypto.DB_NAME).exists()) CoroutineScope(Dispatchers.IO).launch {
                 runCatching { de.meinhelfer.tag.reminder.ReminderScheduler.rescheduleAll(this@HelferApplication) }
             }
         } catch (_: Exception) {
