@@ -29,7 +29,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import de.meinhelfer.tag.ui.HelferTheme
@@ -124,7 +123,7 @@ class MainActivity : FragmentActivity() {
                 androidx.compose.material3.AlertDialog(
                     onDismissRequest = {},
                     title = { androidx.compose.material3.Text("Geschützter Wiederherstellungsmodus") },
-                    text = { androidx.compose.material3.Text("Die Wiederherstellung konnte nicht abgeschlossen werden. Der normale App-Betrieb bleibt zum Schutz deiner Daten gesperrt. Bitte lösche keine App-Daten und deinstalliere die App nicht. Öffne die App nach einem vollständigen Beenden erneut, um die Wiederherstellung erneut zu versuchen.") },
+                    text = { androidx.compose.material3.Text("Die Wiederherstellung konnte nicht abgeschlossen werden. Der normale App-Betrieb ist zum Schutz deiner Daten gesperrt.\n\nWichtig: Medikamenten- und Terminerinnerungen sind derzeit nicht zuverlässig verfügbar. Bitte nutze vorübergehend deinen vorhandenen Medikamentenplan und separate Erinnerungen.\n\nLösche keine App-Daten und deinstalliere die App nicht. Beende die App und öffne sie erneut. Falls der Fehler bestehen bleibt, bewahre deine Sicherungsdatei auf und hole Hilfe.") },
                     confirmButton = {
                         androidx.compose.material3.TextButton(onClick = { finishAndRemoveTask(); android.os.Process.killProcess(android.os.Process.myPid()) }) {
                             androidx.compose.material3.Text("App beenden")
