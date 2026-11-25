@@ -285,7 +285,7 @@ object Backup {
         }
         if (File(staging, "COMMITTED").exists()) {
             val originals = SUFFIXES.map { File(dbFile.path + it) } +
-                listOf(File(dbFile.path + ".klartext"), docsDir, photosDir)
+                SUFFIXES.map { File(dbFile.path + it + ".klartext") } + listOf(docsDir, photosDir)
             originals.forEach { File(it.path + ".vorher").deleteRecursively() }
             DbCrypto.clearRestoreKey(app)
             staging.deleteRecursively()
@@ -394,7 +394,7 @@ object Backup {
                 .toString())
             java.io.FileOutputStream(interrupted).use { marker -> marker.write(1); marker.fd.sync() }
             SUFFIXES.forEach { aside(File(dbFile.path + it)) }
-            aside(File(dbFile.path + ".klartext"))
+            SUFFIXES.forEach { aside(File(dbFile.path + it + ".klartext")) }
             aside(docsDir)
             aside(photosDir)
 
@@ -474,6 +474,10 @@ object Backup {
                 check(edit.commit()) { "Einstellungen konnten nicht zurückgesetzt werden" }
             }
             if (rollback.isSuccess) {
+                java.io.FileOutputStream(File(staging, "ROLLED_BACK")).use { marker ->
+                    marker.write(1)
+                    marker.fd.sync()
+                }
                 DbCrypto.clearRestoreKey(app)
                 staging.deleteRecursively()
             }
