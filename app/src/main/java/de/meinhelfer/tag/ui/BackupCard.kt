@@ -400,8 +400,13 @@ internal fun BackupCard() {
             },
             confirmButton = {
                 TextButton(onClick = {
-                    step = BackupStep.Working("App wird neu gestartet …")
-                    Backup.restartApp(context)
+                    try {
+                        Backup.confirmStaged(context)
+                        step = BackupStep.Working("App wird neu gestartet …")
+                        Backup.restartApp(context)
+                    } catch (_: Exception) {
+                        step = BackupStep.Done("Freigabe fehlgeschlagen", "Die Wiederherstellung konnte nicht freigegeben werden. Bitte prüfe die Sicherung erneut.")
+                    }
                 }) { Text("Ersetzen und neu starten") }
             },
             dismissButton = {
