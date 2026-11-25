@@ -68,7 +68,7 @@ object UpdateChecker {
         val json = if (dev) {
             val releases = org.json.JSONArray(body)
             (0 until releases.length()).map { releases.getJSONObject(it) }
-                .filter { !it.optBoolean("draft") && it.optBoolean("prerelease") && it.optString("tag_name").matches(Regex("v[0-9]+\\\\.[0-9]+\\\\.[0-9]+-dev\\\\.[0-9]+")) && it.optJSONArray("assets")?.let { a -> (0 until a.length()).any { n -> a.getJSONObject(n).optString("name").endsWith(".apk") } } == true }
+                .filter { !it.optBoolean("draft") && it.optBoolean("prerelease") && it.optString("tag_name").matches(Regex("""v[0-9]+\.[0-9]+\.[0-9]+-dev\.[0-9]+""")) && it.optJSONArray("assets")?.let { a -> (0 until a.length()).any { n -> a.getJSONObject(n).optString("name").endsWith(".apk") } } == true }
                 .reduceOrNull { a, b -> if (isNewer(b.optString("tag_name"), a.optString("tag_name"))) b else a } ?: return@withContext null
         } else JSONObject(body)
         val tag = json.optString("tag_name")
@@ -98,6 +98,7 @@ object UpdateChecker {
             val dir = File(context.cacheDir, "updates").apply { mkdirs() }
             dir.listFiles()?.forEach { it.delete() }
             val target = File(dir, "MeinHelfer-${info.version}.apk")
+            val partial = File(dir, "download.part")
 
             val connection = URL(info.apkUrl).openConnection() as HttpURLConnection
             connection.connectTimeout = 15_000
@@ -107,7 +108,7 @@ object UpdateChecker {
                 if (connection.responseCode != 200) throw IOException("HTTP ${connection.responseCode}")
                 val total = connection.contentLengthLong
                 connection.inputStream.use { input ->
-                    target.outputStream().use { output ->
+                    partial.outputStream().use { output ->
                         val buffer = ByteArray(64 * 1024)
                         var done = 0L
                         while (true) {
@@ -119,8 +120,11 @@ object UpdateChecker {
                         }
                     }
                 }
+                if (partial.length() == 0L || (total > 0 && partial.length() != total)) throw IOException("APK unvollständig")
+                check(partial.renameTo(target)) { "APK konnte nicht gespeichert werden" }
             } finally {
                 connection.disconnect()
+                partial.delete()
             }
             target
         }
@@ -155,11 +159,13 @@ object UpdateChecker {
             c.readTimeout = 30_000
             c.instanceFollowRedirects = true
             c.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android) MeinHelfer-App")
+            try {
             if (c.responseCode !in 200..299) return@runCatching false
             val type = c.contentType.orEmpty()
             if (type.isNotEmpty() && !type.contains("pdf", ignoreCase = true)) return@runCatching false
             c.inputStream.use { input -> target.outputStream().use { input.copyTo(it) } }
             target.length() > 1000
+            } finally { c.disconnect() }
         }.getOrDefault(false)
     }
 
