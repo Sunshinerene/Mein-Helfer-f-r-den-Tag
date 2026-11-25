@@ -28,6 +28,36 @@ internal class LabRestore(private val context: Context) {
     fun pending() = log.getBoolean("pending", false)
     fun report() = points.joinToString("\n") { "$it: ${log.getString("result_$it", "Nicht getestet")}" }
 
+    fun reset(): String {
+        check(context.packageName == "de.meinhelfer.tag.lab")
+        listOf(db, docs, photos).forEach { target ->
+            check(target.deleteRecursively())
+            check(File(target.path + ".vorher").deleteRecursively())
+        }
+        listOf("-wal", "-shm", "-journal").forEach { suffix ->
+            check(File(db.path + suffix).deleteRecursively())
+            check(File(db.path + suffix + ".vorher").deleteRecursively())
+        }
+        listOf("restore_staging", "restore_staging_cleanup").forEach {
+            check(File(context.filesDir, it).deleteRecursively())
+        }
+        DbCrypto.clearRestoreKey(context)
+        DbCrypto.setPassphrase(context, null)
+        check(prefs.edit().clear().commit())
+        check(log.edit().putBoolean("pending", false).putBoolean("reached", false).remove("point").commit())
+        return "Synthetische Testdaten zurückgesetzt – Ergebnisse erhalten"
+    }
+
+    fun diagnosis(): String = buildString {
+        appendLine("Paket: " + context.packageName)
+        appendLine("ABI: " + android.os.Build.SUPPORTED_ABIS.joinToString())
+        appendLine("SQLCipher geladen: " + DbCrypto.ensureLoaded())
+        appendLine("Wiederherstellung offen: " + pending())
+        appendLine("Staging: " + File(context.filesDir, "restore_staging").exists())
+        appendLine("Cleanup: " + File(context.filesDir, "restore_staging_cleanup").exists())
+        append(report())
+    }
+
     private fun makeDb(file: File, state: String) {
         check(DbCrypto.ensureLoaded())
         file.parentFile?.mkdirs()
