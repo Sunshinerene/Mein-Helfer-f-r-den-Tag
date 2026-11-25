@@ -178,7 +178,12 @@ object Backup {
         try {
             val base = staging.canonicalPath + File.separator
             var docs = 0
-            ZipInputStream(BackupCrypto.decrypt(source, password)).use { zip ->
+            BackupCrypto.decrypt(source, password).use { decrypted ->
+            ZipInputStream(object : InputStream() {
+                override fun read() = decrypted.read()
+                override fun read(b: ByteArray, off: Int, len: Int) = decrypted.read(b, off, len)
+                override fun close() {}
+            }).use { zip ->
                 while (true) {
                     val e = zip.nextEntry ?: break
                     if (e.isDirectory) continue
@@ -199,6 +204,10 @@ object Backup {
                         else -> target.outputStream().use { nonClosing(zip).copyTo(it) }
                     }
                 }
+            }
+            // ZIP may stop at its central directory before the authenticated stream ends.
+            val drain = ByteArray(8192)
+            while (decrypted.read(drain) != -1) { /* authenticate remaining blocks */ }
             }
             val metaFile = File(staging, "meta.json")
             if (!metaFile.exists()) throw java.io.IOException("Sicherung unvollständig")
