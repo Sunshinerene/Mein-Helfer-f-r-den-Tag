@@ -201,7 +201,7 @@ object Backup {
             if (version > current) throw NewerBackupException()
             if (sqlWal.exists() && sqlWal.length() == 0L) sqlWal.delete()
 
-            File(staging, READY).writeText("1")
+            File(staging, "VERIFIED").writeText("1")
             BackupInfo(
                 createdMillis = meta.optLong("created"),
                 appVersion = meta.optString("app", "?"),
@@ -238,6 +238,13 @@ object Backup {
     }
 
     /** Verwirft einen entpackten, aber nicht uebernommenen Stand. */
+    fun confirmStaged(context: Context) {
+        val staging = File(context.applicationContext.filesDir, STAGING)
+        check(File(staging, "VERIFIED").exists()) { "Keine geprüfte Sicherung vorhanden" }
+        check(!File(staging, "APPLYING").exists() && !File(staging, "COMMITTED").exists())
+        File(staging, READY).outputStream().use { it.write(1); it.fd.sync() }
+    }
+
     fun discardStaged(context: Context) {
         val staging = File(context.applicationContext.filesDir, STAGING)
         check(!File(staging, "APPLYING").exists() && !File(staging, "COMMITTED").exists()) {
