@@ -155,8 +155,11 @@ object Backup {
     ): BackupInfo = withContext(Dispatchers.IO) {
         val app = context.applicationContext
         val staging = File(app.filesDir, STAGING)
-        staging.deleteRecursively()
-        staging.mkdirs()
+        check(!File(staging, "APPLYING").exists() && !File(staging, "COMMITTED").exists()) {
+            "Eine begonnene Wiederherstellung muss zuerst abgeschlossen werden."
+        }
+        check(staging.deleteRecursively()) { "Alter Zwischenstand konnte nicht entfernt werden" }
+        check(staging.mkdirs()) { "Zwischenordner konnte nicht erstellt werden" }
         try {
             val base = staging.canonicalPath + File.separator
             var docs = 0
@@ -236,7 +239,11 @@ object Backup {
 
     /** Verwirft einen entpackten, aber nicht uebernommenen Stand. */
     fun discardStaged(context: Context) {
-        File(context.applicationContext.filesDir, STAGING).deleteRecursively()
+        val staging = File(context.applicationContext.filesDir, STAGING)
+        check(!File(staging, "APPLYING").exists() && !File(staging, "COMMITTED").exists()) {
+            "Begonnene Wiederherstellung darf nicht verworfen werden."
+        }
+        staging.deleteRecursively()
     }
 
     // ------------------------------------------------------------ Austauschen beim Start
@@ -351,6 +358,9 @@ object Backup {
                 runCatching { de.meinhelfer.tag.ai.SunnyMemory.importText(app, f.readText(), replace = true) }
             }
 
+            check(dbFile.isFile) { "Wiederhergestellte Datenbank fehlt" }
+            check(DbCrypto.ensureLoaded()) { "Verschluesselung nicht verfuegbar" }
+            probeVersion(dbFile, if (encrypted) File(staging, "db/passphrase.txt").readText() else "", encrypted)
             // Commit marker must be durable before deleting any original files.
             java.io.FileOutputStream(File(staging, "COMMITTED")).use { marker ->
                 marker.write(1)
