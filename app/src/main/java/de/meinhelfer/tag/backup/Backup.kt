@@ -404,6 +404,8 @@ object Backup {
                 originalPrefs.put(k, item)
             }
             val originalPresence = JSONArray(originalFiles.map { it.exists() })
+            // No live files have been moved yet; a previous pre-marker attempt is safe to clear.
+            DbCrypto.clearRestoreKey(app)
             DbCrypto.saveRestoreKey(app)
             DbCrypto.saveRestoreMetadata(app, JSONObject()
                 .put("prefs", originalPrefs)
@@ -469,11 +471,13 @@ object Backup {
             AppPrefs.setRestoreResult(app, "ok:" + System.currentTimeMillis())
         } catch (t: Throwable) {
             if (cleanup.exists() || !staging.exists() || File(staging, "COMMITTED").exists()) throw t
+            // Before APPLYING, no live data was changed. Never roll back using stale metadata.
+            if (!interrupted.exists()) throw t
             // Zurueck zum alten Stand
             val rollback = runCatching {
-                placed.forEach { it.deleteRecursively() }
+                placed.forEach { check(it.deleteRecursively()) }
                 moved.asReversed().forEach { (vorher, original) ->
-                    original.deleteRecursively()
+                    check(original.deleteRecursively())
                     check(vorher.renameTo(original)) { "Original konnte nicht zurückverschoben werden: ${original.name}" }
                 }
                 if (passChanged) DbCrypto.restoreSavedKey(app)
