@@ -1832,7 +1832,16 @@ private fun SunnyModelSettings() {
                 android.net.Uri.parse("https://huggingface.co/litert-community/Gemma3-1B-IT/resolve/main/Gemma3-1B-IT_multi-prefill-seq_q4_ekv4096.litertlm?download=true")))
         } catch (e: Exception) { status = "Downloadlink konnte nicht geöffnet werden." }
     }) { Text("KI-Modell herunterladen") }
-    Text("Gemma 3 1B IT (ca. 584 MB). Bei Hugging Face anmelden und die Gemma-Lizenz akzeptieren. Danach die .litertlm-Datei importieren.",
+    Text("Einrichtung – Schritt für Schritt", style = MaterialTheme.typography.labelLarge)
+    Text("1. Gemma 3 1B IT als .litertlm-Datei herunterladen (Internet erforderlich). Falls verlangt, bei Hugging Face anmelden und die Modelllizenz akzeptieren.\n2. Mindestens 2 GB freien Speicher bereithalten.\n3. Modelldatei importieren und die heruntergeladene Datei auswählen. Import abwarten.\n4. Flugmodus einschalten und WLAN ausschalten.\n5. Eine unverfängliche Testfrage eingeben und Offline-KI testen wählen. Nach dem Import ist für den lokalen Test kein Internet nötig.",
+        style = MaterialTheme.typography.bodySmall)
+    TextButton(enabled = !busy, onClick = {
+        try {
+            context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW,
+                android.net.Uri.parse("https://huggingface.co/litert-community/Gemma3-1B-IT/tree/main")))
+        } catch (e: Exception) { status = "Modellseite konnte nicht geöffnet werden." }
+    }) { Text("Alternative: Modellseite und Lizenz öffnen") }
+    Text("Bei einem Fehler bitte die angezeigte Meldung notieren. Die Modellkompatibilität wird beim lokalen Test geprüft.",
         style = MaterialTheme.typography.bodySmall)
     OutlinedButton(enabled = !busy, onClick = { picker.launch(arrayOf("application/octet-stream", "*/*")) }) {
         Text(if (busy) "Bitte warten…" else "Modelldatei importieren")
