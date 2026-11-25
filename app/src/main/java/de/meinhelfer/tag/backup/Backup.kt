@@ -197,7 +197,7 @@ object Backup {
             val sqlWal = File(staging, "db/" + DbCrypto.DB_NAME + "-wal")
             check(DbCrypto.ensureLoaded()) { "Verschluesselung nicht verfuegbar" }
             val version = probeVersion(dbFile, pass, encrypted)
-            val current = AppDatabase.get(app).openHelper.readableDatabase.version
+            val current = de.meinhelfer.tag.data.DATABASE_SCHEMA_VERSION
             if (version > current) throw NewerBackupException()
             if (sqlWal.exists() && sqlWal.length() == 0L) sqlWal.delete()
 
