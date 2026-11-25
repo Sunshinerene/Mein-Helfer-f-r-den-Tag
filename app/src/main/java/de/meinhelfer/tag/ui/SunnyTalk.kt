@@ -123,7 +123,7 @@ fun SunnyTalkOverlay() {
         val lp = android.view.WindowManager.LayoutParams(
             android.view.WindowManager.LayoutParams.WRAP_CONTENT,
             android.view.WindowManager.LayoutParams.WRAP_CONTENT,
-            android.view.WindowManager.LayoutParams.TYPE_APPLICATION_ABOVE_SUB_PANEL,
+            android.view.WindowManager.LayoutParams.TYPE_APPLICATION_SUB_PANEL,
             android.view.WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                 android.view.WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
                 android.view.WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
