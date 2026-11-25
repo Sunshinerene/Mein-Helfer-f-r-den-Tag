@@ -6,6 +6,11 @@ import android.os.Process
 internal class LabAbort(context: Context, private val database: LabDatabase) {
     init { check(context.packageName == "de.meinhelfer.tag.lab") }
     private val prefs = context.getSharedPreferences("lab_abort", Context.MODE_PRIVATE)
+    private val points = listOf("A_PREPARED", "ASIDE", "PLACED", "COMMITTED", "CLEANED")
+    fun report(): String = points.joinToString("\n") { point ->
+        "$point: ${prefs.getString("report_$point", "Nicht getestet")}"
+    }
+
     fun pending() = prefs.getBoolean("pending", false)
 
     fun start(): String = startAt("A_PREPARED")
@@ -45,7 +50,8 @@ internal class LabAbort(context: Context, private val database: LabDatabase) {
             check(actual.endsWith(if (committed) "Zustand B" else "Zustand A"))
             "BESTANDEN – $point; $actual"
         }.getOrElse { "FEHLER – $point; ${it.message}" }
-        check(prefs.edit().putBoolean("pending", !result.startsWith("BESTANDEN")).putString("result", result).commit())
+        check(prefs.edit().putBoolean("pending", !result.startsWith("BESTANDEN")).putString("result", result)
+            .putString("report_$point", "${java.util.Date()} – $result").commit())
         return result
     }
 }
