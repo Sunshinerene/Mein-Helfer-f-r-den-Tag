@@ -18,3 +18,22 @@ Verify separate package IDs and absence of fault injection in normal APK. Build 
 
 ## Praxistest 2026-11-25
 Build #2, Commit 7142d18: erfolgreich. Nutzer bestätigt Installation, Auswertung und alle fünf synthetischen Abbruchszenarien bestanden. Kein Screenshot wegen FLAG_SECURE. Dies ist kein Nachweis der produktiven verschlüsselten Wiederherstellung. Nächster Meilenstein: echte Restore-Logik mit isolierten synthetischen Daten testen.
+
+
+## Praxistest Phase 2 – 2026-11-25
+Nutzer bestätigt auf Smartphone nach SQLCipher-Initialisierungskorrektur e183039 alle zehn echten Restore-Abbruchszenarien mit synthetischen Daten bestanden.
+
+| Checkpoint | Ergebnis |
+|---|---|
+| READY | BESTANDEN B |
+| APPLYING | BESTANDEN A |
+| ASIDE:mein_helfer.db | BESTANDEN A |
+| PLACE:mein_helfer.db | BESTANDEN A |
+| PLACE:docs_enc | BESTANDEN A |
+| PLACE:photos | BESTANDEN A |
+| KEY | BESTANDEN A |
+| PREFS | BESTANDEN A |
+| COMMITTED | BESTANDEN B |
+| CLEAN:mein_helfer.db.vorher | BESTANDEN B |
+
+Erster APPLYING-Test scheiterte an fehlender SQLCipher-Initialisierung nach Prozessneustart; erneute Auswertung nach Update und alle weiteren Tests erfolgreich laut Nutzer. Insgesamt 15/15 Szenarien in beiden Phasen. Grenzen: synthetisches SQLCipher-Schema, künstlich erzeugtes Backup, kein vollständiger Room-Roundtrip, keine separate Sprachschatzprüfung, keine Stromausfallprüfung. Keine Freigabe für produktive Wiederherstellung allein aufgrund dieser Tests.
