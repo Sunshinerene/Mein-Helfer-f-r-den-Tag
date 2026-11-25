@@ -35,14 +35,6 @@ internal class LabRoundTrip(private val context: Context) {
             db.close()
         }
     }
-    private inline fun <T> withRoom(action: (AppDatabase) -> T): T {
-        val db = room()
-        try {
-            return action(db)
-        } finally {
-            db.close()
-        }
-    }
     private fun clearFixture() {
         check(!staging.exists() && !File(context.filesDir, "restore_staging_cleanup").exists())
         check(DbCrypto.restoreMetadata(context) == null)
