@@ -281,6 +281,7 @@ object Backup {
             val originals = SUFFIXES.map { File(dbFile.path + it) } +
                 listOf(File(dbFile.path + ".klartext"), docsDir, photosDir)
             originals.forEach { File(it.path + ".vorher").deleteRecursively() }
+            DbCrypto.clearRestoreKey(app)
             staging.deleteRecursively()
             AppPrefs.setRestoreResult(app, "ok:" + System.currentTimeMillis())
             return
@@ -313,6 +314,7 @@ object Backup {
             val meta = JSONObject(File(staging, "meta.json").readText())
             val encrypted = meta.optBoolean("encrypted", true)
 
+            DbCrypto.saveRestoreKey(app)
             java.io.FileOutputStream(interrupted).use { marker -> marker.write(1); marker.fd.sync() }
             SUFFIXES.forEach { aside(File(dbFile.path + it)) }
             aside(File(dbFile.path + ".klartext"))
@@ -329,8 +331,8 @@ object Backup {
             if (stagedPhotos.exists()) place(stagedPhotos, photosDir) else { placed.add(photosDir); check(photosDir.mkdirs()) }
 
             if (encrypted) {
-                DbCrypto.setPassphrase(app, File(staging, "db/passphrase.txt").readText())
                 passChanged = true
+                DbCrypto.setPassphrase(app, File(staging, "db/passphrase.txt").readText())
             }
 
             val prefsJson = File(staging, "prefs.json")
@@ -368,6 +370,7 @@ object Backup {
             }
             // Erfolg: alte Staende loeschen
             moved.forEach { (vorher, _) -> vorher.deleteRecursively() }
+            DbCrypto.clearRestoreKey(app)
             staging.deleteRecursively()
             AppPrefs.setRestoreResult(app, "ok:" + System.currentTimeMillis())
         } catch (t: Throwable) {
@@ -379,7 +382,7 @@ object Backup {
                     original.deleteRecursively()
                     check(vorher.renameTo(original)) { "Original konnte nicht zurückverschoben werden: ${original.name}" }
                 }
-                if (passChanged) DbCrypto.setPassphrase(app, oldPass)
+                if (passChanged) DbCrypto.restoreSavedKey(app)
                 val edit = prefsFile.edit().clear()
                 oldPrefs.forEach { (k, v) ->
                     when (v) {
@@ -393,7 +396,10 @@ object Backup {
                 }
                 check(edit.commit()) { "Einstellungen konnten nicht zurückgesetzt werden" }
             }
-            if (rollback.isSuccess) staging.deleteRecursively()
+            if (rollback.isSuccess) {
+                DbCrypto.clearRestoreKey(app)
+                staging.deleteRecursively()
+            }
             else throw IllegalStateException("Wiederherstellung unterbrochen; Sicherungsstände bleiben erhalten", rollback.exceptionOrNull())
             AppPrefs.setRestoreResult(app, "fehler:" + System.currentTimeMillis())
         }
