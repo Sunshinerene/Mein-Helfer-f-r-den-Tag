@@ -133,7 +133,7 @@ object Backup {
                 .put("skipped", skipped)
             entry("meta.json") { it.write(meta.toString().toByteArray(Charsets.UTF_8)) }
         }
-        AppPrefs.setLastBackup(app, created)
+        if (skipped == 0) AppPrefs.setLastBackup(app, created)
         BackupInfo(created, appVersion(app), dbVersion, docs, photos, skipped)
     }
 
@@ -211,6 +211,9 @@ object Backup {
     private fun probeVersion(file: File, pass: String, encrypted: Boolean): Int {
         val db = SQLiteDatabase.openOrCreateDatabase(file, if (encrypted) pass else "", null, null, null)
         try {
+            db.rawQuery("PRAGMA integrity_check", emptyArray<String>()).use { cursor ->
+                check(cursor.moveToFirst() && cursor.getString(0).equals("ok", ignoreCase = true) && !cursor.moveToNext()) { "Datenbankintegrität fehlerhaft" }
+            }
             return db.version
         } finally {
             db.close()
@@ -262,21 +265,21 @@ object Backup {
         val oldPrefs = prefsFile.all.toMap()
         val moved = mutableListOf<Pair<File, File>>() // (alt vorher-Name, urspruenglicher Ort)
         var passChanged = false
+        val placed = mutableSetOf<File>()
 
         fun aside(f: File) {
             if (!f.exists()) return
             val to = File(f.path + ".vorher")
-            to.deleteRecursively()
+            check(!to.exists()) { "Vorheriger Wiederherstellungsstand vorhanden" }
             check(f.renameTo(to)) { "Umbenennen fehlgeschlagen" }
             moved.add(to to f)
         }
 
         fun place(from: File, to: File) {
+            check(!to.exists()) { "Ziel existiert bereits" }
             to.parentFile?.mkdirs()
-            if (!from.renameTo(to)) {
-                from.copyRecursively(to, overwrite = true)
-                from.deleteRecursively()
-            }
+            placed.add(to)
+            check(from.renameTo(to)) { "Wiederherstellung konnte Datei nicht verschieben" }
         }
 
         try {
@@ -284,7 +287,7 @@ object Backup {
             val encrypted = meta.optBoolean("encrypted", true)
 
             SUFFIXES.forEach { aside(File(dbFile.path + it)) }
-            File(dbFile.path + ".klartext").delete()
+            aside(File(dbFile.path + ".klartext"))
             aside(docsDir)
             aside(photosDir)
 
@@ -293,9 +296,9 @@ object Backup {
                 if (from.exists()) place(from, File(dbFile.path + s))
             }
             val stagedDocs = File(staging, "docs_enc")
-            if (stagedDocs.exists()) place(stagedDocs, docsDir) else docsDir.mkdirs()
+            if (stagedDocs.exists()) place(stagedDocs, docsDir) else { placed.add(docsDir); check(docsDir.mkdirs()) }
             val stagedPhotos = File(staging, "photos")
-            if (stagedPhotos.exists()) place(stagedPhotos, photosDir) else photosDir.mkdirs()
+            if (stagedPhotos.exists()) place(stagedPhotos, photosDir) else { placed.add(photosDir); check(photosDir.mkdirs()) }
 
             if (encrypted) {
                 DbCrypto.setPassphrase(app, File(staging, "db/passphrase.txt").readText())
@@ -334,12 +337,10 @@ object Backup {
         } catch (t: Throwable) {
             // Zurueck zum alten Stand
             runCatching {
-                SUFFIXES.forEach { File(dbFile.path + it).delete() }
-                docsDir.deleteRecursively()
-                photosDir.deleteRecursively()
+                placed.forEach { it.deleteRecursively() }
                 moved.asReversed().forEach { (vorher, original) ->
                     original.deleteRecursively()
-                    vorher.renameTo(original)
+                    check(vorher.renameTo(original)) { "Original konnte nicht zurückverschoben werden: ${original.name}" }
                 }
                 if (passChanged) DbCrypto.setPassphrase(app, oldPass)
                 val edit = prefsFile.edit().clear()
