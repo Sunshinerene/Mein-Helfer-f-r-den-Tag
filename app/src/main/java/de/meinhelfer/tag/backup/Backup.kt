@@ -314,7 +314,32 @@ object Backup {
             val meta = JSONObject(File(staging, "meta.json").readText())
             val encrypted = meta.optBoolean("encrypted", true)
 
+            val originalFiles = SUFFIXES.map { File(dbFile.path + it) } +
+                SUFFIXES.map { File(dbFile.path + it + ".klartext") } +
+                listOf(docsDir, photosDir)
+            check(originalFiles.none { File(it.path + ".vorher").exists() }) {
+                "Vorheriger Wiederherstellungsstand vorhanden"
+            }
+            val originalPrefs = JSONObject()
+            oldPrefs.forEach { (k, v) ->
+                val item = JSONObject()
+                when (v) {
+                    is Boolean -> item.put("t", "b").put("v", v)
+                    is Int -> item.put("t", "i").put("v", v)
+                    is Long -> item.put("t", "l").put("v", v)
+                    is Float -> item.put("t", "f").put("v", v.toDouble())
+                    is String -> item.put("t", "s").put("v", v)
+                    is Set<*> -> item.put("t", "set").put("v", JSONArray(v.map { it.toString() }))
+                    else -> error("Unbekannter Einstellungstyp")
+                }
+                originalPrefs.put(k, item)
+            }
+            val originalPresence = JSONArray(originalFiles.map { it.exists() })
             DbCrypto.saveRestoreKey(app)
+            DbCrypto.saveRestoreMetadata(app, JSONObject()
+                .put("prefs", originalPrefs)
+                .put("presence", originalPresence)
+                .toString())
             java.io.FileOutputStream(interrupted).use { marker -> marker.write(1); marker.fd.sync() }
             SUFFIXES.forEach { aside(File(dbFile.path + it)) }
             aside(File(dbFile.path + ".klartext"))
