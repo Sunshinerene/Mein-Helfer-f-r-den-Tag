@@ -7,9 +7,11 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
+internal const val DATABASE_SCHEMA_VERSION = 31
+
 @Database(
     entities = [Medication::class, Appointment::class, Doctor::class, Checkin::class, DayNote::class, Person::class, Todo::class, Document::class, ConsentRecord::class, MoodEntry::class, Goal::class, GoalStep::class, Responsibility::class, VitalEntry::class, CareLogEntry::class, BudgetEntry::class],
-    version = 31,
+    version = DATABASE_SCHEMA_VERSION,
     // Das Schema wird beim Bauen exportiert; ein Test vergleicht es mit den Umstellungen (MigrationSchemaTest).
     exportSchema = true,
 )
