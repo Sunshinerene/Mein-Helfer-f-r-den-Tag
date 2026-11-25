@@ -141,16 +141,16 @@ internal object BackupCrypto {
             if (first < 0) return -1
             val b = ByteArray(3)
             readFully(input, b)
-            return (first shl 24) or ((b[0].toInt() and 0xFF) shl 16) or ((b[1].toInt() and 0xFF) shl 8) or (b[2].toInt() and 0xFF)
+            val length = (first shl 24) or ((b[0].toInt() and 0xFF) shl 16) or ((b[1].toInt() and 0xFF) shl 8) or (b[2].toInt() and 0xFF)
+            if (length !in 16..(CHUNK + 16)) throw WrongPasswordException()
+            return length
         }
 
         private fun fill(): Boolean {
             if (done) return false
             if (nextLen < 0) {
                 // Kein Block mehr, aber der letzte wurde nie als solcher gelesen: Datei abgeschnitten
-                done = true
-                if (counter == 0) throw WrongPasswordException()
-                return false
+                throw WrongPasswordException()
             }
             if (nextLen > CHUNK + 64) throw WrongPasswordException()
             val ct = ByteArray(nextLen)
