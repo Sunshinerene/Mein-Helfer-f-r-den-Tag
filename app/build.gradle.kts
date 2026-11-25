@@ -29,6 +29,12 @@ android {
     }
 
     buildTypes {
+        create("lab") {
+            initWith(getByName("debug"))
+            applicationIdSuffix = ".lab"
+            versionNameSuffix = "-lab"
+            matchingFallbacks += listOf("debug")
+        }
         release {
             isMinifyEnabled = false
         }
