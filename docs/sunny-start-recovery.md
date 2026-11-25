@@ -16,3 +16,6 @@ Separater datenbankfreier Einstieg mit verständlicher Fehleranzeige, erneutem s
 
 ## Abnahmetests
 Erstinstallation, Update mit Altbestand, fehlende Onboarding-Markierung, gültige/ungültige Sicherung, falsches Passwort, Abbruch in jeder Wiederherstellungsphase, erneuter Abbruch beim Rollback, nicht behebbarer Fehler, Offlinebetrieb. Tests ausschließlich mit Testdaten bis zur Freigabe.
+
+## Verbindliche Design-Kompatibilität
+Alle Start-, Einrichtungs-, Hilfe-, Fehler- und Wiederherstellungsoberflächen verwenden die vorhandene HelferTheme-Architektur und dieselben Designparameter wie die normale App: Stil, Hell/Dunkel, Farbanpassungen, Schriftfaktor, UI-Skalierung, Ecken und Effekte. Keine separaten konkurrierenden Designsysteme. Der Notfallmodus liest ausschließlich sicher verfügbare lokale Designpräferenzen ohne MainViewModel oder Room; bei Fehlern neutrales barrierearmes Ersatzdesign. Keine Änderungen an gespeicherten Designpräferenzen allein durch den Notfallmodus. Bei Erstinstallation Standarddesign, nach erfolgreicher Wiederherstellung das übernommene Design. Abnahmetests: alle vorhandenen Designstile, Hell/Dunkel, große Schrift, Hoch-/Querformat, beschädigte oder fehlende Präferenzen und Offlinebetrieb.
