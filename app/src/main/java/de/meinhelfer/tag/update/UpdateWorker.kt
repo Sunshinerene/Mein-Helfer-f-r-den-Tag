@@ -16,6 +16,7 @@ import java.util.concurrent.TimeUnit
 class UpdateWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
+        if (!de.meinhelfer.tag.HelferApplication.startupReady) return Result.success()
         val context = applicationContext
         if (!AppPrefs.autoUpdateCheck(context)) return Result.success()
 
