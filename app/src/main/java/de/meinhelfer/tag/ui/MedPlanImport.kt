@@ -73,7 +73,7 @@ private fun planDayFor(doc: Document?, plan: MedPlan?): Long =
     if (doc != null) MedPlans.planDay(doc, plan) else plan?.day ?: LocalDate.now().toEpochDay()
 
 private class ReviewRow(val match: PlanMatch) {
-    var use by mutableStateOf(match.status != PlanStatus.Same)
+    var use by mutableStateOf(false)
     var name by mutableStateOf(match.med.name.takeUnless { match.med.nameMissing }.orEmpty())
     var dosage by mutableStateOf(match.med.dosage())
 }
@@ -221,11 +221,11 @@ fun MedPlanReviewDialog(
                             updates += e.copy(
                                 name = r.name.trim(),
                                 dosage = r.dosage.trim(),
-                                times = if (times.isNotBlank()) times else e.times,
-                                dailyUse = if (pm.hasSchema) pm.dailyUse() else e.dailyUse,
+                                times = times,
+                                dailyUse = pm.dailyUse(),
                                 // Einheit nur übernehmen, wenn bisher keine eigene gewählt war; Mengen nur, wenn die Einheit passt
                                 unit = pm.medUnit()?.key?.takeIf { e.unit == "Stück" } ?: e.unit,
-                                doses = if (pm.hasSchema && (pm.medUnit() == null || pm.medUnit()?.key == (pm.medUnit()?.key?.takeIf { e.unit == "Stück" } ?: e.unit))) pm.doses() else e.doses,
+                                doses = if (!pm.hasSchema) "" else if (pm.hasSchema && (pm.medUnit() == null || pm.medUnit()?.key == (pm.medUnit()?.key?.takeIf { e.unit == "Stück" } ?: e.unit))) pm.doses() else e.doses,
                                 // Vorrat auf heute umrechnen, damit der neue Verbrauch nicht rueckwirkend zaehlt
                                 stock = e.currentStock(today),
                                 stockDay = today,
