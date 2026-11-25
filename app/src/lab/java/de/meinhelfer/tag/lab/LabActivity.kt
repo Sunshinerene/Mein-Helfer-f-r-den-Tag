@@ -20,12 +20,14 @@ class LabActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         check(packageName == "de.meinhelfer.tag.lab")
         window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
-        setContent { MaterialTheme { LabHome(LabFixtures(this@LabActivity), LabDatabase(this@LabActivity)) } }
+        val database = LabDatabase(this)
+        val abort = LabAbort(this, database)
+        setContent { MaterialTheme { LabHome(LabFixtures(this@LabActivity), database, abort) } }
     }
 }
 
 @Composable
-private fun LabHome(fixtures: LabFixtures, database: LabDatabase) {
+private fun LabHome(fixtures: LabFixtures, database: LabDatabase, abort: LabAbort) {
     var result by remember { mutableStateOf("Noch kein Test ausgeführt") }
     var busy by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -38,6 +40,7 @@ private fun LabHome(fixtures: LabFixtures, database: LabDatabase) {
             } finally { busy = false }
         }
     }
+    LaunchedEffect(Unit) { runTest(abort::evaluate) }
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
@@ -50,9 +53,12 @@ private fun LabHome(fixtures: LabFixtures, database: LabDatabase) {
             OutlinedButton(onClick = { runTest(fixtures::verify) }, enabled = !busy) { Text("Testdaten prüfen") }
             Button(onClick = { runTest(database::prepare) }, enabled = !busy) { Text("Testdatenbanken A/B vorbereiten") }
             OutlinedButton(onClick = { runTest(database::verify) }, enabled = !busy) { Text("Aktive Testdatenbank prüfen") }
+            Button(onClick = { runTest(abort::start) }, enabled = !busy) { Text("Prozessabbruch: Zustand A") }
+            Text("Die App beendet sich absichtlich. Danach erneut öffnen.")
+            OutlinedButton(onClick = { runTest(abort::evaluate) }, enabled = !busy) { Text("Letzten Abbruchtest auswerten") }
             Text(result)
             listOf("Datensicherung und Wiederherstellung",
-                "Prozessabbruch simulieren", "Testprotokolle", "Systemdiagnose"
+                "Testprotokolle", "Systemdiagnose"
             ).forEach { name ->
                 OutlinedCard(modifier = Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp)) {
