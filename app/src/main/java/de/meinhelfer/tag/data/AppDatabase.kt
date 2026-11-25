@@ -398,10 +398,12 @@ abstract class AppDatabase : RoomDatabase() {
             MIGRATION_23_24, MIGRATION_24_25, MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30, MIGRATION_30_31,
         )
 
-        fun get(context: Context): AppDatabase =
-            instance ?: synchronized(this) {
+        fun get(context: Context): AppDatabase {
+            check(de.meinhelfer.tag.HelferApplication.startupReady) { "Database unavailable during recovery" }
+            return instance ?: synchronized(this) {
                 instance ?: open(context.applicationContext).also { instance = it }
             }
+        }
 
         private fun build(context: Context, encrypted: Boolean): AppDatabase {
             val builder = Room.databaseBuilder(context, AppDatabase::class.java, DbCrypto.DB_NAME)
