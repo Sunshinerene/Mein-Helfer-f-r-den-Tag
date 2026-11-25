@@ -20,12 +20,12 @@ class LabActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         check(packageName == "de.meinhelfer.tag.lab")
         window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
-        setContent { MaterialTheme { LabHome(LabFixtures(this@LabActivity)) } }
+        setContent { MaterialTheme { LabHome(LabFixtures(this@LabActivity), LabDatabase(this@LabActivity)) } }
     }
 }
 
 @Composable
-private fun LabHome(fixtures: LabFixtures) {
+private fun LabHome(fixtures: LabFixtures, database: LabDatabase) {
     var result by remember { mutableStateOf("Noch kein Test ausgeführt") }
     var busy by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -48,6 +48,8 @@ private fun LabHome(fixtures: LabFixtures) {
             Text("Separater App-Start. Produktive Dienste werden hier nicht gestartet.")
             Button(onClick = { runTest(fixtures::create) }, enabled = !busy) { Text("Künstliche Testdaten erzeugen") }
             OutlinedButton(onClick = { runTest(fixtures::verify) }, enabled = !busy) { Text("Testdaten prüfen") }
+            Button(onClick = { runTest(database::prepare) }, enabled = !busy) { Text("Testdatenbanken A/B vorbereiten") }
+            OutlinedButton(onClick = { runTest(database::verify) }, enabled = !busy) { Text("Aktive Testdatenbank prüfen") }
             Text(result)
             listOf("Datensicherung und Wiederherstellung",
                 "Prozessabbruch simulieren", "Testprotokolle", "Systemdiagnose"
