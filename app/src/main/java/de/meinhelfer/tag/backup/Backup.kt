@@ -170,7 +170,7 @@ object Backup {
     ): BackupInfo = withContext(Dispatchers.IO) {
         val app = context.applicationContext
         val staging = File(app.filesDir, STAGING)
-        check(!File(staging, "APPLYING").exists() && !File(staging, "COMMITTED").exists()) {
+        check(!File(staging.parentFile, STAGING + "_cleanup").exists() && listOf(READY, "APPLYING", "COMMITTED", "ROLLED_BACK").none { File(staging, it).exists() }) {
             "Eine begonnene Wiederherstellung muss zuerst abgeschlossen werden."
         }
         check(staging.deleteRecursively()) { "Alter Zwischenstand konnte nicht entfernt werden" }
@@ -178,6 +178,7 @@ object Backup {
         try {
             val base = staging.canonicalPath + File.separator
             var docs = 0
+            val seen = mutableSetOf<String>()
             BackupCrypto.decrypt(source, password).use { decrypted ->
             ZipInputStream(object : InputStream() {
                 override fun read() = decrypted.read()
@@ -188,9 +189,10 @@ object Backup {
                     val e = zip.nextEntry ?: break
                     if (e.isDirectory) continue
                     val name = e.name
-                    val okName = name == "meta.json" || name == "prefs.json" || name == "sprachschatz.txt" || name.startsWith("db/") ||
-                        name.startsWith("docs/") || name.startsWith("photos/")
-                    if (!okName) continue
+                    val flatMedia = (name.startsWith("docs/") || name.startsWith("photos/")) &&
+                        name.substringAfter('/').let { it.isNotBlank() && it != "." && it != ".." && '/' !in it && '\\' !in it }
+                    val okName = name in setOf("meta.json", "prefs.json", "sprachschatz.txt", "db/passphrase.txt", DB_ENTRY, DB_ENTRY + "-wal") || flatMedia
+                    if (!okName || !seen.add(name)) throw java.io.IOException("Unzulässiger oder doppelter Sicherungseintrag")
                     val rel = if (name.startsWith("docs/")) "docs_enc/" + name.removePrefix("docs/") else name
                     val target = File(staging, rel)
                     if (!target.canonicalPath.startsWith(base)) throw java.io.IOException("Ungueltiger Eintrag")
@@ -212,6 +214,7 @@ object Backup {
             val metaFile = File(staging, "meta.json")
             if (!metaFile.exists()) throw java.io.IOException("Sicherung unvollständig")
             val meta = JSONObject(metaFile.readText())
+            if (meta.optInt("format", -1) != 1 || meta.optInt("documents", -1) != docs || meta.optInt("photos", -1) != (File(staging, "photos").listFiles()?.size ?: 0)) throw java.io.IOException("Sicherung unvollständig oder unbekanntes Format")
             val dbFile = File(staging, DB_ENTRY)
             if (!dbFile.exists()) throw java.io.IOException("Sicherung unvollständig")
 
@@ -271,7 +274,7 @@ object Backup {
 
     fun discardStaged(context: Context) {
         val staging = File(context.applicationContext.filesDir, STAGING)
-        check(!File(staging, "APPLYING").exists() && !File(staging, "COMMITTED").exists()) {
+        check(!File(staging.parentFile, STAGING + "_cleanup").exists() && listOf(READY, "APPLYING", "COMMITTED", "ROLLED_BACK").none { File(staging, it).exists() }) {
             "Begonnene Wiederherstellung darf nicht verworfen werden."
         }
         staging.deleteRecursively()
