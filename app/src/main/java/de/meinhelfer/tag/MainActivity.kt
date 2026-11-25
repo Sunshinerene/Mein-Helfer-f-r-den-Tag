@@ -105,7 +105,7 @@ class MainActivity : FragmentActivity() {
 
     @androidx.compose.runtime.Composable
     private fun RecoveryScreen() {
-        val style = runCatching { AppPrefs.designStyle(this) }.getOrDefault("schlicht")
+        val style = de.meinhelfer.tag.ui.DesignStyle.fromKey(runCatching { AppPrefs.designStyle(this) }.getOrDefault("schlicht"))
         val mode = runCatching { AppPrefs.themeMode(this) }.getOrDefault("system")
         val dark = when (mode) {
             "dark" -> true
@@ -117,8 +117,8 @@ class MainActivity : FragmentActivity() {
         val font = runCatching { AppPrefs.fontFactor(this) }.getOrDefault(1f)
         CompositionLocalProvider(LocalDensity provides Density(density.density * scale, density.fontScale * font)) {
             HelferTheme(style = style, dark = dark,
-                tweak = runCatching { AppPrefs.designTweak(this, style) }.getOrNull(),
-                corners = runCatching { AppPrefs.cornerStyle(this) }.getOrDefault("design"),
+                tweak = runCatching { AppPrefs.designTweak(this, style.key) }.getOrNull(),
+                corners = de.meinhelfer.tag.ui.CornerStyle.fromKey(runCatching { AppPrefs.cornerStyle(this) }.getOrDefault("design")),
                 effects = runCatching { AppPrefs.effects(this) }.getOrElse { de.meinhelfer.tag.ui.Effects() }) {
                 androidx.compose.material3.AlertDialog(
                     onDismissRequest = {},
