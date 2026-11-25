@@ -81,6 +81,10 @@ private fun LabHome(fixtures: LabFixtures, database: LabDatabase, abort: LabAbor
             }
             OutlinedButton(onClick = { runTest(restore::evaluate) }, enabled = !busy) { Text("Echte Wiederherstellung auswerten") }
             OutlinedButton(onClick = { runTest(restore::report) }, enabled = !busy) { Text("Ergebnisse echte Wiederherstellung") }
+            OutlinedButton(onClick = {
+                val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                clipboard.setPrimaryClip(android.content.ClipData.newPlainText("Sunny Restore", restore.report()))
+            }, enabled = !busy) { Text("Echte Wiederherstellung: Ergebnisse kopieren") }
             Text("Paket: de.meinhelfer.tag.lab")
         }
     }
