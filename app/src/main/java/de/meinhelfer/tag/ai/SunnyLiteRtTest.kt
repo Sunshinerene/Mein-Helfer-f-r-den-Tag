@@ -10,9 +10,8 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 object SunnyLiteRtTest {
-    private val lock = Mutex()
     suspend fun answer(context: Context, prompt: String): String = withContext(Dispatchers.IO) {
-        lock.withLock {
+        SunnyModelStore.mutex.withLock {
             val model = SunnyModelStore.model(context)
             require(model.isFile && model.length() > 0) { "Bitte zuerst ein kompatibles LiteRT-LM-Modell importieren." }
             require(prompt.isNotBlank() && prompt.length <= 1000)
