@@ -339,6 +339,7 @@ object Backup {
                     check(presence.getBoolean(index))
                     check(original.deleteRecursively())
                     check(previous.renameTo(original))
+                    checkpoint(app, "ROLLBACK:" + original.name)
                 } else if (!presence.getBoolean(index)) {
                     check(original.deleteRecursively())
                 } else {
@@ -346,6 +347,7 @@ object Backup {
                 }
             }
             DbCrypto.restoreSavedKey(app)
+            checkpoint(app, "ROLLBACK_KEY")
             val json = metadata.getJSONObject("prefs")
             val edit = prefsFile.edit().clear()
             json.keys().forEach { k ->
@@ -364,6 +366,7 @@ object Backup {
                 }
             }
             check(edit.commit())
+            checkpoint(app, "ROLLBACK_PREFS")
             if (metadata.has("vocabulary")) de.meinhelfer.tag.ai.SunnyMemory.importText(app, metadata.getString("vocabulary"), replace = true)
             java.io.FileOutputStream(File(staging, "ROLLED_BACK")).use { marker ->
                 marker.write(1)
