@@ -26,3 +26,6 @@
 Projektchats fortlaufend zweistellig nummerieren und in CHAT_INDEX.md dokumentieren. Chats 00 bis 14 sind laut Nutzer am 26.11.2026 im Projekt vorhanden; nächste Nummer: 15.
 
 Qualität, Stabilität und Datensicherheit haben Vorrang vor Geschwindigkeit.
+
+## Parallele Entwicklung
+AGENTS.md und FILE_OWNERSHIP.md beachten. Work vorerst nicht einsetzen; Codex-Aufträge klein halten und tatsächlichen Verbrauch nach erstem Auftrag erfassen. Keine Implementierung ohne konkretes GO. Gemeinsame Dateien nur nach Koordination.
