@@ -1,4 +1,4 @@
-name: Sunny Test Lab bauen
+name: MeinHelfer DevTools bauen
 
 on:
   workflow_dispatch:
@@ -17,16 +17,16 @@ jobs:
   lab:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 17
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v5
         with:
           gradle-version: 8.11.1
       - name: Lab APK bauen
-        run: gradle :app:assembleLab --stacktrace
+        run: gradle :app:testDebugUnitTest :app:assembleDebug :app:assembleLab --stacktrace
       - name: Paket und Berechtigungen prüfen
         run: |
           set -euo pipefail
@@ -43,11 +43,25 @@ jobs:
           if grep -E 'android.permission.(INTERNET|REQUEST_INSTALL_PACKAGES|POST_NOTIFICATIONS|RECEIVE_BOOT_COMPLETED|USE_EXACT_ALARM|SCHEDULE_EXACT_ALARM|health\.)' lab-permissions.txt; then
             echo "Unerwartete produktive Berechtigung"; exit 1
           fi
-      - uses: actions/upload-artifact@v4
+      - name: Produktive APK prüfen
+        run: |
+          set -euo pipefail
+          AAPT=$(find "$ANDROID_HOME/build-tools" -name aapt -type f | sort -V | tail -1)
+          "$AAPT" dump badging app/build/outputs/apk/debug/app-debug.apk | grep -F "package: name='de.meinhelfer.tag'"
+          "$AAPT" dump xmltree app/build/outputs/apk/debug/app-debug.apk AndroidManifest.xml > produktiv-manifest.txt
+          if grep -F 'de.meinhelfer.tag.lab.LabActivity' produktiv-manifest.txt; then exit 1; fi
+      - uses: actions/upload-artifact@v5
         with:
-          name: Sunny-Test-Lab
+          name: MeinHelfer-DevTools
           path: |
             app/build/outputs/apk/lab/app-lab.apk
             lab-permissions.txt
             lab-manifest.txt
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v5
+        with:
+          name: MeinHelfer-Entwicklung
+          path: |
+            app/build/outputs/apk/debug/app-debug.apk
+            produktiv-manifest.txt
           if-no-files-found: error
