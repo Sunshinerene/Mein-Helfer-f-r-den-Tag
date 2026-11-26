@@ -31,14 +31,20 @@ private fun LabHome(fixtures: LabFixtures, database: LabDatabase, abort: LabAbor
     var roundTripResult by rememberSaveable { mutableStateOf("") }
     var result by remember { mutableStateOf("Noch kein Test ausgeführt") }
     var busy by remember { mutableStateOf(false) }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val reports = remember { context.getSharedPreferences("devtools_reports", android.content.Context.MODE_PRIVATE) }
     val scope = rememberCoroutineScope()
+    LaunchedEffect(Unit) { roundTripResult = reports.getString("roundtrip", "").orEmpty() }
     fun runTest(roundTrip: Boolean = false, action: () -> String) {
         if (busy) return
         busy = true
         scope.launch {
             try {
                 result = withContext(Dispatchers.IO) { runCatching(action).getOrElse { "FEHLER: ${it.message}" } }
-                if (roundTrip) roundTripResult = result
+                if (roundTrip) {
+                    roundTripResult = result
+                    reports.edit().putString("roundtrip", result).apply()
+                }
             } finally { busy = false }
         }
     }
@@ -52,7 +58,6 @@ private fun LabHome(fixtures: LabFixtures, database: LabDatabase, abort: LabAbor
             Text("TESTUMGEBUNG – keine echten Pflegedaten", color = MaterialTheme.colorScheme.error)
             Text("Separater App-Start. Produktive Dienste werden hier nicht gestartet.")
             Text("v1.0 · Sunny Developer Edition")
-            val context = androidx.compose.ui.platform.LocalContext.current
             listOf("Übersicht", "Database Lab", "Backup & Restore", "Testberichte").forEach { name ->
                 OutlinedButton(onClick = { section = name }, modifier = Modifier.fillMaxWidth(), enabled = !busy) { Text(name) }
             }
@@ -64,9 +69,9 @@ private fun LabHome(fixtures: LabFixtures, database: LabDatabase, abort: LabAbor
                 }
                 "Database Lab" -> {
             Button(onClick = { runTest(action = fixtures::create) }, enabled = !busy) { Text("Künstliche Testdaten erzeugen") }
-            OutlinedButton(onClick = { runTest(fixtures::verify) }, enabled = !busy) { Text("Testdaten prüfen") }
-            Button(onClick = { runTest(action = database::prepare) }, enabled = !busy && !abort.pending()) { Text("Testdatenbanken A/B vorbereiten") }
-            OutlinedButton(onClick = { runTest(database::verify) }, enabled = !busy) { Text("Aktive Testdatenbank prüfen") }
+            OutlinedButton(onClick = { runTest(action = fixtures::verify) }, enabled = !busy) { Text("Testdaten prüfen") }
+            Button(onClick = { runTest(action = database::prepare) }, enabled = !busy && !abort.pending() && !restore.pending()) { Text("Testdatenbanken A/B vorbereiten") }
+            OutlinedButton(onClick = { runTest(action = database::verify) }, enabled = !busy) { Text("Aktive Testdatenbank prüfen") }
             listOf("A_PREPARED" to "Vor Datenaustausch", "ASIDE" to "Nach Weglegen von A",
                 "PLACED" to "Nach Einsetzen von B", "COMMITTED" to "Nach Bestätigung",
                 "CLEANED" to "Nach Bereinigung").forEach { (point, label) ->
@@ -78,7 +83,7 @@ private fun LabHome(fixtures: LabFixtures, database: LabDatabase, abort: LabAbor
                 "Backup & Restore" -> {
             Text("Echte Wiederherstellung (synthetisch)", style = MaterialTheme.typography.titleLarge)
             restore.points.forEach { point ->
-                Button(onClick = { runTest { restore.start(point) } }, enabled = !busy && !restore.pending()) { Text(point) }
+                Button(onClick = { runTest { restore.start(point) } }, enabled = !busy && !restore.pending() && !abort.pending()) { Text(point) }
             }
             OutlinedButton(onClick = { runTest(action = restore::evaluate) }, enabled = !busy) { Text("Echte Wiederherstellung auswerten") }
             Text("Phase 3: Room und Backup", style = MaterialTheme.typography.titleLarge)
@@ -92,8 +97,8 @@ private fun LabHome(fixtures: LabFixtures, database: LabDatabase, abort: LabAbor
                 val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
                 clipboard.setPrimaryClip(android.content.ClipData.newPlainText("Sunny Test Lab", abort.report()))
             }, enabled = !busy) { Text("Testergebnisse kopieren") }
-            OutlinedButton(onClick = { runTest(abort::report) }, enabled = !busy) { Text("Ergebnisübersicht aller Abbruchtests") }
-            OutlinedButton(onClick = { runTest(restore::report) }, enabled = !busy) { Text("Ergebnisse echte Wiederherstellung") }
+            OutlinedButton(onClick = { runTest(action = abort::report) }, enabled = !busy) { Text("Ergebnisübersicht aller Abbruchtests") }
+            OutlinedButton(onClick = { runTest(action = restore::report) }, enabled = !busy) { Text("Ergebnisse echte Wiederherstellung") }
             OutlinedButton(onClick = {
                 val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
                 clipboard.setPrimaryClip(android.content.ClipData.newPlainText("Sunny Restore", restore.report()))
