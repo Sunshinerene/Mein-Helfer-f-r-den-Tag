@@ -1,6 +1,6 @@
 # MeinHelfer DevTools v1.0
 
-Stand: 26.11.2026 — Build und 29 Funktionsprüfungen bestanden; Release ausstehend.
+Stand: 26.11.2026 — Build und 29 Funktionsprüfungen bestanden; Pre-release veröffentlicht.
 
 ## Referenz
 Backup & Restore Stable: `backup-restore-stable-v1.0-lab22`, Commit `0a7bc5a6dea63defbb80616f7304dbcb56a85492`, Lab-Build 22. Nutzerbericht: 17/17 bestanden am 25.11.2026. Referenz nicht verändern.
@@ -35,3 +35,7 @@ Nutzerbericht: 22/22 bestanden.
 - Kombinierter Bericht mit 17 Prüfergebnissen erfolgreich übermittelt.
 - Nachtrag 26.11.2026: Nutzer bestätigt Launcher-Icon sowie alle 7 Prüfpunkte der Parallelinstallation und Datentrennung als BESTANDEN. Normale App blieb unangetastet. Gesamt: 29/29 dokumentierte Funktionsprüfungen, zusätzlich Icon und Build erfolgreich. Keine umfassende Sicherheitszertifizierung.
 - Release muss auf den getesteten Commit zeigen, nicht auf diesen nachträglichen Dokumentationscommit.
+
+## Release-Abschluss – 26.11.2026
+Nutzer-Screenshot bestätigt veröffentlichte Pre-release `devtools-v1.0`, Commit `36003ae`, APK-Anhang `app-lab.apk` (147 MB) und Quellcodearchive. https://github.com/Sunshinerene/Mein-Helfer-f-r-den-Tag/releases/tag/devtools-v1.0
+Schritt 3 funktional abgeschlossen. APK-Prüfsumme nicht unabhängig abgeglichen. Umfassende Sicherheitsprüfung und produktive Backup-Oberfläche weiterhin offen.
