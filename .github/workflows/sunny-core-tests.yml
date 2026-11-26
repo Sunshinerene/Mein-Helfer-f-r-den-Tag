@@ -8,9 +8,10 @@ on:
       - 'sunny-core/**'
       - '.github/workflows/sunny-core-tests.yml'
   push:
-    branches: [entwicklung/sunny-2]
+    branches: [entwicklung/sunny-2, codex/sunny-brain]
     paths:
       - 'sunny-core/**'
+      - '.github/workflows/sunny-core-tests.yml'
 
 permissions:
   contents: read
