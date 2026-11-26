@@ -1,6 +1,6 @@
 # MeinHelfer DevTools v1.0
 
-Stand: 26.11.2026 — Build und 22 Funktionsprüfungen bestanden; Release ausstehend.
+Stand: 26.11.2026 — Build und 29 Funktionsprüfungen bestanden; Release ausstehend.
 
 ## Referenz
 Backup & Restore Stable: `backup-restore-stable-v1.0-lab22`, Commit `0a7bc5a6dea63defbb80616f7304dbcb56a85492`, Lab-Build 22. Nutzerbericht: 17/17 bestanden am 25.11.2026. Referenz nicht verändern.
@@ -14,9 +14,9 @@ Backup & Restore Stable: `backup-restore-stable-v1.0-lab22`, Commit `0a7bc5a6dea
 - Weitere Sunny-Module bewusst zurückgestellt.
 
 ## Freigabecheckliste
-- [ ] Sunny-Bild als Lab-only Launcher-Icon integrieren und auf Gerät prüfen.
+- [x] Sunny-Bild als Lab-only Launcher-Icon integriert und durch Nutzer bestätigt.
 - [x] Beide APKs aus identischem Commit erfolgreich bauen.
-- [ ] Vor Update der normalen App reguläres Backup erstellen; beide App-IDs und parallele Installation prüfen.
+- [x] Parallelinstallation und Datentrennung durch Nutzer bestätigt (7/7). Normale APK nicht aktualisiert; vor einem späteren Update reguläres Backup erstellen.
 - [x] Menü, Ergebnisanzeige und kombinierte Berichtsausgabe geprüft.
 - [x] Roundtrip (6 Prüfkategorien) und Wiederherstellung (READY, APPLYING, ASIDE:mein_helfer.db, PLACE:mein_helfer.db, PLACE:docs_enc, PLACE:photos, KEY, PREFS, COMMITTED, CLEAN:mein_helfer.db.vorher, REPEAT_ROLLBACK) erneut durchführen.
 - [x] A/B-Zustände mit Referenz verglichen. Keine echten Pflegedaten ins Lab importieren.
@@ -33,5 +33,5 @@ Nutzerbericht: 22/22 bestanden.
 - Roundtrip: Room-Schema/Backup, falsches Passwort, abgeschnittene Sicherung, beschädigte Sicherung, Restore ohne vorhandene DB, Dokumente/Fotos/Einstellungen/Schlüssel/Sprachschatz: alle bestanden.
 - Restore: READY, COMMITTED, CLEAN:mein_helfer.db.vorher → B; APPLYING, ASIDE:mein_helfer.db, PLACE:mein_helfer.db, PLACE:docs_enc, PLACE:photos, KEY, PREFS, REPEAT_ROLLBACK → A. Alle bestanden.
 - Kombinierter Bericht mit 17 Prüfergebnissen erfolgreich übermittelt.
-- Launcher-Icon und parallele Installation sind nicht separat durch den Nutzer bestätigt; normale APK nicht aktualisiert.
+- Nachtrag 26.11.2026: Nutzer bestätigt Launcher-Icon sowie alle 7 Prüfpunkte der Parallelinstallation und Datentrennung als BESTANDEN. Normale App blieb unangetastet. Gesamt: 29/29 dokumentierte Funktionsprüfungen, zusätzlich Icon und Build erfolgreich. Keine umfassende Sicherheitszertifizierung.
 - Release muss auf den getesteten Commit zeigen, nicht auf diesen nachträglichen Dokumentationscommit.
