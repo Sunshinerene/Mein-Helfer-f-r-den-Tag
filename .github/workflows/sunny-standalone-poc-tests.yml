@@ -2,7 +2,7 @@ name: Sunny Standalone POC Tests
 on:
   workflow_dispatch:
   push:
-    branches: [codex/sunny-standalone-s2]
+    branches: [codex/sunny-standalone-s2, entwicklung/sunny-v03-avatar]
     paths:
       - 'sunny-standalone-poc/**'
       - 'sunny-core/**'
@@ -51,6 +51,20 @@ jobs:
               print(directory,totals)
               assert totals['tests'] >= expected and not any(totals[k] for k in ('failures','errors','skipped'))
           PY
+      - name: Verify v0.3 media inventory
+        if: github.ref == 'refs/heads/entwicklung/sunny-v03-avatar'
+        run: |
+          python3 - <<'PY'
+          import pathlib, hashlib, struct
+          root=pathlib.Path('sunny-standalone-poc/src/main/res/drawable-nodpi')
+          expected={f'sunny_su{i:02}.webp' for i in range(1,36)} | {'sunny_beta.webp'}
+          assert {p.name for p in root.glob('*.webp')} == expected
+          for name in sorted(expected):
+              data=(root/name).read_bytes()
+              assert len(data)>=20 and data[:4]==b'RIFF' and data[8:12]==b'WEBP', name
+              assert struct.unpack_from('<I',data,4)[0]+8==len(data), name
+              print(name, len(data), hashlib.sha256(data).hexdigest())
+          PY
       - name: Verify APK identity and isolation
         run: |
           set -euo pipefail
@@ -61,6 +75,17 @@ jobs:
           "$TOOLS/aapt" dump permissions "$APK" > sunny-poc-evidence/permissions.txt
           "$TOOLS/aapt" dump xmltree "$APK" AndroidManifest.xml > sunny-poc-evidence/manifest.txt
           grep -F "package: name='de.meinhelfer.sunny.devtools'" sunny-poc-evidence/badging.txt
+          if [[ "$GITHUB_REF" == "refs/heads/entwicklung/sunny-v03-avatar" ]]; then
+            grep -F "versionCode='3' versionName='0.3-devtools'" sunny-poc-evidence/badging.txt
+            python3 - "$APK" <<'PY'
+          import sys, zipfile, re
+          with zipfile.ZipFile(sys.argv[1]) as apk:
+              names=apk.namelist()
+              expected={f'sunny_su{i:02}.webp' for i in range(1,36)} | {'sunny_beta.webp'}
+              found={n.rsplit('/',1)[-1] for n in names if n.startswith('res/') and n.rsplit('/',1)[-1] in expected}
+              assert found==expected, expected-found
+          PY
+          fi
           grep -F "launchable-activity: name='de.meinhelfer.sunny.poc.MainActivity'" sunny-poc-evidence/badging.txt
           if grep -E 'uses-permission|permission: name=' sunny-poc-evidence/permissions.txt; then exit 1; fi
           if grep -E 'E: (service|receiver|provider|queries|activity-alias)|sharedUserId|android.intent.category.HOME|E: uses-permission' sunny-poc-evidence/manifest.txt; then exit 1; fi
