@@ -75,6 +75,18 @@ object DbCrypto {
             }
         }
 
+    /** Existing database access must never generate a replacement passphrase. */
+    internal fun requireExistingStartupPassphrase(context: Context): String {
+        check(inspectStartupKey(context) == DbStartupPolicy.KeyState.Present) {
+            "Database key unavailable"
+        }
+        val value = keyPrefs(context).getString(KEY, null)
+        check(DbKeyInspection.inspect { value } == DbStartupPolicy.KeyState.Present) {
+            "Database key unavailable"
+        }
+        return checkNotNull(value)
+    }
+
     /** Setzt den Schluessel (bei Wiederherstellung einer Sicherung); null entfernt ihn. */
     fun setPassphrase(context: Context, value: String?) {
         val edit = keyPrefs(context).edit()
