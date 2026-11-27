@@ -26,22 +26,25 @@ internal class LocalModelStore(context: Context) {
         ModelAccess.process.withExclusive { lease ->
             if (!directory.isDirectory && !directory.mkdirs()) throw IOException("Modellordner nicht verfügbar.")
             if (!cache.isDirectory && !cache.mkdirs()) throw IOException("Modellcache nicht verfügbar.")
-            val staged = File.createTempFile("import-", ".litertlm", directory)
             try {
                 val coroutine = currentCoroutineContext()
-                val source = app.contentResolver.openInputStream(uri)
-                    ?: throw IOException("Datei nicht lesbar.")
-                val total = source.use { input ->
-                    FileOutputStream(staged).use { output ->
-                        ModelImportChecks.copy(input, output, { directory.usableSpace }, { coroutine.ensureActive() })
-                            .also { output.fd.sync() }
-                    }
-                }
-                ModelImportChecks.validateHeader(staged)
-                LegacyLiteRt.probe(lease, staged, cache)
-                currentCoroutineContext().ensureActive()
-                Os.rename(staged.absolutePath, model.absolutePath)
-                total
+                ModelReplacement.install(directory, model, { lease.isQuarantined },
+                    prepare = { staged ->
+                        val source = app.contentResolver.openInputStream(uri)
+                            ?: throw IOException("Datei nicht lesbar.")
+                        val total = source.use { input ->
+                            FileOutputStream(staged).use { output ->
+                                ModelImportChecks.copy(input, output, { directory.usableSpace }, { coroutine.ensureActive() })
+                                    .also { output.fd.sync() }
+                            }
+                        }
+                        ModelImportChecks.validateHeader(staged)
+                        LegacyLiteRt.probe(lease, staged, cache)
+                        total
+                    },
+                    checkpoint = { coroutine.ensureActive() },
+                    replace = { staged, target -> Os.rename(staged.absolutePath, target.absolutePath) },
+                )
             } catch (failure: CancellationException) {
                 throw failure
             } catch (failure: InterruptedException) {
@@ -50,15 +53,13 @@ internal class LocalModelStore(context: Context) {
                 throw failure
             } catch (_: Exception) {
                 throw IOException("Modellimport fehlgeschlagen. Vorhandenes Modell bleibt erhalten.")
-            } finally {
-                if (!lease.isQuarantined) staged.delete()
             }
         }
     }
 
     suspend fun delete(): Boolean = withContext(Dispatchers.IO) {
         ModelAccess.process.withExclusive {
-            !model.exists() || model.delete()
+            ModelReplacement.delete(model)
         }
     }
 
