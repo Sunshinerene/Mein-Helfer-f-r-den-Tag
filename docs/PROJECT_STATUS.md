@@ -50,3 +50,6 @@ Owner approved daily documentation. Maintain docs/diary/YYYY-MM-DD.md on entwick
 
 ## Sunny v0.4 – test model downloaded
 Owner reports download completed after being directed to https://huggingface.co/litert-community/Gemma3-1B-IT for gemma3-1b-it-int4.litertlm. Actual downloaded bytes, source revision, hash and LiteRT-LM 0.16.1 compatibility remain unverified. CPU first, synthetic ACK/CLARIFY only. Current Brain branch CI must be verified before separate permanent signing approval. Preserve v0.3 installation and MeinHelfer. Device gates: update, existing features, offline model import and inference, restart, repeated execution, cooperative cancellation, invalid import preserves valid model, removal and no model fallback. No real care data.
+
+## Sunny v0.4 – CI #24
+Owner screenshot confirms successful workflow #24 on entwicklung/sunny-v04-brain, duration 2m33s, matching documentation-only commit title for 8f821bcbce281d6ca971bbcad25dd0a56c7bf96f. Exact run ID, head SHA in run details and logs remain to verify. Device acceptance document added in sunny-standalone-poc/BRAIN-V04-DEVICE-ACCEPTANCE.md. Permanent signing still requires separate approval and certificate verification; native device inference not yet accepted.
