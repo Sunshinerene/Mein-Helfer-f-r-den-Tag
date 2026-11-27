@@ -60,7 +60,7 @@ jobs:
           "$TOOLS/aapt" dump badging "$APK" > sunny-poc-evidence/badging.txt
           "$TOOLS/aapt" dump permissions "$APK" > sunny-poc-evidence/permissions.txt
           "$TOOLS/aapt" dump xmltree "$APK" AndroidManifest.xml > sunny-poc-evidence/manifest.txt
-          grep -F "package: name='de.meinhelfer.sunny.poc'" sunny-poc-evidence/badging.txt
+          grep -F "package: name='de.meinhelfer.sunny.devtools'" sunny-poc-evidence/badging.txt
           grep -F "launchable-activity: name='de.meinhelfer.sunny.poc.MainActivity'" sunny-poc-evidence/badging.txt
           if grep -E 'uses-permission|permission: name=' sunny-poc-evidence/permissions.txt; then exit 1; fi
           if grep -E 'E: (service|receiver|provider|queries|activity-alias)|sharedUserId|android.intent.category.HOME|E: uses-permission' sunny-poc-evidence/manifest.txt; then exit 1; fi
