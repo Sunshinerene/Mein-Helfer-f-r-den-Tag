@@ -26,8 +26,13 @@ jobs:
       - uses: gradle/actions/setup-gradle@v5
         with:
           gradle-version: 8.11.1
+      # Separate invocations avoid concurrent Room schema export by build variants.
+      - name: Unit tests
+        run: gradle --no-parallel --max-workers=1 :app:testDebugUnitTest --stacktrace
+      - name: Debug APK bauen
+        run: gradle --no-parallel --max-workers=1 :app:assembleDebug --stacktrace
       - name: Lab APK bauen
-        run: gradle :app:testDebugUnitTest :app:assembleDebug :app:assembleLab --stacktrace
+        run: gradle --no-parallel --max-workers=1 :app:assembleLab --stacktrace
       - name: Verify security and regression tests
         run: |
           python3 - <<'PY'
@@ -43,7 +48,7 @@ jobs:
               if root.get('name', '').endswith('.DbStartupPolicyTest'):
                   policy = any(t.get('name') == 'all48InputCombinations' for t in root.findall('testcase'))
           print(totals)
-          assert policy and totals['tests'] >= 94
+          assert policy and totals['tests'] >= 121
           assert not any(totals[k] for k in ('failures', 'errors', 'skipped'))
           PY
       - uses: actions/upload-artifact@v5
