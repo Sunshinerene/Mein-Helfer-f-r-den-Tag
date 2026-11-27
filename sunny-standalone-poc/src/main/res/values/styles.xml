@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Sunny AI DevTools</string>
+    <style name="Theme.SunnyPoc" parent="android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">#F7F5F1</item>
+        <item name="android:statusBarColor">#F7F5F1</item>
+        <item name="android:navigationBarColor">#F7F5F1</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:colorAccent">#245B49</item>
+    </style>
+</resources>
