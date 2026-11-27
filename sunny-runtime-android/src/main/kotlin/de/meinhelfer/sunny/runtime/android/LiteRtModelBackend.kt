@@ -1,5 +1,6 @@
 package de.meinhelfer.sunny.runtime.android
 
+import de.meinhelfer.sunny.core.LocalRuntimeException
 import de.meinhelfer.sunny.core.LocalModelBackend
 import de.meinhelfer.sunny.core.LocalModelSession
 import de.meinhelfer.sunny.core.LocalModelStatus
@@ -23,7 +24,7 @@ class LiteRtModelBackend internal constructor(
         this(model, cache, LiteRtNativeModel, ModelAccess.process, Dispatchers.IO)
 
     override suspend fun modelStatus(deadline: RuntimeDeadline): LocalModelStatus {
-        val lease = access.acquire()
+        val lease = acquireForRuntime()
         try {
             return inspect(deadline)
         } finally {
@@ -32,7 +33,7 @@ class LiteRtModelBackend internal constructor(
     }
 
     override suspend fun open(deadline: RuntimeDeadline): LocalModelSession {
-        val lease = access.acquire()
+        val lease = acquireForRuntime()
         try {
             when (inspect(deadline)) {
                 LocalModelStatus.Missing -> throw ModelAccessException(ModelAccessFailure.Missing)
@@ -43,6 +44,13 @@ class LiteRtModelBackend internal constructor(
             lease.close()
             throw failure
         }
+    }
+
+    private fun acquireForRuntime(): ModelAccess.Lease = try {
+        access.acquire()
+    } catch (failure: ModelAccessException) {
+        if (failure.code == ModelAccessFailure.Busy) throw LocalRuntimeException.busy()
+        throw failure
     }
 
     private suspend fun inspect(deadline: RuntimeDeadline) = withContext(dispatcher) {
