@@ -1,6 +1,10 @@
 name: Sunny DevTools Protected Signing
 on:
   workflow_dispatch:
+  push:
+    branches: [entwicklung/sunny-v04-brain]
+    paths:
+      - '.github/workflows/sunny-devtools-signing.yml'
 permissions:
   contents: read
 jobs:
