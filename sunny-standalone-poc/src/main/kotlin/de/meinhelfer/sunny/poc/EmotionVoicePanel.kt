@@ -6,6 +6,8 @@ import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
+import android.app.AlertDialog
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.Spinner
 import android.widget.TextView
@@ -13,6 +15,7 @@ import de.meinhelfer.sunny.poc.emotion.AvatarPreview
 import de.meinhelfer.sunny.poc.emotion.EmotionEngine
 import de.meinhelfer.sunny.poc.emotion.EmotionGroup
 import de.meinhelfer.sunny.poc.emotion.EmotionMediaCatalog
+import de.meinhelfer.sunny.poc.emotion.MediaBinding
 import de.meinhelfer.sunny.poc.emotion.FrameColor
 import de.meinhelfer.sunny.poc.emotion.FrameShape
 import de.meinhelfer.sunny.poc.emotion.PresentationMode
@@ -25,8 +28,44 @@ import java.util.Locale
 
 internal class EmotionVoicePanel(context: Context) : LinearLayout(context) {
     private val engine = EmotionEngine()
-    // Only owner-approved resource bindings can be entered here. S2 ships with a placeholder.
-    private val media = EmotionMediaCatalog(engine, emptyList())
+    // Owner-approved original stills, explicitly bound to stable emotion IDs.
+    private val media = EmotionMediaCatalog(engine, listOf(
+        MediaBinding("su01.webp", R.drawable.sunny_su01),
+        MediaBinding("su02.webp", R.drawable.sunny_su02),
+        MediaBinding("su03.webp", R.drawable.sunny_su03),
+        MediaBinding("su04.webp", R.drawable.sunny_su04),
+        MediaBinding("su05.webp", R.drawable.sunny_su05),
+        MediaBinding("su06.webp", R.drawable.sunny_su06),
+        MediaBinding("su07.webp", R.drawable.sunny_su07),
+        MediaBinding("su08.webp", R.drawable.sunny_su08),
+        MediaBinding("su09.webp", R.drawable.sunny_su09),
+        MediaBinding("su10.webp", R.drawable.sunny_su10),
+        MediaBinding("su11.webp", R.drawable.sunny_su11),
+        MediaBinding("su12.webp", R.drawable.sunny_su12),
+        MediaBinding("su13.webp", R.drawable.sunny_su13),
+        MediaBinding("su14.webp", R.drawable.sunny_su14),
+        MediaBinding("su15.webp", R.drawable.sunny_su15),
+        MediaBinding("su16.webp", R.drawable.sunny_su16),
+        MediaBinding("su17.webp", R.drawable.sunny_su17),
+        MediaBinding("su18.webp", R.drawable.sunny_su18),
+        MediaBinding("su19.webp", R.drawable.sunny_su19),
+        MediaBinding("su20.webp", R.drawable.sunny_su20),
+        MediaBinding("su21.webp", R.drawable.sunny_su21),
+        MediaBinding("su22.webp", R.drawable.sunny_su22),
+        MediaBinding("su23.webp", R.drawable.sunny_su23),
+        MediaBinding("su24.webp", R.drawable.sunny_su24),
+        MediaBinding("su25.webp", R.drawable.sunny_su25),
+        MediaBinding("su26.webp", R.drawable.sunny_su26),
+        MediaBinding("su27.webp", R.drawable.sunny_su27),
+        MediaBinding("su28.webp", R.drawable.sunny_su28),
+        MediaBinding("su29.webp", R.drawable.sunny_su29),
+        MediaBinding("su30.webp", R.drawable.sunny_su30),
+        MediaBinding("su31.webp", R.drawable.sunny_su31),
+        MediaBinding("su32.webp", R.drawable.sunny_su32),
+        MediaBinding("su33.webp", R.drawable.sunny_su33),
+        MediaBinding("su34.webp", R.drawable.sunny_su34),
+        MediaBinding("su35.webp", R.drawable.sunny_su35),
+    ))
     private var emotion = EmotionGroup.Friendly
     private var variant = 0
     private var mode = PresentationMode.Auto
@@ -71,7 +110,18 @@ internal class EmotionVoicePanel(context: Context) : LinearLayout(context) {
 
     init {
         orientation = VERTICAL
-        addView(preview, LayoutParams(LayoutParams.MATCH_PARENT, dp(102)))
+        addView(preview, LayoutParams(LayoutParams.MATCH_PARENT, dp(220)))
+        addView(button("Sunny Beta-Bild ansehen") {
+            val picture = ImageView(context).apply {
+                setImageResource(R.drawable.sunny_beta)
+                adjustViewBounds = true
+                maxHeight = dp(320)
+                scaleType = ImageView.ScaleType.FIT_CENTER
+                contentDescription = "Sunny Beta-Bild"
+            }
+            AlertDialog.Builder(context).setTitle("Sunny Beta").setView(picture)
+                .setPositiveButton("Schließen", null).show()
+        })
         addView(emotionLabel)
         addView(videoStatus)
         addSelector("Emotion für die Vorschau", emotionPicker)
