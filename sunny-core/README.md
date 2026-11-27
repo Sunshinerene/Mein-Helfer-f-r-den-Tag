@@ -114,3 +114,122 @@ Den 6A-Commit bei Bedarf auf dem Entwicklungsbranch mit
 `git revert <6A-Commit>` zurücknehmen. Der Commit enthält ausschließlich
 `sunny-core/`. Eine Datenmigration oder Wiederherstellung ist nicht erforderlich.
 Lokale, ignorierte Build-Ausgaben unter `sunny-core/` können separat entfernt werden.
+
+## CODEX-6B.1 – Sunny Runtime Foundation v0.1
+
+Ausgangsstand ist `bf7a397ce2b1f67276a2a17e13fbda2ec0a55426` von
+`entwicklung/sunny-2`. Die Runtime bleibt ein optionaler Adapter für
+`LocalRuntime`. Der Orchestrator und die Verarbeitung von `ACK` und
+`CLARIFY` behalten den Stand aus 6A.
+
+### Schnittstellen und Lebenszyklus
+
+`ManagedLocalRuntime` prüft vor jeder Generierung den Modellstatus über
+`LocalModelBackend`. Die explizite Statusabfrage liefert `Available`,
+`Missing` oder `Incompatible` als Momentaufnahme. Eine fehlende oder
+inkompatible Ressource stoppt den Aufruf vor dem Öffnen der Session.
+Reale Adapter müssen den Modellstatus beim Öffnen erneut absichern, falls
+sich das Modell zwischen Prüfung und Öffnen ändern kann.
+
+Eine atomare Sperre pro Manager schützt alle Backend-Aufrufe vom Modellstatus
+bis zum Abschluss der Freigabe. Weitere Aufrufe melden sofort `Busy`.
+Der Backend-Vertrag sieht je Backend-Instanz einen Manager vor. Nach
+erfolgreichem Öffnen besitzt der Manager die `LocalModelSession` und ruft
+`close()` genau einmal auf, sobald die Inferenz zurückkehrt oder vollständig
+abgewickelt ist. Das Backend verantwortet Teilallokationen bei fehlgeschlagenem
+Öffnen sowie die synchrone Freigabe innerhalb von `close()`.
+
+`RuntimeDeadline` nutzt eine injizierbare monotone Nanosekundenquelle
+(`System.nanoTime()` als Standard) und ein positives Zeitbudget pro Aufruf.
+Es umfasst Modellprüfung, Initialisierung und Inferenz. Der Manager prüft das
+Budget vor und nach den relevanten Phasen. Der Adapter prüft es zusätzlich
+an sicheren Unterbrechungspunkten. Die Session-Freigabe bleibt auch bei
+abgelaufenem Budget verpflichtend und kann die Gesamtdauer verlängern.
+
+Erwartete Fehler liefern `LocalRuntimeException` mit festem Fehlercode und
+ohne Backend-Fehlertext, Ursache oder unterdrückte Backend-Ausnahmen.
+Externe `CancellationException` und `InterruptedException` werden im
+Original weitergegeben. Adapter müssen daher Abbruchausnahmen ohne sensible
+Inhalte erzeugen. Die Runtime protokolliert keine Eingaben oder Fehler.
+Eine fehlerhafte Modellausgabe geht zur bestehenden Token-Prüfung im
+Orchestrator. Der Orchestrator liefert bei lokalen Fehlern seine feste
+Regelantwort mit der ursprünglichen lokalen Routing-Entscheidung.
+
+### Anforderungsabgleich
+
+| ID | Umsetzung und Nachweis |
+| --- | --- |
+| RT-01 | Austauschbares Backend und Session, JVM-Verträge ohne Android-Importe |
+| RT-02 | Statusabfrage unterscheidet verfügbare, fehlende und inkompatible Modelle |
+| RT-03 | Synthetische Tests belegen für fehlende und inkompatible Modelle null Öffnungs- und Inferenzaufrufe |
+| RT-04 | Injizierte Uhr prüft das Zeitbudget an der Grenze und über mehrere Phasen. Typisierte Fehler decken Status, Öffnen, Inferenz und Freigabe ab |
+| RT-05 | Identität der ursprünglichen Cancellation und Unterbrechung in Tests geprüft |
+| RT-06 | Busy-Tests decken überlappende Aufrufe und den Zeitraum der Freigabe ab |
+| RT-07 | Ereignisreihenfolgen prüfen einmaliges Schließen nach Erfolg, Fehler, Timeout und Abbruch sowie Wiederverwendung |
+| RT-08 | Quellen enthalten keinen Transport. Integrationstests prüfen den lokalen Fallback bei erlaubtem Online-Routing |
+| RT-09 | Fehlercodes ohne Backend-Texte und Ursachen. Tests prüfen auch fehlende unterdrückte Fehlerdetails |
+| RT-10 | Alle 110 Tests aus 6A unverändert erhalten |
+| RT-11 | Eigene synthetische Runtime-Tests mit manueller Uhr und kontrollierten Continuations |
+| RT-12 | Git-Diff ist auf `sunny-core/` begrenzt. Die Prüfsumme des Room-Schemas ist identisch |
+
+### Verifikation und Dateiumfang
+
+Die Toolchain wurde pro Bash-Sitzung aktiviert. Die Startprüfung verwendete
+`java -version`, `javac -version`, `gradle --version`,
+`git status --porcelain --untracked-files=all`, `git branch --show-current`,
+`git rev-parse HEAD` und `git ls-remote origin` für Basis und Arbeitsbranch.
+Der Checkout wurde mit `git fetch origin refs/heads/entwicklung/sunny-2` und
+`git switch -c codex/sunny-runtime FETCH_HEAD` aufgesetzt.
+
+```bash
+source /workspace/.mein-helfer-android/activate.sh
+cd /workspace/Mein-Helfer-f-r-den-Tag
+gradle -p sunny-core --no-daemon --max-workers=4 clean test
+gradle -p sunny-core --no-daemon --max-workers=4 dependencies --configuration runtimeClasspath
+```
+
+Beide Testläufe liefen mit Temurin und javac 17.0.17 und Gradle 8.11.1.
+Die JUnit-XML-Berichte wurden mit Python 3 ausgewertet.
+
+| Testlauf | Ausgeführt | Bestanden | Fehlgeschlagen | Übersprungen |
+| --- | ---: | ---: | ---: | ---: |
+| Ausgangsstand vor Änderungen | 110 | 110 | 0 | 0 |
+| Abschlusslauf, vorhandene Tests | 110 | 110 | 0 | 0 |
+| Abschlusslauf, neue Runtime-Tests | 21 | 21 | 0 | 0 |
+| Abschlusslauf, gesamt | 131 | 131 | 0 | 0 |
+
+Die XML-Berichte enthalten zusätzlich null Testfehler (`errors`).
+Der Runtime-Classpath enthält weiterhin nur Kotlin-Standardbibliothek
+2.2.21 und die transitiven JetBrains-Annotationen 13.0.
+
+`git diff --check` und der Diff zum Ausgangscommit prüfen Dateigrenzen
+und unveränderte Basistests. `sha256sum -c /tmp/sunny-6b1-schemas.sha`
+prüft das unversionierte Room-Schema
+`app/schemas/de.meinhelfer.tag.data.AppDatabase/31.json`.
+SHA-256 vor dem Checkout und nach dem Build:
+`5c69b02f6e4a30d07693f61d1fd796d180ea068df65d9560d5619d61e4dd8c37`.
+
+| Datei | Änderung |
+| --- | --- |
+| `src/main/kotlin/de/meinhelfer/sunny/core/ManagedLocalRuntime.kt` | Runtime, Backend- und Session-Verträge, Status, Frist und Fehlercodes |
+| `src/test/kotlin/de/meinhelfer/sunny/core/ManagedLocalRuntimeTest.kt` | Synthetische Backend- und Integrationstests |
+| `README.md` | Architektur, Testnachweise und Übergabe |
+
+### Grenzen und Folgepakete
+
+Kooperative Zeitlimits greifen erst, wenn der native Modellcode einen
+sicheren Prüfpunkt erreicht oder an den Manager zurückkehrt. Ein blockierendes Backend hält den Slot und seine
+Ressourcen bis zur sicheren Rückkehr. Externe Coroutine-Cancellation muss
+der Adapter über seine Suspendierung bzw. eigene sichere Abbruchpunkte
+melden. 6B.1 enthält kein konkretes Modell und keine gerätespezifische
+Verifikation.
+
+- **6B.2** benötigt einen separat freigegebenen Android-Adapter mit lokalem
+  Modellstatus und Kompatibilitätsprüfung, sicherem Besitzwechsel sowie
+  kooperativer Cancellation und nachgewiesener Ressourcenfreigabe.
+- **6B.3** benötigt separat freigegebene Gerätetests für native Abbruchgrenzen,
+  Ressourcenfreigabe, Busy-Verhalten und Wiederverwendbarkeit.
+
+Rollback auf dem Entwicklungsbranch per `git revert <6B.1-Commit>`.
+Der Revert entfernt die Runtime-Erweiterung und ihre Tests und stellt die
+vorherige README wieder her. Datenmigrationen sind für 6B.1 nicht erforderlich.
