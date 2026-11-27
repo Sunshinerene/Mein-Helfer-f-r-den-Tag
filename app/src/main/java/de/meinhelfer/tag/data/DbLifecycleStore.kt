@@ -1,6 +1,7 @@
 package de.meinhelfer.tag.data
 
 import android.util.AtomicFile
+import android.content.Context
 import java.io.File
 import java.io.FileNotFoundException
 
@@ -14,7 +15,23 @@ internal class DbLifecycleStore(file: File) {
 
     @Synchronized
     fun read(): State? = try {
-        decode(atomic.openRead().use { it.readBytes() })
+        if (File(atomic.baseFile.path + ".bak").exists() ||
+            File(atomic.baseFile.path + ".new").exists()) {
+            State.RECOVERY_REQUIRED
+        } else {
+            // Do not let AtomicFile.openRead silently recover an older authorization.
+            atomic.baseFile.inputStream().use { input ->
+                val bytes = ByteArray(64)
+                var count = 0
+                while (count < bytes.size) {
+                    val n = input.read(bytes, count, bytes.size - count)
+                    if (n < 0) break
+                    count += n
+                }
+                if (count == bytes.size) State.RECOVERY_REQUIRED
+                else decode(bytes.copyOf(count))
+            }
+        }
     } catch (_: FileNotFoundException) {
         if (atomic.baseFile.exists() ||
             File(atomic.baseFile.path + ".bak").exists() ||
@@ -39,6 +56,9 @@ internal class DbLifecycleStore(file: File) {
     }
 
     companion object {
+        internal fun forApp(context: Context): DbLifecycleStore =
+            DbLifecycleStore(File(context.noBackupFilesDir, "db_lifecycle_v1"))
+
         internal fun decode(bytes: ByteArray): State =
             State.entries.firstOrNull { it.name.toByteArray(Charsets.UTF_8).contentEquals(bytes) }
                 ?: State.RECOVERY_REQUIRED
