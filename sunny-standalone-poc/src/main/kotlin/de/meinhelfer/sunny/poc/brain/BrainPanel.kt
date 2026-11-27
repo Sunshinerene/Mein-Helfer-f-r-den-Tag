@@ -23,6 +23,7 @@ internal class BrainPanel(
     private val importButton = Button(activity)
     private val deleteButton = Button(activity)
     private val cancelButton = Button(activity)
+    private val testButton = Button(activity)
 
     init {
         orientation = VERTICAL
@@ -49,6 +50,17 @@ internal class BrainPanel(
                             if (store.delete()) "Modell entfernt." else "Modell konnte nicht entfernt werden."
                         }
                     }.show()
+            }
+        })
+        addView(testButton.apply {
+            text = "Native lokale KI testen"
+            isAllCaps = false
+            setOnClickListener {
+                runOperation("Lokale Klassifikation läuft …") {
+                    withContext(Dispatchers.IO) {
+                        NativeBrainCheck.create(store.model, store.cache).run()
+                    }
+                }
             }
         })
         addView(cancelButton.apply {
@@ -80,6 +92,7 @@ internal class BrainPanel(
         ).filter { it.isNotBlank() }.joinToString("\n")
         importButton.isEnabled = !busy
         deleteButton.isEnabled = !busy && installed
+        testButton.isEnabled = !busy && installed
         cancelButton.isEnabled = busy
         progress.visibility = if (busy) View.VISIBLE else View.GONE
     }
