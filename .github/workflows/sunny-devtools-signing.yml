@@ -49,12 +49,21 @@ jobs:
               print(totals)
               assert totals['tests']>=expected and not any(totals[k] for k in ('failures','errors','skipped'))
           PY
+      # v0.3 signing request: require complete approved avatar inventory before protected job.
       - name: Check source APK
         run: |
           set -euo pipefail
           APK=sunny-standalone-poc/build/outputs/apk/debug/sunny-standalone-poc-debug.apk
           TOOLS="$ANDROID_HOME/build-tools/35.0.0"
           "$TOOLS/aapt" dump badging "$APK" | grep -F "package: name='de.meinhelfer.sunny.devtools'"
+          "$TOOLS/aapt" dump badging "$APK" | grep -F "versionCode='3' versionName='0.3-devtools'"
+          python3 - "$APK" <<'PY'
+          import sys, zipfile
+          expected={f'sunny_su{i:02}.webp' for i in range(1,36)} | {'sunny_beta.webp'}
+          with zipfile.ZipFile(sys.argv[1]) as apk:
+              found={n.rsplit('/',1)[-1] for n in apk.namelist() if n.startswith('res/') and n.rsplit('/',1)[-1] in expected}
+              assert found==expected, expected-found
+          PY
           "$TOOLS/apksigner" verify "$APK"
           mkdir signing-input
           cp "$APK" signing-input/source.apk
