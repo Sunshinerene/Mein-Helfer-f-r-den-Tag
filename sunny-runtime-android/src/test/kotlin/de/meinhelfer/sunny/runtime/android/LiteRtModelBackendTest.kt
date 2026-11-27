@@ -85,6 +85,27 @@ class LiteRtModelBackendTest {
     }
 
     @Test
+    fun failedEngineConstructionQuarantinesWithoutRetryOrModelMutation() = runBlocking {
+        val f = Fixture()
+        f.native.construct = { error("private synthetic detail") }
+        f.access.withExclusive { lease ->
+            val error = failure<ModelAccessException> {
+                legacyReply(f.native, lease, f.model, temp.root, "", probe = true)
+            }
+            assertEquals(ModelAccessFailure.InitializationFailed, error.code)
+            assertEquals("InitializationFailed", error.message)
+            assertNull(error.cause)
+            assertTrue(lease.isQuarantined)
+        }
+        assertEquals(listOf("create"), f.native.events)
+        assertEquals(ModelAccessFailure.Quarantined, failure<ModelAccessException> {
+            f.access.withExclusive { fail("Unexpected mutation") }
+        }.code)
+        f.assertFallback()
+        assertEquals(listOf("create"), f.native.events)
+    }
+
+    @Test
     fun cleansUpAfterPartialInitializationAndConversationCreationFailure() = runBlocking {
         val f = Fixture()
         f.native.initialize = { error("private synthetic detail") }
@@ -278,6 +299,7 @@ class LiteRtModelBackendTest {
     private class FakeNative : NativeModel {
         val events = mutableListOf<String>()
         val prompts = mutableListOf<Pair<Boolean, String>>()
+        var construct: () -> Unit = {}
         var initialize: () -> Unit = {}
         var openConversation: () -> Unit = {}
         var infer: () -> String? = { "ACK" }
@@ -286,6 +308,7 @@ class LiteRtModelBackendTest {
 
         override fun create(model: File, cache: File): NativeEngine {
             events += "create"
+            construct()
             return object : NativeEngine {
                 override fun initialize() {
                     events += "initialize"
