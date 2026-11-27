@@ -1,0 +1,86 @@
+name: Sunny Standalone POC Tests
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/sunny-standalone-poc]
+    paths:
+      - 'sunny-standalone-poc/**'
+      - 'sunny-core/**'
+      - '.github/workflows/sunny-standalone-poc-tests.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v5
+        with:
+          gradle-version: 8.11.1
+      - name: Verify Android SDK
+        run: |
+          set -euo pipefail
+          SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          if ! test -f "$SDK/platforms/android-35/android.jar" || ! test -x "$SDK/build-tools/35.0.0/aapt"; then
+            MANAGER=$(find "$SDK/cmdline-tools" -type f -name sdkmanager | sort -V | tail -1)
+            test -n "$MANAGER"
+            "$MANAGER" --sdk_root="$SDK" "platforms;android-35" "build-tools;35.0.0"
+          fi
+          echo "ANDROID_HOME=$SDK" >> "$GITHUB_ENV"
+      - name: Core tests
+        run: gradle -p sunny-core --no-parallel --max-workers=2 clean test
+      - name: Standalone tests and APK
+        run: gradle -p sunny-standalone-poc --no-parallel --max-workers=2 clean testDebugUnitTest assembleDebug
+      - name: Verify JUnit results
+        run: |
+          python3 - <<'PY'
+          import pathlib, xml.etree.ElementTree as ET
+          for directory, expected in [('sunny-core/build/test-results/test',131),('sunny-standalone-poc/build/test-results/testDebugUnitTest',16)]:
+              files = list(pathlib.Path(directory).glob('TEST-*.xml'))
+              assert files, directory
+              totals = dict.fromkeys(('tests','failures','errors','skipped'),0)
+              for f in files:
+                  root=ET.parse(f).getroot()
+                  for k in totals: totals[k]+=int(root.get(k,0))
+              print(directory,totals)
+              assert totals['tests'] >= expected and not any(totals[k] for k in ('failures','errors','skipped'))
+          PY
+      - name: Verify APK identity and isolation
+        run: |
+          set -euo pipefail
+          APK=sunny-standalone-poc/build/outputs/apk/debug/sunny-standalone-poc-debug.apk
+          TOOLS="$ANDROID_HOME/build-tools/35.0.0"
+          mkdir -p sunny-poc-evidence
+          "$TOOLS/aapt" dump badging "$APK" > sunny-poc-evidence/badging.txt
+          "$TOOLS/aapt" dump permissions "$APK" > sunny-poc-evidence/permissions.txt
+          "$TOOLS/aapt" dump xmltree "$APK" AndroidManifest.xml > sunny-poc-evidence/manifest.txt
+          grep -F "package: name='de.meinhelfer.sunny.poc'" sunny-poc-evidence/badging.txt
+          grep -F "launchable-activity: name='de.meinhelfer.sunny.poc.MainActivity'" sunny-poc-evidence/badging.txt
+          if grep -E 'uses-permission|permission: name=' sunny-poc-evidence/permissions.txt; then exit 1; fi
+          if grep -E 'E: (service|receiver|provider|queries|activity-alias)|sharedUserId|android.intent.category.HOME|E: uses-permission' sunny-poc-evidence/manifest.txt; then exit 1; fi
+          test "$(grep -c 'E: activity (' sunny-poc-evidence/manifest.txt)" -eq 1
+          grep -E 'android:allowBackup.*0x0$' sunny-poc-evidence/manifest.txt
+          "$TOOLS/apksigner" verify --verbose --print-certs "$APK" > sunny-poc-evidence/signature.txt
+          grep -F 'CN=Android Debug' sunny-poc-evidence/signature.txt
+          "$TOOLS/zipalign" -c -P 16 4 "$APK"
+          sha256sum "$APK" | tee sunny-poc-evidence/sha256.txt
+          git diff --exit-code 45fe34dc5b7bc513885712563c8c00311f86ae0a -- app sunny-core settings.gradle.kts build.gradle.kts
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: Sunny-POC-JUnit
+          path: |
+            sunny-core/build/test-results/test/
+            sunny-standalone-poc/build/test-results/testDebugUnitTest/
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@v5
+        with:
+          name: Sunny-AI-DevTools-POC
+          path: |
+            sunny-standalone-poc/build/outputs/apk/debug/sunny-standalone-poc-debug.apk
+            sunny-poc-evidence/
+          if-no-files-found: error
