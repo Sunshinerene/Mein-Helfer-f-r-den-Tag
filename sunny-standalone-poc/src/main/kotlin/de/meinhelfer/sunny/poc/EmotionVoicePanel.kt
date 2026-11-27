@@ -6,6 +6,8 @@ import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
+import android.app.AlertDialog
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.Spinner
 import android.widget.TextView
@@ -108,7 +110,18 @@ internal class EmotionVoicePanel(context: Context) : LinearLayout(context) {
 
     init {
         orientation = VERTICAL
-        addView(preview, LayoutParams(LayoutParams.MATCH_PARENT, dp(102)))
+        addView(preview, LayoutParams(LayoutParams.MATCH_PARENT, dp(220)))
+        addView(button("Sunny Beta-Bild ansehen") {
+            val picture = ImageView(context).apply {
+                setImageResource(R.drawable.sunny_beta)
+                adjustViewBounds = true
+                maxHeight = dp(320)
+                scaleType = ImageView.ScaleType.FIT_CENTER
+                contentDescription = "Sunny Beta-Bild"
+            }
+            AlertDialog.Builder(context).setTitle("Sunny Beta").setView(picture)
+                .setPositiveButton("Schließen", null).show()
+        })
         addView(emotionLabel)
         addView(videoStatus)
         addSelector("Emotion für die Vorschau", emotionPicker)
