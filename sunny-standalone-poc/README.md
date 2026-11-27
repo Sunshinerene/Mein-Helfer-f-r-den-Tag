@@ -1,5 +1,7 @@
 # POC-S1 – Sunny Standalone & Connect
 
+Der Stand v0.2 ist im [POC-S2-Bericht](S2-REPORT.md) dokumentiert. Die folgenden Nachweise beziehen sich auf S1.
+
 Sunny AI DevTools ist eine eigenständige experimentelle Android-App für einen lokalen Test mit synthetischen Eingaben. Die Quellbasis ist GitHub-Commit 45fe34dc5b7bc513885712563c8c00311f86ae0a auf entwicklung/sunny-2. Gegenüber fd6f4ac enthält diese Basis sechs Dokumentationscommits. Der Arbeitsbranch ist codex/sunny-standalone-poc.
 
 Die [Bestandsaufnahme](INVENTORY.md) dokumentiert vorhandene Fähigkeiten, Datenhoheit, Abhängigkeiten, Berechtigungen und ihre Zielzuordnung gemäß den Produktprinzipien. MeinHelfer bleibt eigenständig nutzbar.

@@ -12,8 +12,8 @@ android {
         applicationId = "de.meinhelfer.sunny.poc"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1-poc"
+        versionCode = 2
+        versionName = "0.2-poc"
     }
 
     compileOptions {
