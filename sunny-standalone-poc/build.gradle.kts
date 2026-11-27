@@ -12,8 +12,8 @@ android {
         applicationId = "de.meinhelfer.sunny.devtools"
         minSdk = 26
         targetSdk = 35
-        versionCode = 3
-        versionName = "0.3-devtools"
+        versionCode = 4
+        versionName = "0.4-devtools"
     }
 
     compileOptions {
