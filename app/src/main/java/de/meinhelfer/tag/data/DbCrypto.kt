@@ -87,6 +87,24 @@ object DbCrypto {
         return checkNotNull(value)
     }
 
+    /**
+     * Read-only startup decision. The caller must serialize startup and supply
+     * verified first-run evidence, not merely the absence of a database.
+     * No creation, migration or recovery operation is performed here.
+     */
+    internal fun inspectStartup(
+        context: Context,
+        lifecycle: DbLifecycleStore.State?,
+        firstRunConfirmed: Boolean,
+    ): DbStartupPolicy.Decision =
+        DbStartupGate.decide(
+            cipherAvailable = ensureLoaded(),
+            files = DbFileInspection.inspect(context.getDatabasePath(DB_NAME)),
+            key = inspectStartupKey(context),
+            lifecycle = lifecycle,
+            firstRunConfirmed = firstRunConfirmed,
+        )
+
     /** Setzt den Schluessel (bei Wiederherstellung einer Sicherung); null entfernt ihn. */
     fun setPassphrase(context: Context, value: String?) {
         val edit = keyPrefs(context).edit()
