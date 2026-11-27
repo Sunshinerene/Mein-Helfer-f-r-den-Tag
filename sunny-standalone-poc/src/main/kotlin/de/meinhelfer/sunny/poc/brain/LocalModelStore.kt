@@ -28,39 +28,16 @@ internal class LocalModelStore(context: Context) {
             if (!cache.isDirectory && !cache.mkdirs()) throw IOException("Modellcache nicht verfügbar.")
             val staged = File.createTempFile("import-", ".litertlm", directory)
             try {
-                var total = 0L
+                val coroutine = currentCoroutineContext()
                 val source = app.contentResolver.openInputStream(uri)
                     ?: throw IOException("Datei nicht lesbar.")
-                source.use { input ->
+                val total = source.use { input ->
                     FileOutputStream(staged).use { output ->
-                        val buffer = ByteArray(128 * 1024)
-                        while (true) {
-                            currentCoroutineContext().ensureActive()
-                            val count = input.read(buffer)
-                            if (count < 0) break
-                            if (count == 0) throw IOException("Datei konnte nicht vollständig gelesen werden.")
-                            total += count
-                            if (total > LIMIT || directory.usableSpace < RESERVE + count) {
-                                throw IOException("Nicht genügend Speicher oder Modell zu groß.")
-                            }
-                            output.write(buffer, 0, count)
-                        }
-                        output.fd.sync()
+                        ModelImportChecks.copy(input, output, { directory.usableSpace }, { coroutine.ensureActive() })
+                            .also { output.fd.sync() }
                     }
                 }
-                if (total == 0L) throw IOException("Die Datei ist leer.")
-                // Reject malformed headers before invoking native code.
-                java.io.RandomAccessFile(staged, "r").use { input ->
-                    if (input.length() < 33) throw IOException("Ungültiges Modellformat.")
-                    val magic = ByteArray(8).also(input::readFully)
-                    val major = Integer.reverseBytes(input.readInt())
-                    input.seek(24)
-                    val headerEnd = java.lang.Long.reverseBytes(input.readLong())
-                    if (!magic.contentEquals("LITERTLM".toByteArray(Charsets.US_ASCII)) ||
-                        major != 1 || headerEnd !in 33..16_384 || headerEnd >= input.length()) {
-                        throw IOException("Ungültiges Modellformat.")
-                    }
-                }
+                ModelImportChecks.validateHeader(staged)
                 LegacyLiteRt.probe(lease, staged, cache)
                 currentCoroutineContext().ensureActive()
                 Os.rename(staged.absolutePath, model.absolutePath)
@@ -85,8 +62,4 @@ internal class LocalModelStore(context: Context) {
         }
     }
 
-    private companion object {
-        const val RESERVE = 256L * 1024 * 1024
-        const val LIMIT = 4L * 1024 * 1024 * 1024
-    }
 }
