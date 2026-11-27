@@ -1,6 +1,10 @@
 name: Sunny DevTools Protected Signing
 on:
   workflow_dispatch:
+  push:
+    branches: [entwicklung/sunny-2]
+    paths:
+      - '.github/workflows/sunny-devtools-signing.yml'
 permissions:
   contents: read
 jobs:
@@ -76,6 +80,7 @@ jobs:
         run: |
           set -euo pipefail
           [[ "$EXPECTED_CERT_SHA256" =~ ^[a-fA-F0-9]{64}$ ]] || { echo "Pinned public certificate fingerprint missing or invalid"; exit 1; }
+          test "${EXPECTED_CERT_SHA256,,}" = "dc9ef7d1e5637f259273cb80cbfe0f46eab253ee4b027c03160dcdfa2bfcbbea"
           cd signing-input
           sha256sum -c source.sha256
           TOOLS="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}/build-tools/35.0.0"
@@ -83,7 +88,9 @@ jobs:
           test -x "$TOOLS/aapt"
           test -x "$TOOLS/zipalign"
           "$TOOLS/apksigner" verify source.apk
-          "$TOOLS/aapt" dump badging source.apk | grep -F "package: name='de.meinhelfer.sunny.devtools'"
+          "$TOOLS/aapt" dump badging source.apk > badging.txt
+          grep -F "package: name='de.meinhelfer.sunny.devtools'" badging.txt
+          grep -F "launchable-activity: name='de.meinhelfer.sunny.poc.MainActivity'" badging.txt
           "$TOOLS/aapt" dump permissions source.apk > permissions.txt
           "$TOOLS/aapt" dump xmltree source.apk AndroidManifest.xml > manifest.txt
           if grep -E 'uses-permission|permission: name=' permissions.txt; then exit 1; fi
@@ -111,6 +118,7 @@ jobs:
           "$TOOLS/apksigner" verify --verbose --print-certs signed/sunny-devtools.apk > signed/signature.txt
           test "$(grep -c 'certificate SHA-256 digest:' signed/signature.txt)" -eq 1
           ACTUAL=$(awk '/certificate SHA-256 digest:/ {print $NF}' signed/signature.txt)
+          test "${ACTUAL,,}" = "dc9ef7d1e5637f259273cb80cbfe0f46eab253ee4b027c03160dcdfa2bfcbbea"
           test "${ACTUAL,,}" = "${EXPECTED_CERT_SHA256,,}"
           "$TOOLS/zipalign" -c -P 16 4 signed/sunny-devtools.apk
           "$TOOLS/aapt" dump badging signed/sunny-devtools.apk > signed/badging.txt
