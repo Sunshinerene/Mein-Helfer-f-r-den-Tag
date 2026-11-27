@@ -41,8 +41,9 @@ jobs:
       - name: Verify JUnit results
         run: |
           python3 - <<'PY'
-          import pathlib, xml.etree.ElementTree as ET
-          for directory, expected in [('sunny-core/build/test-results/test',131),('sunny-standalone-poc/build/test-results/testDebugUnitTest',36)]:
+          import os, pathlib, xml.etree.ElementTree as ET
+          minimum = 57 if os.environ.get('GITHUB_REF') == 'refs/heads/entwicklung/sunny-v04-brain' else 36
+          for directory, expected in [('sunny-core/build/test-results/test',131),('sunny-standalone-poc/build/test-results/testDebugUnitTest',minimum)]:
               files = list(pathlib.Path(directory).glob('TEST-*.xml'))
               assert files, directory
               totals = dict.fromkeys(('tests','failures','errors','skipped'),0)
@@ -77,7 +78,11 @@ jobs:
           "$TOOLS/aapt" dump xmltree "$APK" AndroidManifest.xml > sunny-poc-evidence/manifest.txt
           grep -F "package: name='de.meinhelfer.sunny.devtools'" sunny-poc-evidence/badging.txt
           if [[ "$GITHUB_REF" == "refs/heads/entwicklung/sunny-v03-avatar" || "$GITHUB_REF" == "refs/heads/entwicklung/sunny-v04-brain" ]]; then
-            grep -F "versionCode='3' versionName='0.3-devtools'" sunny-poc-evidence/badging.txt
+            if [[ "$GITHUB_REF" == "refs/heads/entwicklung/sunny-v04-brain" ]]; then
+              grep -F "versionCode='4' versionName='0.4-devtools'" sunny-poc-evidence/badging.txt
+            else
+              grep -F "versionCode='3' versionName='0.3-devtools'" sunny-poc-evidence/badging.txt
+            fi
             python3 - "$APK" <<'PY'
           import sys, zipfile, re
           with zipfile.ZipFile(sys.argv[1]) as apk:
