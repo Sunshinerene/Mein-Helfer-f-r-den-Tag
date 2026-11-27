@@ -41,3 +41,6 @@ Owner approved. Every numbered project chat NN can have successors NN/1, NN/2, e
 
 ## Zukunftsidee – Sunny Connect: assistierte Chat-Fortsetzung
 Owner suggested Sunny could eventually create successor chats. Explore detecting a need for a successor, preparing a structured handover, creating/naming the chat via supported authorized interfaces or app controls after user approval, and updating the central mapping under SUNNY-RULE-CHAT-001. No bypass of app permissions, no assumed access, no autonomous approval or deletion. Feasibility open; backlog only, no change to Brain v0.4 priorities.
+
+## Sunny v0.4 CI evidence – workflow #23
+Owner supplied GitHub Actions screenshot showing Sunny Standalone POC Tests #23, title 'Require Brain version 4 and all 57 standalone tests in CI', branch entwicklung/sunny-v04-brain, successful, duration 2m38s. Prior #22 failed. Current branch workflow requires at least 131 core and 57 standalone tests with no failures/errors/skips, APK identity/isolation and media checks. Exact run ID, source SHA, individual logs and artifacts not yet independently verified; screenshot alone does not establish exact test totals or native device inference. Permanent signing and device acceptance remain pending.
