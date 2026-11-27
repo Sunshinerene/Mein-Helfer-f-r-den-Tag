@@ -2,10 +2,11 @@ name: Sunny Standalone POC Tests
 on:
   workflow_dispatch:
   push:
-    branches: [codex/sunny-standalone-s2, entwicklung/sunny-v03-avatar]
+    branches: [codex/sunny-standalone-s2, entwicklung/sunny-v03-avatar, entwicklung/sunny-v04-brain]
     paths:
       - 'sunny-standalone-poc/**'
       - 'sunny-core/**'
+      - 'sunny-runtime-android/**'
       - '.github/workflows/sunny-standalone-poc-tests.yml'
 permissions:
   contents: read
@@ -52,7 +53,7 @@ jobs:
               assert totals['tests'] >= expected and not any(totals[k] for k in ('failures','errors','skipped'))
           PY
       - name: Verify v0.3 media inventory
-        if: github.ref == 'refs/heads/entwicklung/sunny-v03-avatar'
+        if: github.ref == 'refs/heads/entwicklung/sunny-v03-avatar' || github.ref == 'refs/heads/entwicklung/sunny-v04-brain'
         run: |
           python3 - <<'PY'
           import pathlib, hashlib, struct
@@ -75,7 +76,7 @@ jobs:
           "$TOOLS/aapt" dump permissions "$APK" > sunny-poc-evidence/permissions.txt
           "$TOOLS/aapt" dump xmltree "$APK" AndroidManifest.xml > sunny-poc-evidence/manifest.txt
           grep -F "package: name='de.meinhelfer.sunny.devtools'" sunny-poc-evidence/badging.txt
-          if [[ "$GITHUB_REF" == "refs/heads/entwicklung/sunny-v03-avatar" ]]; then
+          if [[ "$GITHUB_REF" == "refs/heads/entwicklung/sunny-v03-avatar" || "$GITHUB_REF" == "refs/heads/entwicklung/sunny-v04-brain" ]]; then
             grep -F "versionCode='3' versionName='0.3-devtools'" sunny-poc-evidence/badging.txt
             python3 - "$APK" <<'PY'
           import sys, zipfile, re
@@ -95,7 +96,11 @@ jobs:
           grep -F 'CN=Android Debug' sunny-poc-evidence/signature.txt
           "$TOOLS/zipalign" -c -P 16 4 "$APK"
           sha256sum "$APK" | tee sunny-poc-evidence/sha256.txt
-          git diff --exit-code 45fe34dc5b7bc513885712563c8c00311f86ae0a -- app sunny-core settings.gradle.kts build.gradle.kts
+          if [[ "$GITHUB_REF" == "refs/heads/entwicklung/sunny-v04-brain" ]]; then
+            git diff --exit-code a29d32ff5d5ceee7d00e5d851b2e33a7ddcc30db -- app sunny-core sunny-runtime-android settings.gradle.kts build.gradle.kts
+          else
+            git diff --exit-code 45fe34dc5b7bc513885712563c8c00311f86ae0a -- app sunny-core settings.gradle.kts build.gradle.kts
+          fi
       - uses: actions/upload-artifact@v5
         if: always()
         with:
