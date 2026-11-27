@@ -9,11 +9,11 @@ android {
     buildToolsVersion = "35.0.0"
 
     defaultConfig {
-        applicationId = "de.meinhelfer.sunny.poc"
+        applicationId = "de.meinhelfer.sunny.devtools"
         minSdk = 26
         targetSdk = 35
         versionCode = 2
-        versionName = "0.2-poc"
+        versionName = "0.2-devtools"
     }
 
     compileOptions {
