@@ -2,7 +2,9 @@ package de.meinhelfer.tag.data
 
 import org.junit.Assert.*
 import org.junit.Test
-import de.meinhelfer.tag.data.DbStartupPolicy.*
+import de.meinhelfer.tag.data.DbStartupPolicy.FileState
+import de.meinhelfer.tag.data.DbStartupPolicy.KeyState
+import de.meinhelfer.tag.data.DbStartupPolicy.Decision
 import de.meinhelfer.tag.data.DbLifecycleStore.State
 
 class DbStartupGateTest {
