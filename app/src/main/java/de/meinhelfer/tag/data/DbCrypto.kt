@@ -53,6 +53,28 @@ object DbCrypto {
         null
     }
 
+    /**
+     * Startup-only inspection: do not initialize encrypted preferences when
+     * their backing file or Android master key is absent.
+     * An inaccessible existing store must not be treated as a missing passphrase.
+     */
+    internal fun inspectStartupKey(context: Context): DbStartupPolicy.KeyState =
+        DbKeyInspection.inspect {
+            val prefsFile = File(context.applicationInfo.dataDir, "shared_prefs/$PREFS.xml")
+            val backupFile = File(prefsFile.path + ".bak")
+            val store = java.security.KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
+            val masterExists = store.containsAlias(MasterKey.DEFAULT_MASTER_KEY_ALIAS)
+            if (!prefsFile.exists() && !backupFile.exists()) {
+                check(!masterExists) { "Existing master key without database key store" }
+                null
+            } else {
+                check(prefsFile.isFile && !backupFile.exists() && masterExists) {
+                    "Database key store unavailable"
+                }
+                keyPrefs(context).getString(KEY, null)
+            }
+        }
+
     /** Setzt den Schluessel (bei Wiederherstellung einer Sicherung); null entfernt ihn. */
     fun setPassphrase(context: Context, value: String?) {
         val edit = keyPrefs(context).edit()
