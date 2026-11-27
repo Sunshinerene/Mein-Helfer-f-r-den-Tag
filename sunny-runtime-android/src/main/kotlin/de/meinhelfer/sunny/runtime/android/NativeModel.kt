@@ -64,7 +64,14 @@ internal fun nativeReply(
     checkpoint: () -> Unit,
 ): String? = lease.useNative {
     checkpoint()
-    val engine = nativeCall(ModelAccessFailure.InitializationFailed) { native.create(model, cache) }
+    val engine = try {
+        nativeCall(ModelAccessFailure.InitializationFailed) { native.create(model, cache) }
+    } catch (failure: Throwable) {
+        // Construction may have allocated native resources without returning a handle.
+        // No cleanup can be verified; prevent further model access in this process.
+        lease.quarantine()
+        throw failure
+    }
     var conversation: NativeConversation? = null
     var primary: Throwable? = null
     try {
