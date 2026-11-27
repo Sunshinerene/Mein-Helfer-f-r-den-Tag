@@ -2,6 +2,9 @@ package de.meinhelfer.sunny.poc
 
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.Intent
+import android.content.ActivityNotFoundException
+import de.meinhelfer.sunny.poc.brain.BrainPanel
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
@@ -33,6 +36,7 @@ class MainActivity : Activity() {
     private val core = CoreDemo()
     private val connect = MockConnect()
     private lateinit var emotionVoice: EmotionVoicePanel
+    private lateinit var brain: BrainPanel
     private lateinit var input: EditText
     private lateinit var coreStatus: TextView
     private lateinit var connectStatus: TextView
@@ -52,7 +56,9 @@ class MainActivity : Activity() {
             isFocusableInTouchMode = true
             addView(label("EXPERIMENTELL · OFFLINE", 13, Green, bold = true))
             addView(label(getString(R.string.app_name), 30, Ink, bold = true), margins(top = 6))
-            addView(buildCoreSection(), margins(top = 20))
+            brain = BrainPanel(this@MainActivity, ::chooseModelFile)
+            addView(section("Sunny Brain").apply { addView(brain) }, margins(top = 20))
+            addView(buildCoreSection(), margins(top = 16))
             addView(buildConnectSection(), margins(top = 16))
             emotionVoice = EmotionVoicePanel(context)
             addView(section("Emotion und Stimme").apply { addView(emotionVoice) }, margins(top = 16))
@@ -77,6 +83,34 @@ class MainActivity : Activity() {
         setContentView(scroll)
         page.requestFocus()
         scroll.requestApplyInsets()
+    }
+
+    @Suppress("DEPRECATION")
+    private fun chooseModelFile() {
+        try {
+            startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type = "application/octet-stream"
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                putExtra(Intent.EXTRA_LOCAL_ONLY, true)
+            }, MODEL_PICKER)
+        } catch (_: ActivityNotFoundException) {
+            AlertDialog.Builder(this).setMessage("Keine Dateiauswahl verfügbar.")
+                .setPositiveButton("OK", null).show()
+        }
+    }
+
+    @Deprecated("Activity result API is used to avoid an additional framework dependency.")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == MODEL_PICKER && resultCode == RESULT_OK) {
+            data?.data?.takeIf { it.scheme == "content" }?.let(brain::acceptFile)
+        }
+    }
+
+    override fun onDestroy() {
+        if (::brain.isInitialized) brain.close()
+        super.onDestroy()
     }
 
     override fun onResume() {
@@ -297,6 +331,7 @@ class MainActivity : Activity() {
     private fun dp(value: Int): Int = (value * resources.displayMetrics.density + 0.5f).toInt()
 
     private companion object {
+        const val MODEL_PICKER = 2401
         val Ink = Color.rgb(29, 41, 35)
         val Green = Color.rgb(36, 91, 73)
         val PaleGreen = Color.rgb(232, 242, 235)
