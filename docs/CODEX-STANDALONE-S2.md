@@ -1,5 +1,5 @@
 # POC-S2 – Sunny Emotion & Voice
-Status: proposed contract, separate execution GO required. Baseline: accepted POC-S1 merge 6b0dedc; verify latest integration HEAD and documentation-only changes before creating codex/sunny-standalone-s2. No merge/release without separate approval.
+Status: owner GO in Chat 00 for technical implementation within this contract; media ingestion, signing changes, manifest queries and workflow changes remain separately gated. Baseline: accepted POC-S1 merge 6b0dedc; verify latest integration HEAD and documentation-only changes before creating codex/sunny-standalone-s2. No merge/release without separate approval.
 
 ## Scope
 Only sunny-standalone-poc/**. Preserve all POC-S1 capabilities and tests, package de.meinhelfer.sunny.poc, sandbox, no backup, no Internet/overlay/microphone/accessibility permissions, no real care data or IPC. Existing MeinHelfer app and core read-only. Workflows/root build locked. Do not copy unfinished runtime/security branches. Use existing Java17/Gradle8.11.1/Kotlin2.2.21/AGP8.10.1/SDK35. Keep new dependencies out unless separately approved.
@@ -26,3 +26,6 @@ S206: all mandatory tests pass, zero failures/errors/skips; report exact command
 S207: device checks for offline speech, visible emotion transitions, stop/reset, old POC-S1 regression, unchanged MeinHelfer. No device claim before actual owner test.
 S208: Debug signing continuity must be resolved separately before updating installed POC-S1; CI currently uses ephemeral debug keys. Do not uninstall or overwrite existing app to bypass mismatch. Report signing fingerprint and coordinate test update strategy.
 S209: Draft PR only. No release, merge, actual app-to-app communication or model runtime migration. Stop on scope conflict.
+
+## Execution handoff
+Owner approval via thumbs-up in Chat 00. Technical implementation may proceed with a labeled placeholder if authoritative media are unavailable. Do not block the technical milestone on media, signing or TTS discovery; report deferred device acceptance criteria explicitly. Do not claim a successful in-place APK update until signing continuity is verified. No changes outside sunny-standalone-poc/**.
