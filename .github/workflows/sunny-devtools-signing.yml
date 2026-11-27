@@ -1,15 +1,11 @@
 name: Sunny DevTools Protected Signing
 on:
   workflow_dispatch:
-  push:
-    branches: [entwicklung/sunny-2]
-    paths:
-      - '.github/workflows/sunny-devtools-signing.yml'
 permissions:
   contents: read
 jobs:
   build:
-    if: github.ref == 'refs/heads/entwicklung/sunny-2'
+    if: github.ref == 'refs/heads/entwicklung/sunny-v04-brain'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -39,7 +35,7 @@ jobs:
           gradle -p sunny-standalone-poc --no-parallel --max-workers=2 clean testDebugUnitTest assembleDebug
           python3 - <<'PY'
           import pathlib, xml.etree.ElementTree as ET
-          for directory, expected in [('sunny-core/build/test-results/test',131),('sunny-standalone-poc/build/test-results/testDebugUnitTest',36)]:
+          for directory, expected in [('sunny-core/build/test-results/test',131),('sunny-standalone-poc/build/test-results/testDebugUnitTest',57)]:
               files=list(pathlib.Path(directory).glob('TEST-*.xml'))
               assert files
               totals=dict.fromkeys(('tests','failures','errors','skipped'),0)
@@ -49,14 +45,14 @@ jobs:
               print(totals)
               assert totals['tests']>=expected and not any(totals[k] for k in ('failures','errors','skipped'))
           PY
-      # v0.3 signing request: require complete approved avatar inventory before protected job.
+      # v0.4: retain complete approved avatar inventory before protected job.
       - name: Check source APK
         run: |
           set -euo pipefail
           APK=sunny-standalone-poc/build/outputs/apk/debug/sunny-standalone-poc-debug.apk
           TOOLS="$ANDROID_HOME/build-tools/35.0.0"
           "$TOOLS/aapt" dump badging "$APK" | grep -F "package: name='de.meinhelfer.sunny.devtools'"
-          "$TOOLS/aapt" dump badging "$APK" | grep -F "versionCode='3' versionName='0.3-devtools'"
+          "$TOOLS/aapt" dump badging "$APK" | grep -F "versionCode='4' versionName='0.4-devtools'"
           python3 - "$APK" <<'PY'
           import sys, zipfile
           expected={f'sunny_su{i:02}.webp' for i in range(1,36)} | {'sunny_beta.webp'}
@@ -75,7 +71,7 @@ jobs:
           if-no-files-found: error
   sign:
     needs: build
-    if: github.ref == 'refs/heads/entwicklung/sunny-2'
+    if: github.ref == 'refs/heads/entwicklung/sunny-v04-brain'
     runs-on: ubuntu-latest
     environment: sunny-devtools-signing
     steps:
@@ -99,6 +95,7 @@ jobs:
           "$TOOLS/apksigner" verify source.apk
           "$TOOLS/aapt" dump badging source.apk > badging.txt
           grep -F "package: name='de.meinhelfer.sunny.devtools'" badging.txt
+          grep -F "versionCode='4' versionName='0.4-devtools'" badging.txt
           grep -F "launchable-activity: name='de.meinhelfer.sunny.poc.MainActivity'" badging.txt
           "$TOOLS/aapt" dump permissions source.apk > permissions.txt
           "$TOOLS/aapt" dump xmltree source.apk AndroidManifest.xml > manifest.txt
@@ -132,6 +129,7 @@ jobs:
           "$TOOLS/zipalign" -c -P 16 4 signed/sunny-devtools.apk
           "$TOOLS/aapt" dump badging signed/sunny-devtools.apk > signed/badging.txt
           grep -F "package: name='de.meinhelfer.sunny.devtools'" signed/badging.txt
+          grep -F "versionCode='4' versionName='0.4-devtools'" signed/badging.txt
           "$TOOLS/aapt" dump permissions signed/sunny-devtools.apk > signed/permissions.txt
           cmp signing-input/permissions.txt signed/permissions.txt
           "$TOOLS/aapt" dump xmltree signed/sunny-devtools.apk AndroidManifest.xml > signed/manifest.txt
