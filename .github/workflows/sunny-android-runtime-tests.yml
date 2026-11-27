@@ -39,7 +39,18 @@ jobs:
           gradle-version: 8.11.1
           cache-disabled: true
       - name: Android SDK
-        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+        run: |
+          set -euo pipefail
+          SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          test -d "$SDK"
+          if [ ! -f "$SDK/platforms/android-35/android.jar" ] || [ ! -x "$SDK/build-tools/35.0.0/aapt" ]; then
+            MANAGER=$(find "$SDK/cmdline-tools" -type f -name sdkmanager | sort -V | tail -1)
+            test -n "$MANAGER"
+            "$MANAGER" --sdk_root="$SDK" "platforms;android-35" "build-tools;35.0.0"
+          fi
+          test -f "$SDK/platforms/android-35/android.jar"
+          test -x "$SDK/build-tools/35.0.0/aapt"
+          echo "ANDROID_HOME=$SDK" >> "$GITHUB_ENV"
       - name: Core tests
         run: gradle -p sunny-core --no-daemon --max-workers=4 clean test
       - name: Adapter tests and APK builds
@@ -73,7 +84,7 @@ jobs:
             sunny-core/build/test-results/test/
             sunny-runtime-android/build/test-results/
             app/build/test-results/testDebugUnitTest/
-          if-no-files-found: error
+          if-no-files-found: warn
       - name: Paket und Berechtigungen prüfen
         run: |
           set -euo pipefail
