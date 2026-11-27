@@ -180,7 +180,7 @@ class LiteRtModelBackendTest {
             val firstCallEntered = kotlinx.coroutines.withContext(Dispatchers.IO) { entered.await(5, TimeUnit.SECONDS) }
             assertTrue(firstCallEntered)
             val competing = f.makeRuntime()
-            assertEquals(LocalRuntimeFailure.StatusCheckFailed, failure<LocalRuntimeException> { competing.generate("fixture") }.failure)
+            assertEquals(LocalRuntimeFailure.Busy, failure<LocalRuntimeException> { competing.generate("fixture") }.failure)
             val import = async(start = CoroutineStart.UNDISPATCHED) {
                 f.access.withExclusive { f.native.events += "import" }
             }
@@ -207,7 +207,7 @@ class LiteRtModelBackendTest {
     fun runtimeRejectsAccessDuringModelImport() = runBlocking {
         val f = Fixture()
         f.access.withExclusive {
-            assertEquals(LocalRuntimeFailure.StatusCheckFailed, failure<LocalRuntimeException> { f.runtime.generate("fixture") }.failure)
+            assertEquals(LocalRuntimeFailure.Busy, failure<LocalRuntimeException> { f.runtime.generate("fixture") }.failure)
             assertTrue(f.native.events.isEmpty())
         }
         assertEquals("ACK", f.runtime.generate("fixture"))
