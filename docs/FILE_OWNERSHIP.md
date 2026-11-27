@@ -8,3 +8,6 @@ Branches proposed: codex/sunny-brain, codex/sunny-modules, codex/sunny-standalon
 
 ## 6B.2 scoped authorization
 Chat 00 owner GO 2026-11-27. New branch codex/sunny-runtime-android. Allowed: new sunny-runtime-android/**; settings.gradle.kts, root build.gradle.kts and app/build.gradle.kts only for module wiring; app/src/main/java/de/meinhelfer/tag/ai/SunnyModelStore.kt and SunnyLiteRtTest.kt only for shared model access and cleanup safety. Existing core sources/tests read-only. All other app files, schemas, workflows, permissions, backup/security paths and main remain locked. No concurrent changes; stop if scope insufficient. No host routing/UI migration.
+
+## SEC-A.2 / SEC-A.3 scoped authorization
+Chat 00 owner GO 2026-11-27. Only on entwicklung/backup-security: DbCrypto.kt, AppDatabase.kt, HelferApplication.kt and MainActivity.kt for fail-closed database startup and recovery messaging, plus dedicated security tests. Codex remains excluded from these files. Preserve backup/restore, first-run setup, existing data and schema. No merge, release or production installation before separate acceptance. Verify all startup callers and migration recovery before enabling the new path.
