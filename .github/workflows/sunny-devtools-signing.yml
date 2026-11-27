@@ -1,0 +1,135 @@
+name: Sunny DevTools Protected Signing
+on:
+  workflow_dispatch:
+  push:
+    branches: [entwicklung/sunny-2]
+    paths:
+      - '.github/workflows/sunny-devtools-signing.yml'
+permissions:
+  contents: read
+jobs:
+  build:
+    if: github.ref == 'refs/heads/entwicklung/sunny-2'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v5
+        with:
+          gradle-version: 8.11.1
+      - name: Verify SDK
+        run: |
+          set -euo pipefail
+          SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          if ! test -f "$SDK/platforms/android-35/android.jar" || ! test -x "$SDK/build-tools/35.0.0/aapt"; then
+            MANAGER=$(find "$SDK/cmdline-tools" -type f -name sdkmanager | sort -V | tail -1)
+            test -n "$MANAGER"
+            "$MANAGER" --sdk_root="$SDK" "platforms;android-35" "build-tools;35.0.0"
+          fi
+          echo "ANDROID_HOME=$SDK" >> "$GITHUB_ENV"
+      - name: Build and test without protected credentials
+        run: |
+          set -euo pipefail
+          gradle -p sunny-core --no-parallel --max-workers=2 clean test
+          gradle -p sunny-standalone-poc --no-parallel --max-workers=2 clean testDebugUnitTest assembleDebug
+          python3 - <<'PY'
+          import pathlib, xml.etree.ElementTree as ET
+          for directory, expected in [('sunny-core/build/test-results/test',131),('sunny-standalone-poc/build/test-results/testDebugUnitTest',36)]:
+              files=list(pathlib.Path(directory).glob('TEST-*.xml'))
+              assert files
+              totals=dict.fromkeys(('tests','failures','errors','skipped'),0)
+              for f in files:
+                  root=ET.parse(f).getroot()
+                  for k in totals: totals[k]+=int(root.get(k,0))
+              print(totals)
+              assert totals['tests']>=expected and not any(totals[k] for k in ('failures','errors','skipped'))
+          PY
+      - name: Check source APK
+        run: |
+          set -euo pipefail
+          APK=sunny-standalone-poc/build/outputs/apk/debug/sunny-standalone-poc-debug.apk
+          TOOLS="$ANDROID_HOME/build-tools/35.0.0"
+          "$TOOLS/aapt" dump badging "$APK" | grep -F "package: name='de.meinhelfer.sunny.devtools'"
+          "$TOOLS/apksigner" verify "$APK"
+          mkdir signing-input
+          cp "$APK" signing-input/source.apk
+          (cd signing-input && sha256sum source.apk > source.sha256)
+      - uses: actions/upload-artifact@v5
+        with:
+          name: sunny-signing-input
+          path: signing-input/
+          if-no-files-found: error
+  sign:
+    needs: build
+    if: github.ref == 'refs/heads/entwicklung/sunny-2'
+    runs-on: ubuntu-latest
+    environment: sunny-devtools-signing
+    steps:
+      - uses: actions/download-artifact@v5
+        with:
+          name: sunny-signing-input
+          path: signing-input
+      - name: Verify protected signing prerequisites
+        env:
+          EXPECTED_CERT_SHA256: ${{ vars.SUNNY_DEVTOOLS_CERT_SHA256 }}
+        run: |
+          set -euo pipefail
+          [[ "$EXPECTED_CERT_SHA256" =~ ^[a-fA-F0-9]{64}$ ]] || { echo "Pinned public certificate fingerprint missing or invalid"; exit 1; }
+          test "${EXPECTED_CERT_SHA256,,}" = "dc9ef7d1e5637f259273cb80cbfe0f46eab253ee4b027c03160dcdfa2bfcbbea"
+          cd signing-input
+          sha256sum -c source.sha256
+          TOOLS="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}/build-tools/35.0.0"
+          test -x "$TOOLS/apksigner"
+          test -x "$TOOLS/aapt"
+          test -x "$TOOLS/zipalign"
+          "$TOOLS/apksigner" verify source.apk
+          "$TOOLS/aapt" dump badging source.apk > badging.txt
+          grep -F "package: name='de.meinhelfer.sunny.devtools'" badging.txt
+          grep -F "launchable-activity: name='de.meinhelfer.sunny.poc.MainActivity'" badging.txt
+          "$TOOLS/aapt" dump permissions source.apk > permissions.txt
+          "$TOOLS/aapt" dump xmltree source.apk AndroidManifest.xml > manifest.txt
+          if grep -E 'uses-permission|permission: name=' permissions.txt; then exit 1; fi
+          if grep -E 'E: (service|receiver|provider|queries|activity-alias)|sharedUserId|android.intent.category.HOME|E: uses-permission' manifest.txt; then exit 1; fi
+          test "$(grep -c 'E: activity (' manifest.txt)" -eq 1
+          grep -E 'android:allowBackup.*0x0$' manifest.txt
+          "$TOOLS/zipalign" -c -P 16 4 source.apk
+      - name: Sign and pin certificate
+        env:
+          KEYSTORE_B64: ${{ secrets.SUNNY_DEVTOOLS_KEYSTORE_B64 }}
+          STORE_PASSWORD: ${{ secrets.SUNNY_DEVTOOLS_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.SUNNY_DEVTOOLS_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.SUNNY_DEVTOOLS_KEY_PASSWORD }}
+          EXPECTED_CERT_SHA256: ${{ vars.SUNNY_DEVTOOLS_CERT_SHA256 }}
+        run: |
+          set -euo pipefail
+          umask 077
+          : "${KEYSTORE_B64:?}" "${STORE_PASSWORD:?}" "${KEY_ALIAS:?}" "${KEY_PASSWORD:?}"
+          TOOLS="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}/build-tools/35.0.0"
+          KEYDIR=$(mktemp -d)
+          trap 'rm -rf "$KEYDIR"' EXIT
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > "$KEYDIR/sunny.p12"
+          mkdir -p signed
+          "$TOOLS/apksigner" sign --ks "$KEYDIR/sunny.p12" --ks-type PKCS12 --ks-key-alias "$KEY_ALIAS" --ks-pass env:STORE_PASSWORD --key-pass env:KEY_PASSWORD --out signed/sunny-devtools.apk signing-input/source.apk
+          "$TOOLS/apksigner" verify --verbose --print-certs signed/sunny-devtools.apk > signed/signature.txt
+          test "$(grep -c 'certificate SHA-256 digest:' signed/signature.txt)" -eq 1
+          ACTUAL=$(awk '/certificate SHA-256 digest:/ {print $NF}' signed/signature.txt)
+          test "${ACTUAL,,}" = "dc9ef7d1e5637f259273cb80cbfe0f46eab253ee4b027c03160dcdfa2bfcbbea"
+          test "${ACTUAL,,}" = "${EXPECTED_CERT_SHA256,,}"
+          "$TOOLS/zipalign" -c -P 16 4 signed/sunny-devtools.apk
+          "$TOOLS/aapt" dump badging signed/sunny-devtools.apk > signed/badging.txt
+          grep -F "package: name='de.meinhelfer.sunny.devtools'" signed/badging.txt
+          "$TOOLS/aapt" dump permissions signed/sunny-devtools.apk > signed/permissions.txt
+          cmp signing-input/permissions.txt signed/permissions.txt
+          "$TOOLS/aapt" dump xmltree signed/sunny-devtools.apk AndroidManifest.xml > signed/manifest.txt
+          cmp signing-input/manifest.txt signed/manifest.txt
+          (cd signed && sha256sum sunny-devtools.apk > sha256.txt)
+      - uses: actions/upload-artifact@v5
+        with:
+          name: Sunny-AI-DevTools-permanent-signed
+          path: signed/
+          if-no-files-found: error

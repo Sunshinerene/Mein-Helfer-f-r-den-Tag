@@ -32,6 +32,7 @@ import kotlin.coroutines.startCoroutine
 class MainActivity : Activity() {
     private val core = CoreDemo()
     private val connect = MockConnect()
+    private lateinit var emotionVoice: EmotionVoicePanel
     private lateinit var input: EditText
     private lateinit var coreStatus: TextView
     private lateinit var connectStatus: TextView
@@ -51,12 +52,10 @@ class MainActivity : Activity() {
             isFocusableInTouchMode = true
             addView(label("EXPERIMENTELL · OFFLINE", 13, Green, bold = true))
             addView(label(getString(R.string.app_name), 30, Ink, bold = true), margins(top = 6))
-            addView(label("Avatar-Platzhalter", 14, Green).apply {
-                background = surface(PaleGreen)
-                setPadding(dp(12), dp(8), dp(12), dp(8))
-            }, margins(top = 12, width = LinearLayout.LayoutParams.WRAP_CONTENT))
             addView(buildCoreSection(), margins(top = 20))
             addView(buildConnectSection(), margins(top = 16))
+            emotionVoice = EmotionVoicePanel(context)
+            addView(section("Emotion und Stimme").apply { addView(emotionVoice) }, margins(top = 16))
             addView(button("Hilfe", ::showHelp), margins(top = 12))
             addView(button("Testsitzung zurücksetzen", ::resetSession))
         }
@@ -78,6 +77,16 @@ class MainActivity : Activity() {
         setContentView(scroll)
         page.requestFocus()
         scroll.requestApplyInsets()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        emotionVoice.setActive(true)
+    }
+
+    override fun onPause() {
+        emotionVoice.setActive(false)
+        super.onPause()
     }
 
     private fun buildCoreSection(): LinearLayout = section("Sunny Core").apply {
@@ -201,6 +210,7 @@ class MainActivity : Activity() {
     private fun resetSession() {
         closeKeyboard()
         connect.reset()
+        emotionVoice.reset()
         input.text.clear()
         input.clearFocus()
         selected = connect.capabilities().first()
@@ -223,7 +233,9 @@ class MainActivity : Activity() {
                     "Über „Fehlende Laufzeit simulieren“ lässt sich die Regelantwort prüfen.\n\n" +
                     "Wähle eine Fähigkeit und rufe sie vor der Freigabe ab, um die Ablehnung zu sehen. " +
                     "Die Testfreigabe gilt nur für die Auswahl. Nach einem Widerruf ist der Abruf wieder gesperrt.\n\n" +
-                    capabilityHelp + "\n\nBeim Zurücksetzen werden Testtext, Antworten und alle Testfreigaben gelöscht.",
+                    capabilityHelp + "\n\nUnter „Emotion und Stimme“ kannst du Emotionsvarianten und die Darstellung prüfen. " +
+                    "Die Stimme liest nur den ausgewählten festen Testtext. Beim Zurücksetzen endet die Sprachausgabe. " +
+                    "Die Vorschau startet neu. Testtext, Antworten und alle Testfreigaben werden gelöscht.",
             )
             .setPositiveButton("Schließen", null)
             .show()

@@ -2,7 +2,7 @@ name: Sunny Standalone POC Tests
 on:
   workflow_dispatch:
   push:
-    branches: [codex/sunny-standalone-poc]
+    branches: [codex/sunny-standalone-s2]
     paths:
       - 'sunny-standalone-poc/**'
       - 'sunny-core/**'
@@ -41,7 +41,7 @@ jobs:
         run: |
           python3 - <<'PY'
           import pathlib, xml.etree.ElementTree as ET
-          for directory, expected in [('sunny-core/build/test-results/test',131),('sunny-standalone-poc/build/test-results/testDebugUnitTest',16)]:
+          for directory, expected in [('sunny-core/build/test-results/test',131),('sunny-standalone-poc/build/test-results/testDebugUnitTest',36)]:
               files = list(pathlib.Path(directory).glob('TEST-*.xml'))
               assert files, directory
               totals = dict.fromkeys(('tests','failures','errors','skipped'),0)
@@ -60,7 +60,7 @@ jobs:
           "$TOOLS/aapt" dump badging "$APK" > sunny-poc-evidence/badging.txt
           "$TOOLS/aapt" dump permissions "$APK" > sunny-poc-evidence/permissions.txt
           "$TOOLS/aapt" dump xmltree "$APK" AndroidManifest.xml > sunny-poc-evidence/manifest.txt
-          grep -F "package: name='de.meinhelfer.sunny.poc'" sunny-poc-evidence/badging.txt
+          grep -F "package: name='de.meinhelfer.sunny.devtools'" sunny-poc-evidence/badging.txt
           grep -F "launchable-activity: name='de.meinhelfer.sunny.poc.MainActivity'" sunny-poc-evidence/badging.txt
           if grep -E 'uses-permission|permission: name=' sunny-poc-evidence/permissions.txt; then exit 1; fi
           if grep -E 'E: (service|receiver|provider|queries|activity-alias)|sharedUserId|android.intent.category.HOME|E: uses-permission' sunny-poc-evidence/manifest.txt; then exit 1; fi
