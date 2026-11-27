@@ -34,5 +34,6 @@ androidComponents {
 
 dependencies {
     implementation("de.meinhelfer.sunny:sunny-core:0.1")
+    implementation(project(":sunny-runtime-android"))
     testImplementation("junit:junit:4.13.2")
 }
