@@ -12,7 +12,12 @@ enum class LocalRuntimeFailure {
 
 /** Contains only a fixed failure code. Backend exception messages and causes are discarded. */
 class LocalRuntimeException internal constructor(val failure: LocalRuntimeFailure) :
-    IllegalStateException(failure.name)
+    IllegalStateException(failure.name) {
+    companion object {
+        /** A backend can report contention across runtime instances without exposing details. */
+        fun busy(): LocalRuntimeException = LocalRuntimeException(LocalRuntimeFailure.Busy)
+    }
+}
 
 /**
  * Local-only backend. It must check compatibility before opening and revalidate it during
