@@ -83,3 +83,6 @@ PR #14 (7A, head 5a360a7eb115c5d095c7937cd51a56401579e668): one authorized desig
 
 ## 2026-11-28 – Owner-approved integration of 6C.1
 Owner GO in 00/1 for PR #15 only. Reviewed head 02512433dd21986a63ae19abaa866946ec3723af unchanged; base advances were documentation only. GitHub initially reported not mergeable, then confirmed mergeable on recheck. Marked ready and merged using expected head SHA; merge commit c13f10a916018ecd2e6596f9a18e12b28a9d2f43. Post-merge CI not independently confirmed yet (connector filters runs to PR triggers). Gate: at least 144 Core and 265 runtime aggregate, zero failures/errors/skips, before integrating PR #16. No production, signing or native Brain changes authorized. PR #14 and #16 remain separate.
+
+## 2026-11-28 – Memory Foundation post-merge workflow status
+Owner screenshots at 12:45 and 12:49 CET confirm merge PR #15 on entwicklung/sunny-2: Sunny Core Tests #12 success (1m14s), Sunny Android Runtime Tests #18 success (5m57s). Exact post-merge JUnit counts remain unverified; request direct run URL(s) to read job logs. Prior independent PR CI counts 144 Core/265 aggregate are not a substitute for post-merge counts. PR #16 remains unmerged pending integration gate.
