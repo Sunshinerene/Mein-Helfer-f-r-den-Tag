@@ -2,12 +2,16 @@ package de.meinhelfer.sunny.poc.brain
 
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.net.Uri
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.ProgressBar
 import android.view.View
+import de.meinhelfer.sunny.runtime.android.DiagnosticStatus
+import de.meinhelfer.sunny.runtime.android.NativeDiagnostics
 import kotlinx.coroutines.*
 
 internal class BrainPanel(
@@ -24,6 +28,8 @@ internal class BrainPanel(
     private val deleteButton = Button(activity)
     private val cancelButton = Button(activity)
     private val testButton = Button(activity)
+    private val diagnosisButton = Button(activity)
+    private var lastDiagnosis: BrainDiagnosticReport? = null
 
     init {
         orientation = VERTICAL
@@ -57,11 +63,14 @@ internal class BrainPanel(
             isAllCaps = false
             setOnClickListener {
                 runOperation("Lokale Klassifikation läuft …") {
-                    withContext(Dispatchers.IO) {
-                        NativeBrainCheck.create(store.model, store.cache).run()
-                    }
+                    runDiagnostic()
                 }
             }
+        })
+        addView(diagnosisButton.apply {
+            text = "Brain-Diagnose anzeigen"
+            isAllCaps = false
+            setOnClickListener { lastDiagnosis?.let(::showDiagnostic) }
         })
         addView(cancelButton.apply {
             text = "Vorgang abbrechen"
@@ -92,9 +101,46 @@ internal class BrainPanel(
         ).filter { it.isNotBlank() }.joinToString("\n")
         importButton.isEnabled = !busy
         deleteButton.isEnabled = !busy && installed
-        testButton.isEnabled = !busy && installed
+        testButton.isEnabled = !busy
+        diagnosisButton.isEnabled = !busy && lastDiagnosis != null
         cancelButton.isEnabled = busy
         progress.visibility = if (busy) View.VISIBLE else View.GONE
+    }
+
+    private suspend fun runDiagnostic(): String {
+        val trace = NativeDiagnostics()
+        val start = trace.nowNanos()
+        var completion = DiagnosticStatus.Unknown
+        try {
+            return withContext(Dispatchers.IO) {
+                NativeBrainCheck.create(store.model, store.cache, trace).run()
+            }.also { completion = DiagnosticStatus.Completed }
+        } catch (failure: CancellationException) {
+            completion = DiagnosticStatus.Cancelled
+            throw failure
+        } catch (failure: InterruptedException) {
+            completion = DiagnosticStatus.Interrupted
+            throw failure
+        } catch (failure: Exception) {
+            completion = DiagnosticStatus.Failed
+            throw failure
+        } finally {
+            if (!closed) lastDiagnosis = BrainDiagnosticReport(trace.snapshot(), trace.nowNanos() - start, completion)
+        }
+    }
+
+    private fun showDiagnostic(report: BrainDiagnosticReport) {
+        val summary = report.export()
+        val preview = report.localPreview?.let { "«$it»" } ?: "Kein sichtbarer Text erfasst."
+        AlertDialog.Builder(activity)
+            .setTitle("Brain-Diagnose")
+            .setMessage("$summary\nSynthetische Modellantwort · nicht vertrauenswürdig · nur hier angezeigt\n$preview")
+            .setPositiveButton("Bericht kopieren") { _, _ ->
+                activity.getSystemService(ClipboardManager::class.java)
+                    .setPrimaryClip(ClipData.newPlainText("Sunny Brain-Diagnose", summary))
+            }
+            .setNegativeButton("Schließen", null)
+            .show()
     }
 
     private fun runOperation(message: String, work: suspend () -> String) {
@@ -120,6 +166,7 @@ internal class BrainPanel(
 
     fun close() {
         closed = true
+        lastDiagnosis = null
         scope.cancel()
     }
 }

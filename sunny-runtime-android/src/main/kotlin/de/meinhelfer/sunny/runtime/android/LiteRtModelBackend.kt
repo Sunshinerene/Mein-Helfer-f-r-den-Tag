@@ -19,23 +19,27 @@ class LiteRtModelBackend internal constructor(
     private val native: NativeModel,
     private val access: ModelAccess,
     private val dispatcher: CoroutineDispatcher,
+    private val diagnostics: NativeDiagnostics? = null,
 ) : LocalModelBackend {
     constructor(model: File, cache: File) :
         this(model, cache, LiteRtNativeModel, ModelAccess.process, Dispatchers.IO)
 
+    constructor(model: File, cache: File, diagnostics: NativeDiagnostics) :
+        this(model, cache, LiteRtNativeModel, ModelAccess.process, Dispatchers.IO, diagnostics)
+
     override suspend fun modelStatus(deadline: RuntimeDeadline): LocalModelStatus {
-        val lease = acquireForRuntime()
+        val lease = acquireForRuntime(DiagnosticPhase.ModelAccess)
         try {
-            return inspect(deadline)
+            return inspect(deadline, DiagnosticPhase.ModelCheck)
         } finally {
             lease.close()
         }
     }
 
     override suspend fun open(deadline: RuntimeDeadline): LocalModelSession {
-        val lease = acquireForRuntime()
+        val lease = acquireForRuntime(DiagnosticPhase.NativeAccess)
         try {
-            when (inspect(deadline)) {
+            when (inspect(deadline, DiagnosticPhase.ModelRecheck)) {
                 LocalModelStatus.Missing -> throw ModelAccessException(ModelAccessFailure.Missing)
                 LocalModelStatus.Incompatible -> throw ModelAccessException(ModelAccessFailure.Incompatible)
                 LocalModelStatus.Available -> return Session(lease)
@@ -46,17 +50,27 @@ class LiteRtModelBackend internal constructor(
         }
     }
 
-    private fun acquireForRuntime(): ModelAccess.Lease = try {
-        access.acquire()
+    private fun acquireForRuntime(phase: DiagnosticPhase): ModelAccess.Lease = try {
+        diagnostics?.measure(phase) { access.acquire() } ?: access.acquire()
     } catch (failure: ModelAccessException) {
+        if (failure.code == ModelAccessFailure.Quarantined) diagnostics?.quarantined()
         if (failure.code == ModelAccessFailure.Busy) throw LocalRuntimeException.busy()
         throw failure
     }
 
-    private suspend fun inspect(deadline: RuntimeDeadline) = withContext(dispatcher) {
-        ensureActive()
-        deadline.checkpoint()
-        nativeCall(ModelAccessFailure.ReadFailed) { modelStatus(model) }.also { deadline.checkpoint() }
+    private suspend fun inspect(deadline: RuntimeDeadline, phase: DiagnosticPhase) = withContext(dispatcher) {
+        val check = {
+            ensureActive()
+            deadline.checkpoint()
+            nativeCall(ModelAccessFailure.ReadFailed) { modelStatus(model) }.also { deadline.checkpoint() }
+        }
+        diagnostics?.measure(phase, { status ->
+            when (status) {
+                LocalModelStatus.Available -> DiagnosticStatus.Available
+                LocalModelStatus.Missing -> DiagnosticStatus.Missing
+                LocalModelStatus.Incompatible -> DiagnosticStatus.Incompatible
+            }
+        }, check) ?: check()
     }
 
     private inner class Session(private val lease: ModelAccess.Lease) : LocalModelSession {
@@ -73,7 +87,7 @@ class LiteRtModelBackend internal constructor(
             try {
                 return withContext(dispatcher) {
                     val prompt = "Classify the request. Reply with exactly ACK or CLARIFY. Request:\n$text"
-                    nativeReply(native, lease, model, cache, prompt, legacy = false) {
+                    nativeReply(native, lease, model, cache, prompt, legacy = false, diagnostics = diagnostics) {
                         ensureActive()
                         deadline.checkpoint()
                     }
