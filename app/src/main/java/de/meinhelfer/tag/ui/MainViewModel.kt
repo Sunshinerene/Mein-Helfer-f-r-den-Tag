@@ -1254,7 +1254,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             _updateState.value = UpdateState.Checking
             _updateState.value = try {
-                val info = UpdateChecker.fetchLatest()
+                val info = UpdateChecker.fetchLatest(getApplication())
                 val installed = UpdateChecker.installedVersion(getApplication())
                 if (info != null && UpdateChecker.isNewer(info.version, installed)) {
                     UpdateState.Available(info)

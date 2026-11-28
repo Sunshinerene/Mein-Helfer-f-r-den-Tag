@@ -91,9 +91,13 @@ internal fun BackupCard() {
             try {
                 val out = context.contentResolver.openOutputStream(uri, "w") ?: throw java.io.IOException("Zieldatei nicht beschreibbar")
                 val info = Backup.create(context, out, pw) { text -> step = BackupStep.Working(text) }
-                lastBackup = info.createdMillis
+                if (info.skipped == 0) {
+                    lastBackup = info.createdMillis
+                } else {
+                    resetAfterBackup = false
+                }
                 step = BackupStep.Done(
-                    "Sicherung gespeichert",
+                    if (info.skipped == 0) "Sicherung gespeichert" else "Sicherung unvollständig",
                     "${info.documents} Dokumente und ${info.photos} Fotos gesichert." +
                         (if (info.skipped > 0) "\n${info.skipped} Dokumente konnten nicht gelesen werden und fehlen in der Sicherung." else "") +
                         "\n\nBewahre die Datei und das Passwort getrennt und sicher auf, am besten außerhalb des Handys (Cloud, Computer, USB-Stick). Ohne das Passwort lässt sich die Sicherung nicht öffnen.",
@@ -394,15 +398,35 @@ internal fun BackupCard() {
             text = {
                 Text(
                     "Sicherung vom ${timeText(s.info.createdMillis)} (App ${s.info.appVersion}) mit ${s.info.documents} Dokumenten und ${s.info.photos} Fotos.\n\n" +
+                        (if (s.info.skipped > 0) "ACHTUNG: Diese Sicherung ist unvollständig; ${s.info.skipped} Dokumente fehlen.\n\n" else "") +
                         "Alle jetzigen Daten auf diesem Handy werden durch die Sicherung ersetzt. Danach startet die App neu. " +
                         "Wenn etwas schiefgeht, bleiben die bisherigen Daten erhalten.",
                 )
             },
             confirmButton = {
                 TextButton(onClick = {
-                    step = BackupStep.Working("App wird neu gestartet …")
-                    Backup.restartApp(context)
-                }) { Text("Ersetzen und neu starten") }
+                    val activity = findActivity(context)
+                    if (activity == null || !de.meinhelfer.tag.security.AppLock.available(context)) {
+                        Backup.discardStaged(context)
+                        step = BackupStep.Done("Freigabe nicht möglich", "Bitte richte eine Gerätesperre ein und prüfe die Sicherung erneut.")
+                        return@TextButton
+                    }
+                    step = BackupStep.Working("Persönliche Freigabe erforderlich …")
+                    de.meinhelfer.tag.security.AppLock.authenticate(activity, "Sicherung wiederherstellen") { ok ->
+                        if (!ok || activity.isFinishing || activity.isDestroyed) {
+                            Backup.discardStaged(context)
+                            step = BackupStep.Done("Nicht freigegeben", "Die vorhandenen Daten wurden nicht ersetzt.")
+                        } else {
+                            try {
+                                Backup.confirmStaged(context)
+                                step = BackupStep.Working("App wird neu gestartet …")
+                                Backup.restartApp(context)
+                            } catch (_: Exception) {
+                                step = BackupStep.Done("Freigabe fehlgeschlagen", "Die Wiederherstellung konnte nicht freigegeben werden. Bitte prüfe die Sicherung erneut.")
+                            }
+                        }
+                    }
+                }) { Text("Freigeben und neu starten") }
             },
             dismissButton = {
                 TextButton(onClick = {

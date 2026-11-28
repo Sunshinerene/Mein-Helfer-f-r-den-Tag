@@ -15,6 +15,7 @@ import java.util.Locale
 /** Wird vom AlarmManager ausgeloest und zeigt die Benachrichtigung an. */
 class ReminderReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
+        if (!de.meinhelfer.tag.HelferApplication.startupReady) return
         val pending = goAsync()
         val app = context.applicationContext
         CoroutineScope(Dispatchers.IO).launch {

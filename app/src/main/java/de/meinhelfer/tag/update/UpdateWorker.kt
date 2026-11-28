@@ -16,11 +16,12 @@ import java.util.concurrent.TimeUnit
 class UpdateWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
+        if (!de.meinhelfer.tag.HelferApplication.startupReady) return Result.success()
         val context = applicationContext
         if (!AppPrefs.autoUpdateCheck(context)) return Result.success()
 
         return try {
-            val info = UpdateChecker.fetchLatest()
+            val info = UpdateChecker.fetchLatest(context)
             if (info != null &&
                 UpdateChecker.isNewer(info.version, UpdateChecker.installedVersion(context)) &&
                 AppPrefs.lastNotifiedVersion(context) != info.version

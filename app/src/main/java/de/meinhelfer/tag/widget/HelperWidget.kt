@@ -55,6 +55,20 @@ object HelperWidget {
     }
 
     internal suspend fun build(context: Context): RemoteViews {
+        if (!de.meinhelfer.tag.HelferApplication.startupReady) {
+            return RemoteViews(context.packageName, R.layout.widget_today).apply {
+                setTextViewText(R.id.widget_title, "Mein Helfer – Wiederherstellung")
+                setTextViewText(R.id.widget_intake, "Erinnerungen derzeit nicht verfügbar")
+                setTextViewText(R.id.widget_appointment, "App öffnen und Wiederherstellung prüfen")
+                setTextViewText(R.id.widget_stamp, "")
+                setViewVisibility(R.id.widget_take_row, android.view.View.GONE)
+                val open = Intent(context, MainActivity::class.java).apply {
+                    putExtra(MainActivity.EXTRA_FROM_WIDGET, true)
+                }
+                setOnClickPendingIntent(R.id.widget_root, PendingIntent.getActivity(context, 4711, open,
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))
+            }
+        }
         val db = AppDatabase.get(context)
         val now = LocalDateTime.now()
         val today = now.toLocalDate().toEpochDay()

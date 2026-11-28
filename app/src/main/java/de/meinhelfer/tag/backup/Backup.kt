@@ -37,6 +37,11 @@ class BackupInfo(
  * erst entpacken und pruefen ([stage]), dann beim naechsten App-Start austauschen ([applyPending]).
  */
 object Backup {
+    // Only the separately installed lab can arm this in-memory callback.
+    internal var labCheckpoint: ((String) -> Unit)? = null
+    private fun checkpoint(context: Context, name: String) {
+        if (context.packageName == "de.meinhelfer.tag.lab") labCheckpoint?.invoke(name)
+    }
     private const val STAGING = "restore_staging"
     private const val READY = "READY"
     private const val DB_ENTRY = "db/" + DbCrypto.DB_NAME
@@ -55,10 +60,20 @@ object Backup {
         target: OutputStream,
         password: CharArray,
         onProgress: (String) -> Unit,
+    ): BackupInfo = createFromDatabase(context, target, password, onProgress, null)
+
+    internal suspend fun createForLab(context: Context, target: OutputStream, password: CharArray, db: AppDatabase): BackupInfo {
+        check(context.packageName == "de.meinhelfer.tag.lab")
+        return createFromDatabase(context, target, password, {}, db)
+    }
+
+    private suspend fun createFromDatabase(
+        context: Context, target: OutputStream, password: CharArray,
+        onProgress: (String) -> Unit, labDb: AppDatabase?,
     ): BackupInfo = withContext(Dispatchers.IO) {
         val app = context.applicationContext
         onProgress("Datenbank wird vorbereitet …")
-        val db = AppDatabase.get(app)
+        val db = labDb ?: AppDatabase.get(app)
         val helperDb = db.openHelper.writableDatabase
         helperDb.query("PRAGMA wal_checkpoint(TRUNCATE)").use { it.moveToFirst() }
         val dbVersion = helperDb.version
@@ -77,9 +92,16 @@ object Backup {
                 zip.closeEntry()
             }
 
-            entry(DB_ENTRY) { out -> dbFile.inputStream().use { it.copyTo(out) } }
-            val wal = File(dbFile.path + "-wal")
-            if (wal.exists() && wal.length() > 0) entry("db/" + DbCrypto.DB_NAME + "-wal") { out -> wal.inputStream().use { it.copyTo(out) } }
+            // Hold the SQLite writer lock while copying the database and its WAL.
+            helperDb.beginTransactionNonExclusive()
+            try {
+                entry(DB_ENTRY) { out -> dbFile.inputStream().use { it.copyTo(out) } }
+                val wal = File(dbFile.path + "-wal")
+                if (wal.exists() && wal.length() > 0) entry("db/" + DbCrypto.DB_NAME + "-wal") { out -> wal.inputStream().use { it.copyTo(out) } }
+                helperDb.setTransactionSuccessful()
+            } finally {
+                helperDb.endTransaction()
+            }
             if (encrypted) {
                 val pass = DbCrypto.storedPassphrase(app) ?: throw IllegalStateException("Datenbankschluessel fehlt")
                 entry("db/passphrase.txt") { it.write(pass.toByteArray(Charsets.UTF_8)) }
@@ -133,7 +155,7 @@ object Backup {
                 .put("skipped", skipped)
             entry("meta.json") { it.write(meta.toString().toByteArray(Charsets.UTF_8)) }
         }
-        AppPrefs.setLastBackup(app, created)
+        if (skipped == 0) AppPrefs.setLastBackup(app, created)
         BackupInfo(created, appVersion(app), dbVersion, docs, photos, skipped)
     }
 
@@ -148,19 +170,29 @@ object Backup {
     ): BackupInfo = withContext(Dispatchers.IO) {
         val app = context.applicationContext
         val staging = File(app.filesDir, STAGING)
-        staging.deleteRecursively()
-        staging.mkdirs()
+        check(!File(staging.parentFile, STAGING + "_cleanup").exists() && listOf(READY, "APPLYING", "COMMITTED", "ROLLED_BACK").none { File(staging, it).exists() }) {
+            "Eine begonnene Wiederherstellung muss zuerst abgeschlossen werden."
+        }
+        check(staging.deleteRecursively()) { "Alter Zwischenstand konnte nicht entfernt werden" }
+        check(staging.mkdirs()) { "Zwischenordner konnte nicht erstellt werden" }
         try {
             val base = staging.canonicalPath + File.separator
             var docs = 0
-            ZipInputStream(BackupCrypto.decrypt(source, password)).use { zip ->
+            val seen = mutableSetOf<String>()
+            BackupCrypto.decrypt(source, password).use { decrypted ->
+            ZipInputStream(object : InputStream() {
+                override fun read() = decrypted.read()
+                override fun read(b: ByteArray, off: Int, len: Int) = decrypted.read(b, off, len)
+                override fun close() {}
+            }).use { zip ->
                 while (true) {
                     val e = zip.nextEntry ?: break
                     if (e.isDirectory) continue
                     val name = e.name
-                    val okName = name == "meta.json" || name == "prefs.json" || name == "sprachschatz.txt" || name.startsWith("db/") ||
-                        name.startsWith("docs/") || name.startsWith("photos/")
-                    if (!okName) continue
+                    val flatMedia = (name.startsWith("docs/") || name.startsWith("photos/")) &&
+                        name.substringAfter('/').let { it.isNotBlank() && it != "." && it != ".." && '/' !in it && '\\' !in it }
+                    val okName = name in setOf("meta.json", "prefs.json", "sprachschatz.txt", "db/passphrase.txt", DB_ENTRY, DB_ENTRY + "-wal") || flatMedia
+                    if (!okName || !seen.add(name)) throw java.io.IOException("Unzulässiger oder doppelter Sicherungseintrag")
                     val rel = if (name.startsWith("docs/")) "docs_enc/" + name.removePrefix("docs/") else name
                     val target = File(staging, rel)
                     if (!target.canonicalPath.startsWith(base)) throw java.io.IOException("Ungueltiger Eintrag")
@@ -175,9 +207,14 @@ object Backup {
                     }
                 }
             }
+            // ZIP may stop at its central directory before the authenticated stream ends.
+            val drain = ByteArray(8192)
+            while (decrypted.read(drain) != -1) { /* authenticate remaining blocks */ }
+            }
             val metaFile = File(staging, "meta.json")
             if (!metaFile.exists()) throw java.io.IOException("Sicherung unvollständig")
             val meta = JSONObject(metaFile.readText())
+            if (meta.optInt("format", -1) != 1 || meta.optInt("documents", -1) != docs || meta.optInt("photos", -1) != (File(staging, "photos").listFiles()?.size ?: 0)) throw java.io.IOException("Sicherung unvollständig oder unbekanntes Format")
             val dbFile = File(staging, DB_ENTRY)
             if (!dbFile.exists()) throw java.io.IOException("Sicherung unvollständig")
 
@@ -187,11 +224,11 @@ object Backup {
             val sqlWal = File(staging, "db/" + DbCrypto.DB_NAME + "-wal")
             check(DbCrypto.ensureLoaded()) { "Verschluesselung nicht verfuegbar" }
             val version = probeVersion(dbFile, pass, encrypted)
-            val current = AppDatabase.get(app).openHelper.readableDatabase.version
+            val current = de.meinhelfer.tag.data.DATABASE_SCHEMA_VERSION
             if (version > current) throw NewerBackupException()
             if (sqlWal.exists() && sqlWal.length() == 0L) sqlWal.delete()
 
-            File(staging, READY).writeText("1")
+            File(staging, "VERIFIED").writeText("1")
             BackupInfo(
                 createdMillis = meta.optLong("created"),
                 appVersion = meta.optString("app", "?"),
@@ -211,6 +248,9 @@ object Backup {
     private fun probeVersion(file: File, pass: String, encrypted: Boolean): Int {
         val db = SQLiteDatabase.openOrCreateDatabase(file, if (encrypted) pass else "", null, null, null)
         try {
+            db.rawQuery("PRAGMA integrity_check", emptyArray<String>()).use { cursor ->
+                check(cursor.moveToFirst() && cursor.getString(0).equals("ok", ignoreCase = true) && !cursor.moveToNext()) { "Datenbankintegrität fehlerhaft" }
+            }
             return db.version
         } finally {
             db.close()
@@ -225,8 +265,19 @@ object Backup {
     }
 
     /** Verwirft einen entpackten, aber nicht uebernommenen Stand. */
+    fun confirmStaged(context: Context) {
+        val staging = File(context.applicationContext.filesDir, STAGING)
+        check(File(staging, "VERIFIED").exists()) { "Keine geprüfte Sicherung vorhanden" }
+        check(!File(staging, "APPLYING").exists() && !File(staging, "COMMITTED").exists())
+        File(staging, READY).outputStream().use { it.write(1); it.fd.sync() }
+    }
+
     fun discardStaged(context: Context) {
-        File(context.applicationContext.filesDir, STAGING).deleteRecursively()
+        val staging = File(context.applicationContext.filesDir, STAGING)
+        check(!File(staging.parentFile, STAGING + "_cleanup").exists() && listOf(READY, "APPLYING", "COMMITTED", "ROLLED_BACK").none { File(staging, it).exists() }) {
+            "Begonnene Wiederherstellung darf nicht verworfen werden."
+        }
+        staging.deleteRecursively()
     }
 
     // ------------------------------------------------------------ Austauschen beim Start
@@ -248,8 +299,20 @@ object Backup {
     fun applyPending(context: Context) {
         val app = context.applicationContext
         val staging = File(app.filesDir, STAGING)
+        val cleanup = File(app.filesDir, STAGING + "_cleanup")
+        if (cleanup.exists()) {
+            check(!staging.exists()) { "Mehrere Wiederherstellungsstände vorhanden" }
+            DbCrypto.clearRestoreKey(app)
+            check(cleanup.deleteRecursively())
+        }
         if (!staging.exists()) return
-        if (!File(staging, READY).exists()) {
+        fun finishCleanup() {
+            check(!cleanup.exists())
+            check(staging.renameTo(cleanup)) { "Wiederherstellungsprotokoll konnte nicht archiviert werden" }
+            DbCrypto.clearRestoreKey(app)
+            check(cleanup.deleteRecursively())
+        }
+        if (!File(staging, READY).exists() && listOf("APPLYING", "COMMITTED", "ROLLED_BACK").none { File(staging, it).exists() }) {
             staging.deleteRecursively()
             return
         }
@@ -258,33 +321,133 @@ object Backup {
         val docsDir = File(app.filesDir, "docs_enc")
         val photosDir = File(app.filesDir, "photos")
         val prefsFile = app.getSharedPreferences(AppPrefs.FILE, Context.MODE_PRIVATE)
+        // Never retry a partially applied restore automatically.
+        val interrupted = File(staging, "APPLYING")
+        if (File(staging, "ROLLED_BACK").exists()) {
+            finishCleanup()
+            AppPrefs.setRestoreResult(app, "fehler:" + System.currentTimeMillis())
+            return
+        }
+        if (File(staging, "COMMITTED").exists()) {
+            val originals = SUFFIXES.map { File(dbFile.path + it) } +
+                SUFFIXES.map { File(dbFile.path + it + ".klartext") } + listOf(docsDir, photosDir)
+            originals.forEach { check(File(it.path + ".vorher").deleteRecursively()) }
+            finishCleanup()
+            AppPrefs.setRestoreResult(app, "ok:" + System.currentTimeMillis())
+            return
+        }
+        if (interrupted.exists()) {
+            val metadata = JSONObject(checkNotNull(DbCrypto.restoreMetadata(app)) {
+                "Wiederherstellungsprotokoll fehlt"
+            })
+            val originals = SUFFIXES.map { File(dbFile.path + it) } +
+                SUFFIXES.map { File(dbFile.path + it + ".klartext") } +
+                listOf(docsDir, photosDir)
+            val presence = metadata.getJSONArray("presence")
+            check(presence.length() == originals.size)
+            originals.forEachIndexed { index, original ->
+                val previous = File(original.path + ".vorher")
+                if (previous.exists()) {
+                    check(presence.getBoolean(index))
+                    check(original.deleteRecursively())
+                    check(previous.renameTo(original))
+                    checkpoint(app, "ROLLBACK:" + original.name)
+                } else if (!presence.getBoolean(index)) {
+                    check(original.deleteRecursively())
+                } else {
+                    check(original.exists()) { "Original fehlt: ${original.name}" }
+                }
+            }
+            DbCrypto.restoreSavedKey(app)
+            checkpoint(app, "ROLLBACK_KEY")
+            val json = metadata.getJSONObject("prefs")
+            val edit = prefsFile.edit().clear()
+            json.keys().forEach { k ->
+                val o = json.getJSONObject(k)
+                when (o.getString("t")) {
+                    "b" -> edit.putBoolean(k, o.getBoolean("v"))
+                    "i" -> edit.putInt(k, o.getInt("v"))
+                    "l" -> edit.putLong(k, o.getLong("v"))
+                    "f" -> edit.putFloat(k, o.getDouble("v").toFloat())
+                    "s" -> edit.putString(k, o.getString("v"))
+                    "set" -> {
+                        val arr = o.getJSONArray("v")
+                        edit.putStringSet(k, (0 until arr.length()).map { arr.getString(it) }.toSet())
+                    }
+                    else -> error("Unbekannter Einstellungstyp")
+                }
+            }
+            check(edit.commit())
+            checkpoint(app, "ROLLBACK_PREFS")
+            if (metadata.has("vocabulary")) de.meinhelfer.tag.ai.SunnyMemory.importText(app, metadata.getString("vocabulary"), replace = true)
+            java.io.FileOutputStream(File(staging, "ROLLED_BACK")).use { marker ->
+                marker.write(1)
+                marker.fd.sync()
+            }
+            finishCleanup()
+            AppPrefs.setRestoreResult(app, "fehler:" + System.currentTimeMillis())
+            return
+        }
         val oldPass = DbCrypto.storedPassphrase(app)
         val oldPrefs = prefsFile.all.toMap()
         val moved = mutableListOf<Pair<File, File>>() // (alt vorher-Name, urspruenglicher Ort)
         var passChanged = false
+        val placed = mutableSetOf<File>()
 
         fun aside(f: File) {
             if (!f.exists()) return
             val to = File(f.path + ".vorher")
-            to.deleteRecursively()
+            check(!to.exists()) { "Vorheriger Wiederherstellungsstand vorhanden" }
             check(f.renameTo(to)) { "Umbenennen fehlgeschlagen" }
             moved.add(to to f)
+            checkpoint(app, "ASIDE:" + f.name)
         }
 
         fun place(from: File, to: File) {
+            check(!to.exists()) { "Ziel existiert bereits" }
             to.parentFile?.mkdirs()
-            if (!from.renameTo(to)) {
-                from.copyRecursively(to, overwrite = true)
-                from.deleteRecursively()
-            }
+            placed.add(to)
+            check(from.renameTo(to)) { "Wiederherstellung konnte Datei nicht verschieben" }
+            checkpoint(app, "PLACE:" + to.name)
         }
 
         try {
             val meta = JSONObject(File(staging, "meta.json").readText())
             val encrypted = meta.optBoolean("encrypted", true)
 
+            val originalFiles = SUFFIXES.map { File(dbFile.path + it) } +
+                SUFFIXES.map { File(dbFile.path + it + ".klartext") } +
+                listOf(docsDir, photosDir)
+            check(originalFiles.none { File(it.path + ".vorher").exists() }) {
+                "Vorheriger Wiederherstellungsstand vorhanden"
+            }
+            val originalPrefs = JSONObject()
+            oldPrefs.forEach { (k, v) ->
+                val item = JSONObject()
+                when (v) {
+                    is Boolean -> item.put("t", "b").put("v", v)
+                    is Int -> item.put("t", "i").put("v", v)
+                    is Long -> item.put("t", "l").put("v", v)
+                    is Float -> item.put("t", "f").put("v", v.toDouble())
+                    is String -> item.put("t", "s").put("v", v)
+                    is Set<*> -> item.put("t", "set").put("v", JSONArray(v.map { it.toString() }))
+                    else -> error("Unbekannter Einstellungstyp")
+                }
+                originalPrefs.put(k, item)
+            }
+            val originalPresence = JSONArray(originalFiles.map { it.exists() })
+            // No live files have been moved yet; a previous pre-marker attempt is safe to clear.
+            DbCrypto.clearRestoreKey(app)
+            DbCrypto.saveRestoreKey(app)
+            DbCrypto.saveRestoreMetadata(app, JSONObject()
+                .put("prefs", originalPrefs)
+                .put("vocabulary", de.meinhelfer.tag.ai.SunnyMemory.exportText(app))
+                .put("presence", originalPresence)
+                .toString())
+            java.io.FileOutputStream(interrupted).use { marker -> marker.write(1); marker.fd.sync() }
+            checkpoint(app, "APPLYING")
             SUFFIXES.forEach { aside(File(dbFile.path + it)) }
-            File(dbFile.path + ".klartext").delete()
+            SUFFIXES.forEach { aside(File(dbFile.path + it + ".klartext")) }
             aside(docsDir)
             aside(photosDir)
 
@@ -293,15 +456,16 @@ object Backup {
                 if (from.exists()) place(from, File(dbFile.path + s))
             }
             val stagedDocs = File(staging, "docs_enc")
-            if (stagedDocs.exists()) place(stagedDocs, docsDir) else docsDir.mkdirs()
+            if (stagedDocs.exists()) place(stagedDocs, docsDir) else { placed.add(docsDir); check(docsDir.mkdirs()) }
             val stagedPhotos = File(staging, "photos")
-            if (stagedPhotos.exists()) place(stagedPhotos, photosDir) else photosDir.mkdirs()
+            if (stagedPhotos.exists()) place(stagedPhotos, photosDir) else { placed.add(photosDir); check(photosDir.mkdirs()) }
 
             if (encrypted) {
-                DbCrypto.setPassphrase(app, File(staging, "db/passphrase.txt").readText())
                 passChanged = true
+                DbCrypto.setPassphrase(app, File(staging, "db/passphrase.txt").readText())
             }
 
+            checkpoint(app, "KEY")
             val prefsJson = File(staging, "prefs.json")
             if (prefsJson.exists()) {
                 val json = JSONObject(prefsJson.readText())
@@ -323,25 +487,36 @@ object Backup {
                 check(edit.commit()) { "Einstellungen nicht gespeichert" }
             }
 
+            checkpoint(app, "PREFS")
             File(staging, "sprachschatz.txt").takeIf { it.exists() }?.let { f ->
-                runCatching { de.meinhelfer.tag.ai.SunnyMemory.importText(app, f.readText(), replace = true) }
+                de.meinhelfer.tag.ai.SunnyMemory.importText(app, f.readText(), replace = true)
             }
 
+            check(dbFile.isFile) { "Wiederhergestellte Datenbank fehlt" }
+            check(DbCrypto.ensureLoaded()) { "Verschluesselung nicht verfuegbar" }
+            probeVersion(dbFile, if (encrypted) File(staging, "db/passphrase.txt").readText() else "", encrypted)
+            // Commit marker must be durable before deleting any original files.
+            java.io.FileOutputStream(File(staging, "COMMITTED")).use { marker ->
+                marker.write(1)
+                marker.fd.sync()
+            }
+            checkpoint(app, "COMMITTED")
             // Erfolg: alte Staende loeschen
-            moved.forEach { (vorher, _) -> vorher.deleteRecursively() }
-            staging.deleteRecursively()
+            moved.forEach { (vorher, _) -> check(vorher.deleteRecursively()); checkpoint(app, "CLEAN:" + vorher.name) }
+            finishCleanup()
             AppPrefs.setRestoreResult(app, "ok:" + System.currentTimeMillis())
         } catch (t: Throwable) {
+            if (cleanup.exists() || !staging.exists() || File(staging, "COMMITTED").exists()) throw t
+            // Before APPLYING, no live data was changed. Never roll back using stale metadata.
+            if (!interrupted.exists()) throw t
             // Zurueck zum alten Stand
-            runCatching {
-                SUFFIXES.forEach { File(dbFile.path + it).delete() }
-                docsDir.deleteRecursively()
-                photosDir.deleteRecursively()
+            val rollback = runCatching {
+                placed.forEach { check(it.deleteRecursively()) }
                 moved.asReversed().forEach { (vorher, original) ->
-                    original.deleteRecursively()
-                    vorher.renameTo(original)
+                    check(original.deleteRecursively())
+                    check(vorher.renameTo(original)) { "Original konnte nicht zurückverschoben werden: ${original.name}" }
                 }
-                if (passChanged) DbCrypto.setPassphrase(app, oldPass)
+                if (passChanged) DbCrypto.restoreSavedKey(app)
                 val edit = prefsFile.edit().clear()
                 oldPrefs.forEach { (k, v) ->
                     when (v) {
@@ -353,9 +528,20 @@ object Backup {
                         is Set<*> -> edit.putStringSet(k, v.map { it.toString() }.toSet())
                     }
                 }
-                edit.commit()
+                check(edit.commit()) { "Einstellungen konnten nicht zurückgesetzt werden" }
+                DbCrypto.restoreMetadata(app)?.let { saved ->
+                    val metadata = JSONObject(saved)
+                    if (metadata.has("vocabulary")) de.meinhelfer.tag.ai.SunnyMemory.importText(app, metadata.getString("vocabulary"), replace = true)
+                }
             }
-            runCatching { staging.deleteRecursively() }
+            if (rollback.isSuccess) {
+                java.io.FileOutputStream(File(staging, "ROLLED_BACK")).use { marker ->
+                    marker.write(1)
+                    marker.fd.sync()
+                }
+                finishCleanup()
+            }
+            else throw IllegalStateException("Wiederherstellung unterbrochen; Sicherungsstände bleiben erhalten", rollback.exceptionOrNull())
             AppPrefs.setRestoreResult(app, "fehler:" + System.currentTimeMillis())
         }
     }

@@ -414,21 +414,27 @@ fun AssistantCard(vm: MainViewModel, onOpen: (tab: Int) -> Unit, onMood: () -> U
             newsLoading = false
         }
     }
-    fun tell() {
+    fun voluntaryTalkAllowed(): Boolean = de.meinhelfer.tag.summary.SunnyMoodPolicy.mayPrompt(
+        AppPrefs.assistantTalk(context), AppPrefs.isQuietNow(context), false,
+        System.currentTimeMillis(), context.getSharedPreferences("sunny_quiet", android.content.Context.MODE_PRIVATE).getLong("until", 0L),
+    )
+    fun tell(automatic: Boolean = false) {
         talkScope.launch {
+            if (automatic && !voluntaryTalkAllowed()) return@launch
             val item = fetchNews() ?: news
+            if (automatic && (!voluntaryTalkAllowed() || Speech.speaking.value != null)) return@launch
             news = item
             AppPrefs.setAssistantLastTalk(context, System.currentTimeMillis())
             Speech.speak(context, "assistent", talkText(item))
         }
     }
     androidx.compose.runtime.LaunchedEffect(Unit) {
-        if (!AppPrefs.assistantTalk(context) || AppPrefs.isQuietNow(context)) return@LaunchedEffect
+        if (!voluntaryTalkAllowed()) return@LaunchedEffect
         if (System.currentTimeMillis() - AppPrefs.assistantLastTalk(context) < 3L * 3600 * 1000) return@LaunchedEffect
         val audio = context.getSystemService(android.content.Context.AUDIO_SERVICE) as? android.media.AudioManager
         if (audio != null && audio.ringerMode != android.media.AudioManager.RINGER_MODE_NORMAL) return@LaunchedEffect
         kotlinx.coroutines.delay(1200)
-        if (Speech.speaking.value == null) tell()
+        if (Speech.speaking.value == null && voluntaryTalkAllowed()) tell(automatic = true)
     }
     Foldable(
         key = "assistent",
@@ -695,6 +701,12 @@ fun AssistantSheetContent(vm: MainViewModel, page: String, onOpenGuide: () -> Un
     var open by remember { mutableStateOf<String?>(null) }
     var aiAnswer by remember { mutableStateOf<String?>(null) }
     val context = androidx.compose.ui.platform.LocalContext.current
+    val localScope = androidx.compose.runtime.rememberCoroutineScope()
+    var localHistory by remember { mutableStateOf(listOf<Pair<String, String>>()) }
+    var localBusy by remember { mutableStateOf(false) }
+    var localError by remember { mutableStateOf<String?>(null) }
+    var localAnswer by remember { mutableStateOf<String?>(null) }
+    val localReady = de.meinhelfer.tag.ai.SunnyModelStore.installedBytes(context) > 0
     val help = remember(page) { guideFor(page) }
     val note = pageNote(page, vm, st)
     val answers = remember(question) { searchGuide(question) }
@@ -761,6 +773,59 @@ fun AssistantSheetContent(vm: MainViewModel, page: String, onOpenGuide: () -> Un
                 Column(Modifier.fillMaxWidth().clickable { open = if (open == "f_" + a.title) null else "f_" + a.title }) {
                     Text("❓ " + a.title, style = MaterialTheme.typography.bodyLarge)
                     if (open == "f_" + a.title) Text(a.text, style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+            if (localReady) {
+                OutlinedButton(enabled = !localBusy, modifier = Modifier.fillMaxWidth(), onClick = {
+                    val prompt = question.trim().take(500)
+                    localBusy = true
+                    localError = null
+                    localAnswer = null
+                    localScope.launch {
+                        try {
+                            val history = localHistory.takeLast(2).joinToString("\n") { (q, a) ->
+                                "Nutzer: " + q.take(80) + "\nSunny: " + a.take(100)
+                            }.takeLast(320)
+                            val request = "Sei freundlich, motivierend und respektvoll. Du-Form. Keine App-Aktionen. " +
+                                (if (history.isBlank()) "" else "Bisheriges Gespräch:\n" + history + "\n") +
+                                "Aktuelle Frage: " + prompt
+                            val reply = de.meinhelfer.tag.ai.SunnyLiteRtTest.answer(context, request.take(1000))
+                            localAnswer = reply
+                            localHistory = (localHistory + (prompt to reply)).takeLast(2)
+
+                        } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+                        catch (e: Exception) { localError = "Lokale KI konnte nicht antworten. Bitte versuche es erneut." }
+                        catch (e: LinkageError) { localError = "Lokale KI-Laufzeit nicht verfügbar." }
+                        finally { localBusy = false }
+                    }
+                }) { Text(if (localBusy) "${st.name} denkt nach …" else "${st.name} offline fragen") }
+                Text("Sunny Brain · lokal, ohne automatische Cloud-Weitergabe", style = MaterialTheme.typography.bodySmall)
+                if (localHistory.isNotEmpty()) {
+                    TextButton(enabled = !localBusy, onClick = {
+                        localHistory = emptyList()
+                        localAnswer = null
+                        localError = null
+                        question = ""
+                    }) { Text("Neues Gespräch") }
+                }
+                localError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                if (localBusy || localAnswer != null) {
+                    val emotion = if (localBusy) SunnyEmotion.Thinking else SunnyEmotion.Talking
+                    val avatarImage by SunnyAvatar.useImage.collectAsState()
+                    if (avatarImage) {
+                        val res = SunnyEmotionMedia.image(context, emotion)
+                        androidx.compose.foundation.Image(
+                            painter = androidx.compose.ui.res.painterResource(res),
+                            contentDescription = if (localBusy) "Sunny denkt nach" else "Sunny antwortet",
+                            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                            modifier = Modifier.fillMaxWidth().heightIn(max = 160.dp)
+                        )
+                    }
+                }
+                localAnswer?.let { reply ->
+                    Text(reply, style = MaterialTheme.typography.bodyMedium)
+                    SpeakButton(owner = "assistent-lokal", label = "🔊 Antwort vorlesen") { reply }
+                    Text("KI-Antwort, nur ein Anhaltspunkt. Keine medizinische Beratung.", style = MaterialTheme.typography.bodySmall)
                 }
             }
             // Freiwillig: Frage mit KI beantworten, nur mit Abschnitten der Anleitung, ohne Daten aus der App
@@ -878,6 +943,19 @@ fun AssistantSettingsCard(vm: MainViewModel) {
                 AppPrefs.setAssistantImage(context, it)
                 SunnyAvatar.useImage.value = it
             }
+            if (image) {
+                var mode by remember { mutableStateOf(SunnyPresentation.mode(context)) }
+                Text("Sunny-Darstellung", style = MaterialTheme.typography.labelLarge)
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    listOf("Automatik", "Videos", "Bilder").forEachIndexed { index, label ->
+                        FilterChip(selected = mode == index, onClick = {
+                            SunnyPresentation.setMode(context, index)
+                            mode = index
+                        }, label = { Text(label) })
+                    }
+                }
+                Text("Bilder sparen Ressourcen. Fehlende Videos werden durch Bilder ersetzt.", style = MaterialTheme.typography.bodySmall)
+            }
             var readHints by remember { mutableStateOf(AppPrefs.assistantReadHints(context)) }
             SwitchLine("Empfehlungen gleich vorlesen", "Erscheint eine Empfehlung (z. B. Unterstützung nach schlechter Stimmung oder Hinweise der KI), liest $name sie sofort vor. Einen Knopf „🔊 Vorlesen“ gibt es dort immer.", readHints) {
                 readHints = it
@@ -896,6 +974,10 @@ fun AssistantSettingsCard(vm: MainViewModel) {
                 sunnyUpd = it
                 AppPrefs.setSunnyUpdates(context, it)
             }
+            HorizontalDivider()
+            SunnyModelSettings()
+            HorizontalDivider()
+            SunnyPersonalitySettings()
             HorizontalDivider()
             SteuerwerkSettings(vm, name)
             HorizontalDivider()
@@ -1186,6 +1268,49 @@ private fun PopupSettings(name: String, image: Boolean) {
     )
     chips("Rand", SunnyPopup.FRAMES, style.frame) { set(style.copy(frame = it)) }
     chips("Hintergrund", SunnyPopup.BACKS, style.back) { set(style.copy(back = it)) }
+    val design by SunnyFrameDesign.state.collectAsState()
+    androidx.compose.runtime.LaunchedEffect(context) { SunnyFrameDesign.load(context) }
+    chips("Rahmenform", listOf("Rund", "Abgerundet", "Eckig"), design.shape) {
+        SunnyFrameDesign.save(context, design.copy(shape = it))
+    }
+    chips("Rahmenfarbe", listOf("App-Farbe", "Türkis", "Violett", "Pink", "Gold", "Grün", "Weiß"), design.color + 1) {
+        SunnyFrameDesign.save(context, design.copy(color = it - 1))
+    }
+    Text("Rahmenstärke: ${design.width} dp")
+    androidx.compose.material3.Slider(value = design.width.toFloat(), onValueChange = {
+        SunnyFrameDesign.save(context, design.copy(width = it.toInt()))
+    }, valueRange = 1f..8f, steps = 6)
+    Text("Leuchtintensität: ${(design.glow * 100).toInt()} %")
+    androidx.compose.material3.Slider(value = design.glow, onValueChange = {
+        SunnyFrameDesign.save(context, design.copy(glow = it))
+    }, valueRange = 0f..1f)
+    chips("Leuchteffekt", listOf("Statisch", "Pulsierend"), if (design.pulse) 1 else 0) {
+        SunnyFrameDesign.save(context, design.copy(pulse = it == 1))
+    }
+    if (style.back != 3) {
+        Text("Hintergrund gestalten", style = MaterialTheme.typography.labelLarge)
+        chips("Hintergrundform", listOf("Wie bisher", "Rund", "Abgerundet", "Eckig"), design.backShape) {
+            SunnyFrameDesign.save(context, design.copy(backShape = it))
+        }
+        chips("Hintergrundfarbe", listOf("Standard", "Türkis", "Violett", "Pink", "Gold", "Grün", "Weiß"), design.backColor + 1) {
+            SunnyFrameDesign.save(context, design.copy(backColor = it - 1))
+        }
+        if (style.back == 2) {
+            Text("Hintergrund-Leuchtintensität: ${(design.backGlow * 100).toInt()} %")
+            androidx.compose.material3.Slider(value = design.backGlow, onValueChange = {
+                SunnyFrameDesign.save(context, design.copy(backGlow = it))
+            }, valueRange = 0f..1f)
+            chips("Hintergrundeffekt", listOf("Statisch", "Bewegt"), if (design.backPulse) 1 else 0) {
+                SunnyFrameDesign.save(context, design.copy(backPulse = it == 1))
+            }
+        }
+    }
+    var mediaMode by remember { mutableStateOf(SunnyPresentation.mode(context)) }
+    chips("Mediendarstellung", listOf("Automatik", "Videos", "Bilder"), mediaMode) {
+        SunnyPresentation.setMode(context, it)
+        mediaMode = it
+    }
+
     Text("Vorschau", style = MaterialTheme.typography.bodyMedium)
     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
         SunnyBubble(style.copy(size = size.toInt(), alpha = alpha), Modifier.padding(8.dp), video = false)
@@ -1644,4 +1769,113 @@ private fun SteuerwerkSettings(vm: MainViewModel, name: String) {
         }) { Text("Gelerntes zurücksetzen") }
     }
     if (showJournal) SunnyJournalDialog(vm, name) { showJournal = false }
+}
+
+
+@Composable
+private fun SunnyPersonalitySettings() {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var profile by remember { mutableStateOf(de.meinhelfer.tag.ai.SunnyPreferences.load(context)) }
+    fun save(value: de.meinhelfer.tag.ai.SunnyPreferences.Profile) {
+        de.meinhelfer.tag.ai.SunnyPreferences.save(context, value)
+        profile = de.meinhelfer.tag.ai.SunnyPreferences.load(context)
+    }
+    Text("Persönlichkeit und Gedächtnis", style = MaterialTheme.typography.labelLarge)
+    SwitchLine("Vorlieben lokal merken", "Nur deine ausgewählten Einstellungen, keine Gesprächsprotokolle.", profile.enabled) {
+        save(profile.copy(enabled = it))
+    }
+    if (profile.enabled) {
+        SwitchLine("Motivierende Aussagen", "Persönliche Ermutigung nach der Stimmungsabfrage.", profile.encouragement) {
+            save(profile.copy(encouragement = it))
+        }
+        SwitchLine("Entlastungsvorschläge", "Freiwillige Alltagstipps nach der Stimmungsabfrage.", profile.relief) {
+            save(profile.copy(relief = it))
+        }
+        TextButton(onClick = { save(de.meinhelfer.tag.ai.SunnyPreferences.Profile()) }) {
+            Text("Gespeicherte Vorlieben löschen")
+        }
+    }
+}
+
+
+@Composable
+private fun SunnyModelSettings() {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    var bytes by remember { mutableStateOf(de.meinhelfer.tag.ai.SunnyModelStore.installedBytes(context)) }
+    var busy by remember { mutableStateOf(false) }
+    var status by remember { mutableStateOf("") }
+    var question by remember { mutableStateOf("Hallo Sunny, stell dich kurz vor.") }
+    var answer by remember { mutableStateOf("") }
+    val picker = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null && !busy) {
+            busy = true
+            scope.launch {
+                try {
+                    bytes = de.meinhelfer.tag.ai.SunnyModelStore.importModel(context, uri)
+                    status = "Modell gespeichert. Bitte lokal testen."
+                } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+                catch (e: Exception) { status = "Import fehlgeschlagen: " + (e.message ?: "") }
+                finally { busy = false }
+            }
+        }
+    }
+    Text("Sunny Brain – lokales KI-Modell", style = MaterialTheme.typography.labelLarge)
+    Text(if (bytes > 0) "Gespeichert: ${bytes / (1024 * 1024)} MB" else "Kein Modell gespeichert.",
+        style = MaterialTheme.typography.bodySmall)
+    Text("LiteRT-LM: lokaler Test ohne Internet. Bitte keine sensiblen Daten eingeben.", style = MaterialTheme.typography.bodySmall)
+    OutlinedButton(enabled = !busy, onClick = {
+        try {
+            context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW,
+                android.net.Uri.parse("https://huggingface.co/litert-community/Gemma3-1B-IT/resolve/main/Gemma3-1B-IT_multi-prefill-seq_q4_ekv4096.litertlm?download=true")))
+        } catch (e: Exception) { status = "Downloadlink konnte nicht geöffnet werden." }
+    }) { Text("KI-Modell herunterladen") }
+    Text("Einrichtung – Schritt für Schritt", style = MaterialTheme.typography.labelLarge)
+    Text("1. Gemma 3 1B IT als .litertlm-Datei herunterladen (Internet erforderlich). Falls verlangt, bei Hugging Face anmelden und die Modelllizenz akzeptieren.\n2. Mindestens 2 GB freien Speicher bereithalten.\n3. Modelldatei importieren und die heruntergeladene Datei auswählen. Import abwarten.\n4. Flugmodus einschalten und WLAN ausschalten.\n5. Eine unverfängliche Testfrage eingeben und Offline-KI testen wählen. Nach dem Import ist für den lokalen Test kein Internet nötig.",
+        style = MaterialTheme.typography.bodySmall)
+    TextButton(enabled = !busy, onClick = {
+        try {
+            context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW,
+                android.net.Uri.parse("https://huggingface.co/litert-community/Gemma3-1B-IT/tree/main")))
+        } catch (e: Exception) { status = "Modellseite konnte nicht geöffnet werden." }
+    }) { Text("Alternative: Modellseite und Lizenz öffnen") }
+    Text("Bei einem Fehler bitte die angezeigte Meldung notieren. Die Modellkompatibilität wird beim lokalen Test geprüft.",
+        style = MaterialTheme.typography.bodySmall)
+    OutlinedButton(enabled = !busy, onClick = { picker.launch(arrayOf("application/octet-stream", "*/*")) }) {
+        Text(if (busy) "Bitte warten…" else "Modelldatei importieren")
+    }
+    if (bytes > 0) TextButton(enabled = !busy, onClick = {
+        busy = true
+        scope.launch {
+            try {
+                if (de.meinhelfer.tag.ai.SunnyModelStore.delete(context)) { bytes = 0L; status = "Modell gelöscht." }
+                else status = "Löschen fehlgeschlagen."
+            } finally { busy = false }
+        }
+    }) { Text("Modell löschen") }
+    if (bytes > 0) {
+        androidx.compose.material3.OutlinedTextField(
+            value = question, onValueChange = { if (it.length <= 1000) question = it },
+            enabled = !busy, label = { Text("Lokale Testfrage") }
+        )
+        OutlinedButton(enabled = !busy && question.isNotBlank(), onClick = {
+            busy = true
+            answer = ""
+            status = "Lokales Modell wird geladen…"
+            val prompt = question
+            scope.launch {
+                try {
+                    answer = de.meinhelfer.tag.ai.SunnyLiteRtTest.answer(context, prompt)
+                    status = "Lokale Antwort erhalten."
+                } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+                catch (e: Exception) { status = "KI-Test fehlgeschlagen: " + (e.message ?: "") }
+                catch (e: LinkageError) { status = "KI-Laufzeit auf diesem Gerät nicht verfügbar." }
+                finally { busy = false }
+            }
+        }) { Text("Offline-KI testen") }
+        if (answer.isNotBlank()) Text(answer)
+    }
+    if (status.isNotBlank()) Text(status, style = MaterialTheme.typography.bodySmall)
 }

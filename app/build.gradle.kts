@@ -13,8 +13,8 @@ android {
         applicationId = "de.meinhelfer.tag"
         minSdk = 26
         targetSdk = 35
-        versionCode = 101
-        versionName = "0.96.1"
+        versionCode = 102
+        versionName = "0.97.0-dev.1"
     }
 
     // Fester Test-Schluessel, damit spaetere APK-Updates ueber die alte Version installiert werden koennen.
@@ -29,6 +29,12 @@ android {
     }
 
     buildTypes {
+        create("lab") {
+            initWith(getByName("debug"))
+            applicationIdSuffix = ".lab"
+            versionNameSuffix = "-lab"
+            matchingFallbacks += listOf("debug")
+        }
         release {
             isMinifyEnabled = false
         }
@@ -63,6 +69,7 @@ ksp {
 }
 
 dependencies {
+    implementation(project(":sunny-runtime-android"))
     val composeBom = platform("androidx.compose:compose-bom:2024.12.01")
     implementation(composeBom)
     implementation("androidx.compose.ui:ui")
@@ -88,7 +95,7 @@ dependencies {
 
     implementation("net.zetetic:sqlcipher-android:4.6.1@aar")
 
-    val room = "2.6.1"
+    val room = "2.7.2"
     implementation("androidx.room:room-runtime:$room")
     implementation("androidx.room:room-ktx:$room")
     ksp("androidx.room:room-compiler:$room")

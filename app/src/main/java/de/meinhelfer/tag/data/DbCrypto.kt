@@ -60,6 +60,36 @@ object DbCrypto {
         check(edit.commit()) { "Schluessel nicht gespeichert" }
     }
 
+    /** Saves the original key in encrypted preferences before a restore changes it. */
+    fun saveRestoreKey(context: Context) {
+        val prefs = keyPrefs(context)
+        check(!prefs.getBoolean("restore_key_pending", false)) { "Alter Wiederherstellungsschluessel vorhanden" }
+        check(prefs.edit().putString("restore_old_key", prefs.getString(KEY, null))
+            .putBoolean("restore_key_pending", true).commit())
+    }
+
+    /** Idempotent: retain the recovery key until the entire rollback is complete. */
+    fun restoreSavedKey(context: Context) {
+        val prefs = keyPrefs(context)
+        check(prefs.getBoolean("restore_key_pending", false)) { "Wiederherstellungsschluessel fehlt" }
+        val old = prefs.getString("restore_old_key", null)
+        val edit = prefs.edit()
+        if (old == null) edit.remove(KEY) else edit.putString(KEY, old)
+        check(edit.commit())
+    }
+
+    /** Keep rollback metadata encrypted with the same Android-backed key store. */
+    fun saveRestoreMetadata(context: Context, metadata: String) {
+        check(keyPrefs(context).edit().putString("restore_metadata", metadata).commit())
+    }
+
+    fun restoreMetadata(context: Context): String? =
+        keyPrefs(context).getString("restore_metadata", null)
+
+    fun clearRestoreKey(context: Context) {
+        check(keyPrefs(context).edit().remove("restore_old_key").remove("restore_key_pending").remove("restore_metadata").commit())
+    }
+
     /** Laedt die SQLCipher-Bibliothek, falls noetig. */
     fun ensureLoaded(): Boolean = load()
 

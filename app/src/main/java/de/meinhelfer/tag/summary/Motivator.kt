@@ -249,7 +249,10 @@ object Motivator {
             professional -> PROFESSIONAL + GENERAL
             else -> GENERAL
         }
-        val sentence = pool[(today % pool.size).toInt().coerceAtLeast(0)]
+        val reaction = lastMood?.takeIf { it.day == today && it.mood in 1..5 }?.let {
+            SunnyMoodPolicy.react(it.mood, it.tagList(), professional)
+        }
+        val sentence = reaction?.message ?: pool[(today % pool.size).toInt().coerceAtLeast(0)]
         val first = caregiver.name.trim().split(" ").firstOrNull().orEmpty()
         val hello = when {
             hour < 11 -> "Guten Morgen"
@@ -314,6 +317,7 @@ object Motivator {
 
         // ---- Tipps
         val tips = mutableListOf<String>()
+        reaction?.let { tips += it.relief }
         if (trend < 0) tips += "Deine Stimmung ist in den letzten Tagen gesunken. Plane bewusst Entlastung ein."
         if (trend > 0) tips += "Deine Stimmung ist gestiegen. Schön! Was hat dir geholfen?"
         val tagTips = linkedMapOf(

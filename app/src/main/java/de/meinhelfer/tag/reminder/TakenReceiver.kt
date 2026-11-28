@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 /** Knopf "Eingenommen" in der Benachrichtigung: hakt die Einnahme ab und schliesst die Benachrichtigung. */
 class TakenReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
+        if (!de.meinhelfer.tag.HelferApplication.startupReady) return
         val pending = goAsync()
         val app = context.applicationContext
         val medId = intent.getLongExtra(EXTRA_MED, -1L)

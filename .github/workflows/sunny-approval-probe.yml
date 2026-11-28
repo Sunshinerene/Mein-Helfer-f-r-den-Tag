@@ -1,0 +1,15 @@
+name: Sunny Environment Approval Probe
+on:
+  push:
+    branches: [entwicklung/sunny-2]
+    paths:
+      - '.github/workflows/sunny-approval-probe.yml'
+permissions: {}
+jobs:
+  approval-probe:
+    if: github.ref == 'refs/heads/entwicklung/sunny-2'
+    runs-on: ubuntu-latest
+    environment: sunny-devtools-signing
+    steps:
+      - name: Confirm approval gate reached
+        run: echo "Approval probe reached execution. No signing credentials requested, no APK signed."

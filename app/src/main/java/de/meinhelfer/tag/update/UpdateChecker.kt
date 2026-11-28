@@ -36,8 +36,16 @@ object UpdateChecker {
     fun installedVersion(context: Context): String =
         context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "0"
 
+    fun developmentChannel(context: Context): Boolean =
+        context.getSharedPreferences("update_channel", Context.MODE_PRIVATE).getBoolean("dev", false)
+
+    fun setDevelopmentChannel(context: Context, enabled: Boolean) {
+        context.getSharedPreferences("update_channel", Context.MODE_PRIVATE).edit().putBoolean("dev", enabled).apply()
+    }
+
     /** true, wenn [remote] (z. B. "0.3.0") neuer ist als [local]. */
     fun isNewer(remote: String, local: String): Boolean {
+        if (remote.substringBefore("-dev.").removePrefix("v") == local.substringBefore("-dev.").removePrefix("v") && remote.contains("-dev.") != local.contains("-dev.")) return !remote.contains("-dev.")
         val r = versionParts(remote)
         val l = versionParts(local)
         for (i in 0 until maxOf(r.size, l.size)) {
@@ -45,18 +53,24 @@ object UpdateChecker {
             val b = l.getOrElse(i) { 0 }
             if (a != b) return a > b
         }
-        return false
+        return !remote.contains("-dev.") && local.contains("-dev.") && remote.substringBefore("-dev.") == local.substringBefore("-dev.")
     }
 
     private fun versionParts(version: String): List<Int> =
-        version.trim().removePrefix("v").split(".").map { part ->
+        version.trim().removePrefix("v").replace("-dev.", ".").split(".").map { part ->
             part.takeWhile { it.isDigit() }.toIntOrNull() ?: 0
         }
 
     /** Neuestes Release oder null, wenn es (noch) keines mit APK gibt. Wirft IOException bei Netzwerkfehlern. */
-    suspend fun fetchLatest(): UpdateInfo? = withContext(Dispatchers.IO) {
-        val body = httpGet(RELEASES_API) ?: return@withContext null
-        val json = JSONObject(body)
+    suspend fun fetchLatest(context: Context): UpdateInfo? = withContext(Dispatchers.IO) {
+        val dev = developmentChannel(context)
+        val body = httpGet(if (dev) "https://api.github.com/repos/$REPO/releases?per_page=100" else RELEASES_API) ?: return@withContext null
+        val json = if (dev) {
+            val releases = org.json.JSONArray(body)
+            (0 until releases.length()).map { releases.getJSONObject(it) }
+                .filter { !it.optBoolean("draft") && it.optBoolean("prerelease") && it.optString("tag_name").matches(Regex("""v[0-9]+\.[0-9]+\.[0-9]+-dev\.[0-9]+""")) && it.optJSONArray("assets")?.let { a -> (0 until a.length()).any { n -> a.getJSONObject(n).optString("name").endsWith(".apk") } } == true }
+                .reduceOrNull { a, b -> if (isNewer(b.optString("tag_name"), a.optString("tag_name"))) b else a } ?: return@withContext null
+        } else JSONObject(body)
         val tag = json.optString("tag_name")
         val assets = json.optJSONArray("assets") ?: return@withContext null
 
@@ -84,6 +98,7 @@ object UpdateChecker {
             val dir = File(context.cacheDir, "updates").apply { mkdirs() }
             dir.listFiles()?.forEach { it.delete() }
             val target = File(dir, "MeinHelfer-${info.version}.apk")
+            val partial = File(dir, "download.part")
 
             val connection = URL(info.apkUrl).openConnection() as HttpURLConnection
             connection.connectTimeout = 15_000
@@ -93,7 +108,7 @@ object UpdateChecker {
                 if (connection.responseCode != 200) throw IOException("HTTP ${connection.responseCode}")
                 val total = connection.contentLengthLong
                 connection.inputStream.use { input ->
-                    target.outputStream().use { output ->
+                    partial.outputStream().use { output ->
                         val buffer = ByteArray(64 * 1024)
                         var done = 0L
                         while (true) {
@@ -105,8 +120,11 @@ object UpdateChecker {
                         }
                     }
                 }
+                if (partial.length() == 0L || (total > 0 && partial.length() != total)) throw IOException("APK unvollständig")
+                check(partial.renameTo(target)) { "APK konnte nicht gespeichert werden" }
             } finally {
                 connection.disconnect()
+                partial.delete()
             }
             target
         }
@@ -141,11 +159,13 @@ object UpdateChecker {
             c.readTimeout = 30_000
             c.instanceFollowRedirects = true
             c.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android) MeinHelfer-App")
+            try {
             if (c.responseCode !in 200..299) return@runCatching false
             val type = c.contentType.orEmpty()
             if (type.isNotEmpty() && !type.contains("pdf", ignoreCase = true)) return@runCatching false
             c.inputStream.use { input -> target.outputStream().use { input.copyTo(it) } }
             target.length() > 1000
+            } finally { c.disconnect() }
         }.getOrDefault(false)
     }
 

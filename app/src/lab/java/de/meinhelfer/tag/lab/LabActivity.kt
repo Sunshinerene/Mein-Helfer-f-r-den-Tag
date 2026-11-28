@@ -1,0 +1,117 @@
+package de.meinhelfer.tag.lab
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+
+class LabActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        check(packageName == "de.meinhelfer.tag.lab")
+        val database = LabDatabase(this)
+        val abort = LabAbort(this, database)
+        setContent { MaterialTheme { LabHome(LabFixtures(this@LabActivity), database, abort, LabRestore(this@LabActivity)) } }
+    }
+}
+
+@Composable
+private fun LabHome(fixtures: LabFixtures, database: LabDatabase, abort: LabAbort, restore: LabRestore) {
+    var section by rememberSaveable { mutableStateOf("Übersicht") }
+    var roundTripResult by rememberSaveable { mutableStateOf("") }
+    var result by remember { mutableStateOf("Noch kein Test ausgeführt") }
+    var busy by remember { mutableStateOf(false) }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val reports = remember { context.getSharedPreferences("devtools_reports", android.content.Context.MODE_PRIVATE) }
+    val scope = rememberCoroutineScope()
+    LaunchedEffect(Unit) { roundTripResult = reports.getString("roundtrip", "").orEmpty() }
+    fun runTest(roundTrip: Boolean = false, action: () -> String) {
+        if (busy) return
+        busy = true
+        scope.launch {
+            try {
+                result = withContext(Dispatchers.IO) { runCatching(action).getOrElse { "FEHLER: ${it.message}" } }
+                if (roundTrip) {
+                    roundTripResult = result
+                    reports.edit().putString("roundtrip", result).apply()
+                }
+            } finally { busy = false }
+        }
+    }
+    LaunchedEffect(Unit) { runTest { if (restore.pending()) restore.evaluate() else abort.evaluate() } }
+    Surface(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text("MeinHelfer DevTools", style = MaterialTheme.typography.headlineMedium)
+            Text("TESTUMGEBUNG – keine echten Pflegedaten", color = MaterialTheme.colorScheme.error)
+            Text("Separater App-Start. Produktive Dienste werden hier nicht gestartet.")
+            Text("v1.0 · Sunny Developer Edition")
+            listOf("Übersicht", "Database Lab", "Backup & Restore", "Testberichte").forEach { name ->
+                OutlinedButton(onClick = { section = name }, modifier = Modifier.fillMaxWidth(), enabled = !busy) { Text(name) }
+            }
+            Text(section, style = MaterialTheme.typography.titleLarge)
+            when (section) {
+                "Übersicht" -> {
+                    Text("Isolierte Testmodule für Datenbank, Backup und Wiederherstellung.")
+                    Text("Geplant: Security Lab, Systemdiagnose, Sunny Brain, Voice und Emotion.")
+                }
+                "Database Lab" -> {
+            Button(onClick = { runTest(action = fixtures::create) }, enabled = !busy) { Text("Künstliche Testdaten erzeugen") }
+            OutlinedButton(onClick = { runTest(action = fixtures::verify) }, enabled = !busy) { Text("Testdaten prüfen") }
+            Button(onClick = { runTest(action = database::prepare) }, enabled = !busy && !abort.pending() && !restore.pending()) { Text("Testdatenbanken A/B vorbereiten") }
+            OutlinedButton(onClick = { runTest(action = database::verify) }, enabled = !busy) { Text("Aktive Testdatenbank prüfen") }
+            listOf("A_PREPARED" to "Vor Datenaustausch", "ASIDE" to "Nach Weglegen von A",
+                "PLACED" to "Nach Einsetzen von B", "COMMITTED" to "Nach Bestätigung",
+                "CLEANED" to "Nach Bereinigung").forEach { (point, label) ->
+                Button(onClick = { runTest { abort.startAt(point) } }, enabled = !busy && !abort.pending()) { Text("Abbruch: $label") }
+            }
+            Text("Die App beendet sich absichtlich. Danach erneut öffnen.")
+            OutlinedButton(onClick = { runTest(action = abort::evaluate) }, enabled = !busy) { Text("Letzten Abbruchtest auswerten") }
+                }
+                "Backup & Restore" -> {
+            Text("Echte Wiederherstellung (synthetisch)", style = MaterialTheme.typography.titleLarge)
+            restore.points.forEach { point ->
+                Button(onClick = { runTest { restore.start(point) } }, enabled = !busy && !restore.pending() && !abort.pending()) { Text(point) }
+            }
+            OutlinedButton(onClick = { runTest(action = restore::evaluate) }, enabled = !busy) { Text("Echte Wiederherstellung auswerten") }
+            Text("Phase 3: Room und Backup", style = MaterialTheme.typography.titleLarge)
+            Button(onClick = { runTest { restore.start("REPEAT_ROLLBACK") } }, enabled = !busy && !restore.pending() && !abort.pending()) { Text("Mehrfachabbruch während Rücksicherung") }
+            Text("Bei diesem Test die App nach jedem Abbruch erneut öffnen (insgesamt vier Abbrüche).")
+            Button(onClick = { runTest(true) { LabRoundTrip(context.applicationContext).run() } },
+                enabled = !busy && !restore.pending() && !abort.pending()) { Text("Vollständigen Backup-Roundtrip testen") }
+                }
+                "Testberichte" -> {
+            OutlinedButton(onClick = {
+                val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                clipboard.setPrimaryClip(android.content.ClipData.newPlainText("Sunny Test Lab", abort.report()))
+            }, enabled = !busy) { Text("Testergebnisse kopieren") }
+            OutlinedButton(onClick = { runTest(action = abort::report) }, enabled = !busy) { Text("Ergebnisübersicht aller Abbruchtests") }
+            OutlinedButton(onClick = { runTest(action = restore::report) }, enabled = !busy) { Text("Ergebnisse echte Wiederherstellung") }
+            OutlinedButton(onClick = {
+                val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                clipboard.setPrimaryClip(android.content.ClipData.newPlainText("Sunny Restore", restore.report()))
+            }, enabled = !busy) { Text("Echte Wiederherstellung: Ergebnisse kopieren") }
+                    OutlinedButton(onClick = {
+                        val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                        clipboard.setPrimaryClip(android.content.ClipData.newPlainText("DevTools", roundTripResult + "\n" + restore.report()))
+                    }, enabled = !busy) { Text("Phase 3: Ergebnisse kopieren") }
+                    if (roundTripResult.isNotEmpty()) Text(roundTripResult)
+                }
+            }
+            Text(result)
+            Text("Paket: de.meinhelfer.tag.lab")
+        }
+    }
+}

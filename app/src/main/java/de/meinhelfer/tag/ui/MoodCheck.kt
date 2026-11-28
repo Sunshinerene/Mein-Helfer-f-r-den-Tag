@@ -43,6 +43,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.meinhelfer.tag.summary.Motivator
 import de.meinhelfer.tag.summary.SupportLevel
+import de.meinhelfer.tag.summary.SunnyMoodPolicy
+import de.meinhelfer.tag.summary.Expression
 
 /** Fuenf Smileys zur Auswahl (5 = sehr gut links, 1 = schlecht rechts). */
 @Composable
@@ -93,10 +95,11 @@ fun MoodCheckScreen(
     onSave: (mood: Int, tags: List<String>, note: String) -> Unit,
     onClose: () -> Unit,
 ) {
+    val context = LocalContext.current
     var mood by remember { mutableStateOf<Int?>(null) }
     val tags = remember { mutableStateListOf<String>() }
     var note by remember { mutableStateOf("") }
-    var savedLow by remember { mutableStateOf<Int?>(null) }
+    var savedMood by remember { mutableStateOf<Int?>(null) }
     val first = name.trim().split(" ").firstOrNull().orEmpty()
 
     Column(
@@ -109,18 +112,32 @@ fun MoodCheckScreen(
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         Spacer(Modifier.height(12.dp))
-        val low = savedLow
+        val low = savedMood
         if (low != null) {
+            val reaction = SunnyMoodPolicy.react(low, tags.toList(), professional)
+            if (de.meinhelfer.tag.update.AppPrefs.assistantEnabled(LocalContext.current)) {
+                SunnyReactionAnimation(reaction.animation, Expression.valueOf(reaction.expression.name), size = 96.dp, modifier = Modifier.align(Alignment.CenterHorizontally))
+            }
             Text("Danke, dass du es festhältst.", style = MaterialTheme.typography.headlineSmall)
-            Text(
-                "Schwere Momente gehören dazu, und du musst sie nicht allein tragen. Vielleicht hilft dir etwas davon:",
-                style = MaterialTheme.typography.bodyLarge,
-            )
-            val level = if (low <= 1) SupportLevel.Strong else SupportLevel.Relief
-            SupportBox(level, professional, read = false)
-            HintReader("stimmung", modifier = Modifier.fillMaxWidth()) {
-                "Danke, dass du es festhältst. Schwere Momente gehören dazu, und du musst sie nicht allein tragen. Vielleicht hilft dir etwas davon. " +
-                    supportSpeech(level, professional)
+            val preferences = de.meinhelfer.tag.ai.SunnyPreferences.load(context)
+            if (preferences.encouragement) Text(reaction.message, style = MaterialTheme.typography.bodyLarge)
+            if (preferences.relief) Text(reaction.relief, style = MaterialTheme.typography.bodyMedium)
+            if (low <= 2) {
+                val level = if (low == 1) SupportLevel.Strong else SupportLevel.Relief
+                SupportBox(level, professional, read = false)
+            }
+            if (preferences.encouragement || preferences.relief) {
+                HintReader("stimmung", modifier = Modifier.fillMaxWidth(), auto = false) {
+                    listOfNotNull(reaction.message.takeIf { preferences.encouragement }, reaction.relief.takeIf { preferences.relief }).joinToString(" ")
+                }
+            }
+            if (de.meinhelfer.tag.update.AppPrefs.assistantEnabled(context)) {
+                OutlinedButton(shape = buttonShape(), onClick = {
+                    context.getSharedPreferences("sunny_quiet", Context.MODE_PRIVATE).edit()
+                        .putLong("until", System.currentTimeMillis() + reaction.quietMinutes * 60_000L).apply()
+                    Speech.stop()
+                    onClose()
+                }, modifier = Modifier.fillMaxWidth()) { Text("Sunny: ${reaction.quietMinutes} Minuten Ruhe") }
             }
             Button(shape = buttonShape(), onClick = { Speech.stop(); onClose() }, modifier = Modifier.fillMaxWidth()) { Text("Weiter") }
             return@Column
@@ -152,7 +169,7 @@ fun MoodCheckScreen(
             onClick = {
                 val m = mood ?: return@Button
                 onSave(m, tags.toList(), note)
-                if (m <= 2) savedLow = m else onClose()
+                savedMood = m
             },
             modifier = Modifier.fillMaxWidth(),
         ) { Text("Speichern") }
