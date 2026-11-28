@@ -39,14 +39,14 @@ jobs:
       - name: Standalone tests and APK
         run: gradle -p sunny-standalone-poc --no-parallel --max-workers=2 clean testDebugUnitTest assembleDebug
       - name: Diagnostic adapter tests
-        if: github.ref == 'refs/heads/codex/sunny-brain-native-diagnostics'
+        if: github.ref == 'refs/heads/codex/sunny-brain-native-diagnostics' || github.ref == 'refs/heads/entwicklung/sunny-v04-brain'
         run: gradle -p sunny-standalone-poc --no-parallel --max-workers=2 :sunny-runtime-android:testDebugUnitTest :sunny-runtime-android:testReleaseUnitTest
       - name: Verify JUnit results
         run: |
           python3 - <<'PY'
           import os, pathlib, xml.etree.ElementTree as ET
           minimum = 57 if os.environ.get('GITHUB_REF') == 'refs/heads/entwicklung/sunny-v04-brain' else 36
-          diagnostic = os.environ.get('GITHUB_REF') == 'refs/heads/codex/sunny-brain-native-diagnostics'
+          diagnostic = os.environ.get('GITHUB_REF') in ('refs/heads/codex/sunny-brain-native-diagnostics', 'refs/heads/entwicklung/sunny-v04-brain')
           suites = [('sunny-core/build/test-results/test',131),('sunny-standalone-poc/build/test-results/testDebugUnitTest',59 if diagnostic else minimum)]
           if diagnostic:
               suites += [('sunny-runtime-android/build/test-results/testDebugUnitTest',21),('sunny-runtime-android/build/test-results/testReleaseUnitTest',21)]
@@ -112,7 +112,8 @@ jobs:
             git diff --exit-code 64ab6c9ec230e2f05a64da7491fe3303ef793b0b -- app sunny-core settings.gradle.kts build.gradle.kts .github/workflows/sunny-devtools-signing.yml
             git diff --exit-code 5f38e1ca2fa967ba169afa2bbd3647f33b5beb6d -- . ':(exclude).github/workflows/sunny-standalone-poc-tests.yml'
           elif [[ "$GITHUB_REF" == "refs/heads/entwicklung/sunny-v04-brain" ]]; then
-            git diff --exit-code a29d32ff5d5ceee7d00e5d851b2e33a7ddcc30db -- app sunny-core sunny-runtime-android settings.gradle.kts build.gradle.kts
+            git diff --exit-code a29d32ff5d5ceee7d00e5d851b2e33a7ddcc30db -- app sunny-core settings.gradle.kts build.gradle.kts
+            git diff --exit-code 5f38e1ca2fa967ba169afa2bbd3647f33b5beb6d -- sunny-runtime-android
           else
             git diff --exit-code 45fe34dc5b7bc513885712563c8c00311f86ae0a -- app sunny-core settings.gradle.kts build.gradle.kts
           fi
