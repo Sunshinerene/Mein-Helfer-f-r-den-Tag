@@ -1,0 +1,75 @@
+name: Sunny Launcher Idea Tests
+on:
+  push:
+    branches: [codex/sunny-launcher-idea-v01]
+    paths:
+      - '.github/workflows/sunny-launcher-idea-tests.yml'
+      - 'sunny-launcher-idea/**'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v5
+        with:
+          gradle-version: 8.11.1
+      - name: Verify Android SDK
+        run: |
+          set -euo pipefail
+          SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          if ! test -f "$SDK/platforms/android-35/android.jar" || ! test -x "$SDK/build-tools/35.0.0/aapt"; then
+            MANAGER=$(find "$SDK/cmdline-tools" -type f -name sdkmanager | sort -V | tail -1)
+            test -n "$MANAGER"
+            "$MANAGER" --sdk_root="$SDK" "platforms;android-35" "build-tools;35.0.0"
+          fi
+          echo "ANDROID_HOME=$SDK" >> "$GITHUB_ENV"
+      - name: Verify reviewed scope
+        run: |
+          set -euo pipefail
+          git diff --exit-code b68ab8072bb172b7ca56fb533245dcae910c10ac -- . ':(exclude).github/workflows/sunny-launcher-idea-tests.yml'
+          git diff --exit-code 651c9e970c4eaffea5190bbbd514b61b14d44e99 -- . ':(exclude)sunny-launcher-idea/**' ':(exclude)docs/CODEX-LAUNCHER-IDEA-01-REPORT.md' ':(exclude).github/workflows/sunny-launcher-idea-tests.yml'
+      - name: Core baseline
+        run: gradle -p sunny-core --no-daemon --no-parallel --max-workers=2 clean test
+      - name: Launcher tests, lint and unsigned APK
+        run: gradle -p sunny-launcher-idea --no-daemon --no-parallel --max-workers=2 clean testDebugUnitTest lintDebug assembleDebug
+      - name: Verify test results
+        run: |
+          python3 - <<'PY'
+          import pathlib, xml.etree.ElementTree as ET
+          for directory, expected in [('sunny-core/build/test-results/test',160),('sunny-launcher-idea/build/test-results/testDebugUnitTest',23)]:
+              files=list(pathlib.Path(directory).glob('TEST-*.xml'))
+              assert files, directory
+              totals=dict.fromkeys(('tests','failures','errors','skipped'),0)
+              for f in files:
+                  root=ET.parse(f).getroot()
+                  for k in totals: totals[k]+=int(root.get(k,0))
+              print(directory,totals)
+              assert totals['tests']>=expected and not any(totals[k] for k in ('failures','errors','skipped'))
+          PY
+      - name: Verify APK and original avatar
+        run: |
+          set -euo pipefail
+          APK=sunny-launcher-idea/build/outputs/apk/debug/sunny-launcher-idea-debug-unsigned.apk
+          TOOLS="$ANDROID_HOME/build-tools/35.0.0"
+          python3 sunny-launcher-idea/tools/verify_apk.py "$APK" --build-tools "$TOOLS"
+          cmp sunny-standalone-poc/src/main/res/drawable-nodpi/sunny_su08.webp sunny-launcher-idea/src/main/res/drawable-nodpi/sunny_su08.webp
+          sha256sum "$APK"
+          if "$TOOLS/apksigner" verify "$APK"; then echo "Unexpected signed APK"; exit 1; fi
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: Sunny-Launcher-Test-Evidence
+          path: |
+            sunny-core/build/test-results/test/
+            sunny-launcher-idea/build/test-results/testDebugUnitTest/
+            sunny-launcher-idea/build/reports/lint-results-debug.*
+          if-no-files-found: warn
