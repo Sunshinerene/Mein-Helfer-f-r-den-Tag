@@ -1,0 +1,59 @@
+# CODEX-6B.3-DIAG – Sunny Brain v0.4
+
+Basis ist der verifizierte HEAD `64ab6c9ec230e2f05a64da7491fe3303ef793b0b` von `entwicklung/sunny-v04-brain`. Bei der Prüfung war der Checkout sauber und `codex/sunny-brain-native-diagnostics` existierte auf GitHub noch nicht. Auftrag und Ausführungsfreigabe stammen aus `entwicklung/sunny-2` und dem Freigabe-Commit `2bf9009b`. [Arbeitsauftrag](https://github.com/Sunshinerene/Mein-Helfer-f-r-den-Tag/blob/entwicklung/sunny-2/docs/CODEX-6B3-DIAG.md) · [Freigabe](https://github.com/Sunshinerene/Mein-Helfer-f-r-den-Tag/blob/2bf9009b/docs/PROJECT_STATUS.md)
+
+## Gerätebefund und Ursachenanalyse
+
+Laut Betreiber startete die signierte v0.4 im Flugmodus, importierte ein Modell (557 MiB), behielt es über erneutes Öffnen und meldete zweimal einen fehlgeschlagenen nativen Test. Die Dauer von ungefähr drei Sekunden ist eine Schätzung. Geräteantwort, native Fehlerphase, Modellrevision und Hash der installierten Datei fehlen. Die Geräteursache bleibt offen.
+
+| Phase | Was der Code belegt und was die Diagnose prüft |
+| --- | --- |
+| Routing und Guard | `NativeBrainCheck` übergibt den festen synthetischen deutschen Satz als `Language` mit `localReady=true`. Der originale `SunnyRouting` wählt damit `OnDevice`. Die Anfrage enthält keinen Aktionskandidaten. `SunnyOrchestrator` verwendet die bestehende Deny-by-default-Policy und erlaubt einen nativen Erfolg nur bei lokalem Reply ohne Fallback. Ein Core-Fallback nach Modellfehler ist im bisherigen UI von ungültiger Modellausgabe nicht unterscheidbar. |
+| Modell und Zugriff | `ManagedLocalRuntime` prüft die Verfügbarkeit. `LiteRtModelBackend` prüft unter der prozessweiten Lease auf lesbare Datei, `LITERTLM`-Magic, Major 1 und plausibles Ende des Headers und wiederholt dies unter der nativen Lease. Ein solcher Headercheck prüft nur Teile des Containers. Native Modellmetadaten, Tokenizer und CPU-Kompatibilität werden durch den Dateinamen und die angezeigten MiB nicht nachgewiesen. Es bleiben unter anderem Lesefehler, Busy und eine bestehende Prozessquarantäne als unterscheidbare Möglichkeiten. |
+| Engine, Sitzung und Cleanup | Die Fassade setzt CPU, app-internen Cache und `maxNumTokens=1024`. LiteRT `Engine.initialize()` erstellt das native Handle und `createConversation()` erfordert eine initialisierte Engine. Der Import probt bereits eine native Konversation mit „Antworte mit OK.“ auf der Staging-Datei und akzeptiert jede zurückgegebene Legacy-`Message.toString()`. Das belegt erfolgreiches Senden beim Import, sofern der gemeldete Import den aktuellen Pfad durchlief. Der neue Engine-/Session-Aufbau für die installierte Datei und das spätere Cleanup können trotzdem scheitern. Eine fehlgeschlagene Kind-Bereinigung schließt die Engine weiterhin nicht darunter. Quarantäne bis zum Prozessneustart bleibt aktiv, wenn die Bereinigung ungewiss ist. |
+| Prompt und Generierung | Der unveränderte englische Klassifikationsauftrag wird zusammen mit dem festen deutschen Satz als ein User-Turn übergeben. LiteRT baut aus der Nachricht die native Prompt-Eingabe auf und verwendet die modellabhängige Konversationsformatierung. Sunny setzt hier weder eine eigene Chat-Template-Überschreibung noch ein erzwungenes Antwortformat. Zusätzlicher Text, Markdown, Leerraum oder ein anderer Token sind plausible, ungemessene Ausgaben. Auch ein Fehler beim Senden oder Parsen der Antwort ist möglich. Wenn die Bibliothek keine `Message` zurückgibt, bleiben Inhalt und Format unbekannt. |
+| Extraktion und Core-Vertrag | LiteRT-LM 0.16.1 liefert für `sendMessage(String)` ein `Message`-Objekt. `Message.toString()` stellt dessen Contents dar. Der Klassifikationsadapter verwendet demgegenüber weiterhin genau einen `Content.Text` ohne Tool Calls und ohne Channels. `SunnyOrchestrator` akzeptiert ausschließlich die unveränderten Strings `ACK` und `CLARIFY`. „ACK\n“, „ack“, leere oder strukturierte Antworten können daher auch bei einer technisch erfolgreichen Generierung scheitern. Es gibt in diesem Pfad keine Trimmung oder neue Normalisierung. |
+| Zeitlimit und Abbruch | 120 Sekunden sind eine kooperative Core-Deadline. Wenn die gemeldeten etwa drei Sekunden zutreffen, ist ein regulärer Ablauf dieser Deadline unwahrscheinlich. Ein nativer Aufruf läuft beim Abbruch bis zum nächsten sicheren Checkpoint unter der Lease weiter. Ein bereits beobachteter Antworttext ist kein Erfolgsnachweis, wenn Deadline, Abbruch oder Cleanup zum Scheitern führen. |
+
+Versionsgenaue API-Quellen: [Engine und native Handle-Verwaltung](https://github.com/google-ai-edge/LiteRT-LM/blob/v0.16.1/kotlin/java/com/google/ai/edge/litertlm/Engine.kt) · [Conversation und Antwortparsing](https://github.com/google-ai-edge/LiteRT-LM/blob/v0.16.1/kotlin/java/com/google/ai/edge/litertlm/Conversation.kt) · [Message und Contents](https://github.com/google-ai-edge/LiteRT-LM/blob/v0.16.1/kotlin/java/com/google/ai/edge/litertlm/Message.kt) · [Prompt-Templates](https://github.com/google-ai-edge/LiteRT-LM/blob/v0.16.1/docs/api/cpp/conversation.md) · [Container-Schema](https://github.com/google-ai-edge/LiteRT-LM/blob/v0.16.1/schema/core/litertlm_header_schema.fbs).
+
+Die veröffentlichte LiteRT-Community-Modellkarte nennt Android-LiteRT-LM-CPU-Benchmarks für die QAT-INT4-Variante, die dort auf `gemma3-1b-it-int4.litertlm` verlinkt. Das stützt das Format und das grundsätzliche Zielsystem. Die Datei ist zugangsbeschränkt und wurde nicht heruntergeladen. Eine konkrete Revision, die Gerätebytes und die Kompatibilität genau dieser Bytes mit dem gepinnten Android-Artefakt `litertlm-android:0.16.1` bleiben unbestätigt. [Modellkarte](https://huggingface.co/litert-community/Gemma3-1B-IT#android-via-litert-lm).
+
+## Implementierung und Diff
+
+- **Auftrag 1–2:** Der bestehende Knopf „Native lokale KI testen“ erfasst den normalen Lauf über `NativeBrainCheck → SunnyOrchestrator → ManagedLocalRuntime → LiteRtModelBackend → LiteRT-LM`. Der Knopf ist auch ohne Modell nutzbar, damit „Fehlt“ diagnostiziert werden kann. Es gibt keine zusätzliche Generierung oder alternative Erfolgsprüfung. Prompt, Guard, Lease, Deadline, Quarantäne, Engine-Konfiguration, Importprobe und Core-Regeln bleiben unverändert.
+- **Auftrag 3:** „Brain-Diagnose anzeigen“ öffnet den zuletzt abgeschlossenen Lauf der aktuellen Panel-Instanz. Gemessen werden Gesamtdauer und erreichte Phasen per monotonem `System.nanoTime()`, gerundet auf ganze Millisekunden. Gemessene Abschnitte können sich überlappen. „Unbekannt“ steht für fehlende Evidenz. CPU wird als konfigurierte Auswahl der tatsächlichen Fassade ausgewiesen. Runtime-Status und Laufabschluss zeigen Deadline, Unterbrechung oder Abbruch. Native Cleanup-Ergebnisse werden auch nach Abbruch erfasst, sofern das native Ende zurückkehrt.
+- **Auftrag 3–4:** Maximal die ersten 256 UTF-16-Codeeinheiten eines sichtbaren Textteils erscheinen lokal, mit sichtbaren Steuerzeichen-Escapes oder Ersatzzeichen und einem Kürzungsmarker. Bei strukturierter Ausgabe zeigt die Vorschau höchstens den ersten nichtleeren Textteil. Tool-Argumente, Kanäle und Nicht-Text-Inhalte gelangen nicht in die Vorschau. Die Vorschau wird weder interpretiert noch exportiert. Nur die manuelle Aktion „Bericht kopieren“ schreibt feste Labels, typisierte Zustände und Zeiten in die Android-Zwischenablage. Die App speichert den Bericht nicht dauerhaft und sendet ihn nicht. Modell und Einstellungen werden nicht geändert. Der bereits vorhandene app-interne Runtime-Cache kann wie beim bisherigen nativen Test angelegt oder benutzt werden. Optionale Hash- und Prozessspeichermessungen wurden ausgelassen.
+- **Auftrag 5:** Sieben neue Adapter-Tests prüfen Fake-Nativablauf, einmaliges Senden, deterministische Dauer, Modellprüfung, Busy, Quarantäne, Fehlerphasen, Antwortformate, Vorschaugrenzen, Deadline und Abbruch mit belegter Lease bis zum Cleanup. Zwei neue Standalone-Tests prüfen festen Input, Routing, beide Erfolgstoken, unveränderte strikte Ablehnung und einen sicheren Bericht bei Fallback. Die Fake-Tests verändern weder produktive Modelldateien noch greifen sie auf ein Netzwerk zu. JDK 17 kann die Java-21-Klassendateien von LiteRT in JVM-Tests nicht laden. Die Tests verwenden deshalb die vom Android-Adapter abgeleitete Nachrichtenform ohne AAR-Objekte zur JVM-Laufzeit. Der Android-Build kompiliert und paketiert weiterhin das echte AAR.
+
+Der Produktionsdiff umfasst `LiteRtModelBackend.kt`, `NativeModel.kt`, `NativeDiagnostics.kt` und die Brain-Dateien `BrainPanel.kt`, `NativeBrainCheck.kt`, `BrainDiagnosticReport.kt`. Hinzu kommen `NativeDiagnosticsTest.kt`, `BrainDiagnosticReportTest.kt` und dieser Bericht. Bestehende Tests, Core, MeinHelfer, Gradle-Konfiguration, Manifeste, Medien und Workflows sind im Diff unverändert.
+
+## Build und Abnahmeprüfungen
+
+Gradle 8.11.1, Eclipse Adoptium JDK 17.0.17+10, Android SDK 35, Build-Tools 35.0.0. Der erste Android-Versuch brauchte ein beschreibbares `ANDROID_USER_HOME` und die fehlenden offiziellen Build-Tools 35.0.0, deren Archivprüfsumme vor der Installation verifiziert wurde. Der direkte Zugriff eines ersten Format-Tests auf die Java-21-AAR-Klasse wurde durch den typisierten Fake-Test ersetzt.
+
+```sh
+gradle -p sunny-core --no-parallel --max-workers=2 clean test
+gradle -p sunny-standalone-poc --no-parallel --max-workers=2 clean testDebugUnitTest \
+  :sunny-runtime-android:testDebugUnitTest :sunny-runtime-android:testReleaseUnitTest assembleDebug
+```
+
+| JUnit-XML | Bestand | Neu | Gesamt | Fehler / Fehlschläge / Übersprungen |
+| --- | ---: | ---: | ---: | ---: |
+| Core | 131 | 0 | 131 | 0 / 0 / 0 |
+| Standalone Debug | 57 | 2 | 59 | 0 / 0 / 0 |
+| Adapter Debug | 14 | 7 | 21 | 0 / 0 / 0 |
+| Adapter Release | 14 | 7 | 21 | 0 / 0 / 0 |
+| Summe | 216 | 16 | 232 | 0 / 0 / 0 |
+
+`assembleDebug` erfolgreich. `aapt dump badging/permissions/xmltree` bestätigten `de.meinhelfer.sunny.devtools`, Version 4 / `0.4-devtools`, null Berechtigungen, eine Activity, keine zusätzlichen App-Komponenten oder Paketabfragen, keine Shared UID, keinen HOME-Intent und deaktiviertes Backup. ZIP-/RIFF-Prüfung bestätigte genau 36 erwartete Avatar-WebP in Quellbaum und APK. `apksigner verify --verbose --print-certs` bestätigte die vom Standard-Debug-Build erzeugte Android-Debug-Signatur. `zipalign -c -P 16 4` war erfolgreich. Lokaler Debug-APK-SHA-256: `7772475214194811060b4b9ef76edcd836652625f5e3f75d8a3cf0bc9fa50129`.
+
+Unabhängige CI und Review bleiben offen. Der Standalone-Workflow umfasst weder PRs zum Brain-Zielbranch noch Pushes auf diesen Diagnosebranch. Die Workflow-Datei fehlt im Default-Branch (GitHub API 404), sodass manueller Dispatch über den unveränderten Workflow nicht vorausgesetzt werden kann. Geräteabnahme und Prüfung der tatsächlichen Modellbytes bleiben offen. Der lokale Debug-Build ist kein Update für die signierte Geräteinstallation.
+
+## Gerätetest nach separater Freigabe
+
+1. Nach Review und CI nur die separat freigegebene, passend signierte Testversion als In-place-Update installieren. Vorhandenes Modell und MeinHelfer erhalten.
+2. Flugmodus aktivieren. In Sunny Brain „Native lokale KI testen“ auswählen. Nach Ende „Brain-Diagnose anzeigen“ öffnen. Dauer, erste fehlgeschlagene Phase, Antwortformat, Core-Urteil und Cleanup notieren. Den kopierbaren Statusbericht bei Bedarf manuell übernehmen.
+3. Wiederholen und bei laufender Generierung einmal abbrechen. Nach native-rückkehrbedingtem Ende die Bereinigung im Bericht prüfen. Nach Quarantäne den Prozess neu starten. Modellbestand und unveränderte MeinHelfer-Funktion prüfen. Kein erneuter Modellimport oder Löschtest ist für die Diagnose erforderlich.
+
+Erst nach Messung einen ursachenspezifischen Fix separat bewerten und freigeben. Für den Rollback diesen Diagnose-Commit auf dem Arbeitsbranch revertieren oder den Draft verwerfen. Ein Datenrollback oder Modellwechsel ist nicht erforderlich.
