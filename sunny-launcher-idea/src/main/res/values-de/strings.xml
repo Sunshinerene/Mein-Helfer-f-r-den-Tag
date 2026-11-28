@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Sunny Launcher</string>
+    <string name="prototype">Ideenprototyp</string>
+    <string name="home">Start</string>
+    <string name="apps">Apps</string>
+    <string name="design">Design</string>
+    <string name="sunny">Sunny</string>
+    <string name="sunny_portrait">Sunny winkt zur Begrüßung</string>
+    <string name="favorites">Favoriten</string>
+    <string name="favorites_intro">Füge Apps hinzu, um sie direkt von der Startseite zu öffnen.</string>
+    <string name="browse_apps">Apps entdecken</string>
+    <string name="assistant_title">Sunny Assistentin</string>
+    <string name="assistant_placeholder">Platzhalter</string>
+    <string name="assistant_explanation">Hier ist Platz für eine künftige Assistentin. Gespräche und KI-Funktionen sind in diesem Prototyp nicht verfügbar.</string>
+    <string name="apps_intro">Öffne eine App oder füge sie für den Schnellzugriff zu den Favoriten hinzu.</string>
+    <string name="apps_loading">Verfügbare Apps werden gesucht…</string>
+    <string name="examples_title">Beispiele · keine Apps verfügbar</string>
+    <string name="examples_intro">Android hat keine startbaren Apps gemeldet. Die Beispiele zeigen, wie die Liste aussieht.</string>
+    <string name="example_camera">Beispiel Kamera</string>
+    <string name="example_gallery">Beispiel Galerie</string>
+    <string name="open_app">%1$s öffnen</string>
+    <string name="add_favorite">%1$s zu Favoriten hinzufügen</string>
+    <string name="remove_favorite">%1$s aus Favoriten entfernen</string>
+    <string name="favorite_added">%1$s wurde zu den Favoriten hinzugefügt</string>
+    <string name="favorite_removed">%1$s wurde aus den Favoriten entfernt</string>
+    <string name="unavailable">App nicht verfügbar</string>
+    <string name="open_unavailable">Diese App ist nicht mehr verfügbar.</string>
+    <string name="open_blocked">Android konnte diese App nicht öffnen.</string>
+    <string name="appearance">Darstellung</string>
+    <string name="appearance_system">Wie auf dem Gerät</string>
+    <string name="appearance_light">Hell</string>
+    <string name="appearance_dark">Dunkel</string>
+    <string name="colors">Farbwelt</string>
+    <string name="palette_twilight">Abendlicht · Violett</string>
+    <string name="palette_sunrise">Morgenrot · warmes Pfirsich</string>
+</resources>
