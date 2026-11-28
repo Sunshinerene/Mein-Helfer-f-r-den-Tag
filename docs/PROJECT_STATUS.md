@@ -59,3 +59,10 @@ Owner screenshot of CI #24 confirms head 8f821bc, success 2m33s, verify 2m30s, t
 
 ## 2026-11-28 – Brain v0.4 protected signing requested
 Owner explicitly approved workflow start in Chat 00/1. Commit 64ab6c9ec230e2f05a64da7491fe3303ef793b0b on entwicklung/sunny-v04-brain adds scoped push trigger for signing YAML only; protected environment and certificate checks retained. Commit confirmed, actual workflow run and environment branch eligibility not yet verified. Owner must separately approve protected environment; no bypass. No app source or Main change. Next: verify build, environment approval and signed artifact before device installation.
+
+## 2026-11-28 – Explicit owner GO: parallel Codex packages
+Owner explicitly approved all three separately scoped packages in active Chat 00/1 by 👍 in direct response to the enumerated approval request. Authorization is limited to docs/CODEX-PARALLEL-2026-11-28.md (prepared at a6d15329aea80c0da646df4d002b227484592bd2):
+- CODEX-6C.1 Memory Foundation: GO for isolated JVM implementation and synthetic tests on codex/sunny-memory-foundation.
+- CODEX-6B.4 Conversation contract: GO for isolated interfaces and simulated tests on codex/sunny-conversation-contract; no native inference integration.
+- CODEX-7A Module Registry: GO for design and test matrix only on codex/sunny-module-registry-design; no implementation.
+All shared constraints and exact file ownership in the package document remain binding. Each task must verify current integration HEAD and prerequisites, use its own branch and report via draft PR; no merges, signing, production changes, permission changes or edits to Brain test branch. Parallel execution permitted only within these nonoverlapping scopes. No further approval needed for steps within those scopes; stop on conflicts or required scope expansion. Independent review, CI and owner acceptance remain separate. This record authorizes execution but does not establish that Codex jobs have been launched.
