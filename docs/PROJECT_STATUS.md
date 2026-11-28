@@ -113,3 +113,6 @@ Owner GO for preparation only. docs/CODEX-LAUNCHER-IDEA-01.md defines standalone
 
 ## 2026-11-28 – Explicit owner GO: CODEX-LAUNCHER-IDEA-01
 Owner thumbs-up in active Chat 00/1 directly approved execution of the prepared isolated launcher idea package docs/CODEX-LAUNCHER-IDEA-01.md (bccfc97d9488289a11abd91fc50cfab18680361e). Scope: codex/sunny-launcher-idea-v01, standalone normal Android app de.meinhelfer.sunny.launcher.idea, synthetic prototype only, no HOME takeover, sensitive permissions, network, native AI, production integration, merge, signing or release. Official launcher start-readiness gate unchanged. Draft PR against entwicklung/sunny-2. Execution authorization recorded; Codex launch not yet independently confirmed.
+
+## 2026-11-28 – Brain target CI preparation verified
+Run 46144918876, job 140978722035 completed successfully; raw logs confirm checkout 0e518acfcd1d19a964faa4026375d6dc4db94f7b and 131 Core, 59 Standalone, 21 adapter Debug, 21 adapter Release = 232 executions, zero failures/errors/skips. Diagnostic branch CI passed after target workflow adaptation. Target-branch-specific checks still require post-merge CI. PR #17 ready for separate scoped merge approval into entwicklung/sunny-v04-brain; no version change, signing or release yet. Owner reports Launcher idea Codex task started; results pending independent review.
