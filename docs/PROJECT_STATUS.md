@@ -86,3 +86,6 @@ Owner GO in 00/1 for PR #15 only. Reviewed head 02512433dd21986a63ae19abaa866946
 
 ## 2026-11-28 – Memory Foundation post-merge workflow status
 Owner screenshots at 12:45 and 12:49 CET confirm merge PR #15 on entwicklung/sunny-2: Sunny Core Tests #12 success (1m14s), Sunny Android Runtime Tests #18 success (5m57s). Exact post-merge JUnit counts remain unverified; request direct run URL(s) to read job logs. Prior independent PR CI counts 144 Core/265 aggregate are not a substitute for post-merge counts. PR #16 remains unmerged pending integration gate.
+
+## 2026-11-28 – 6C.1 post-merge integration gate passed
+Direct owner-provided run URL https://github.com/Sunshinerene/Mein-Helfer-f-r-den-Tag/actions/runs/46141144404 allowed independent retrieval of runtime job 140967128969. Checkout log verifies exact merge c13f10a916018ecd2e6596f9a18e12b28a9d2f43. JUnit totals: Core 144, Adapter Debug 14, Adapter Release 14, App Debug 93; aggregate 265, zero failures/errors/skips across all suites. All job steps, APK builds, package/permissions and production APK checks successful. Memory Foundation integration gate passed for isolated synthetic prototype; no real-data or native device acceptance implied. PR #16 next, separate explicit merge GO required.
