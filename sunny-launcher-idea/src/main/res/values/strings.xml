@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Sunny Launcher</string>
+    <string name="prototype">Idea prototype</string>
+    <string name="home">Home</string>
+    <string name="apps">Apps</string>
+    <string name="design">Design</string>
+    <string name="sunny">Sunny</string>
+    <string name="sunny_portrait">Sunny waves hello</string>
+    <string name="favorites">Favorites</string>
+    <string name="favorites_intro">Add apps for quick access from Home.</string>
+    <string name="browse_apps">Explore apps</string>
+    <string name="assistant_title">Sunny Assistant</string>
+    <string name="assistant_placeholder">Placeholder</string>
+    <string name="assistant_explanation">This area is reserved for a future assistant. Conversations and AI features are unavailable in this prototype.</string>
+    <string name="apps_intro">Open an app or add it to Favorites for quick access.</string>
+    <string name="apps_loading">Looking for available apps…</string>
+    <string name="examples_title">Examples · no apps available</string>
+    <string name="examples_intro">Android did not provide any launchable apps. These examples only show how the list looks.</string>
+    <string name="example_camera">Camera example</string>
+    <string name="example_gallery">Gallery example</string>
+    <string name="open_app">Open %1$s</string>
+    <string name="add_favorite">Add %1$s to Favorites</string>
+    <string name="remove_favorite">Remove %1$s from Favorites</string>
+    <string name="favorite_added">%1$s added to Favorites</string>
+    <string name="favorite_removed">%1$s removed from Favorites</string>
+    <string name="unavailable">App unavailable</string>
+    <string name="open_unavailable">This app is no longer available.</string>
+    <string name="open_blocked">Android could not open this app.</string>
+    <string name="appearance">Appearance</string>
+    <string name="appearance_system">Match device</string>
+    <string name="appearance_light">Light</string>
+    <string name="appearance_dark">Dark</string>
+    <string name="colors">Color palette</string>
+    <string name="palette_twilight">Twilight · violet</string>
+    <string name="palette_sunrise">Sunrise · warm peach</string>
+</resources>
