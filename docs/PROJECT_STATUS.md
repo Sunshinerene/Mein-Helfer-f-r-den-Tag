@@ -107,3 +107,6 @@ Standalone POC #25, run 46144154722, job 140976403418, exact checkout 4106add093
 
 ## 2026-11-28 – Brain target CI isolation prepared
 Owner GO for test workflow only. Diagnostic branch commit 0e518acfcd1d19a964faa4026375d6dc4db94f7b extends the 59/21/21 test gates to the Brain target branch and pins the adapter tree to reviewed diagnostic source 5f38e1ca2fa967ba169afa2bbd3647f33b5beb6d, retaining original app/core/root build isolation. Independent CI on new head required before separate merge GO. No signing or version change. Owner also asked about a parallel Launcher idea version; proposed isolated concept/prototype, separate app package and branch, no default HOME takeover or sensitive permissions, no native dependency. Official launcher start gate unchanged; separate scope and approval before execution.
+
+## 2026-11-28 – Launcher idea package prepared
+Owner GO for preparation only. docs/CODEX-LAUNCHER-IDEA-01.md defines standalone normal Android app prototype, separate branch codex/sunny-launcher-idea-v01 and package de.meinhelfer.sunny.launcher.idea, no HOME takeover, no sensitive permissions/network/native AI or production integration. Separate execution GO required; official launcher readiness gate remains unchanged. Brain diagnostic CI run 46144918876 on 0e518acf was in progress at initial check.
