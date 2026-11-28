@@ -36,10 +36,10 @@ jobs:
         run: |
           set -euo pipefail
           gradle -p sunny-core --no-parallel --max-workers=2 clean test
-          gradle -p sunny-standalone-poc --no-parallel --max-workers=2 clean testDebugUnitTest assembleDebug
+          gradle -p sunny-standalone-poc --no-parallel --max-workers=2 clean testDebugUnitTest assembleDebug :sunny-runtime-android:testDebugUnitTest :sunny-runtime-android:testReleaseUnitTest
           python3 - <<'PY'
           import pathlib, xml.etree.ElementTree as ET
-          for directory, expected in [('sunny-core/build/test-results/test',131),('sunny-standalone-poc/build/test-results/testDebugUnitTest',57)]:
+          for directory, expected in [('sunny-core/build/test-results/test',131),('sunny-standalone-poc/build/test-results/testDebugUnitTest',59),('sunny-runtime-android/build/test-results/testDebugUnitTest',21),('sunny-runtime-android/build/test-results/testReleaseUnitTest',21)]:
               files=list(pathlib.Path(directory).glob('TEST-*.xml'))
               assert files
               totals=dict.fromkeys(('tests','failures','errors','skipped'),0)
@@ -56,7 +56,7 @@ jobs:
           APK=sunny-standalone-poc/build/outputs/apk/debug/sunny-standalone-poc-debug.apk
           TOOLS="$ANDROID_HOME/build-tools/35.0.0"
           "$TOOLS/aapt" dump badging "$APK" | grep -F "package: name='de.meinhelfer.sunny.devtools'"
-          "$TOOLS/aapt" dump badging "$APK" | grep -F "versionCode='4' versionName='0.4-devtools'"
+          "$TOOLS/aapt" dump badging "$APK" | grep -F "versionCode='5' versionName='0.4.1-devtools'"
           python3 - "$APK" <<'PY'
           import sys, zipfile
           expected={f'sunny_su{i:02}.webp' for i in range(1,36)} | {'sunny_beta.webp'}
@@ -99,7 +99,7 @@ jobs:
           "$TOOLS/apksigner" verify source.apk
           "$TOOLS/aapt" dump badging source.apk > badging.txt
           grep -F "package: name='de.meinhelfer.sunny.devtools'" badging.txt
-          grep -F "versionCode='4' versionName='0.4-devtools'" badging.txt
+          grep -F "versionCode='5' versionName='0.4.1-devtools'" badging.txt
           grep -F "launchable-activity: name='de.meinhelfer.sunny.poc.MainActivity'" badging.txt
           "$TOOLS/aapt" dump permissions source.apk > permissions.txt
           "$TOOLS/aapt" dump xmltree source.apk AndroidManifest.xml > manifest.txt
@@ -133,7 +133,7 @@ jobs:
           "$TOOLS/zipalign" -c -P 16 4 signed/sunny-devtools.apk
           "$TOOLS/aapt" dump badging signed/sunny-devtools.apk > signed/badging.txt
           grep -F "package: name='de.meinhelfer.sunny.devtools'" signed/badging.txt
-          grep -F "versionCode='4' versionName='0.4-devtools'" signed/badging.txt
+          grep -F "versionCode='5' versionName='0.4.1-devtools'" signed/badging.txt
           "$TOOLS/aapt" dump permissions signed/sunny-devtools.apk > signed/permissions.txt
           cmp signing-input/permissions.txt signed/permissions.txt
           "$TOOLS/aapt" dump xmltree signed/sunny-devtools.apk AndroidManifest.xml > signed/manifest.txt

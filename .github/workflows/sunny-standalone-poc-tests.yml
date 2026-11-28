@@ -85,7 +85,9 @@ jobs:
           "$TOOLS/aapt" dump xmltree "$APK" AndroidManifest.xml > sunny-poc-evidence/manifest.txt
           grep -F "package: name='de.meinhelfer.sunny.devtools'" sunny-poc-evidence/badging.txt
           if [[ "$GITHUB_REF" == "refs/heads/entwicklung/sunny-v03-avatar" || "$GITHUB_REF" == "refs/heads/entwicklung/sunny-v04-brain" || "$GITHUB_REF" == "refs/heads/codex/sunny-brain-native-diagnostics" ]]; then
-            if [[ "$GITHUB_REF" == "refs/heads/entwicklung/sunny-v04-brain" || "$GITHUB_REF" == "refs/heads/codex/sunny-brain-native-diagnostics" ]]; then
+            if [[ "$GITHUB_REF" == "refs/heads/entwicklung/sunny-v04-brain" ]]; then
+              grep -F "versionCode='5' versionName='0.4.1-devtools'" sunny-poc-evidence/badging.txt
+            elif [[ "$GITHUB_REF" == "refs/heads/codex/sunny-brain-native-diagnostics" ]]; then
               grep -F "versionCode='4' versionName='0.4-devtools'" sunny-poc-evidence/badging.txt
             else
               grep -F "versionCode='3' versionName='0.3-devtools'" sunny-poc-evidence/badging.txt
